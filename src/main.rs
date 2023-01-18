@@ -1,8 +1,20 @@
 use {
-    std::{env, fs::File, io::Read, fmt::Write, time::{Duration, SystemTime, UNIX_EPOCH}},
+    std::{
+        env, 
+        fs::{File, OpenOptions}, 
+        io::{Read, Write as IOWrite}, 
+        fmt::Write, 
+        time::{Duration, SystemTime, UNIX_EPOCH},
+    },
     fuzzyhash::FuzzyHash,
     indicatif::{ProgressStyle, ProgressState},
-    rdkafka::{ClientConfig, producer::{FutureProducer, FutureRecord}},
+    rdkafka::{
+        ClientConfig,
+        Message,
+        client::ClientContext,
+        producer::{FutureProducer, FutureRecord},
+        consumer::{StreamConsumer, ConsumerContext, Consumer},
+    },
     serde::{Serialize, Deserialize},
     rand::Rng,
 };
@@ -14,8 +26,54 @@ struct MemoryStateMessage {
     changes: Vec<u32>,
 }
 
+pub struct StreamingContext;
+
+impl ClientContext for StreamingContext {}
+
+impl ConsumerContext for StreamingContext {}
+
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
+    storage_import_step().await;
+    Ok(())
+}
+
+async fn storage_import_step() {
+    let consumer = kafka_consumer_for_topic(&env::var("KAFKA_ENDPOINT").unwrap(), "far-memory-updates");
+    let mut entries_saved = 0;
+
+    loop {
+        let msg = consumer.recv().await.unwrap();
+        let payload = msg.payload().unwrap();
+
+        let payload: MemoryStateMessage = serde_json::from_slice(&payload).unwrap();
+        let output_data = {
+            let mut output_data = Vec::new();
+
+            {
+                let mut csv_writer = csv::WriterBuilder::new()
+                    .has_headers(false)
+                    .from_writer(&mut output_data);
+                csv_writer.serialize(&payload).unwrap(); 
+            }
+            
+            output_data
+        };
+
+        let mut file = OpenOptions::new()
+            .write(true)
+            .append(true)
+            .open("./data.csv")
+            .unwrap();
+
+        file.write(&output_data).unwrap();
+
+        entries_saved += 1;
+        println!("entries saved: {}", entries_saved);
+    }
+}
+
+async fn collect_memory_stats() {
     let producer = kafka_producer(&env::var("KAFKA_ENDPOINT").unwrap());
     
     let mut hashes = compute_swapfile_hashes();
@@ -87,6 +145,20 @@ fn kafka_producer(endpoint: &str) -> FutureProducer {
         .set("message.timeout.ms", "5000")
         .create()
         .unwrap()
+}
+
+fn kafka_consumer_for_topic(endpoint: &str, topic: &str) -> StreamConsumer<StreamingContext> {
+    let consumer: StreamConsumer<StreamingContext> = ClientConfig::new()
+        .set("group.id", "far-memory-storage-import")
+        .set("bootstrap.servers", endpoint)
+        .set("enable.auto.commit", "true")
+        .set("auto.offset.reset", "beginning")
+        .create_with_context(StreamingContext)
+        .unwrap();
+
+    consumer.subscribe(&vec![topic]).unwrap();
+
+    consumer
 }
 
 fn random_key() -> Vec<u8> {
