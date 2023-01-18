@@ -35,10 +35,6 @@ fn compute_swapfile_hashes() -> Vec<String> {
             break;
         }
 
-        if hashes.len() > 10 {
-            break;
-        }
-
         let hash = FuzzyHash::new(&buffer[..read]).to_string();
         hashes.push(hash);
     }
