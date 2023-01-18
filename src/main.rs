@@ -1,26 +1,56 @@
 use {
-    std::{fs::File, io::Read, fmt::Write},
+    std::{env, fs::File, io::Read, fmt::Write, time::{Duration, SystemTime, UNIX_EPOCH}},
     fuzzyhash::FuzzyHash,
     indicatif::{ProgressStyle, ProgressState},
+    rdkafka::{ClientConfig, producer::{FutureProducer, FutureRecord}},
+    serde::{Serialize, Deserialize},
+    rand::Rng,
 };
 
-fn main() {
-    println!("computing hashes");
-    let hashes = compute_swapfile_hashes();
+#[derive(Serialize, Deserialize)]
+struct MemoryStateMessage {
+    service: String,
+    time: f64,
+    changes: Vec<u32>,
+}
 
-    println!("computing more hashes");
-    let more_hashes = compute_swapfile_hashes();
+#[tokio::main]
+async fn main() -> std::io::Result<()> {
+    let mut hashes = compute_swapfile_hashes();
+    let producer = kafka_producer(&env::var("KAFKA_ENDPOINT").unwrap());
 
-    println!("comparing");
-    let compare_result = hashes_compare(&hashes, &more_hashes);
-    println!("compare result: {:?}", compare_result);
+    let mut memory_changes_tracked = 0;
+
+    loop {
+        let new_hashes = compute_swapfile_hashes();
+        let changes = hashes_compare(&hashes, &new_hashes);
+        hashes = new_hashes;
+
+        let msg = MemoryStateMessage {
+            service: "demo".to_owned(), 
+            time: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs_f64(),
+            changes,
+        };
+
+        let msg = serde_json::to_vec(&msg).unwrap();
+        producer.send(FutureRecord::to("far-memory-updates")
+            .payload(&msg)
+            .key(&random_key()),
+            Duration::from_secs(10)
+        ).await.unwrap();
+
+        memory_changes_tracked += 1;
+        println!("total memory changes tracked: {}", memory_changes_tracked);
+
+        tokio::time::sleep(Duration::from_secs(10)).await;
+    }
 }
 
 fn compute_swapfile_hashes() -> Vec<String> {
     let mut hashes = Vec::new();
 
     let mut swapfile = File::open("/swapfile").unwrap();
-    let mut buffer = vec![0; 1024 * 1024 * 8]; // read 8 megabytes at a time
+    let mut buffer = vec![0; 1024 * 1024 * 1]; // read 1 megabyte at a time
 
     let pb = indicatif::ProgressBar::new(swapfile.metadata().unwrap().len());
     pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({eta})")
@@ -49,4 +79,18 @@ fn hashes_compare(a: &Vec<String>, b: &Vec<String>) -> Vec<u32> {
         .zip(b.iter())
         .map(|(a, b)| FuzzyHash::compare(a, b).unwrap_or(u32::MAX))
         .collect()
+}
+
+fn kafka_producer(endpoint: &str) -> FutureProducer {
+    ClientConfig::new()
+        .set("bootstrap.servers", endpoint)
+        .set("message.timeout.ms", "5000")
+        .create()
+        .unwrap()
+}
+
+fn random_key() -> Vec<u8> {
+    let mut id = [0u8; 12];
+    rand::thread_rng().fill(&mut id);
+    id.to_vec()
 }
