@@ -21,8 +21,11 @@ fn compute_swapfile_hashes() -> Vec<String> {
     let mut swapfile = File::open("/swapfile").unwrap();
     let mut buffer = vec![0; 1024 * 1024 * 8]; // read 8 megabytes at a time
 
+    let pb = indicatif::ProgressBar::new(swapfile.metadata().unwrap().len());
+
     loop {
         let read = swapfile.read(&mut buffer).unwrap();
+        pb.inc(read as u64);
         if read == 0 {
             break;
         }
@@ -30,6 +33,8 @@ fn compute_swapfile_hashes() -> Vec<String> {
         let hash = FuzzyHash::new(&buffer[..read]).to_string();
         hashes.push(hash);
     }
+
+    pb.finish();
 
     hashes
 }
