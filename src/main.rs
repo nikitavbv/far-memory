@@ -16,9 +16,9 @@ struct MemoryStateMessage {
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
-    let mut hashes = compute_swapfile_hashes();
     let producer = kafka_producer(&env::var("KAFKA_ENDPOINT").unwrap());
-
+    
+    let mut hashes = compute_swapfile_hashes();
     let mut memory_changes_tracked = 0;
 
     loop {
@@ -77,7 +77,7 @@ fn compute_swapfile_hashes() -> Vec<String> {
 fn hashes_compare(a: &Vec<String>, b: &Vec<String>) -> Vec<u32> {
     a.iter()
         .zip(b.iter())
-        .map(|(a, b)| FuzzyHash::compare(a, b).unwrap_or(u32::MAX))
+        .map(|(a, b)| FuzzyHash::compare(a, b).unwrap_or(0))
         .collect()
 }
 
