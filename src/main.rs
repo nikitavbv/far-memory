@@ -26,6 +26,14 @@ struct MemoryStateMessage {
     changes: Vec<u32>,
 }
 
+#[derive(Serialize)]
+struct MemoryPageState {
+    service: String,
+    time: f64,
+    page: u32,
+    change: u32,
+}
+
 pub struct StreamingContext;
 
 impl ClientContext for StreamingContext {}
@@ -54,7 +62,15 @@ async fn storage_import_step() {
                 let mut csv_writer = csv::WriterBuilder::new()
                     .has_headers(false)
                     .from_writer(&mut output_data);
-                csv_writer.serialize(&payload).unwrap(); 
+
+                for i in 0..payload.changes.len() {
+                    csv_writer.serialize(&MemoryPageState {
+                        service: payload.service.clone(),
+                        time: payload.time,
+                        page: i as u32,
+                        change: *payload.changes.get(i).unwrap(),
+                    }).unwrap(); 
+                }
             }
             
             output_data
@@ -149,7 +165,7 @@ fn kafka_producer(endpoint: &str) -> FutureProducer {
 
 fn kafka_consumer_for_topic(endpoint: &str, topic: &str) -> StreamConsumer<StreamingContext> {
     let consumer: StreamConsumer<StreamingContext> = ClientConfig::new()
-        .set("group.id", "far-memory-storage-import")
+        .set("group.id", "far-memory-storage-import-v2")
         .set("bootstrap.servers", endpoint)
         .set("enable.auto.commit", "true")
         .set("auto.offset.reset", "beginning")
