@@ -40,6 +40,11 @@ impl ClientContext for StreamingContext {}
 
 impl ConsumerContext for StreamingContext {}
 
+#[derive(Deserialize)]
+struct Config {
+    kafka_endpoint: Option<String>,
+}
+
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
     storage_import_step().await;
