@@ -1,3 +1,5 @@
+use std::fs::read_to_string;
+
 use {
     std::{
         env, 
@@ -158,6 +160,10 @@ fn hashes_compare(a: &Vec<String>, b: &Vec<String>) -> Vec<u32> {
         .zip(b.iter())
         .map(|(a, b)| FuzzyHash::compare(a, b).unwrap_or(0))
         .collect()
+}
+
+fn load_config() -> Config {
+    toml::from_str(&read_to_string("./config.toml").unwrap()).unwrap()
 }
 
 fn kafka_producer(endpoint: &str) -> FutureProducer {
