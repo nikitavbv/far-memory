@@ -49,12 +49,15 @@ struct Config {
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
-    storage_import_step().await;
+    let config = load_config();
+
+    storage_import_step(&config).await;
+
     Ok(())
 }
 
-async fn storage_import_step() {
-    let consumer = kafka_consumer_for_topic(&env::var("KAFKA_ENDPOINT").unwrap(), "far-memory-updates");
+async fn storage_import_step(config: &Config) {
+    let consumer = kafka_consumer_for_topic(config.kafka_endpoint.as_ref().unwrap(), "far-memory-updates");
     let mut entries_saved = 0;
 
     loop {
