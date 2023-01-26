@@ -56,6 +56,23 @@ async fn main() -> std::io::Result<()> {
     Ok(())
 }
 
+fn hash_demo() {
+    let seq1 = b"hello world! hello world! hello world! hello world! hello world!".repeat(100);
+    let seq2 = b"hdllo world! hello world! hello world! hello world! hello world!".repeat(100);
+
+    let hash1 = FuzzyHash::new(seq1).to_string();
+    let hash2 = FuzzyHash::new(seq2).to_string();
+
+    // hash1 is 6:rJPIPIPIPIPAPIPIPIPIPAPIPIPIPIPAPIPIPIPIPAPIPIPIPIPAPIPIPIPIPAPJ:f
+    println!("hash 1 is: {}", hash1);
+
+    // hash2 is 6:mFJPIPIPIPIPPPIPIPIPIPPPIPIPIPIPPPIPIPIPIPPPIPIPIPIPPPIPIPIPIPPU:mM
+    println!("hash 2 is: {}", hash2);
+
+    // diff is 88
+    println!("diff is: {}", FuzzyHash::compare(hash1, hash2).unwrap());
+}
+
 async fn storage_import_step(config: &Config) {
     let consumer = kafka_consumer_for_topic(config.kafka_endpoint.as_ref().unwrap(), "far-memory-updates");
     let mut entries_saved = 0;
