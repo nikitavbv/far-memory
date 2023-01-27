@@ -1,9 +1,7 @@
-use std::fs::read_to_string;
-
 use {
     std::{
         env, 
-        fs::{File, OpenOptions}, 
+        fs::{File, OpenOptions, read_to_string}, 
         io::{Read, Write as IOWrite}, 
         fmt::Write, 
         time::{Duration, SystemTime, UNIX_EPOCH},
