@@ -2,17 +2,18 @@ use {
     std::time::Instant,
     rand::Rng,
     indicatif::ProgressIterator,
-    crate::benchmark::{InMemoryBackend, IOBackend, OnDiskBackend},
+    crate::benchmark::{InMemoryBackend, IOBackend, OnDiskBackend, RemoteBackend},
 };
 
 pub mod benchmark;
 
 fn main() {
-    //let mut backend = InMemoryBackend::new();
-    let mut backend = OnDiskBackend::new("data/benchmark".to_owned());
-    
+    let mut backend = InMemoryBackend::new();
+    //let mut backend = OnDiskBackend::new("data/benchmark".to_owned());
+    //let mut backend = RemoteBackend::new("redis://host:6379");
+
     let slot_data_size = 2 * 1024 * 1024;
-    let total_slots = 1024 * 10;
+    let total_slots = 300;
 
     println!("filling backend with data");
     fill_with_data(&mut backend, slot_data_size, total_slots);

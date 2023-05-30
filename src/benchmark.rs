@@ -1,5 +1,7 @@
 use std::{fs::File, io::{Write, prelude::*}};
 
+use redis::Commands;
+
 pub trait IOBackend {
     fn write(&mut self, slot: usize, data: Vec<u8>);
     fn read(&mut self, slot: usize) -> &[u8];
@@ -54,6 +56,35 @@ impl IOBackend for OnDiskBackend {
         let mut file = File::open(format!("{}/{}", self.path_prefix, slot)).unwrap();
         self.buffer.clear();
         file.read_to_end(&mut self.buffer).unwrap();
+        &self.buffer
+    }
+}
+
+pub struct RemoteBackend {
+    client: redis::Client,
+    connection: redis::Connection,
+    buffer: Vec<u8>,
+}
+
+impl RemoteBackend {
+    pub fn new(addr: &str) -> Self {
+        let client = redis::Client::open(addr).unwrap();
+        let connection = client.get_connection().unwrap();
+        Self {
+            client,
+            connection,
+            buffer: Vec::new(),
+        }
+    }
+}
+
+impl IOBackend for RemoteBackend {
+    fn write(&mut self, slot: usize, data: Vec<u8>) {
+        self.connection.set::<String, Vec<u8>, ()>(format!("far_memory::{}", slot), data).unwrap();
+    }
+
+    fn read(&mut self, slot: usize) -> &[u8] {
+        self.buffer = self.connection.get::<String, Vec<u8>>(format!("far_memory::{}", slot)).unwrap();
         &self.buffer
     }
 }
