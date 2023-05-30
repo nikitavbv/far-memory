@@ -30,17 +30,19 @@ fn run_benchmark<T: IOBackend>(backend: &mut T, total_slots: usize, slot_data_si
 
     let mut results = Vec::new();
     for _ in (0..200).progress() {
+        let data_to_write = backend.read(rng.gen_range(0..total_slots)).to_vec();
+
         let started_at = Instant::now();
 
         let mut total_reads: i32 = 0;
 
         while (Instant::now() - started_at).as_secs() < 2 {
-            let slot_to_read = rng.gen_range(0..total_slots);
+            let slot = rng.gen_range(0..total_slots);
 
             if benchmark_writes {
-                // TODO: implement writes benchmark
+                backend.write(slot, data_to_write.clone());
             } else {
-                let data = backend.read(slot_to_read);
+                let data = backend.read(slot);
         
                 for i in 0..data.len() {
                     sum += data[i];
@@ -50,8 +52,8 @@ fn run_benchmark<T: IOBackend>(backend: &mut T, total_slots: usize, slot_data_si
             total_reads += 1;
         }
 
-        let ops_per_sec = (total_reads as f64) / (Instant::now() - started_at).as_secs_f64();
-        results.push(ops_per_sec);
+        let time_per_ops = (Instant::now() - started_at).as_nanos() as f64 / (total_reads as f64);
+        results.push(time_per_ops);
     }
 
     sum += backend.read(rng.gen_range(0..total_slots))[rng.gen_range(0..slot_data_size)];
