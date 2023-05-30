@@ -2,15 +2,17 @@ use {
     std::time::Instant,
     rand::Rng,
     indicatif::ProgressIterator,
-    crate::benchmark::{InMemoryBackend, IOBackend},
+    crate::benchmark::{InMemoryBackend, IOBackend, OnDiskBackend},
 };
 
 pub mod benchmark;
 
 fn main() {
-    let mut backend = InMemoryBackend::new();
-    let slot_data_size = 1024 * 1024;
-    let total_slots = 4096;
+    //let mut backend = InMemoryBackend::new();
+    let mut backend = OnDiskBackend::new("data/benchmark".to_owned());
+    
+    let slot_data_size = 2 * 1024 * 1024;
+    let total_slots = 1024 * 10;
 
     println!("filling backend with data");
     fill_with_data(&mut backend, slot_data_size, total_slots);
@@ -29,7 +31,7 @@ fn run_benchmark<T: IOBackend>(backend: &mut T, total_slots: usize, slot_data_si
     let mut sum = 0;
 
     let mut results = Vec::new();
-    for _ in (0..200).progress() {
+    for _ in (0..10).progress() {
         let data_to_write = backend.read(rng.gen_range(0..total_slots)).to_vec();
 
         let started_at = Instant::now();
