@@ -24,7 +24,7 @@ impl IOBackend for InMemoryBackend {
         while slot >= self.data.len() {
             self.data.push(Box::new(Vec::new()));
         }
-        self.data.insert(slot, Box::new(data));
+        self.data[slot] = Box::new(data);
     }
 
     fn read(&mut self, slot: usize) -> &[u8] {

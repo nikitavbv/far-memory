@@ -13,7 +13,7 @@ fn main() {
     //let mut backend = RemoteBackend::new("redis://host:6379");
 
     let slot_data_size = 2 * 1024 * 1024;
-    let total_slots = 300;
+    let total_slots = 1024 * 10;
 
     println!("filling backend with data");
     fill_with_data(&mut backend, slot_data_size, total_slots);
@@ -32,7 +32,7 @@ fn run_benchmark<T: IOBackend>(backend: &mut T, total_slots: usize, slot_data_si
     let mut sum = 0;
 
     let mut results = Vec::new();
-    for _ in (0..10).progress() {
+    for _ in (0..200).progress() {
         let data_to_write = backend.read(rng.gen_range(0..total_slots)).to_vec();
 
         let started_at = Instant::now();
@@ -62,10 +62,10 @@ fn run_benchmark<T: IOBackend>(backend: &mut T, total_slots: usize, slot_data_si
     sum += backend.read(rng.gen_range(0..total_slots))[rng.gen_range(0..slot_data_size)];
 
     println!("done, sum: {}", sum);
-    println!("mean: {}", statistical::mean(&results));
-    println!("median: {}", statistical::median(&results));
-    println!("standard deviation: {}", statistical::standard_deviation(&results, None));
-    println!("variance: {}", statistical::variance(&results, None));
+    println!("mean: {}", statistical::mean(&results).round());
+    println!("median: {}", statistical::median(&results).round());
+    println!("standard deviation: {}", statistical::standard_deviation(&results, None).round());
+    println!("variance: {}", statistical::variance(&results, None).round());
 }
 
 fn fill_with_data<T: IOBackend>(backend: &mut T, slot_data_size: usize, total_slots: usize) {
