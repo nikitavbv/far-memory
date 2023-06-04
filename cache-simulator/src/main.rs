@@ -1,5 +1,5 @@
 use {
-    std::{collections::HashMap, marker::PhantomData, sync::{Arc, RwLock}, fs},
+    std::{collections::{HashMap, VecDeque}, marker::PhantomData, sync::{Arc, RwLock}, fs},
     rand::{
         prelude::*,
         distributions::WeightedIndex,
@@ -31,6 +31,7 @@ trait TimeHandler {
     fn tick(&self, delta: u64);
 }
 
+#[derive(Clone)]
 struct Cache<R, H: WorkloadHandler<R>> {
     request_type: PhantomData<R>,
     cache: Arc<RwLock<HashMap<RequestId, u64>>>,
@@ -86,7 +87,7 @@ impl<R, H: WorkloadHandler<R>> WorkloadHandler<R> for Cache<R, H> {
 
         Response {
             time_units: result.time_units + self.write_latency,
-            compute_units: result.time_units + self.write_compute,
+            compute_units: result.compute_units + self.write_compute,
         }
     }
 }
@@ -108,6 +109,7 @@ struct ComputeNode<R, H: WorkloadHandler<R>> {
     request_type: PhantomData<R>,
     handler: H,
     compute_units_available: RwLock<f64>,
+    cores: u64,
 }
 
 impl<R, H: WorkloadHandler<R>> ComputeNode<R, H> {
@@ -116,14 +118,16 @@ impl<R, H: WorkloadHandler<R>> ComputeNode<R, H> {
             request_type: PhantomData,
             handler,
             compute_units_available: RwLock::new(initial_compute_units),
+            cores: 10,
         }
     }
 
     pub fn handle_request(&self, request: &Request<R>) -> Option<Response> {
-        if *self.compute_units_available.read().unwrap() < 0.0 {
+        let response = self.handler.handle(request);
+
+        if *self.compute_units_available.read().unwrap() < response.compute_units {
             None
         } else {
-            let response = self.handler.handle(request);
             *self.compute_units_available.write().unwrap() -= response.compute_units;
             Some(response)
         }
@@ -133,7 +137,11 @@ impl<R, H: WorkloadHandler<R>> ComputeNode<R, H> {
 impl <R, H: WorkloadHandler<R> + TimeHandler> TimeHandler for ComputeNode<R, H> {
     fn tick(&self, delta: u64) {
         self.handler.tick(delta);
-        *self.compute_units_available.write().unwrap() += delta as f64;
+        *self.compute_units_available.write().unwrap() += (delta as f64) * self.cores as f64;
+        let max = 10.0 * self.cores as f64;
+        if *self.compute_units_available.read().unwrap() > max {
+            *self.compute_units_available.write().unwrap() = max;
+        }
     }
 }
 
@@ -181,23 +189,64 @@ fn main() {
 
     let mut rng: ChaCha20Rng = ChaCha20Rng::seed_from_u64(42);
 
-    let workload_generator = YoutubeVideoWorkloadGenerator::new(&mut rng);
+    let mut workload_generator = YoutubeVideoWorkloadGenerator::new(&mut rng);
     println!("workload generator ready");
 
     let summarizer = YoutubeVideoSummarizer;
+    let cache = Cache::new(summarizer, 200, 2000, 0.005, 0.0005, 0.01, 0.001);
+    let summarizer = cache;
+
+    let local_ttl = 200;
+    let local_cache_size = 1000;
+    let local_read_latency = 0.0005;
+    let local_read_compute = local_read_latency;
+    let local_write_latency = 0.001;
+    let local_write_compute = local_write_latency;
+
     let cluster = ComputeCluster::of(vec![
+        /*ComputeNode::new(summarizer.clone(), 1.0),
         ComputeNode::new(summarizer.clone(), 1.0),
-        ComputeNode::new(summarizer.clone(), 1.0),
-        ComputeNode::new(summarizer.clone(), 1.0),
-        ComputeNode::new(summarizer.clone(), 1.0),
-        ComputeNode::new(summarizer.clone(), 1.0),
+        ComputeNode::new(summarizer.clone(), 1.0),*/
+
+        ComputeNode::new(Cache::new(summarizer.clone(), local_ttl, local_cache_size, local_read_latency, local_read_compute, local_write_latency, local_write_compute), 1.0),
+        ComputeNode::new(Cache::new(summarizer.clone(), local_ttl, local_cache_size, local_read_latency, local_read_compute, local_write_latency, local_write_compute), 1.0),
+        ComputeNode::new(Cache::new(summarizer.clone(), local_ttl, local_cache_size, local_read_latency, local_read_compute, local_write_latency, local_write_compute), 1.0),
     ]);
 
-    for epoch in 0..1000 {
+    let mut queue = VecDeque::new();
+    let mut epoch = 0;
+    let total_epochs = 1000;
+    let max_epochs = 2000;
+
+    while epoch < total_epochs || !queue.is_empty() {
         cluster.tick(1);
+
+        if epoch > max_epochs {
+            break;
+        }
+
+        if epoch < total_epochs {
+            let requests_to_add = 1 + rng.gen_range(0..10);
+            for _ in 0..requests_to_add {
+                queue.push_back((epoch, workload_generator.next_item()));
+            }
+        }
+
+        while let Some((request_epoch, request)) = queue.pop_front() {
+            let response = cluster.handle_request(&request);
+            if response.is_none() {
+                queue.push_front((request_epoch, request));
+                break;
+            }
+        }
+
+        println!("epoch: {}, queue size: {}", epoch, queue.len());
+
+        epoch += 1;
     }
 }
 
+#[derive(Clone)]
 struct SummarizeYoutubeVideoRequest {
     video_duration: f64,
 }
@@ -254,7 +303,7 @@ impl WorkloadHandler<SummarizeYoutubeVideoRequest> for YoutubeVideoSummarizer {
     fn handle(&self, request: &Request<SummarizeYoutubeVideoRequest>) -> Response {
         Response {
             time_units: 0.1 + 0.2 * request.body.video_duration,
-            compute_units: 0.05 + 0.15 * request.body.video_duration,
+            compute_units: 0.05 + 0.015 * request.body.video_duration,
         }
     }
 }
