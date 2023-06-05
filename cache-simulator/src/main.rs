@@ -1,5 +1,5 @@
 use {
-    std::{collections::{HashMap, VecDeque}, marker::PhantomData, sync::{Arc, RwLock}, fs},
+    std::{collections::{HashMap, VecDeque}, marker::PhantomData, sync::{Arc, RwLock, Mutex}, fs, io::Write},
     rand::{
         prelude::*,
         distributions::WeightedIndex,
@@ -92,7 +92,7 @@ impl<R, H: WorkloadHandler<R>> WorkloadHandler<R> for Cache<R, H> {
     }
 }
 
-impl<R, H: WorkloadHandler<R>> TimeHandler for Cache<R, H> {
+impl<R, H: WorkloadHandler<R> + TimeHandler> TimeHandler for Cache<R, H> {
     fn tick(&self, delta: u64) {
         let mut cache = self.cache.write().unwrap();
         for (request_id, ttl) in cache.clone().iter() {
@@ -102,6 +102,7 @@ impl<R, H: WorkloadHandler<R>> TimeHandler for Cache<R, H> {
                 cache.insert(*request_id, ttl - delta);
             }
         }
+        self.handler.tick(delta);
     }
 }
 
@@ -123,11 +124,10 @@ impl<R, H: WorkloadHandler<R>> ComputeNode<R, H> {
     }
 
     pub fn handle_request(&self, request: &Request<R>) -> Option<Response> {
-        let response = self.handler.handle(request);
-
-        if *self.compute_units_available.read().unwrap() < response.compute_units {
+        if *self.compute_units_available.read().unwrap() < 0.0 {
             None
         } else {
+            let response = self.handler.handle(request);
             *self.compute_units_available.write().unwrap() -= response.compute_units;
             Some(response)
         }
@@ -166,11 +166,19 @@ impl <R, H: WorkloadHandler<R> + Clone> ComputeCluster<R, H> {
     }
 
     pub fn handle_request(&self, request: &Request<R>) -> Option<Response> {
-        for node in &self.nodes {
+        if request.id % 3 == 0 {
+            return self.nodes[0].handle_request(request);
+        } else {
+            return self.nodes[(request.id as usize) % self.nodes.len()].handle_request(request);
+        }
+
+        /*for i in 0..self.nodes.len() {
+            let node = &self.nodes[i];
+            
             if let Some(res) = node.handle_request(request) {
                 return Some(res);
             }
-        }
+        }*/
 
         None
     }
@@ -193,30 +201,60 @@ fn main() {
     println!("workload generator ready");
 
     let summarizer = YoutubeVideoSummarizer;
-    let cache = Cache::new(summarizer, 200, 2000, 0.005, 0.0005, 0.01, 0.001);
+    let cache = Cache::new(summarizer, 20000, 50000, 19.0, 0.01, 20.2, 0.02);
     let summarizer = cache;
 
-    let local_ttl = 200;
-    let local_cache_size = 1000;
-    let local_read_latency = 0.0005;
+    let local_ttl = 10000;
+    let local_cache_size = 10000;
+    let local_read_latency = 0.009;
     let local_read_compute = local_read_latency;
-    let local_write_latency = 0.001;
+    let local_write_latency = 0.018;
     let local_write_compute = local_write_latency;
 
-    let cluster = ComputeCluster::of(vec![
+    let nodes = vec![
         /*ComputeNode::new(summarizer.clone(), 1.0),
+        ComputeNode::new(summarizer.clone(), 1.0),
+        ComputeNode::new(summarizer.clone(), 1.0),
+        ComputeNode::new(summarizer.clone(), 1.0),
+        ComputeNode::new(summarizer.clone(), 1.0),
+        ComputeNode::new(summarizer.clone(), 1.0),
+        ComputeNode::new(summarizer.clone(), 1.0),
+        ComputeNode::new(summarizer.clone(), 1.0),
         ComputeNode::new(summarizer.clone(), 1.0),
         ComputeNode::new(summarizer.clone(), 1.0),*/
 
         ComputeNode::new(Cache::new(summarizer.clone(), local_ttl, local_cache_size, local_read_latency, local_read_compute, local_write_latency, local_write_compute), 1.0),
         ComputeNode::new(Cache::new(summarizer.clone(), local_ttl, local_cache_size, local_read_latency, local_read_compute, local_write_latency, local_write_compute), 1.0),
+   
         ComputeNode::new(Cache::new(summarizer.clone(), local_ttl, local_cache_size, local_read_latency, local_read_compute, local_write_latency, local_write_compute), 1.0),
-    ]);
+        ComputeNode::new(Cache::new(summarizer.clone(), local_ttl, local_cache_size, local_read_latency, local_read_compute, local_write_latency, local_write_compute), 1.0),
+   
+        ComputeNode::new(Cache::new(summarizer.clone(), local_ttl, local_cache_size, local_read_latency, local_read_compute, local_write_latency, local_write_compute), 1.0),
+        ComputeNode::new(Cache::new(summarizer.clone(), local_ttl, local_cache_size, local_read_latency, local_read_compute, local_write_latency, local_write_compute), 1.0),
+   
+        ComputeNode::new(Cache::new(summarizer.clone(), local_ttl, local_cache_size, local_read_latency, local_read_compute, local_write_latency, local_write_compute), 1.0),
+        ComputeNode::new(Cache::new(summarizer.clone(), local_ttl, local_cache_size, local_read_latency, local_read_compute, local_write_latency, local_write_compute), 1.0),
+   
+        ComputeNode::new(Cache::new(summarizer.clone(), local_ttl, local_cache_size, local_read_latency, local_read_compute, local_write_latency, local_write_compute), 1.0),
+        ComputeNode::new(Cache::new(summarizer.clone(), local_ttl, local_cache_size, local_read_latency, local_read_compute, local_write_latency, local_write_compute), 1.0),
+   ];
+    let nodes_len = nodes.len();
+    let cluster = ComputeCluster::of(nodes);
+
+
+    let base_request_level = 2;
+    let max_requests = 2;
 
     let mut queue = VecDeque::new();
     let mut epoch = 0;
-    let total_epochs = 1000;
-    let max_epochs = 2000;
+    let total_epochs = 10000;
+    let max_epochs = 20000;
+
+    let metric_request_lag = MetricWriter::new("request_lag".to_owned());
+    let metric_processing_time = MetricWriter::new("processing_time".to_owned());
+    let metric_requests_handled = MetricWriter::new("requests_handled".to_owned());
+
+    let mut requests_handled = 0;
 
     while epoch < total_epochs || !queue.is_empty() {
         cluster.tick(1);
@@ -226,7 +264,7 @@ fn main() {
         }
 
         if epoch < total_epochs {
-            let requests_to_add = 1 + rng.gen_range(0..10);
+            let requests_to_add = base_request_level + rng.gen_range(0..max_requests);
             for _ in 0..requests_to_add {
                 queue.push_back((epoch, workload_generator.next_item()));
             }
@@ -240,14 +278,37 @@ fn main() {
             }
         }
 
-        println!("epoch: {}, queue size: {}", epoch, queue.len());
+        /*while cluster.handle_request(&workload_generator.next_item()).is_some() {
+            requests_handled += 1;
+        }*/
+
+        println!("epoch: {}, queue len: {}", epoch, queue.len());
+
+        if queue.len() > 0 {
+            if queue.front().unwrap().1.id % 3 == 0 {
+                metric_request_lag.write((epoch - queue.front().unwrap().0 + 1).to_string());
+            }
+        }
+
+        /*if queue.len() > 0 {
+            metric_request_lag.write((epoch - queue.front().unwrap().0 + 1).to_string());
+        } else {
+            metric_request_lag.write("0".to_owned());
+        }
+
+        metric_processing_time.write(queue.len().to_string());*/
+        /*if epoch > 0 {
+            metric_requests_handled.write((requests_handled as f64 / (nodes_len * epoch) as f64).to_string());
+        }*/
 
         epoch += 1;
     }
+
+    println!("total: {}", requests_handled);
 }
 
 #[derive(Clone)]
-struct SummarizeYoutubeVideoRequest {
+struct YoutubeVideoRequest {
     video_duration: f64,
 }
 
@@ -286,12 +347,12 @@ fn generate_video_duration(rng: &mut ChaCha20Rng) -> f64 {
     (3.0 * 60.0) * (index as f64 + rng.gen::<f64>())
 }
 
-impl WorkloadGenerator<SummarizeYoutubeVideoRequest> for YoutubeVideoWorkloadGenerator {
-    fn next_item(&mut self) -> Request<SummarizeYoutubeVideoRequest> {
+impl WorkloadGenerator<YoutubeVideoRequest> for YoutubeVideoWorkloadGenerator {
+    fn next_item(&mut self) -> Request<YoutubeVideoRequest> {
         let id = self.index.sample(&mut self.rng);
         Request {
             id: id as u64,
-            body: SummarizeYoutubeVideoRequest { video_duration: self.duration[id] },
+            body: YoutubeVideoRequest { video_duration: self.duration[id] },
         }
     }
 }
@@ -299,8 +360,8 @@ impl WorkloadGenerator<SummarizeYoutubeVideoRequest> for YoutubeVideoWorkloadGen
 #[derive(Clone)]
 struct YoutubeVideoSummarizer;
 
-impl WorkloadHandler<SummarizeYoutubeVideoRequest> for YoutubeVideoSummarizer {
-    fn handle(&self, request: &Request<SummarizeYoutubeVideoRequest>) -> Response {
+impl WorkloadHandler<YoutubeVideoRequest> for YoutubeVideoSummarizer {
+    fn handle(&self, request: &Request<YoutubeVideoRequest>) -> Response {
         Response {
             time_units: 0.1 + 0.2 * request.body.video_duration,
             compute_units: 0.05 + 0.015 * request.body.video_duration,
@@ -308,7 +369,40 @@ impl WorkloadHandler<SummarizeYoutubeVideoRequest> for YoutubeVideoSummarizer {
     }
 }
 
+#[derive(Clone)]
+struct YoutubeLikeDislikeStatsProvider;
+
+impl WorkloadHandler<YoutubeVideoRequest> for YoutubeLikeDislikeStatsProvider {
+    fn handle(&self, request: &Request<YoutubeVideoRequest>) -> Response {
+        Response {
+            time_units: 0.4,
+            compute_units: 0.005,
+        }
+    }
+}
+
 impl TimeHandler for YoutubeVideoSummarizer {
+    fn tick(&self, delta: u64) {
+    }
+}
+
+struct MetricWriter {
+    file: Mutex<fs::File>,
+}
+
+impl MetricWriter {
+    pub fn new(metric_name: String) -> Self {
+        Self {
+            file: Mutex::new(fs::File::create(format!("data/metric_{}", metric_name)).unwrap()),
+        }
+    }
+
+    pub fn write(&self, value: String) {
+        self.file.lock().unwrap().write_all(format!("{}\n", value).as_bytes()).unwrap();
+    }
+}
+
+impl TimeHandler for YoutubeLikeDislikeStatsProvider {
     fn tick(&self, delta: u64) {
     }
 }
