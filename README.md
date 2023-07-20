@@ -1,4 +1,4 @@
 # far memory
 
 ## todo
-- implement memory storage service
+- implement block device client
