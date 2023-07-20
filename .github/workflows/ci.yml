@@ -40,10 +40,12 @@ jobs:
     name: compile thesis
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: vinay0410/tectonic-action@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/checkout@v3
+    - uses: wtfjoke/setup-tectonic@v2
       with:
-        tex_path: 'thesis/thesis.tex'
-    - run: ls thesis
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+    - run: tectonic thesis/thesis.tex --outfmt pdf
+    - uses: actions/upload-artifact@v3
+      with:
+        name: thesis
+        path: thesis/thesis.pdf
