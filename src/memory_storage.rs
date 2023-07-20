@@ -1,9 +1,19 @@
 use {
     tracing::info,
-    tonic::transport::Server,
-    crate::rpc::memory_storage_service_server::{
-        MemoryStorageService,
-        MemoryStorageServiceServer,
+    tonic::{transport::Server, Status, Request, Response},
+    crate::rpc::{
+        memory_storage_service_server::{
+            MemoryStorageService,
+            MemoryStorageServiceServer,
+        },
+        AllocateMemoryBlockRequest,
+        AllocateMemoryBlockResponse,
+        WriteMemoryBlockRequest,
+        WriteMemoryBlockResponse,
+        ReadMemoryBlockRequest,
+        ReadMemoryBlockResponse,
+        FreeMemoryBlockRequest,
+        FreeMemoryBlockResponse,
     }
 };
 
@@ -31,4 +41,19 @@ impl MemoryStorageServiceHandler {
 
 #[tonic::async_trait]
 impl MemoryStorageService for MemoryStorageServiceHandler {
+    async fn allocate_memory_block(&self, request: Request<AllocateMemoryBlockRequest>) -> Result<Response<AllocateMemoryBlockResponse>, Status> {
+        unimplemented!()
+    }
+
+    async fn write_memory_block(&self, request: Request<WriteMemoryBlockRequest>) -> Result<Response<WriteMemoryBlockResponse>, Status> {
+        unimplemented!()
+    }
+
+    async fn read_memory_block(&self, request: Request<ReadMemoryBlockRequest>) -> Result<Response<ReadMemoryBlockResponse>, Status> {
+        unimplemented!()
+    }
+
+    async fn free_memory_block(&self, request: Request<FreeMemoryBlockRequest>) -> Result<Response<FreeMemoryBlockResponse>, Status> {
+        unimplemented!()
+    }
 }

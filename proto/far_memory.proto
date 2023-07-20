@@ -3,4 +3,44 @@ syntax = "proto3";
 package far_memory;
 
 service MemoryStorageService {
+    rpc AllocateMemoryBlock(AllocateMemoryBlockRequest) returns (AllocateMemoryBlockResponse) {}
+    rpc WriteMemoryBlock(WriteMemoryBlockRequest) returns (WriteMemoryBlockResponse) {}
+    rpc ReadMemoryBlock(ReadMemoryBlockRequest) returns (ReadMemoryBlockResponse) {}
+    rpc FreeMemoryBlock(FreeMemoryBlockRequest) returns (FreeMemoryBlockResponse) {}
+}
+
+// common types
+message MemoryBlockId {
+    uint32 id = 1;
+}
+
+// requests and responses
+message AllocateMemoryBlockRequest {
+}
+
+message AllocateMemoryBlockResponse {
+    MemoryBlockId id = 1;
+}
+
+message WriteMemoryBlockRequest {
+    MemoryBlockId id = 1;
+    bytes data = 2;
+}
+
+message WriteMemoryBlockResponse {
+}
+
+message ReadMemoryBlockRequest {
+    MemoryBlockId id = 1;
+}
+
+message ReadMemoryBlockResponse {
+    bytes data = 1;
+}
+
+message FreeMemoryBlockRequest {
+    MemoryBlockId id = 1;
+}
+
+message FreeMemoryBlockResponse {
 }
