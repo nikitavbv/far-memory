@@ -9,7 +9,14 @@
             footskip=.25in]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage{fontspec}
-\setmainfont{Times New Roman}
+\setmainfont{times-new-roman}[
+  ExternalLocation = fonts/,
+  Extension = .ttf,
+  UprightFont = *-regular,
+  BoldFont = *-bold,
+  ItalicFont = *-italic,
+  BoldItalicFont = *-bold-italic,
+]
 
 \renewcommand{\baselinestretch}{1.5}
 
