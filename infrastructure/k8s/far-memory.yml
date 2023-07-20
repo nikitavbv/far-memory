@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: far-memory-storage
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: far-memory-storage
+  replicas: 1
+  serviceName: far-memory-storage
+  template:
+    metadata:
+      labels:
+        app: far-memory-storage
+    spec:
+      containers:
+      - name: far-memory-storage
+        image: ghcr.io/nikitavbv/far-memory/far-memory:0.1.2
