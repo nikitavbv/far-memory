@@ -4,7 +4,7 @@ name: Continuous integration
 
 jobs:
   server-build:
-    name: Server Build
+    name: server build
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -38,7 +38,7 @@ jobs:
 
   thesis:
     name: compile thesis
-    runs-on: ubuntu:latest
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - uses: vinay0410/tectonic-action@master
