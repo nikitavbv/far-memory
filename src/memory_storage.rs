@@ -25,8 +25,24 @@ struct BlockId {
     id: u32,
 }
 
+impl From<&MemoryBlockId> for BlockId {
+    fn from(value: &MemoryBlockId) -> Self {
+        Self {
+            id: value.id,
+        }
+    }
+}
+
 struct BlockData {
     data: Vec<u8>,
+}
+
+impl BlockData {
+    fn new(data: Vec<u8>) -> Self {
+        Self {
+            data,
+        }
+    }
 }
 
 pub async fn run_memory_storage_server() {
@@ -64,15 +80,13 @@ impl MemoryStorageServiceHandler {
     }
 
     fn new_block(&self) -> BlockData {
-        BlockData {
-            data: vec![0; 2 * 1024 * 1024],
-        }
+        BlockData::new(vec![0; 2 * 1024 * 1024])
     }
 }
 
 #[tonic::async_trait]
 impl MemoryStorageService for MemoryStorageServiceHandler {
-    async fn allocate_memory_block(&self, request: Request<AllocateMemoryBlockRequest>) -> Result<Response<AllocateMemoryBlockResponse>, Status> {
+    async fn allocate_memory_block(&self, _req: Request<AllocateMemoryBlockRequest>) -> Result<Response<AllocateMemoryBlockResponse>, Status> {
         let id = self.next_id().await;
         let block_data = self.new_block();
 
@@ -86,15 +100,35 @@ impl MemoryStorageService for MemoryStorageServiceHandler {
         }))
     }
 
-    async fn write_memory_block(&self, request: Request<WriteMemoryBlockRequest>) -> Result<Response<WriteMemoryBlockResponse>, Status> {
-        unimplemented!()
+    async fn write_memory_block(&self, req: Request<WriteMemoryBlockRequest>) -> Result<Response<WriteMemoryBlockResponse>, Status> {
+        let req = req.into_inner();
+        let id = BlockId::from(req.id.as_ref().unwrap());
+
+        let mut storage = self.storage.lock().await;
+        storage.get_mut(&id).unwrap().data = req.data;
+
+        Ok(Response::new(WriteMemoryBlockResponse {}))
     }
 
-    async fn read_memory_block(&self, request: Request<ReadMemoryBlockRequest>) -> Result<Response<ReadMemoryBlockResponse>, Status> {
-        unimplemented!()
+    async fn read_memory_block(&self, req: Request<ReadMemoryBlockRequest>) -> Result<Response<ReadMemoryBlockResponse>, Status> {
+        let req = req.into_inner();
+        let id = BlockId::from(req.id.as_ref().unwrap());
+
+        let storage = self.storage.lock().await;
+        let data = storage.get(&id).unwrap().data.clone();
+        
+        Ok(Response::new(ReadMemoryBlockResponse {
+            data,
+        }))
     }
 
-    async fn free_memory_block(&self, request: Request<FreeMemoryBlockRequest>) -> Result<Response<FreeMemoryBlockResponse>, Status> {
-        unimplemented!()
+    async fn free_memory_block(&self, req: Request<FreeMemoryBlockRequest>) -> Result<Response<FreeMemoryBlockResponse>, Status> {
+        let req = req.into_inner();
+        let id = BlockId::from(req.id.as_ref().unwrap());
+
+        let mut storage = self.storage.lock().await;
+        storage.remove(&id);
+
+        Ok(Response::new(FreeMemoryBlockResponse {}))
     }
 }
