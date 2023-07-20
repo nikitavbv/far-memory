@@ -35,3 +35,15 @@ jobs:
         tags: |
           ghcr.io/nikitavbv/far-memory/far-memory:latest
           ghcr.io/nikitavbv/far-memory/far-memory:0.1.${{ github.run_number }}
+
+  thesis:
+    name: compile thesis
+    runs-on: ubuntu:latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: vinay0410/tectonic-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tex_path: 'thesis/thesis.tex'
+    - run: ls thesis
