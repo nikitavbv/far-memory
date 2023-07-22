@@ -1,7 +1,7 @@
 \documentclass[14pt]{article}
 
 \usepackage[a4paper,
-            bindingoffset=0.2in,
+            bindingoffset=0in,
             left=1in,
             right=1in,
             top=1in,
@@ -23,6 +23,8 @@
 \usepackage[none]{hyphenat}
 
 \renewcommand{\baselinestretch}{1.5}
+
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
 
 \begin{document}
 
@@ -149,5 +151,51 @@ $\underset{\text{\fontsize{8}{10}\selectfont (підпис)}}{\text{\underline{\
 \textit{Ключові слова:} FAR MEMORY, РОЗПОДІЛЕНІ СИСТЕМИ, КОМПʼЮТЕРНІ МЕРЕЖІ, СТРУКТУРИ ДАНИХ, LINUX.
 
 \thispagestyle{empty}
+
+\pagebreak
+
+\begin{center}
+\fontsize{18}{22}
+\textbf{КАЛЕНДАРНИЙ ПЛАН}
+\end{center}
+
+\thispagestyle{empty}
+
+\begin{flushleft}
+\begin{tabularx}{1.15\textwidth}{| p{1.25cm} | X | p{2.5cm} | p{2.5cm} |}
+\hline
+\multicolumn{1}{|p{1.25cm}}{\centering № п/п} & \multicolumn{1}{|Y}{\centering Назва етапів курсового проекту }& \multicolumn{1}{|p{2.5cm}}{\centering  Термін виконання етапів проекту } & \multicolumn{1}{|p{2.5cm}|}{\centering Підписи керівника, студента}\\
+\hline
+\multicolumn{1}{|p{1.25cm}|}{\centering 1.} & Отримання теми курсового проекту & 20.03.2023 & \\
+\hline
+\multicolumn{1}{|p{1.25cm}|}{\centering 2.} & Визначення основних задач курсової роботи  & 25.03.2023 & \\
+\hline
+\multicolumn{1}{|p{1.25cm}|}{\centering 3.} & Аналіз предметної області, що розглядається & 01.04.2023 & \\
+\hline
+\multicolumn{1}{|p{1.25cm}|}{\centering 4.} & Аналіз досліджень за темою та існуючих реалізацій & 05.04.2023 & \\
+\hline
+\multicolumn{1}{|p{1.25cm}|}{\centering 5.} & Розробка архітектури програмного рішення & 15.04.2023 & \\
+\hline
+\multicolumn{1}{|p{1.25cm}|}{\centering 6.} & Опис архітектури програмного рішення & 01.05.2023 & \\
+\hline
+\multicolumn{1}{|p{1.25cm}|}{\centering 7.} & Підготовка пояснювальної записки & 15.05.2023 & \\
+\hline
+\multicolumn{1}{|p{1.25cm}|}{\centering 8.} & Здача курсової роботи  на перевірку & 01.06.2023 & \\
+\hline
+\multicolumn{1}{|p{1.25cm}|}{\centering 9.} & Захист курсової роботи & 06.06.2023 & \\
+\hline
+&&&\\
+\hline
+&&&\\
+\hline
+&&&\\
+\hline
+\end{tabularx}
+
+\vspace{1cm}
+\begin{tabularx}{\textwidth}{Y Y Y Y}
+Студент
+\end{tabularx}
+\end{flushleft}
 
 \end{document}
