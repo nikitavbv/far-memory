@@ -8,7 +8,7 @@ pub async fn run_block_storage_client() {
     info!("starting block storage client");
 
     unsafe {
-        mount(&mut FarMemoryDevice, "/dev/nbd0", |_device| Ok(())).unwrap();
+        mount(&mut FarMemoryDevice, "/dev/nbd1", |_device| Ok(())).unwrap();
     }
 }
 
@@ -29,10 +29,10 @@ impl BlockDevice for FarMemoryDevice {
     }
 
     fn block_size(&self) -> u32 {
-        2 * 1024 * 1024
+        1024
     }
 
     fn blocks(&self) -> u64 {
-        512
+        1024
     }
 }
