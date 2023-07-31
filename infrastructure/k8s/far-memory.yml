@@ -17,3 +17,15 @@ spec:
       containers:
       - name: far-memory-storage
         image: ghcr.io/nikitavbv/far-memory/far-memory:0.1.4
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: far-memory-storage
+  namespace: default
+spec:
+  selector:
+    name: far-memory-storage
+  ports:
+  - port: 9000
+    targetPort: 9000

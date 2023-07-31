@@ -1,10 +1,15 @@
-use crate::{
-    utils::init_logging,
-    client::run_block_storage_client,
-    memory_storage::run_memory_storage_server,
+use {
+    tracing::info,
+    crate::{
+        utils::init_logging,
+        client::run_block_storage_client,
+        memory_storage::run_memory_storage_server,
+        config::Config,
+    },
 };
 
 pub mod client;
+pub mod config;
 pub mod memory_storage;
 pub mod rpc;
 pub mod utils;
@@ -13,8 +18,17 @@ pub mod utils;
 async fn main() -> std::io::Result<()> {
     init_logging();
 
-    run_block_storage_client().await;
-    // run_memory_storage_server().await;
+    info!("running far-memory");
+
+    let config = Config::load();
+
+    if config.memory_storage_enabled() {
+        run_memory_storage_server().await;
+    }
+
+    if config.block_storage_client_enabled() {
+        run_block_storage_client().await;
+    }
 
     Ok(())
 }

@@ -7,24 +7,35 @@ use {
 pub async fn run_block_storage_client() {
     info!("starting block storage client");
 
-    unsafe {
-        mount(&mut FarMemoryDevice, "/dev/nbd1", |_device| Ok(())).unwrap();
+    let mut device = FarMemoryDevice::new();
+
+    tokio::task::spawn_blocking(move || {
+        unsafe {
+            mount(&mut device, "/dev/nbd1", |_device| Ok(())).unwrap();
+        }
+    });
+}
+
+struct FarMemoryDevice {
+    data: Vec<u8>,
+}
+
+impl FarMemoryDevice {
+    pub fn new() -> Self {
+        Self {
+            data: vec![0; 1024 * 1024 * 1024],
+        }
     }
 }
 
-struct FarMemoryDevice;
-
 impl BlockDevice for FarMemoryDevice {
     fn read(&mut self, offset: u64, bytes: &mut [u8]) -> Result<(), Error> {
-        for (index, byte) in bytes.iter_mut().enumerate() {
-            *byte = match (index as u64 + offset) % 4 {
-                0 => 0xDE,
-                1 => 0xAD,
-                2 => 0xDE,
-                _ => 0xEF,
-            }
-        }
+        bytes.copy_from_slice(&self.data[offset as usize..offset as usize + bytes.len()]);
+        Ok(())
+    }
 
+    fn write(&mut self, offset: u64, bytes: &[u8]) -> std::io::Result<()> {
+        self.data[offset as usize..offset as usize + bytes.len()].copy_from_slice(bytes);
         Ok(())
     }
 
@@ -33,6 +44,6 @@ impl BlockDevice for FarMemoryDevice {
     }
 
     fn blocks(&self) -> u64 {
-        1024
+        1024 * 1024
     }
 }
