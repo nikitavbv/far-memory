@@ -22,6 +22,10 @@ impl Config {
         toml::from_str(&config).unwrap()
     }
 
+    pub fn access_token(&self) -> String {
+        self.access_token.as_ref().unwrap().clone()
+    }
+
     pub fn memory_storage_enabled(&self) -> bool {
         self.memory_storage_enabled.unwrap_or(false)
     }

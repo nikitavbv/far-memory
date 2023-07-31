@@ -45,13 +45,13 @@ impl BlockData {
     }
 }
 
-pub async fn run_memory_storage_server() {
+pub async fn run_memory_storage_server(access_token: String) {
     let addr = "0.0.0.0:9000".parse().unwrap();
 
     info!("starting memory storage server on {:?}", addr);
 
     Server::builder()
-        .add_service(MemoryStorageServiceServer::new(MemoryStorageServiceHandler::new()))
+        .add_service(MemoryStorageServiceServer::new(MemoryStorageServiceHandler::new(access_token)))
         .serve(addr)
         .await
         .unwrap();
@@ -60,13 +60,26 @@ pub async fn run_memory_storage_server() {
 struct MemoryStorageServiceHandler {
     storage: Mutex<HashMap<BlockId, BlockData>>,
     id_counter: Mutex<u32>,
+    access_token: String,
 }
 
 impl MemoryStorageServiceHandler {
-    pub fn new() -> Self {
+    pub fn new(access_token: String) -> Self {
         Self {
             storage: Mutex::new(HashMap::new()),
             id_counter: Mutex::new(0),
+            access_token,
+        }
+    }
+
+    fn check_auth<T>(&self, request: &Request<T>) -> Result<(), Status> {
+        let headers = request.metadata().clone().into_headers();
+        let token = headers.get("x-access-token").unwrap().to_str().unwrap();
+
+        if token == &self.access_token {
+            Ok(())
+        } else {
+            Err(Status::unauthenticated("invalid access token"))
         }
     }
 
@@ -86,7 +99,9 @@ impl MemoryStorageServiceHandler {
 
 #[tonic::async_trait]
 impl MemoryStorageService for MemoryStorageServiceHandler {
-    async fn allocate_memory_block(&self, _req: Request<AllocateMemoryBlockRequest>) -> Result<Response<AllocateMemoryBlockResponse>, Status> {
+    async fn allocate_memory_block(&self, req: Request<AllocateMemoryBlockRequest>) -> Result<Response<AllocateMemoryBlockResponse>, Status> {
+        self.check_auth(&req)?;
+        
         let id = self.next_id().await;
         let block_data = self.new_block();
 
@@ -101,6 +116,8 @@ impl MemoryStorageService for MemoryStorageServiceHandler {
     }
 
     async fn write_memory_block(&self, req: Request<WriteMemoryBlockRequest>) -> Result<Response<WriteMemoryBlockResponse>, Status> {
+        self.check_auth(&req)?;
+        
         let req = req.into_inner();
         let id = BlockId::from(req.id.as_ref().unwrap());
 
@@ -111,6 +128,8 @@ impl MemoryStorageService for MemoryStorageServiceHandler {
     }
 
     async fn read_memory_block(&self, req: Request<ReadMemoryBlockRequest>) -> Result<Response<ReadMemoryBlockResponse>, Status> {
+        self.check_auth(&req)?;
+        
         let req = req.into_inner();
         let id = BlockId::from(req.id.as_ref().unwrap());
 
@@ -123,6 +142,8 @@ impl MemoryStorageService for MemoryStorageServiceHandler {
     }
 
     async fn free_memory_block(&self, req: Request<FreeMemoryBlockRequest>) -> Result<Response<FreeMemoryBlockResponse>, Status> {
+        self.check_auth(&req)?;
+        
         let req = req.into_inner();
         let id = BlockId::from(req.id.as_ref().unwrap());
 

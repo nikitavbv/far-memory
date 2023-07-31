@@ -23,7 +23,7 @@ async fn main() -> std::io::Result<()> {
     let config = Config::load();
 
     if config.memory_storage_enabled() {
-        run_memory_storage_server().await;
+        run_memory_storage_server(config.access_token()).await;
     }
 
     if config.block_storage_client_enabled() {
