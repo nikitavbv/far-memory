@@ -16,7 +16,17 @@ spec:
     spec:
       containers:
       - name: far-memory-storage
-        image: ghcr.io/nikitavbv/far-memory/far-memory:0.1.4
+        image: ghcr.io/nikitavbv/far-memory/far-memory:0.1.26
+        volumeMounts:
+        - name: config
+          mountPath: /etc/far-memory/config
+      volumes:
+      - name: config
+        configMap:
+          name: far-memory-config
+          items:
+          - key: config.toml
+            path: config.toml
 ---
 apiVersion: v1
 kind: Service
