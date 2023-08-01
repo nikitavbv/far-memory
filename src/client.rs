@@ -48,17 +48,29 @@ impl Interceptor for AuthInterceptor {
 }
 
 struct FarMemoryDevice {
+    runtime: tokio::runtime::Runtime,
     client: MemoryStorageServiceClient<InterceptedService<Channel, AuthInterceptor>>,
     data: Vec<u8>,
 }
 
 impl FarMemoryDevice {
     pub async fn new(endpoint: String, token: String) -> Self {
-        Self {
-            client: MemoryStorageServiceClient::with_interceptor(
+        let runtime = tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(1)
+            .enable_all()
+            .build()
+            .unwrap();
+
+        let client = runtime.spawn(async move {
+            MemoryStorageServiceClient::with_interceptor(
                 Endpoint::from_str(&endpoint).unwrap().connect().await.unwrap(), 
                 AuthInterceptor::new(token)
-            ),
+            )
+        }).await.unwrap();
+
+        Self {
+            runtime,
+            client,
             data: vec![0; 1024 * 1024 * 1024],
         }
     }
@@ -66,6 +78,11 @@ impl FarMemoryDevice {
 
 impl BlockDevice for FarMemoryDevice {
     fn read(&mut self, offset: u64, bytes: &mut [u8]) -> Result<(), Error> {
+        self.runtime.block_on(async {
+            let res = self.client.allocate_memory_block(AllocateMemoryBlockRequest {}).await.unwrap();
+            info!("res: {:?}", res);
+        });
+        
         bytes.copy_from_slice(&self.data[offset as usize..offset as usize + bytes.len()]);
         Ok(())
     }
