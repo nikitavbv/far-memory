@@ -1,5 +1,5 @@
 use {
-    std::{path::Path, fs::read_to_string},
+    std::{path::Path, fs::read_to_string, env::var},
     serde::Deserialize,
 };
 
@@ -13,7 +13,8 @@ pub struct Config {
 
 impl Config {
     pub fn load() -> Self {
-        let config_path = Path::new("config.toml");
+        let config_path = var("FAR_MEMORY_CONFIG").unwrap_or("config.toml".to_owned());
+        let config_path = Path::new(&config_path);
         if !config_path.exists() {
             return Self::default();
         }
