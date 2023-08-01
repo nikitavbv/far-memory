@@ -27,7 +27,7 @@ async fn main() -> std::io::Result<()> {
     }
 
     if config.block_storage_client_enabled() {
-        run_block_storage_client().await;
+        run_block_storage_client(config.endpoint(), config.access_token()).await;
     }
 
     Ok(())

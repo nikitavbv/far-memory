@@ -1,13 +1,25 @@
+use std::str::FromStr;
+
 use {
     std::io::Error,
     tracing::info,
     vblk::{mount, BlockDevice},
+    tonic::{
+        service::Interceptor,
+        codegen::InterceptedService,
+        transport::{Endpoint, Channel},
+        metadata::MetadataValue,
+    },
+    crate::rpc::{
+        memory_storage_service_client::MemoryStorageServiceClient,
+        AllocateMemoryBlockRequest,
+    },
 };
 
-pub async fn run_block_storage_client() {
+pub async fn run_block_storage_client(endpoint: String, token: String) {
     info!("starting block storage client");
 
-    let mut device = FarMemoryDevice::new();
+    let mut device = FarMemoryDevice::new(endpoint, token).await;
 
     tokio::task::spawn_blocking(move || {
         unsafe {
@@ -16,13 +28,37 @@ pub async fn run_block_storage_client() {
     });
 }
 
+struct AuthInterceptor {
+    token: String,
+}
+
+impl AuthInterceptor {
+    pub fn new(token: String) -> Self {
+        Self {
+            token,
+        }
+    }
+}
+
+impl Interceptor for AuthInterceptor {
+    fn call(&mut self, mut request: tonic::Request<()>) -> Result<tonic::Request<()>, tonic::Status> {
+        request.metadata_mut().append("x-access-token", MetadataValue::try_from(&self.token).unwrap());
+        Ok(request)
+    }
+}
+
 struct FarMemoryDevice {
+    client: MemoryStorageServiceClient<InterceptedService<Channel, AuthInterceptor>>,
     data: Vec<u8>,
 }
 
 impl FarMemoryDevice {
-    pub fn new() -> Self {
+    pub async fn new(endpoint: String, token: String) -> Self {
         Self {
+            client: MemoryStorageServiceClient::with_interceptor(
+                Endpoint::from_str(&endpoint).unwrap().connect().await.unwrap(), 
+                AuthInterceptor::new(token)
+            ),
             data: vec![0; 1024 * 1024 * 1024],
         }
     }
@@ -44,6 +80,6 @@ impl BlockDevice for FarMemoryDevice {
     }
 
     fn blocks(&self) -> u64 {
-        1024 * 1024
+        100
     }
 }

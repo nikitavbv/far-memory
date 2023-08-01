@@ -5,6 +5,7 @@ use {
 
 #[derive(Default, Deserialize)]
 pub struct Config {
+    endpoint: Option<String>,
     access_token: Option<String>,
 
     memory_storage_enabled: Option<bool>,
@@ -21,6 +22,10 @@ impl Config {
 
         let config = read_to_string(config_path).unwrap();
         toml::from_str(&config).unwrap()
+    }
+
+    pub fn endpoint(&self) -> String {
+        self.endpoint.as_ref().unwrap().clone()
     }
 
     pub fn access_token(&self) -> String {

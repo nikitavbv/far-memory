@@ -199,6 +199,7 @@ dependencies = [
 name = "far-memory"
 version = "0.1.0"
 dependencies = [
+ "http",
  "prost",
  "serde",
  "tokio",

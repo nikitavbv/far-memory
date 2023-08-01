@@ -38,7 +38,7 @@ metadata:
   namespace: default
 spec:
   selector:
-    name: far-memory-storage
+    app: far-memory-storage
   ports:
   - port: 9000
     targetPort: 9000
