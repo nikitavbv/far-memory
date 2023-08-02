@@ -21,13 +21,14 @@ async fn main() -> std::io::Result<()> {
     info!("running far-memory");
 
     let config = Config::load();
+    let far_memory_block_size = 2 * 1024 * 1024;
 
     if config.memory_storage_enabled() {
-        run_memory_storage_server(config.access_token()).await;
+        run_memory_storage_server(config.access_token(), far_memory_block_size).await;
     }
 
     if config.block_storage_client_enabled() {
-        run_block_storage_client(config.endpoint(), config.access_token()).await;
+        run_block_storage_client(config.endpoint(), config.access_token(), far_memory_block_size).await;
     }
 
     Ok(())

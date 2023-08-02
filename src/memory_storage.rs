@@ -45,13 +45,13 @@ impl BlockData {
     }
 }
 
-pub async fn run_memory_storage_server(access_token: String) {
+pub async fn run_memory_storage_server(access_token: String, far_memory_block_size: u64) {
     let addr = "0.0.0.0:9000".parse().unwrap();
 
     info!("starting memory storage server on {:?}", addr);
 
     Server::builder()
-        .add_service(MemoryStorageServiceServer::new(MemoryStorageServiceHandler::new(access_token)))
+        .add_service(MemoryStorageServiceServer::new(MemoryStorageServiceHandler::new(access_token, far_memory_block_size)))
         .serve(addr)
         .await
         .unwrap();
@@ -61,14 +61,16 @@ struct MemoryStorageServiceHandler {
     storage: Mutex<HashMap<BlockId, BlockData>>,
     id_counter: Mutex<u32>,
     access_token: String,
+    far_memory_block_size: u64,
 }
 
 impl MemoryStorageServiceHandler {
-    pub fn new(access_token: String) -> Self {
+    pub fn new(access_token: String, far_memory_block_size: u64) -> Self {
         Self {
             storage: Mutex::new(HashMap::new()),
             id_counter: Mutex::new(0),
             access_token,
+            far_memory_block_size,
         }
     }
 
@@ -93,7 +95,7 @@ impl MemoryStorageServiceHandler {
     }
 
     fn new_block(&self) -> BlockData {
-        BlockData::new(vec![0; 2 * 1024 * 1024])
+        BlockData::new(vec![0; self.far_memory_block_size as usize])
     }
 }
 
