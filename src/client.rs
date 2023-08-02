@@ -1,3 +1,5 @@
+use crate::rpc::WriteMemoryBlockRequest;
+
 use {
     std::{io::Error, str::FromStr, collections::HashMap},
     tracing::info,
@@ -53,8 +55,6 @@ struct FarMemoryDevice {
 
     far_memory_block_size: u64,
     blocks_initialized: HashMap<u64, MemoryBlockId>,
-
-    data: Vec<u8>,
 }
 
 impl FarMemoryDevice {
@@ -78,8 +78,6 @@ impl FarMemoryDevice {
 
             far_memory_block_size,
             blocks_initialized: HashMap::new(),
-
-            data: vec![0; 1024 * 1024 * 1024],
         }
     }
 
@@ -117,6 +115,15 @@ impl FarMemoryDevice {
             }).await.unwrap().into_inner().data
         })
     }
+
+    fn write_block(&mut self, id: MemoryBlockId, data: Vec<u8>) {
+        self.runtime.block_on(async {
+            self.client.write_memory_block(WriteMemoryBlockRequest {
+                id: Some(id),
+                data,
+            }).await.unwrap();
+        });
+    }
 }
 
 impl BlockDevice for FarMemoryDevice {
@@ -139,16 +146,44 @@ impl BlockDevice for FarMemoryDevice {
         Ok(())
     }
 
-    /*fn write(&mut self, offset: u64, bytes: &[u8]) -> std::io::Result<()> {
-        //self.data[offset as usize..offset as usize + bytes.len()].copy_from_slice(bytes);
+    fn write(&mut self, offset: u64, bytes: &[u8]) -> std::io::Result<()> {
+        info!("writing blocks");
+
+        let begin_block_index = self.block_for_offset(offset);
+        let end_block_index = self.block_for_offset(offset + bytes.len() as u64);
+
+        let mut blocks_data = Vec::new();
+
+        for block in begin_block_index..end_block_index+1 {
+            let block_id = self.block_id_for_block_offset(block);
+            let mut block_data = self.read_block(&block_id);        
+            blocks_data.append(&mut block_data);    
+        }
+
+        let blocks_begin_offset = self.offset_for_block(begin_block_index);
+
+        blocks_data[(offset - blocks_begin_offset) as usize..(offset - blocks_begin_offset + bytes.len() as u64) as usize].copy_from_slice(bytes);
+
+        let mut i = 0;
+        for block in begin_block_index..end_block_index+1 {
+            let block_id = self.block_id_for_block_offset(block);
+            let block_data = &blocks_data[(i * self.far_memory_block_size) as usize..((i+1)*self.far_memory_block_size) as usize];
+
+            self.write_block(block_id, block_data.to_vec());
+
+            i += 1;
+        }
+
+        info!("done writing blocks");
+
         Ok(())
-    }*/
+    }
 
     fn block_size(&self) -> u32 {
         1024
     }
 
     fn blocks(&self) -> u64 {
-        100
+        200
     }
 }
