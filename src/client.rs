@@ -1,5 +1,3 @@
-use crate::rpc::WriteMemoryBlockRequest;
-
 use {
     std::{io::Error, str::FromStr, collections::HashMap},
     tracing::info,
@@ -15,6 +13,7 @@ use {
         MemoryBlockId,
         AllocateMemoryBlockRequest,
         ReadMemoryBlockRequest,
+        WriteMemoryBlockRequest,
     },
 };
 
@@ -72,12 +71,14 @@ impl FarMemoryDevice {
             )
         }).await.unwrap();
 
+        let blocks_initialized = bincode::deserialize(&std::fs::read("./block_map").unwrap()).unwrap();
+
         Self {
             runtime,
             client,
 
             far_memory_block_size,
-            blocks_initialized: HashMap::new(),
+            blocks_initialized,
         }
     }
 
@@ -102,6 +103,9 @@ impl FarMemoryDevice {
 
         let id = res.id.unwrap();
         self.blocks_initialized.insert(block_offset, id.clone());
+
+        let block_map = bincode::serialize(&self.blocks_initialized).unwrap();
+        std::fs::write("./block_map", &block_map).unwrap();
 
         id
     }
@@ -184,6 +188,6 @@ impl BlockDevice for FarMemoryDevice {
     }
 
     fn blocks(&self) -> u64 {
-        200
+        1024 * 100
     }
 }
