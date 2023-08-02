@@ -10,8 +10,9 @@ use {
     },
     crate::rpc::{
         memory_storage_service_client::MemoryStorageServiceClient,
-        AllocateMemoryBlockRequest,
         MemoryBlockId,
+        AllocateMemoryBlockRequest,
+        ReadMemoryBlockRequest,
     },
 };
 
@@ -86,6 +87,10 @@ impl FarMemoryDevice {
         offset / self.far_memory_block_size
     }
 
+    fn offset_for_block(&self, block_offset: u64) -> u64 {
+        block_offset * self.far_memory_block_size
+    }
+
     fn block_id_for_block_offset(&mut self, block_offset: u64) -> MemoryBlockId {
         if let Some(id) = self.blocks_initialized.get(&block_offset) {
             return id.clone();
@@ -102,6 +107,16 @@ impl FarMemoryDevice {
 
         id
     }
+
+    fn read_block(&mut self, block_id: &MemoryBlockId) -> Vec<u8> {
+        let id = block_id.clone();
+
+        self.runtime.block_on(async {
+            self.client.read_memory_block(ReadMemoryBlockRequest {
+                id: Some(id),
+            }).await.unwrap().into_inner().data
+        })
+    }
 }
 
 impl BlockDevice for FarMemoryDevice {
@@ -109,19 +124,25 @@ impl BlockDevice for FarMemoryDevice {
         let begin_block_index = self.block_for_offset(offset);
         let end_block_index = self.block_for_offset(offset + bytes.len() as u64);
 
+        let mut blocks_data = Vec::new();
+
         for block in begin_block_index..end_block_index+1 {
             let block_id = self.block_id_for_block_offset(block);
-            info!("block id: {:?}", block_id);
+            let mut block_data = self.read_block(&block_id);        
+            blocks_data.append(&mut block_data);    
         }
 
-        bytes.copy_from_slice(&self.data[offset as usize..offset as usize + bytes.len()]);
+        let blocks_begin_offset = self.offset_for_block(begin_block_index);
+
+        bytes.copy_from_slice(&blocks_data[(offset - blocks_begin_offset) as usize..(offset - blocks_begin_offset + bytes.len() as u64) as usize]);
+        
         Ok(())
     }
 
-    fn write(&mut self, offset: u64, bytes: &[u8]) -> std::io::Result<()> {
-        self.data[offset as usize..offset as usize + bytes.len()].copy_from_slice(bytes);
+    /*fn write(&mut self, offset: u64, bytes: &[u8]) -> std::io::Result<()> {
+        //self.data[offset as usize..offset as usize + bytes.len()].copy_from_slice(bytes);
         Ok(())
-    }
+    }*/
 
     fn block_size(&self) -> u32 {
         1024
