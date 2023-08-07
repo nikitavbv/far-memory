@@ -23,6 +23,7 @@
 \usepackage[none]{hyphenat}
 \usepackage{titlesec}
 \usepackage{graphicx}
+\usepackage{multicol}
 
 \renewcommand{\baselinestretch}{1.5}
 
@@ -44,8 +45,10 @@
 Факультет інформатики та обчислювальної техніки\\
 Кафедра інформатики та програмної інженерії\\
 
-«На правах рукопису»\hfill«До захисту допущено»\\
-УДК 004.043\hfill Завідувач кафедри \hspace{1cm}
+\begin{tabularx}{\textwidth}{l | p{10cm} | l}
+\hline
+\begin{tabular}{@{}c@{}}1 \\ 2\end{tabular} & & \begin{tabular}{@{}c@{}}1 \\ 2\end{tabular}
+\end{tabularx}
 
 \fontsize{18}{22}\selectfont
 \vspace{0.5cm}
