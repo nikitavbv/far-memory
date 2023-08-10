@@ -19,9 +19,10 @@ use docx_rs::{
 };
 
 fn main() {
-    println!("Hello, world!");
+    let path = "./thesis.docx";
+    let file = std::fs::File::create(path).unwrap();
 
-    let file = std::fs::File::create("./thesis.docx").unwrap();
+    println!("generating thesis to {:?}", path);
 
     Docx::new()
         .page_margin(
