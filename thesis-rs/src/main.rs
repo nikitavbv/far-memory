@@ -1,4 +1,22 @@
-use docx_rs::{Docx, Paragraph, Run, PageMargin, Font, FontPitchType, RunFonts, AlignmentType, BreakType, LineSpacing, Table, TableRow, TableCell, TableBorders};
+use docx_rs::{
+    Docx,
+    Paragraph, 
+    Run, 
+    PageMargin, 
+    RunFonts, 
+    AlignmentType, 
+    BreakType, 
+    LineSpacing, 
+    Table, 
+    TableRow, 
+    TableCell, 
+    TableBorders, 
+    WidthType,
+    Pic,
+    VAlignType,
+    TableCellMargins,
+    TableAlignmentType,
+};
 
 fn main() {
     println!("Hello, world!");
@@ -28,7 +46,7 @@ fn main() {
             )
             .align(AlignmentType::Center))
         .add_paragraph(Paragraph::new()
-            .line_spacing(LineSpacing::new().line(24 * 15).before(100))
+            .line_spacing(LineSpacing::new().line(24 * 15).before(100).after(400))
             .add_run(Run::new()
                 .size(24)
                 .add_text("Факультет інформатики та обчислювальної техніки")
@@ -47,15 +65,120 @@ fn main() {
                             .add_text("УДК "))
                         .add_run(Run::new()
                             .underline("single")
-                            .add_text("004.043")
-                        )), // TODO: check which code exactly should I use
+                            .add_text("004.043") // TODO: check which code exactly should I use
+                        ))
+                    .width(5000, WidthType::Dxa),
+                TableCell::new()
+                    .add_paragraph(Paragraph::new()
+                        .line_spacing(LineSpacing::new().line(24 * 15))
+                        .add_run(Run::new()
+                            .size(24)
+                            .add_text("«До захисту допущено»")
+                            .add_break(BreakType::TextWrapping)
+                            .add_text("Завідувач кафедри")
+                            .add_break(BreakType::TextWrapping)
+                            .add_image(Pic::new(&line()).size(1000000, 17000))
+                            .add_text("Едуард ЖАРІКОВ")
+                            .add_break(BreakType::TextWrapping)
+                            .add_text("«")
+                            .add_image(Pic::new(&line()).size(180000, 17000))
+                            .add_text("»")
+                            .add_image(Pic::new(&line()).size(1400000, 17000))
+                            .add_text("2023р.")))
+                    .width(4000, WidthType::Dxa)
+            ])
+        ]).set_borders(TableBorders::new().clear_all()))
+        .add_paragraph(Paragraph::new()
+            .line_spacing(LineSpacing::new().line(30 * 10).before(300).after(300))
+            .align(AlignmentType::Center)
+            .add_run(Run::new()
+                .size(36)
+                .bold()
+                .add_text("Магістерська дисертація")
+                .add_break(BreakType::TextWrapping))
+            .add_run(Run::new()
+                .size(24)
+                .bold()
+                .add_text("на здобуття ступеня магістра")
+                .add_break(BreakType::TextWrapping)
+                .add_text("за освітньо-професійною програмою «Інженерія програмного забезпечення інформаційних систем»")
+                .add_break(BreakType::TextWrapping)
+                .add_text("зі спеціальності 121 «Інженерія програмного забезпечення»")
+                .add_break(BreakType::TextWrapping)
+                .add_text("на тему: «Методи та програмні засоби надання програмно-визначеної віддаленої памʼяті у розподілених системах»")))
+        .add_table(Table::new(vec![
+            TableRow::new(vec![
                 TableCell::new()
                     .add_paragraph(Paragraph::new()
                         .add_run(Run::new()
                             .size(24)
-                            .add_text("«До захисту допущено»")))
-            ])
-        ]).set_borders(TableBorders::new().clear_all()))
+                            .add_text("Виконав (-ла):")
+                            .add_break(BreakType::TextWrapping)
+                            .add_text("студент (-ка) ІІ курсу, групи ІП-22мп")
+                            .add_break(BreakType::TextWrapping)
+                            .add_text("Волобуєв Нікіта Олександрович")))
+                    .width(7000, WidthType::Dxa),
+                TableCell::new()
+                    .add_paragraph(Paragraph::new()
+                            .add_run(Run::new().add_image(Pic::new(&line()).size(800000, 17000))))
+                    .vertical_align(VAlignType::Bottom)
+            ]),
+            TableRow::new(vec![
+                TableCell::new()
+                    .add_paragraph(Paragraph::new()
+                        .add_run(Run::new()
+                            .size(24)
+                            .add_text("Керівник: ")
+                            .add_break(BreakType::TextWrapping)
+                            .add_text("Посада, науковий ступінь, вчене звання")
+                            .add_break(BreakType::TextWrapping)
+                            .add_text("Прізвище, ім’я, по батькові")))
+                    .width(7000, WidthType::Dxa),
+                TableCell::new()
+                    .add_paragraph(Paragraph::new()
+                            .add_run(Run::new().add_image(Pic::new(&line()).size(800000, 17000))))
+                    .vertical_align(VAlignType::Bottom)
+            ]),
+            TableRow::new(vec![
+                TableCell::new()
+                    .add_paragraph(Paragraph::new()
+                        .add_run(Run::new()
+                            .size(24)
+                            .add_text("Рецензент:")
+                            .add_break(BreakType::TextWrapping)
+                            .add_text("доцент кафедри ІСТ, к.т.н., доц.,")
+                            .add_break(BreakType::TextWrapping)
+                            .add_text("Лісовиченко Олег Іванович ")))
+                    .width(7000, WidthType::Dxa),
+                TableCell::new()
+                    .add_paragraph(Paragraph::new()
+                            .add_run(Run::new().add_image(Pic::new(&line()).size(800000, 17000))))
+                    .vertical_align(VAlignType::Bottom)
+            ]),
+        ]).set_borders(TableBorders::new().clear_all()).margins(TableCellMargins::new().margin_bottom(300, WidthType::Dxa)))
+        .add_paragraph(Paragraph::new())
+        .add_table(Table::new(vec![
+            TableRow::new(vec![
+                TableCell::new()
+                    .add_paragraph(Paragraph::new()
+                    .align(AlignmentType::Left)
+                    .add_run(Run::new()
+                    .size(24)
+                    .add_text("Засвідчую, що у цій магістерській дисертації")
+                    .add_break(BreakType::TextWrapping)
+                    .add_text("немає запозичень з праць інших авторів без")
+                    .add_break(BreakType::TextWrapping)
+                    .add_text("відповідних посилань.")
+                    .add_break(BreakType::TextWrapping)
+                    .add_text("Студент (-ка) ")
+                    .add_image(Pic::new(&line()).size(800000, 17000))))
+                    .width(5000, WidthType::Dxa),
+            ]),
+        ]).align(TableAlignmentType::Right).set_borders(TableBorders::new().clear_all()))
+        .add_paragraph(Paragraph::new()
+            .align(AlignmentType::Center)
+            .add_run(Run::new().add_text("Київ – 2023 року"))
+        )
         .build()
         .pack(file)
         .unwrap();
@@ -63,4 +186,8 @@ fn main() {
 
 fn mm_to_twentieth_of_a_point(mm: f32) -> i32 {
     (mm * 56.6929133858).round() as i32
+}
+
+fn line() -> Vec<u8> {
+    std::fs::read("resources/line.gif").unwrap()
 }
