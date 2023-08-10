@@ -1,0 +1,1 @@
+[requirements](https://ela.kpi.ua/bitstream/123456789/49978/1/Mahisterska_dysertatsiia.pdf)
