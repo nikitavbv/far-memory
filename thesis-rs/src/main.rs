@@ -1,5 +1,6 @@
 use {
     std::process::Command,
+    clap::Parser,
     docx_rs::{
         Docx,
         Paragraph, 
@@ -21,7 +22,15 @@ use {
     },
 };
 
+#[derive(Parser, Debug)]
+struct Args {   
+    #[arg(short, long)]
+    pdf: bool,
+}
+
 fn main() {
+    let args = Args::parse();
+
     let path = "./thesis.docx";
     let file = std::fs::File::create(path).unwrap();
 
@@ -188,11 +197,13 @@ fn main() {
         .pack(file)
         .unwrap();
 
-    println!("converting to pdf");
-    Command::new("docx2pdf").args(["./thesis.docx", "./thesis.pdf"]).output().unwrap();
-
-    println!("done, opening resulting file");
-    Command::new("open").args(["./thesis.pdf"]).output().unwrap();  
+    if args.pdf {
+        println!("converting to pdf");
+        Command::new("docx2pdf").args(["./thesis.docx", "./thesis.pdf"]).output().unwrap();
+    
+        println!("done, opening resulting file");
+        Command::new("open").args(["./thesis.pdf"]).output().unwrap();
+    }
 }
 
 fn mm_to_twentieth_of_a_point(mm: f32) -> i32 {
