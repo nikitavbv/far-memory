@@ -157,6 +157,7 @@ fn main() {
                     .add_paragraph(Paragraph::new()
                         .add_run(Run::new()
                             .size(14 * 2)
+                            .highlight("yellow")
                             .add_text("Рецензент:")
                             .add_break(BreakType::TextWrapping)
                             .add_text("доцент кафедри ІСТ, к.т.н., доц.,")
