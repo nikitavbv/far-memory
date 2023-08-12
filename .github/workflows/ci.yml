@@ -41,11 +41,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: wtfjoke/setup-tectonic@v2
+    - uses: actions-rs/toolchain@v1
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-    - run: tectonic thesis/thesis.tex --outfmt pdf
+        profile: minimal
+        toolchain: stable
+        override: true
+    - uses: Swatinem/rust-cache@v2
+    - run: cargo run --release
+      working-directory: thesis-rs
     - uses: actions/upload-artifact@v3
       with:
         name: thesis
-        path: thesis/thesis.pdf
+        path: thesis/thesis.docx
