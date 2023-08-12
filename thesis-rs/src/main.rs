@@ -69,7 +69,7 @@ fn main() {
                             .add_text("УДК "))
                         .add_run(Run::new()
                             .underline("single")
-                            .add_text("004.043") // TODO: check which code exactly should I use
+                            .add_text("004.75")
                         ))
                     .width(5000, WidthType::Dxa),
                 TableCell::new()
@@ -116,9 +116,9 @@ fn main() {
                     .add_paragraph(Paragraph::new()
                         .add_run(Run::new()
                             .size(14 * 2)
-                            .add_text("Виконав (-ла):")
+                            .add_text("Виконав:")
                             .add_break(BreakType::TextWrapping)
-                            .add_text("студент (-ка) ІІ курсу, групи ІП-22мп")
+                            .add_text("студент ІІ курсу, групи ІП-22мп")
                             .add_break(BreakType::TextWrapping)
                             .add_text("Волобуєв Нікіта Олександрович")))
                     .width(7000, WidthType::Dxa),
@@ -134,9 +134,9 @@ fn main() {
                             .size(14 * 2)
                             .add_text("Керівник: ")
                             .add_break(BreakType::TextWrapping)
-                            .add_text("Посада, науковий ступінь, вчене звання")
+                            .add_text("д.т.н., проф., засл.діяч")
                             .add_break(BreakType::TextWrapping)
-                            .add_text("Прізвище, ім’я, по батькові")))
+                            .add_text("Павлов Олександр Анатолійович")))
                     .width(7000, WidthType::Dxa),
                 TableCell::new()
                     .add_paragraph(Paragraph::new()
