@@ -1,21 +1,24 @@
-use docx_rs::{
-    Docx,
-    Paragraph, 
-    Run, 
-    PageMargin, 
-    RunFonts, 
-    AlignmentType, 
-    BreakType, 
-    LineSpacing, 
-    Table, 
-    TableRow, 
-    TableCell, 
-    TableBorders, 
-    WidthType,
-    Pic,
-    VAlignType,
-    TableCellMargins,
-    TableAlignmentType,
+use {
+    std::process::Command,
+    docx_rs::{
+        Docx,
+        Paragraph, 
+        Run, 
+        PageMargin, 
+        RunFonts, 
+        AlignmentType, 
+        BreakType, 
+        LineSpacing, 
+        Table, 
+        TableRow, 
+        TableCell, 
+        TableBorders, 
+        WidthType,
+        Pic,
+        VAlignType,
+        TableCellMargins,
+        TableAlignmentType,
+    },
 };
 
 fn main() {
@@ -183,6 +186,9 @@ fn main() {
         .build()
         .pack(file)
         .unwrap();
+
+    println!("converting to pdf");
+    Command::new("docx2pdf").args(["./thesis.docx", "./thesis.pdf"]).output().unwrap();
 }
 
 fn mm_to_twentieth_of_a_point(mm: f32) -> i32 {
