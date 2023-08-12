@@ -115,7 +115,7 @@ fn main() {
                 TableCell::new()
                     .add_paragraph(Paragraph::new()
                         .add_run(Run::new()
-                            .size(24)
+                            .size(14 * 2)
                             .add_text("Виконав (-ла):")
                             .add_break(BreakType::TextWrapping)
                             .add_text("студент (-ка) ІІ курсу, групи ІП-22мп")
@@ -131,7 +131,7 @@ fn main() {
                 TableCell::new()
                     .add_paragraph(Paragraph::new()
                         .add_run(Run::new()
-                            .size(24)
+                            .size(14 * 2)
                             .add_text("Керівник: ")
                             .add_break(BreakType::TextWrapping)
                             .add_text("Посада, науковий ступінь, вчене звання")
@@ -147,7 +147,7 @@ fn main() {
                 TableCell::new()
                     .add_paragraph(Paragraph::new()
                         .add_run(Run::new()
-                            .size(24)
+                            .size(14 * 2)
                             .add_text("Рецензент:")
                             .add_break(BreakType::TextWrapping)
                             .add_text("доцент кафедри ІСТ, к.т.н., доц.,")
@@ -167,7 +167,7 @@ fn main() {
                     .add_paragraph(Paragraph::new()
                     .align(AlignmentType::Left)
                     .add_run(Run::new()
-                    .size(24)
+                    .size(14 * 2)
                     .add_text("Засвідчую, що у цій магістерській дисертації")
                     .add_break(BreakType::TextWrapping)
                     .add_text("немає запозичень з праць інших авторів без")
@@ -176,10 +176,11 @@ fn main() {
                     .add_break(BreakType::TextWrapping)
                     .add_text("Студент (-ка) ")
                     .add_image(Pic::new(&line()).size(800000, 17000))))
-                    .width(5000, WidthType::Dxa),
+                    .width(6000, WidthType::Dxa),
             ]),
         ]).align(TableAlignmentType::Right).set_borders(TableBorders::new().clear_all()))
         .add_paragraph(Paragraph::new()
+            .line_spacing(LineSpacing::new().before(300))
             .align(AlignmentType::Center)
             .add_run(Run::new().add_text("Київ – 2023 року"))
         )
@@ -189,6 +190,9 @@ fn main() {
 
     println!("converting to pdf");
     Command::new("docx2pdf").args(["./thesis.docx", "./thesis.pdf"]).output().unwrap();
+
+    println!("done, opening resulting file");
+    Command::new("open").args(["./thesis.pdf"]).output().unwrap();  
 }
 
 fn mm_to_twentieth_of_a_point(mm: f32) -> i32 {
