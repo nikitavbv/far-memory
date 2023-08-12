@@ -52,4 +52,4 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: thesis
-        path: thesis/thesis.docx
+        path: thesis-rs/thesis.docx
