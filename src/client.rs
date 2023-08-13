@@ -1,5 +1,5 @@
 use {
-    std::{io::Error, str::FromStr, collections::HashMap},
+    std::{io::Error, str::FromStr, collections::HashMap, num::NonZeroUsize},
     tracing::info,
     vblk::{mount, BlockDevice},
     tonic::{
@@ -8,6 +8,7 @@ use {
         transport::{Endpoint, Channel},
         metadata::MetadataValue,
     },
+    lru::LruCache,
     crate::rpc::{
         memory_storage_service_client::MemoryStorageServiceClient,
         MemoryBlockId,
@@ -54,6 +55,7 @@ struct FarMemoryDevice {
 
     far_memory_block_size: u64,
     blocks_initialized: HashMap<u64, MemoryBlockId>,
+    blocks_cache: LruCache<MemoryBlockId, Vec<u8>>,
 }
 
 impl FarMemoryDevice {
@@ -79,6 +81,7 @@ impl FarMemoryDevice {
 
             far_memory_block_size,
             blocks_initialized,
+            blocks_cache: LruCache::new(NonZeroUsize::new(10).unwrap()),
         }
     }
 
@@ -139,14 +142,24 @@ impl BlockDevice for FarMemoryDevice {
 
         for block in begin_block_index..end_block_index+1 {
             let block_id = self.block_id_for_block_offset(block);
-            let mut block_data = self.read_block(&block_id);        
+
+            let block_from_cache = self.blocks_cache.get(&block_id);
+            let mut block_data = match block_from_cache {
+                Some(v) => v.clone(),
+                None => {
+                    let data = self.read_block(&block_id);
+                    self.blocks_cache.put(block_id.clone(), data.clone());
+                    data
+                }
+            };
+            
             blocks_data.append(&mut block_data);    
         }
 
         let blocks_begin_offset = self.offset_for_block(begin_block_index);
 
         bytes.copy_from_slice(&blocks_data[(offset - blocks_begin_offset) as usize..(offset - blocks_begin_offset + bytes.len() as u64) as usize]);
-        
+
         Ok(())
     }
 
