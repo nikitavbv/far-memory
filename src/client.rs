@@ -185,8 +185,10 @@ impl BlockDevice for FarMemoryDevice {
         for block in begin_block_index..end_block_index+1 {
             let block_id = self.block_id_for_block_offset(block);
             let block_data = &blocks_data[(i * self.far_memory_block_size) as usize..((i+1)*self.far_memory_block_size) as usize];
+            let block_data = block_data.to_vec();
 
-            self.write_block(block_id, block_data.to_vec());
+            self.blocks_cache.put(block_id.clone(), block_data.clone());
+            self.write_block(block_id, block_data);
 
             i += 1;
         }
