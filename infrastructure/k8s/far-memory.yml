@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: far-memory-storage
+  name: far-memory-storage-a
   namespace: default
 spec:
   selector:
     matchLabels:
-      app: far-memory-storage
+      app: far-memory-storage-a
   replicas: 1
-  serviceName: far-memory-storage
+  serviceName: far-memory-storage-a
   template:
     metadata:
       labels:
-        app: far-memory-storage
+        app: far-memory-storage-a
     spec:
       containers:
-      - name: far-memory-storage
-        image: ghcr.io/nikitavbv/far-memory/far-memory:0.1.28
+      - name: far-memory-storage-a
+        image: ghcr.io/nikitavbv/far-memory/far-memory:0.1.53
         env:
         - name: FAR_MEMORY_CONFIG
           value: /etc/far-memory/config/config.toml
@@ -34,11 +34,56 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: far-memory-storage
+  name: far-memory-storage-a
   namespace: default
 spec:
   selector:
-    app: far-memory-storage
+    app: far-memory-storage-a
   ports:
-  - port: 9000
-    targetPort: 9000
+  - port: 9001
+    targetPort: 9001
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: far-memory-storage-b
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: far-memory-storage-b
+  replicas: 1
+  serviceName: far-memory-storage-b
+  template:
+    metadata:
+      labels:
+        app: far-memory-storage-b
+    spec:
+      containers:
+      - name: far-memory-storage-b
+        image: ghcr.io/nikitavbv/far-memory/far-memory:0.1.53
+        env:
+        - name: FAR_MEMORY_CONFIG
+          value: /etc/far-memory/config/config.toml
+        volumeMounts:
+        - name: config
+          mountPath: /etc/far-memory/config
+      volumes:
+      - name: config
+        configMap:
+          name: far-memory-config
+          items:
+          - key: config.toml
+            path: config.toml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: far-memory-storage-b
+  namespace: default
+spec:
+  selector:
+    app: far-memory-storage-b
+  ports:
+  - port: 9002
+    targetPort: 9002
