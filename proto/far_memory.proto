@@ -9,6 +9,10 @@ service MemoryStorageService {
     rpc FreeMemoryBlock(FreeMemoryBlockRequest) returns (FreeMemoryBlockResponse) {}
 }
 
+service ControllerService {
+    rpc ControllerAllocateMemoryBlock(ControllerAllocateMemoryBlockRequest) returns (ControllerAllocateMemoryBlockResponse) {}
+}
+
 // common types
 message MemoryBlockId {
     uint32 id = 1;
@@ -43,4 +47,10 @@ message FreeMemoryBlockRequest {
 }
 
 message FreeMemoryBlockResponse {
+}
+
+message ControllerAllocateMemoryBlockRequest {
+}
+
+message ControllerAllocateMemoryBlockResponse {
 }
