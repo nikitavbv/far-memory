@@ -41,7 +41,7 @@ spec:
     app: far-memory-storage-a
   ports:
   - port: 9001
-    targetPort: 9001
+    targetPort: 9000
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -86,4 +86,4 @@ spec:
     app: far-memory-storage-b
   ports:
   - port: 9002
-    targetPort: 9002
+    targetPort: 9000

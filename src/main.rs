@@ -2,14 +2,16 @@ use {
     tracing::info,
     crate::{
         utils::init_logging,
+        config::Config,
         client::run_block_storage_client,
         memory_storage::run_memory_storage_server,
-        config::Config,
+        controller::run_controller_server,
     },
 };
 
 pub mod client;
 pub mod config;
+pub mod controller;
 pub mod memory_storage;
 pub mod rpc;
 pub mod utils;
@@ -29,6 +31,10 @@ async fn main() -> std::io::Result<()> {
 
     if config.block_storage_client_enabled() {
         run_block_storage_client(config.endpoint(), config.access_token(), far_memory_block_size).await;
+    }
+
+    if config.controller_enabled() {
+        run_controller_server(config.access_token()).await;
     }
 
     Ok(())

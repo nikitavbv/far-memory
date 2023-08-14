@@ -10,6 +10,14 @@ pub struct Config {
 
     memory_storage_enabled: Option<bool>,
     block_storage_client_enabled: Option<bool>,
+    controller_enabled: Option<bool>,
+
+    controller_storage_servers: Option<Vec<StorageServerConfig>>,
+}
+
+#[derive(Deserialize, Clone)]
+pub struct StorageServerConfig {
+    endpoint: String,
 }
 
 impl Config {
@@ -38,5 +46,13 @@ impl Config {
 
     pub fn block_storage_client_enabled(&self) -> bool {
         self.block_storage_client_enabled.unwrap_or(false)
+    }
+
+    pub fn controller_enabled(&self) -> bool {
+        self.controller_enabled.unwrap_or(false)
+    }
+
+    pub fn controller_storage_servers(&self) -> Vec<StorageServerConfig> {
+        self.controller_storage_servers.as_ref().cloned().unwrap_or(Vec::new())
     }
 }
