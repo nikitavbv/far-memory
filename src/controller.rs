@@ -11,6 +11,7 @@ use {
                 ControllerService,
                 ControllerServiceServer,
             },
+            MemoryBlockId,
             ControllerAllocateMemoryBlockRequest,
             ControllerAllocateMemoryBlockResponse,
         },
@@ -65,6 +66,7 @@ impl ControllerService for ControllerServiceHandler {
         self.check_auth(&req)?;
         
         // pick node with lowest number of blocks allocated
+
         // call allocate memory block on that node
         // return block id and node id
 
@@ -74,6 +76,7 @@ impl ControllerService for ControllerServiceHandler {
 
 struct StorageNode {
     client: MemoryStorageServiceClient<InterceptedService<Channel, AuthInterceptor>>,
+    blocks_allocated: Vec<MemoryBlockId>,
 }
 
 impl StorageNode {
@@ -83,6 +86,12 @@ impl StorageNode {
                 Endpoint::from_str(&endpoint).unwrap().connect().await.unwrap(),
                 AuthInterceptor::new(token)
             ),
+            blocks_allocated: Vec::new(),
         }
+    }
+
+    pub async fn allocate_memory_block(&self) -> MemoryBlockId {
+        // TODO: call client to allocate block, save it to blocks_allocated and return id
+        unimplemented!()
     }
 }
