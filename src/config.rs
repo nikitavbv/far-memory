@@ -1,5 +1,5 @@
 use {
-    std::{path::Path, fs::read_to_string, env::var},
+    std::{path::Path, fs::read_to_string, env::var, collections::HashMap},
     serde::Deserialize,
 };
 
@@ -12,10 +12,10 @@ pub struct Config {
     block_storage_client_enabled: Option<bool>,
     controller_enabled: Option<bool>,
 
-    controller_storage_servers: Option<Vec<StorageServerConfig>>,
+    controller_storage_servers: Option<HashMap<String, StorageServerConfig>>,
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct StorageServerConfig {
     endpoint: String,
 }
@@ -52,7 +52,13 @@ impl Config {
         self.controller_enabled.unwrap_or(false)
     }
 
-    pub fn controller_storage_servers(&self) -> Vec<StorageServerConfig> {
-        self.controller_storage_servers.as_ref().cloned().unwrap_or(Vec::new())
+    pub fn controller_storage_nodes(&self) -> Vec<StorageServerConfig> {
+        self.controller_storage_servers.as_ref().cloned().unwrap_or(HashMap::new()).values().cloned().collect()
+    }
+}
+
+impl StorageServerConfig {
+    pub fn endpoint(&self) -> String {
+        self.endpoint.clone()
     }
 }

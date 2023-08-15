@@ -9,12 +9,15 @@ use {
         metadata::MetadataValue,
     },
     lru::LruCache,
-    crate::rpc::{
-        memory_storage_service_client::MemoryStorageServiceClient,
-        MemoryBlockId,
-        AllocateMemoryBlockRequest,
-        ReadMemoryBlockRequest,
-        WriteMemoryBlockRequest,
+    crate::{
+        utils::AuthInterceptor,
+        rpc::{
+            memory_storage_service_client::MemoryStorageServiceClient,
+            MemoryBlockId,
+            AllocateMemoryBlockRequest,
+            ReadMemoryBlockRequest,
+            WriteMemoryBlockRequest,
+        },
     },
 };
 
@@ -28,25 +31,6 @@ pub async fn run_block_storage_client(endpoint: String, token: String, far_memor
             mount(&mut device, "/dev/nbd1", |_device| Ok(())).unwrap();
         }
     });
-}
-
-struct AuthInterceptor {
-    token: String,
-}
-
-impl AuthInterceptor {
-    pub fn new(token: String) -> Self {
-        Self {
-            token,
-        }
-    }
-}
-
-impl Interceptor for AuthInterceptor {
-    fn call(&mut self, mut request: tonic::Request<()>) -> Result<tonic::Request<()>, tonic::Status> {
-        request.metadata_mut().append("x-access-token", MetadataValue::try_from(&self.token).unwrap());
-        Ok(request)
-    }
 }
 
 struct FarMemoryDevice {

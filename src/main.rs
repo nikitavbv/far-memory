@@ -34,7 +34,7 @@ async fn main() -> std::io::Result<()> {
     }
 
     if config.controller_enabled() {
-        run_controller_server(config.access_token()).await;
+        run_controller_server(config.access_token(), config.controller_storage_nodes()).await;
     }
 
     Ok(())
