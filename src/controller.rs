@@ -1,6 +1,7 @@
 use {
     std::str::FromStr,
     tracing::info,
+    tokio::sync::Mutex,
     tonic::{transport::{Server, Endpoint, Channel}, Request, Response, Status, codegen::InterceptedService},
     crate::{
         config::StorageServerConfig,
@@ -12,8 +13,10 @@ use {
                 ControllerServiceServer,
             },
             MemoryBlockId,
+            StorageNodeId,
             ControllerAllocateMemoryBlockRequest,
             ControllerAllocateMemoryBlockResponse,
+            AllocateMemoryBlockRequest,
         },
     },
 };
@@ -25,7 +28,7 @@ pub async fn run_controller_server(access_token: String, storage_nodes_config: V
 
     let mut nodes = Vec::new();
     for config in &storage_nodes_config {
-        nodes.push(StorageNode::new(config.endpoint(), access_token.clone()).await);
+        nodes.push(StorageNode::new(nodes.len() as u32, config.endpoint(), access_token.clone()).await);
     }
 
     Server::builder()
@@ -66,32 +69,61 @@ impl ControllerService for ControllerServiceHandler {
         self.check_auth(&req)?;
         
         // pick node with lowest number of blocks allocated
+        let mut node_with_lowest_blocks = None;
+        let mut lowest_blocks_count = None;
+        for node in &self.nodes {
+            let blocks_count = node.total_blocks_allocated().await;
+            if lowest_blocks_count.is_none() || lowest_blocks_count.unwrap() > blocks_count {
+                lowest_blocks_count = Some(blocks_count);
+                node_with_lowest_blocks = Some(node);
+            }
+        }
 
         // call allocate memory block on that node
-        // return block id and node id
+        let block_id = node_with_lowest_blocks.unwrap().allocate_memory_block().await;
 
-        unimplemented!()
+        // return block id and node id
+        Ok(Response::new(ControllerAllocateMemoryBlockResponse {
+            node_id: Some(StorageNodeId {
+                id: node_with_lowest_blocks.unwrap().id(),
+            }),
+            block_id: Some(block_id),
+        }))
     } 
 }
 
 struct StorageNode {
-    client: MemoryStorageServiceClient<InterceptedService<Channel, AuthInterceptor>>,
-    blocks_allocated: Vec<MemoryBlockId>,
+    id: u32,
+    client: Mutex<MemoryStorageServiceClient<InterceptedService<Channel, AuthInterceptor>>>,
+    blocks_allocated: Mutex<Vec<MemoryBlockId>>,
 }
 
 impl StorageNode {
-    pub async fn new(endpoint: String, token: String) -> Self {
+    pub async fn new(id: u32, endpoint: String, token: String) -> Self {
         Self {
-            client: MemoryStorageServiceClient::with_interceptor(
+            id,
+            client: Mutex::new(MemoryStorageServiceClient::with_interceptor(
                 Endpoint::from_str(&endpoint).unwrap().connect().await.unwrap(),
                 AuthInterceptor::new(token)
-            ),
-            blocks_allocated: Vec::new(),
+            )),
+            blocks_allocated: Mutex::new(Vec::new()),
         }
     }
 
     pub async fn allocate_memory_block(&self) -> MemoryBlockId {
-        // TODO: call client to allocate block, save it to blocks_allocated and return id
-        unimplemented!()
+        let res = self.client.lock().await.allocate_memory_block(AllocateMemoryBlockRequest {}).await.unwrap().into_inner();
+        let id = res.id.as_ref().cloned().unwrap();
+        
+        self.blocks_allocated.lock().await.push(id.clone());
+
+        id
+    }
+
+    pub async fn total_blocks_allocated(&self) -> u32 {
+        self.blocks_allocated.lock().await.len() as u32
+    }
+
+    pub fn id(&self) -> u32 {
+        self.id
     }
 }

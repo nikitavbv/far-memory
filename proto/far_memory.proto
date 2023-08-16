@@ -18,6 +18,10 @@ message MemoryBlockId {
     uint32 id = 1;
 }
 
+message StorageNodeId {
+    uint32 id = 1;
+}
+
 // requests and responses
 message AllocateMemoryBlockRequest {
 }
@@ -53,4 +57,6 @@ message ControllerAllocateMemoryBlockRequest {
 }
 
 message ControllerAllocateMemoryBlockResponse {
+    StorageNodeId node_id = 1;
+    MemoryBlockId block_id = 2;
 }
