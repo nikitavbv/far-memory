@@ -66,42 +66,16 @@ impl FarMemoryDevice {
 
 impl BlockDevice for FarMemoryDevice {
     fn read(&mut self, offset: u64, bytes: &mut [u8]) -> Result<(), Error> {
-        // TODO: call byte buffer here
+        self.runtime.block_on(async {
+            self.byte_buffer.read(offset, bytes);
+        });
         Ok(())
     }
 
     fn write(&mut self, offset: u64, bytes: &[u8]) -> std::io::Result<()> {
-        info!("writing blocks");
-
-        let begin_block_index = self.block_for_offset(offset);
-        let end_block_index = self.block_for_offset(offset + bytes.len() as u64);
-
-        let mut blocks_data = Vec::new();
-
-        for block in begin_block_index..end_block_index+1 {
-            let block_id = self.block_id_for_block_offset(block);
-            let mut block_data = self.read_block(&block_id);        
-            blocks_data.append(&mut block_data);    
-        }
-
-        let blocks_begin_offset = self.offset_for_block(begin_block_index);
-
-        blocks_data[(offset - blocks_begin_offset) as usize..(offset - blocks_begin_offset + bytes.len() as u64) as usize].copy_from_slice(bytes);
-
-        let mut i = 0;
-        for block in begin_block_index..end_block_index+1 {
-            let block_id = self.block_id_for_block_offset(block);
-            let block_data = &blocks_data[(i * self.far_memory_block_size) as usize..((i+1)*self.far_memory_block_size) as usize];
-            let block_data = block_data.to_vec();
-
-            self.blocks_cache.put(block_id.clone(), block_data.clone());
-            self.write_block(block_id, block_data);
-
-            i += 1;
-        }
-
-        info!("done writing blocks");
-
+        self.runtime.block_on(async {
+            self.byte_buffer.write(offset, bytes);
+        });
         Ok(())
     }
 

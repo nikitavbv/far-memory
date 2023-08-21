@@ -84,20 +84,20 @@ impl FarMemoryByteBuffer {
         }).await.unwrap();
     }
 
-    async fn read(&self, offset: u64, bytes: &mut [u8]) {
+    pub async fn read(&mut self, offset: u64, bytes: &mut [u8]) {
         let begin_block_index = self.block_for_offset(offset);
         let end_block_index = self.block_for_offset(offset + bytes.len() as u64);
 
         let mut blocks_data = Vec::new();
 
         for block in begin_block_index..end_block_index+1 {
-            let block_id = self.block_id_for_block_offset(block);
+            let block_id = self.block_id_for_block_offset(block).await;
 
             let block_from_cache = self.blocks_cache.get(&block_id);
             let mut block_data = match block_from_cache {
                 Some(v) => v.clone(),
                 None => {
-                    let data = self.read_block(&block_id);
+                    let data = self.read_block(&block_id).await;
                     self.blocks_cache.put(block_id.clone(), data.clone());
                     data
                 }
@@ -111,7 +111,36 @@ impl FarMemoryByteBuffer {
         bytes.copy_from_slice(&blocks_data[(offset - blocks_begin_offset) as usize..(offset - blocks_begin_offset + bytes.len() as u64) as usize]);
     }
 
-    async fn write(&self, offset: u64, bytes: &[u8]) {
-        // TODO: implement this
+    pub async fn write(&mut self, offset: u64, bytes: &[u8]) {
+        info!("writing blocks");
+
+        let begin_block_index = self.block_for_offset(offset);
+        let end_block_index = self.block_for_offset(offset + bytes.len() as u64);
+
+        let mut blocks_data = Vec::new();
+
+        for block in begin_block_index..end_block_index+1 {
+            let block_id = self.block_id_for_block_offset(block).await;
+            let mut block_data = self.read_block(&block_id).await;        
+            blocks_data.append(&mut block_data);    
+        }
+
+        let blocks_begin_offset = self.offset_for_block(begin_block_index);
+
+        blocks_data[(offset - blocks_begin_offset) as usize..(offset - blocks_begin_offset + bytes.len() as u64) as usize].copy_from_slice(bytes);
+
+        let mut i = 0;
+        for block in begin_block_index..end_block_index+1 {
+            let block_id = self.block_id_for_block_offset(block).await;
+            let block_data = &blocks_data[(i * self.far_memory_block_size) as usize..((i+1)*self.far_memory_block_size) as usize];
+            let block_data = block_data.to_vec();
+
+            self.blocks_cache.put(block_id.clone(), block_data.clone());
+            self.write_block(block_id, block_data);
+
+            i += 1;
+        }
+
+        info!("done writing blocks");
     }
 }
