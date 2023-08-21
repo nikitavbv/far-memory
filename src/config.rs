@@ -11,6 +11,7 @@ pub struct Config {
     memory_storage_enabled: Option<bool>,
     block_storage_client_enabled: Option<bool>,
     controller_enabled: Option<bool>,
+    test_mode_enabled: Option<bool>,
 
     controller_storage_servers: Option<HashMap<String, StorageServerConfig>>,
 }
@@ -50,6 +51,10 @@ impl Config {
 
     pub fn controller_enabled(&self) -> bool {
         self.controller_enabled.unwrap_or(false)
+    }
+
+    pub fn test_mode_enabled(&self) -> bool {
+        self.test_mode_enabled.unwrap_or(false)
     }
 
     pub fn controller_storage_nodes(&self) -> Vec<StorageServerConfig> {

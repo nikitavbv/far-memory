@@ -3,7 +3,7 @@ use {
     crate::{
         utils::init_logging,
         config::Config,
-        client::run_block_storage_client,
+        client::{run_block_storage_client, test_mode::run_test_mode},
         memory_storage::run_memory_storage_server,
         controller::run_controller_server,
     },
@@ -25,6 +25,10 @@ async fn main() -> std::io::Result<()> {
     let config = Config::load();
     let far_memory_block_size = 2 * 1024 * 1024;
 
+    if config.controller_enabled() {
+        run_controller_server(config.access_token(), config.controller_storage_nodes()).await;
+    }
+
     if config.memory_storage_enabled() {
         run_memory_storage_server(config.access_token(), far_memory_block_size).await;
     }
@@ -33,8 +37,8 @@ async fn main() -> std::io::Result<()> {
         run_block_storage_client(config.endpoint(), config.access_token(), far_memory_block_size).await;
     }
 
-    if config.controller_enabled() {
-        run_controller_server(config.access_token(), config.controller_storage_nodes()).await;
+    if config.test_mode_enabled() {
+        run_test_mode(config.endpoint(), config.access_token(), far_memory_block_size).await;
     }
 
     Ok(())

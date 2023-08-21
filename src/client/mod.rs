@@ -1,28 +1,13 @@
 use {
-    std::{io::Error, str::FromStr, collections::HashMap, num::NonZeroUsize, path::Path},
+    std::{io::Error, path::Path},
     tracing::info,
     vblk::{mount, BlockDevice},
-    tonic::{
-        service::Interceptor,
-        codegen::InterceptedService,
-        transport::{Endpoint, Channel},
-        metadata::MetadataValue,
-    },
-    lru::LruCache,
-    crate::{
-        utils::AuthInterceptor,
-        rpc::{
-            memory_storage_service_client::MemoryStorageServiceClient,
-            MemoryBlockId,
-            AllocateMemoryBlockRequest,
-            ReadMemoryBlockRequest,
-            WriteMemoryBlockRequest,
-        },
-    },
     self::byte_buffer::FarMemoryByteBuffer,
 };
 
+pub mod block_map;
 pub mod byte_buffer;
+pub mod test_mode;
 
 pub async fn run_block_storage_client(endpoint: String, token: String, far_memory_block_size: u64) {
     info!("starting block storage client");
@@ -67,14 +52,14 @@ impl FarMemoryDevice {
 impl BlockDevice for FarMemoryDevice {
     fn read(&mut self, offset: u64, bytes: &mut [u8]) -> Result<(), Error> {
         self.runtime.block_on(async {
-            self.byte_buffer.read(offset, bytes);
+            self.byte_buffer.read(offset, bytes).await;
         });
         Ok(())
     }
 
     fn write(&mut self, offset: u64, bytes: &[u8]) -> std::io::Result<()> {
         self.runtime.block_on(async {
-            self.byte_buffer.write(offset, bytes);
+            self.byte_buffer.write(offset, bytes).await;
         });
         Ok(())
     }

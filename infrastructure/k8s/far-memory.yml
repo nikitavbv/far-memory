@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: far-memory-storage-a
-        image: ghcr.io/nikitavbv/far-memory/far-memory:0.1.53
+        image: ghcr.io/nikitavbv/far-memory/far-memory:0.1.61
         env:
         - name: FAR_MEMORY_CONFIG
           value: /etc/far-memory/config/config.toml
@@ -49,7 +49,7 @@ spec:
     spec:
       containers:
       - name: far-memory-storage-b
-        image: ghcr.io/nikitavbv/far-memory/far-memory:0.1.53
+        image: ghcr.io/nikitavbv/far-memory/far-memory:0.1.61
         env:
         - name: FAR_MEMORY_CONFIG
           value: /etc/far-memory/config/config.toml
@@ -60,6 +60,39 @@ spec:
       - name: config
         configMap:
           name: far-memory-config
+          items:
+          - key: config.toml
+            path: config.toml
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: far-memory-controller
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: far-memory-controller
+  replicas: 1
+  serviceName: far-memory-controller
+  template:
+    metadata:
+      labels:
+        app: far-memory-controller
+    spec:
+      containers:
+      - name: far-memory-controller
+        image: ghcr.io/nikitavbv/far-memory/far-memory:0.1.61
+        env:
+        - name: FAR_MEMORY_CONFIG
+          value: /etc/far-memory/config/config.toml
+        volumeMounts:
+        - name: config
+          mountPath: /etc/far-memory/config
+      volumes:
+      - name: config
+        configMap:
+          name: far-memory-config-controller
           items:
           - key: config.toml
             path: config.toml

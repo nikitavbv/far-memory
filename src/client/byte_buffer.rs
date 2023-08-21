@@ -10,16 +10,20 @@ use {
         utils::AuthInterceptor,
         rpc::{
             memory_storage_service_client::MemoryStorageServiceClient,
+            controller_service_client::ControllerServiceClient,
             MemoryBlockId,
             AllocateMemoryBlockRequest,
             ReadMemoryBlockRequest,
             WriteMemoryBlockRequest,
         }
-    }
+    },
+    super::block_map::BlockMap,
 };
 
 pub struct FarMemoryByteBuffer {
-    client: MemoryStorageServiceClient<InterceptedService<Channel, AuthInterceptor>>,
+    client: ControllerServiceClient<InterceptedService<Channel, AuthInterceptor>>,
+
+    block_map: BlockMap,
 
     far_memory_block_size: u64,
     blocks_initialized: HashMap<u64, MemoryBlockId>,
@@ -28,13 +32,16 @@ pub struct FarMemoryByteBuffer {
 
 impl FarMemoryByteBuffer {
     pub async fn new(endpoint: String, token: String, far_memory_block_size: u64) -> Self {
-        let client = MemoryStorageServiceClient::with_interceptor(
+        let client = ControllerServiceClient::with_interceptor(
             Endpoint::from_str(&endpoint).unwrap().connect().await.unwrap(), 
             AuthInterceptor::new(token)
         );
 
         Self {
             client,
+
+            block_map: BlockMap::new(far_memory_block_size),
+
             far_memory_block_size,
             blocks_initialized: HashMap::new(),
             blocks_cache: LruCache::new(NonZeroUsize::new(10).unwrap()),
@@ -53,7 +60,7 @@ impl FarMemoryByteBuffer {
         block_offset * self.far_memory_block_size
     }
 
-    async fn block_id_for_block_offset(&mut self, block_offset: u64) -> MemoryBlockId {
+    /*async fn block_id_for_block_offset(&mut self, block_offset: u64) -> MemoryBlockId {
         if let Some(id) = self.blocks_initialized.get(&block_offset) {
             return id.clone();
         }
@@ -82,10 +89,10 @@ impl FarMemoryByteBuffer {
             id: Some(id),
             data,
         }).await.unwrap();
-    }
+    }*/
 
     pub async fn read(&mut self, offset: u64, bytes: &mut [u8]) {
-        let begin_block_index = self.block_for_offset(offset);
+        /*let begin_block_index = self.block_for_offset(offset);
         let end_block_index = self.block_for_offset(offset + bytes.len() as u64);
 
         let mut blocks_data = Vec::new();
@@ -108,13 +115,15 @@ impl FarMemoryByteBuffer {
 
         let blocks_begin_offset = self.offset_for_block(begin_block_index);
 
-        bytes.copy_from_slice(&blocks_data[(offset - blocks_begin_offset) as usize..(offset - blocks_begin_offset + bytes.len() as u64) as usize]);
+        bytes.copy_from_slice(&blocks_data[(offset - blocks_begin_offset) as usize..(offset - blocks_begin_offset + bytes.len() as u64) as usize]);*/
     }
 
     pub async fn write(&mut self, offset: u64, bytes: &[u8]) {
         info!("writing blocks");
 
-        let begin_block_index = self.block_for_offset(offset);
+
+
+        /*let begin_block_index = self.block_for_offset(offset);
         let end_block_index = self.block_for_offset(offset + bytes.len() as u64);
 
         let mut blocks_data = Vec::new();
@@ -136,10 +145,10 @@ impl FarMemoryByteBuffer {
             let block_data = block_data.to_vec();
 
             self.blocks_cache.put(block_id.clone(), block_data.clone());
-            self.write_block(block_id, block_data);
+            self.write_block(block_id, block_data).await;
 
             i += 1;
-        }
+        }*/
 
         info!("done writing blocks");
     }
