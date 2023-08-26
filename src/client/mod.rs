@@ -2,11 +2,15 @@ use {
     std::{io::Error, path::Path},
     tracing::info,
     vblk::{mount, BlockDevice},
-    self::byte_buffer::FarMemoryByteBuffer,
+    self::{
+        controller_client::ControllerClient,
+        byte_buffer::FarMemoryByteBuffer,
+    },
 };
 
 pub mod block_map;
 pub mod byte_buffer;
+pub mod controller_client;
 pub mod test_mode;
 
 pub async fn run_block_storage_client(endpoint: String, token: String, far_memory_block_size: u64) {
@@ -34,12 +38,14 @@ impl FarMemoryDevice {
             .build()
             .unwrap();
 
+        let client = ControllerClient::new(endpoint, token).await;
+
         let mut byte_buffer = runtime.spawn(async move {
-            FarMemoryByteBuffer::new(endpoint, token, far_memory_block_size).await
+            FarMemoryByteBuffer::new(client, far_memory_block_size).await
         }).await.unwrap();
 
         if Path::new("./block_map").exists() {
-            byte_buffer.load_block_map(&std::fs::read("./block_map").unwrap());
+            // byte_buffer.load_block_map(&std::fs::read("./block_map").unwrap());
         }
 
         Self {

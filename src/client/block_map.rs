@@ -1,8 +1,10 @@
-pub struct BlockMap {
+use std::collections::HashMap;
+
+pub struct LocalBlockMap {
     block_size: u64,
 }
 
-impl BlockMap {
+impl LocalBlockMap {
     pub fn new(block_size: u64) -> Self {
         Self {
             block_size,
@@ -25,7 +27,23 @@ impl BlockMap {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+pub struct RemoteBlockMap {
+    map: HashMap<LocalBlockId, RemoteBlockId>,
+}
+
+impl RemoteBlockMap {
+    pub fn new() -> Self {
+        Self {
+            map: HashMap::new(),
+        }
+    }
+
+    pub fn remote_block_for_local_block(&self, local_block: &LocalBlockId) -> Option<&RemoteBlockId> {
+        self.map.get(local_block)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct LocalBlockId {
     id: u64,
 }
@@ -34,6 +52,17 @@ impl LocalBlockId {
     pub fn new(id: u64) -> Self {
         Self {
             id,
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct RemoteBlockId {
+}
+
+impl RemoteBlockId {
+    pub fn new() -> Self {
+        Self {
         }
     }
 }
