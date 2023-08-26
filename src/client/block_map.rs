@@ -25,6 +25,10 @@ impl LocalBlockMap {
 
         result
     }
+
+    pub fn offset_for_block(&self, block: &LocalBlockId) -> u64 {
+        block.id * self.block_size
+    }
 }
 
 pub struct RemoteBlockMap {
@@ -41,9 +45,13 @@ impl RemoteBlockMap {
     pub fn remote_block_for_local_block(&self, local_block: &LocalBlockId) -> Option<&RemoteBlockId> {
         self.map.get(local_block)
     }
+
+    pub fn put_remote_block_for_local(&mut self, local_block: LocalBlockId, remote_block: RemoteBlockId) {
+        self.map.insert(local_block, remote_block);
+    }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct LocalBlockId {
     id: u64,
 }
@@ -58,11 +66,15 @@ impl LocalBlockId {
 
 #[derive(Clone)]
 pub struct RemoteBlockId {
+    node_id: u32,
+    block_id: u32,
 }
 
 impl RemoteBlockId {
-    pub fn new() -> Self {
+    pub fn new(node_id: u32, block_id: u32) -> Self {
         Self {
+            node_id,
+            block_id,
         }
     }
 }
@@ -73,7 +85,7 @@ mod tests {
 
     #[test]
     fn test_local_blocks_for_range() {
-        let map = BlockMap::new(32);
+        let map = LocalBlockMap::new(32);
 
         let blocks_for_range = map.local_blocks_for_range(24, 12);
         assert_eq!(blocks_for_range, vec![LocalBlockId::new(0), LocalBlockId::new(1)]);

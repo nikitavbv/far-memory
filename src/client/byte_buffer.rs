@@ -8,12 +8,15 @@ use {
     super::{
         controller_client::ControllerClient,
         block_map::{LocalBlockMap, RemoteBlockMap},
+        block_allocator::BlockAllocator,
+        block_writer::WriteRequest,
     },
 };
 
 pub struct FarMemoryByteBuffer {
     local_block_map: LocalBlockMap,
     remote_block_map: RemoteBlockMap,
+    block_allocator: BlockAllocator,
 }
 
 impl FarMemoryByteBuffer {
@@ -21,6 +24,7 @@ impl FarMemoryByteBuffer {
         Self {
             local_block_map: LocalBlockMap::new(far_memory_block_size),
             remote_block_map: RemoteBlockMap::new(),
+            block_allocator: BlockAllocator::new(client),
         }
     }
 
@@ -33,12 +37,21 @@ impl FarMemoryByteBuffer {
 
         for local_block in local_blocks {
             match self.remote_block_map.remote_block_for_local_block(&local_block) {
-                Some(v) => remote_blocks.push(v),
+                Some(v) => remote_blocks.push(v.clone()),
                 None => {
-                    // TODO: request block and save it to remote block map
-                    unimplemented!("block allocation is not implemented yet");
+                    let block = self.block_allocator.allocate_block().await;
+                    remote_blocks.push(block.clone());
+                    self.remote_block_map.put_remote_block_for_local(local_block.clone(), block);
                 }
             }
         }
+
+        // TODO: create write requests
+        let mut offset = offset;
+        let mut bytes_to_write_offset = 0;
+
+        let mut requests: Vec<WriteRequest> = vec![];
+
+        
     }
 }

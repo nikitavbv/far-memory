@@ -8,7 +8,9 @@ use {
     },
 };
 
+pub mod block_allocator;
 pub mod block_map;
+pub mod block_writer;
 pub mod byte_buffer;
 pub mod controller_client;
 pub mod test_mode;

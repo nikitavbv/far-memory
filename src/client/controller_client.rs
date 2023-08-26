@@ -4,8 +4,12 @@ use {
     tonic::{codegen::InterceptedService, transport::{Endpoint, Channel}},
     crate::{
         utils::AuthInterceptor,
-        rpc::controller_service_client::ControllerServiceClient,
+        rpc::{
+            controller_service_client::ControllerServiceClient,
+            ControllerAllocateMemoryBlockRequest,
+        },
     },
+    super::block_map::RemoteBlockId,
 };
 
 #[derive(Clone)]
@@ -21,5 +25,12 @@ impl ControllerClient {
                 AuthInterceptor::new(token)
             ))),
         }
+    }
+
+    pub async fn allocate_block(&self) -> RemoteBlockId {
+        let res = self.client.lock().await.controller_allocate_memory_block(ControllerAllocateMemoryBlockRequest {
+        }).await.unwrap().into_inner();
+
+        RemoteBlockId::new(res.node_id.unwrap().id, res.block_id.unwrap().id)
     }
 }
