@@ -35,23 +35,26 @@ impl FarMemoryByteBuffer {
         let local_blocks = self.local_block_map.local_blocks_for_range(offset, bytes.len() as u64);
         let mut remote_blocks = Vec::new();
 
-        for local_block in local_blocks {
+        for (local_block, block_slice) in local_blocks {
             match self.remote_block_map.remote_block_for_local_block(&local_block) {
-                Some(v) => remote_blocks.push(v.clone()),
+                Some(v) => remote_blocks.push((v.clone(), block_slice)),
                 None => {
                     let block = self.block_allocator.allocate_block().await;
-                    remote_blocks.push(block.clone());
+                    remote_blocks.push((block.clone(), block_slice));
                     self.remote_block_map.put_remote_block_for_local(local_block.clone(), block);
                 }
             }
         }
 
-        // TODO: create write requests
-        let mut offset = offset;
-        let mut bytes_to_write_offset = 0;
+        let mut write_requests = vec![];
+        let mut bytes_offset = 0;
 
-        let mut requests: Vec<WriteRequest> = vec![];
+        for (remote_block, block_slice) in remote_blocks {
+            write_requests.push(WriteRequest::new(remote_block, block_slice.offset() as u32, bytes[bytes_offset..(block_slice.len() as usize)].to_vec()));
+            bytes_offset += block_slice.len() as usize;
+        }
 
-        
+        // TODO: perform actual writes
+        panic!("write requests are: {:?}", write_requests);
     }
 }

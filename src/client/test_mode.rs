@@ -12,7 +12,7 @@ pub async fn run_test_mode(endpoint: String, token: String, far_memory_block_siz
     let client = ControllerClient::new(endpoint, token).await;
 
     let mut buffer = FarMemoryByteBuffer::new(client, far_memory_block_size).await;
-    buffer.write(0, &[1, 2, 3, 4, 5]).await;
+    buffer.write(1, &[1, 2, 3, 4, 5]).await;
 
     let mut bytes = vec![0; 10];
     buffer.read(0, &mut bytes).await;

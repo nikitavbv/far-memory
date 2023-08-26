@@ -11,23 +11,31 @@ impl LocalBlockMap {
         }
     }
 
-    pub fn local_blocks_for_range(&self, offset: u64, len: u64) -> Vec<LocalBlockId> {
+    pub fn local_blocks_for_range(&self, offset: u64, len: u64) -> Vec<(LocalBlockId, BlockSlice)> {
         let mut result = Vec::new();
         let start_local_id = offset / self.block_size;  
         let mut i = start_local_id * self.block_size;
         let mut local_id = start_local_id;
         
+        let mut global_offset = offset;
+
         while i < offset + len {
-            result.push(LocalBlockId::new(local_id));
+            let slice_offset = global_offset - i;
+
+            let remaining_block_length = self.block_size - slice_offset;
+            let remaining_data_length = offset + len - i - slice_offset;
+ 
+            let slice_len = remaining_block_length.min(remaining_data_length);
+
+            result.push((LocalBlockId::new(local_id), BlockSlice::new(slice_offset, slice_len)));
+
+            global_offset += slice_len;
+
             i += self.block_size;
             local_id += 1;
         }
 
         result
-    }
-
-    pub fn offset_for_block(&self, block: &LocalBlockId) -> u64 {
-        block.id * self.block_size
     }
 }
 
@@ -64,7 +72,30 @@ impl LocalBlockId {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, PartialEq, Eq)]
+pub struct BlockSlice {
+    offset: u64,
+    len: u64,
+}
+
+impl BlockSlice {
+    pub fn new(offset: u64, len: u64) -> Self {
+        Self {
+            offset,
+            len,
+        }
+    }
+
+    pub fn offset(&self) -> u64 {
+        self.offset
+    }
+
+    pub fn len(&self) -> u64 {
+        self.len
+    }
+}
+
+#[derive(Clone, Debug)]
 pub struct RemoteBlockId {
     node_id: u32,
     block_id: u32,
@@ -88,6 +119,13 @@ mod tests {
         let map = LocalBlockMap::new(32);
 
         let blocks_for_range = map.local_blocks_for_range(24, 12);
-        assert_eq!(blocks_for_range, vec![LocalBlockId::new(0), LocalBlockId::new(1)]);
+        
+        assert_eq!(
+            blocks_for_range, 
+            vec![
+                (LocalBlockId::new(0), BlockSlice::new(24, 8)), 
+                (LocalBlockId::new(1), BlockSlice::new(0, 4)),
+            ]
+        );
     }
 }
