@@ -6,7 +6,7 @@ use {
         transport::{Endpoint, Channel},
     },
     super::{
-        controller_client::ControllerClient,
+        far_memory_client::FarMemoryClient,
         block_map::{LocalBlockMap, RemoteBlockMap},
         block_allocator::BlockAllocator,
         block_writer::WriteRequest,
@@ -20,7 +20,7 @@ pub struct FarMemoryByteBuffer {
 }
 
 impl FarMemoryByteBuffer {
-    pub async fn new(client: ControllerClient, far_memory_block_size: u64) -> Self {
+    pub async fn new(client: FarMemoryClient, far_memory_block_size: u64) -> Self {
         Self {
             local_block_map: LocalBlockMap::new(far_memory_block_size),
             remote_block_map: RemoteBlockMap::new(),

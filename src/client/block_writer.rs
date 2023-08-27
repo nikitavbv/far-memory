@@ -1,4 +1,9 @@
-use super::block_map::RemoteBlockId;
+use {
+    super::block_map::RemoteBlockId,
+    super::{
+        far_memory_client::FarMemoryClient,
+    }
+};
 
 #[derive(Debug)]
 pub struct WriteRequest {
@@ -14,5 +19,21 @@ impl WriteRequest {
             offset,
             data,
         }
+    }
+}
+
+pub struct BlockWriter {
+    client: FarMemoryClient,
+}
+
+impl BlockWriter {
+    pub fn new(client: FarMemoryClient) -> Self {
+        Self {
+            client,
+        }
+    }
+
+    pub async fn perform_write(&self, req: WriteRequest) {
+        self.client.write(&req.block, req.offset, req.data).await;
     }
 }

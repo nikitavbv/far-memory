@@ -3,7 +3,7 @@ use {
     tracing::info,
     vblk::{mount, BlockDevice},
     self::{
-        controller_client::ControllerClient,
+        far_memory_client::FarMemoryClient,
         byte_buffer::FarMemoryByteBuffer,
     },
 };
@@ -12,7 +12,7 @@ pub mod block_allocator;
 pub mod block_map;
 pub mod block_writer;
 pub mod byte_buffer;
-pub mod controller_client;
+pub mod far_memory_client;
 pub mod test_mode;
 
 pub async fn run_block_storage_client(endpoint: String, token: String, far_memory_block_size: u64) {
@@ -40,7 +40,7 @@ impl FarMemoryDevice {
             .build()
             .unwrap();
 
-        let client = ControllerClient::new(endpoint, token).await;
+        let client = FarMemoryClient::new(endpoint, token).await;
 
         let mut byte_buffer = runtime.spawn(async move {
             FarMemoryByteBuffer::new(client, far_memory_block_size).await

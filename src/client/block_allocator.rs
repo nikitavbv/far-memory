@@ -1,14 +1,14 @@
 use super::{
-    controller_client::ControllerClient,
+    far_memory_client::FarMemoryClient,
     block_map::RemoteBlockId,
 };
 
 pub struct BlockAllocator {
-    client: ControllerClient,
+    client: FarMemoryClient,
 }
 
 impl BlockAllocator {
-    pub fn new(client: ControllerClient) -> Self {
+    pub fn new(client: FarMemoryClient) -> Self {
         Self {
             client,
         }

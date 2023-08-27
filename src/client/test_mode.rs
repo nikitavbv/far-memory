@@ -1,7 +1,7 @@
 use {
     tracing::info,
     super::{
-        controller_client::ControllerClient,
+        far_memory_client::FarMemoryClient,
         byte_buffer::FarMemoryByteBuffer,
     },
 };
@@ -9,7 +9,7 @@ use {
 pub async fn run_test_mode(endpoint: String, token: String, far_memory_block_size: u64) {
     info!("running test mode");
 
-    let client = ControllerClient::new(endpoint, token).await;
+    let client = FarMemoryClient::new(endpoint, token).await;
 
     let mut buffer = FarMemoryByteBuffer::new(client, far_memory_block_size).await;
     buffer.write(1, &[1, 2, 3, 4, 5]).await;

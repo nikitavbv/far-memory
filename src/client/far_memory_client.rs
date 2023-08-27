@@ -13,11 +13,11 @@ use {
 };
 
 #[derive(Clone)]
-pub struct ControllerClient {
+pub struct FarMemoryClient {
     client: Arc<Mutex<ControllerServiceClient<InterceptedService<Channel, AuthInterceptor>>>>,
 }
 
-impl ControllerClient {
+impl FarMemoryClient {
     pub async fn new(endpoint: String, token: String) -> Self {
         Self {
             client: Arc::new(Mutex::new(ControllerServiceClient::with_interceptor(
@@ -32,5 +32,9 @@ impl ControllerClient {
         }).await.unwrap().into_inner();
 
         RemoteBlockId::new(res.node_id.unwrap().id, res.block_id.unwrap().id)
+    }
+
+    pub async fn write(&self, block_id: &RemoteBlockId, offset: u32, data: Vec<u8>) {
+        unimplemented!()
     }
 }
