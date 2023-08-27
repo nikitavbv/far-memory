@@ -18,6 +18,17 @@ use {
         VAlignType,
         TableCellMargins,
         TableAlignmentType,
+        NumberingId,
+        IndentLevel,
+        Numbering,
+        AbstractNumbering,
+        LevelOverride,
+        Level,
+        Start,
+        NumberFormat,
+        LevelText,
+        LevelJc,
+        SpecialIndentType,
     },
     crate::components::LineComponent,
 };
@@ -48,6 +59,18 @@ fn main() {
         )
         .default_fonts(RunFonts::new().cs("Times New Roman"))
         .default_size(28) // 14
+        .add_abstract_numbering(
+            AbstractNumbering::new(1)
+                .add_level(Level::new(
+                    0,
+                    Start::new(1),
+                    NumberFormat::new("decimal"),
+                    LevelText::new("%1."),
+                    LevelJc::new("start")
+                )
+                .indent(Some(360), Some(SpecialIndentType::Hanging(360)), None, Some(0))
+            )
+        )
         .add_paragraph(Paragraph::new()
             .add_run(Run::new()
                 .size(28)
@@ -264,6 +287,11 @@ fn main() {
             .line_spacing(LineSpacing::new().before(150))
             .align(AlignmentType::Center)
             .add_run(Run::new().bold().add_text("Волобуєву Нікіті Олександровичу"))
+        )
+        .add_paragraph(Paragraph::new()
+            .line_spacing(LineSpacing::new().before(150))
+            .numbering(NumberingId::new(1), IndentLevel::new(0))
+            .add_run(Run::new().add_text("Тема дисертації"))
         )
         .build()
         .pack(file)
