@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: far-memory-storage-a
-        image: ghcr.io/nikitavbv/far-memory/far-memory:0.1.61
+        image: ghcr.io/nikitavbv/far-memory/far-memory:0.1.67
         env:
         - name: FAR_MEMORY_CONFIG
           value: /etc/far-memory/config/config.toml
@@ -49,7 +49,7 @@ spec:
     spec:
       containers:
       - name: far-memory-storage-b
-        image: ghcr.io/nikitavbv/far-memory/far-memory:0.1.61
+        image: ghcr.io/nikitavbv/far-memory/far-memory:0.1.67
         env:
         - name: FAR_MEMORY_CONFIG
           value: /etc/far-memory/config/config.toml
@@ -82,7 +82,7 @@ spec:
     spec:
       containers:
       - name: far-memory-controller
-        image: ghcr.io/nikitavbv/far-memory/far-memory:0.1.61
+        image: ghcr.io/nikitavbv/far-memory/far-memory:0.1.67
         env:
         - name: FAR_MEMORY_CONFIG
           value: /etc/far-memory/config/config.toml
