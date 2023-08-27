@@ -1,1 +1,3 @@
-pub mod test_component;
+pub use self::line::LineComponent;
+
+pub mod line;

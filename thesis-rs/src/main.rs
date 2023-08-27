@@ -15,12 +15,11 @@ use {
         TableCell, 
         TableBorders, 
         WidthType,
-        Pic,
         VAlignType,
         TableCellMargins,
         TableAlignmentType,
     },
-    crate::components::test_component::TestComponent,
+    crate::components::LineComponent,
 };
 
 pub mod components;
@@ -53,9 +52,9 @@ fn main() {
             .add_run(Run::new()
                 .size(28)
                 .bold()
-                .add_text("Національний технічний університет україни".to_uppercase())
+                .add_text("Національний технічний університет України".to_uppercase())
                 .add_break(BreakType::TextWrapping)
-                .add_text("«Київскьий Політехнічний Інститут".to_uppercase())
+                .add_text("«Київський Політехнічний Інститут".to_uppercase())
                 .add_break(BreakType::TextWrapping)
                 .add_text("імені ")
                 .add_text("Ігоря Сікорського»".to_uppercase())
@@ -93,13 +92,13 @@ fn main() {
                             .add_break(BreakType::TextWrapping)
                             .add_text("Завідувач кафедри")
                             .add_break(BreakType::TextWrapping)
-                            .add_image(Pic::new(&line()).size(1000000, 17000))
+                            .add_line_component(1000000)
                             .add_text("Едуард ЖАРІКОВ")
                             .add_break(BreakType::TextWrapping)
                             .add_text("«")
-                            .add_image(Pic::new(&line()).size(180000, 17000))
+                            .add_line_component(180000)
                             .add_text("»")
-                            .add_image(Pic::new(&line()).size(1400000, 17000))
+                            .add_line_component(1400000)
                             .add_text("2023р.")))
                     .width(4000, WidthType::Dxa)
             ])
@@ -136,7 +135,7 @@ fn main() {
                     .width(7000, WidthType::Dxa),
                 TableCell::new()
                     .add_paragraph(Paragraph::new()
-                            .add_run(Run::new().add_image(Pic::new(&line()).size(800000, 17000))))
+                            .add_run(Run::new().add_line_component(800000)))
                     .vertical_align(VAlignType::Bottom)
             ]),
             TableRow::new(vec![
@@ -152,7 +151,7 @@ fn main() {
                     .width(7000, WidthType::Dxa),
                 TableCell::new()
                     .add_paragraph(Paragraph::new()
-                            .add_run(Run::new().add_image(Pic::new(&line()).size(800000, 17000))))
+                            .add_run(Run::new().add_line_component(800000)))
                     .vertical_align(VAlignType::Bottom)
             ]),
             TableRow::new(vec![
@@ -169,7 +168,7 @@ fn main() {
                     .width(7000, WidthType::Dxa),
                 TableCell::new()
                     .add_paragraph(Paragraph::new()
-                            .add_run(Run::new().add_image(Pic::new(&line()).size(800000, 17000))))
+                            .add_run(Run::new().add_line_component(800000)))
                     .vertical_align(VAlignType::Bottom)
             ]),
         ]).set_borders(TableBorders::new().clear_all()).margins(TableCellMargins::new().margin_bottom(300, WidthType::Dxa)))
@@ -188,7 +187,7 @@ fn main() {
                         .add_text("відповідних посилань.")
                         .add_break(BreakType::TextWrapping)
                         .add_text("Студент (-ка) ")
-                        .add_image(Pic::new(&line()).size(800000, 17000))
+                        .add_line_component(800000)
                     ))
                     .width(6000, WidthType::Dxa),
             ]),
@@ -198,8 +197,74 @@ fn main() {
             .align(AlignmentType::Center)
             .add_run(Run::new().add_text("Київ – 2023 року"))
         )
-        .add_paragraph(Paragraph::new().add_run(Run::new().add_break(BreakType::Page)))
-        .add_test_component()
+        .add_paragraph(Paragraph::new()
+            .add_run(Run::new()
+                .size(28)
+                .bold()
+                .add_text("Національний технічний університет України")
+                .add_break(BreakType::TextWrapping)
+                .add_text("«Київський політехнічний інститут імені Ігоря Сікорського»")
+            )
+            .align(AlignmentType::Center))
+        .add_paragraph(Paragraph::new()
+            .line_spacing(LineSpacing::new().line(24 * 15).before(100))
+            .add_run(Run::new()
+                .size(28)
+                .add_text("Факультет інформатики та обчислювальної техніки")
+                .add_break(BreakType::TextWrapping)
+                .add_text("Кафедра інформатики та програмної інженерії")
+            )
+            .align(AlignmentType::Center))
+        .add_paragraph(Paragraph::new()
+            .line_spacing(LineSpacing::new().line(24 * 15).after(400))
+            .align(AlignmentType::Both)
+            .add_run(Run::new()
+                .size(28)
+                .add_text("Рівень вищої освіти – другий (магістерський)")
+                .add_break(BreakType::TextWrapping)
+                .add_text("Спеціальність – 121 «Інженерія програмного забезпечення»")
+                .add_break(BreakType::TextWrapping)
+                .add_text("Освітньо-професійна програма «Інженерія програмного забезпечення інформаційних систем»")
+            )
+        )
+        .add_table(Table::new(vec![
+            TableRow::new(vec![
+                TableCell::new().width(5000, WidthType::Dxa),
+                TableCell::new()
+                    .add_paragraph(Paragraph::new()
+                        .line_spacing(LineSpacing::new().line(24 * 15))
+                        .add_run(Run::new()
+                            .size(24)
+                            .add_text("Затверджую".to_uppercase())
+                            .add_break(BreakType::TextWrapping)
+                            .add_text("Завідувач кафедри")
+                            .add_break(BreakType::TextWrapping)
+                            .add_line_component(1000000)
+                            .add_text("Едуард ЖАРІКОВ")
+                            .add_break(BreakType::TextWrapping)
+                            .add_text("«")
+                            .add_line_component(180000)
+                            .add_text("»")
+                            .add_line_component(1400000)
+                            .add_text("2023р.")))
+                    .width(4000, WidthType::Dxa)
+            ])
+        ]).set_borders(TableBorders::new().clear_all()))
+        .add_paragraph(Paragraph::new()
+            .line_spacing(LineSpacing::new().line(24 * 10).before(300))
+            .align(AlignmentType::Center)
+            .add_run(Run::new()
+                .bold()
+                .add_text("Завдання".to_uppercase())
+                .add_break(BreakType::TextWrapping)
+                .add_text("на магістерську дисертацію студенту")
+            )
+        )
+        .add_paragraph(Paragraph::new()
+            .line_spacing(LineSpacing::new().before(150))
+            .align(AlignmentType::Center)
+            .add_run(Run::new().bold().add_text("Волобуєву Нікіті Олександровичу"))
+        )
         .build()
         .pack(file)
         .unwrap();
@@ -215,8 +280,4 @@ fn main() {
 
 fn mm_to_twentieth_of_a_point(mm: f32) -> i32 {
     (mm * 56.6929133858).round() as i32
-}
-
-fn line() -> Vec<u8> {
-    std::fs::read("resources/line.gif").unwrap()
 }
