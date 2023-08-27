@@ -20,20 +20,22 @@ use {
         TableAlignmentType,
         NumberingId,
         IndentLevel,
-        Numbering,
         AbstractNumbering,
-        LevelOverride,
         Level,
         Start,
         NumberFormat,
         LevelText,
         LevelJc,
-        SpecialIndentType,
     },
-    crate::components::LineComponent,
+    crate::{
+        components::LineComponent,
+        content::Content,
+    },
 };
 
 pub mod components;
+
+pub mod content;
 
 #[derive(Parser, Debug)]
 struct Args {   
@@ -49,6 +51,8 @@ fn main() {
 
     println!("generating thesis to {:?}", path);
 
+    let content = Content::new();
+
     Docx::new()
         .page_margin(
             PageMargin::new()
@@ -59,16 +63,16 @@ fn main() {
         )
         .default_fonts(RunFonts::new().cs("Times New Roman"))
         .default_size(28) // 14
+        .default_tab_stop(0)
         .add_abstract_numbering(
             AbstractNumbering::new(1)
                 .add_level(Level::new(
                     0,
                     Start::new(1),
                     NumberFormat::new("decimal"),
-                    LevelText::new("%1."),
+                    LevelText::new("%1. "),
                     LevelJc::new("start")
                 )
-                .indent(Some(360), Some(SpecialIndentType::Hanging(360)), None, Some(0))
             )
         )
         .add_paragraph(Paragraph::new()
@@ -143,7 +147,7 @@ fn main() {
                 .add_break(BreakType::TextWrapping)
                 .add_text("зі спеціальності 121 «Інженерія програмного забезпечення»")
                 .add_break(BreakType::TextWrapping)
-                .add_text("на тему: «Методи та програмні засоби надання програмно-визначеної віддаленої памʼяті у розподілених системах»")))
+                .add_text(format!("на тему: «{}»", content.topic))))
         .add_table(Table::new(vec![
             TableRow::new(vec![
                 TableCell::new()
@@ -168,9 +172,9 @@ fn main() {
                             .size(14 * 2)
                             .add_text("Керівник: ")
                             .add_break(BreakType::TextWrapping)
-                            .add_text("д.т.н., проф., засл.діяч")
+                            .add_text(&content.mentor_title)
                             .add_break(BreakType::TextWrapping)
-                            .add_text("Павлов Олександр Анатолійович")))
+                            .add_text(&content.mentor_name)))
                     .width(7000, WidthType::Dxa),
                 TableCell::new()
                     .add_paragraph(Paragraph::new()
@@ -291,8 +295,36 @@ fn main() {
         .add_paragraph(Paragraph::new()
             .line_spacing(LineSpacing::new().before(150))
             .numbering(NumberingId::new(1), IndentLevel::new(0))
-            .add_run(Run::new().add_text("Тема дисертації"))
+            .align(AlignmentType::Both)
+            .add_run(Run::new()
+                .add_text(format!(
+                    "Тема дисертації «{}», науковий керівник дисертації {} {}, затверджені наказом по університету від ", 
+                    content.topic, 
+                    content.mentor_name, 
+                    content.mentor_title
+                )))
+            .add_run(Run::new()
+                .highlight("yellow")
+                .add_text("«27» жовтня 2021 р. № 3587-с"))
         )
+        .add_paragraph(Paragraph::new()
+            .line_spacing(LineSpacing::new().before(150))
+            .numbering(NumberingId::new(1), IndentLevel::new(0))
+            .align(AlignmentType::Both)
+            .add_run(Run::new().add_text("Термін подання студентом дисертації "))
+            .add_run(Run::new().highlight("yellow").add_text("«06» грудня 2023 р."))
+        )
+        .add_paragraph(Paragraph::new()
+            .line_spacing(LineSpacing::new().before(150))
+            .numbering(NumberingId::new(1), IndentLevel::new(0))
+            .align(AlignmentType::Both)
+            .add_run(Run::new().add_text(format!("Об’єкт дослідження – {}.", content.research_object)))
+        )
+        .add_paragraph(Paragraph::new()
+            .line_spacing(LineSpacing::new().before(150))
+            .numbering(NumberingId::new(1), IndentLevel::new(0))
+            .align(AlignmentType::Both)
+            .add_run(Run::new().add_text(format!("Предмет дослідження – {}.", content.research_subject))))
         .build()
         .pack(file)
         .unwrap();
