@@ -17,6 +17,8 @@ use {
             ControllerAllocateMemoryBlockRequest,
             ControllerAllocateMemoryBlockResponse,
             AllocateMemoryBlockRequest,
+            GetMemoryStorageNodeByIdRequest,
+            GetMemoryStorageNodeByIdResponse,
         },
     },
 };
@@ -90,10 +92,23 @@ impl ControllerService for ControllerServiceHandler {
             block_id: Some(block_id),
         }))
     } 
+
+    async fn get_memory_storage_node_by_id(&self, req: Request<GetMemoryStorageNodeByIdRequest>) -> Result<Response<GetMemoryStorageNodeByIdResponse>, Status> {
+        self.check_auth(&req)?;
+
+        let req = req.into_inner();
+
+        let endpoint = self.nodes.get(req.node_id.unwrap().id as usize).unwrap().endpoint.clone();
+
+        Ok(Response::new(GetMemoryStorageNodeByIdResponse {
+            endpoint,
+        }))
+    }
 }
 
 struct StorageNode {
     id: u32,
+    endpoint: String,
     client: Mutex<MemoryStorageServiceClient<InterceptedService<Channel, AuthInterceptor>>>,
     blocks_allocated: Mutex<Vec<MemoryBlockId>>,
 }
@@ -106,6 +121,7 @@ impl StorageNode {
                 Endpoint::from_str(&endpoint).unwrap().connect().await.unwrap(),
                 AuthInterceptor::new(token)
             )),
+            endpoint,
             blocks_allocated: Mutex::new(Vec::new()),
         }
     }

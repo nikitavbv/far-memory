@@ -112,6 +112,10 @@ impl RemoteBlockId {
     pub fn node_id(&self) -> u32 {
         self.node_id
     }
+
+    pub fn block_id(&self) -> u32 {
+        self.block_id
+    }
 }
 
 #[cfg(test)]

@@ -11,6 +11,7 @@ service MemoryStorageService {
 
 service ControllerService {
     rpc ControllerAllocateMemoryBlock(ControllerAllocateMemoryBlockRequest) returns (ControllerAllocateMemoryBlockResponse) {}
+    rpc GetMemoryStorageNodeById(GetMemoryStorageNodeByIdRequest) returns (GetMemoryStorageNodeByIdResponse) {}
 }
 
 // common types
@@ -33,6 +34,7 @@ message AllocateMemoryBlockResponse {
 message WriteMemoryBlockRequest {
     MemoryBlockId id = 1;
     bytes data = 2;
+    uint32 offset = 3;
 }
 
 message WriteMemoryBlockResponse {
@@ -59,4 +61,12 @@ message ControllerAllocateMemoryBlockRequest {
 message ControllerAllocateMemoryBlockResponse {
     StorageNodeId node_id = 1;
     MemoryBlockId block_id = 2;
+}
+
+message GetMemoryStorageNodeByIdRequest {
+    StorageNodeId node_id = 1;
+}
+
+message GetMemoryStorageNodeByIdResponse {
+    string endpoint = 1;
 }

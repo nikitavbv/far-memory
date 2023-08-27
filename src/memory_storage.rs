@@ -124,7 +124,7 @@ impl MemoryStorageService for MemoryStorageServiceHandler {
         let id = BlockId::from(req.id.as_ref().unwrap());
 
         let mut storage = self.storage.lock().await;
-        storage.get_mut(&id).unwrap().data = req.data;
+        storage.get_mut(&id).unwrap().data[req.offset as usize..].copy_from_slice(&req.data);
 
         Ok(Response::new(WriteMemoryBlockResponse {}))
     }

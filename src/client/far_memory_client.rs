@@ -5,9 +5,13 @@ use {
     crate::{
         utils::AuthInterceptor,
         rpc::{
+            self,
             controller_service_client::ControllerServiceClient,
             memory_storage_service_client::MemoryStorageServiceClient,
+            StorageNodeId,
             ControllerAllocateMemoryBlockRequest,
+            GetMemoryStorageNodeByIdRequest,
+            WriteMemoryBlockRequest,
         },
     },
     super::block_map::RemoteBlockId,
@@ -15,6 +19,7 @@ use {
 
 #[derive(Clone)]
 pub struct FarMemoryClient {
+    token: String,
     controller_client: Arc<Mutex<ControllerServiceClient<InterceptedService<Channel, AuthInterceptor>>>>,
     storage_service_nodes: Arc<Mutex<HashMap<u32, Arc<Mutex<MemoryStorageServiceClient<InterceptedService<Channel, AuthInterceptor>>>>>>>,
 }
@@ -22,6 +27,7 @@ pub struct FarMemoryClient {
 impl FarMemoryClient {
     pub async fn new(endpoint: String, token: String) -> Self {
         Self {
+            token: token.clone(),
             controller_client: Arc::new(Mutex::new(ControllerServiceClient::with_interceptor(
                 Endpoint::from_str(&endpoint).unwrap().connect().await.unwrap(), 
                 AuthInterceptor::new(token)
@@ -41,11 +47,36 @@ impl FarMemoryClient {
         let node_id = block_id.node_id();
         let client = self.client_for_storage_node(node_id).await;
 
+        client.lock().await.write_memory_block(WriteMemoryBlockRequest {
+            id: Some(rpc::MemoryBlockId { id: block_id.block_id() }),
+            data,
+            offset,
+        }).await.unwrap();
+
         unimplemented!()
     }
 
     async fn client_for_storage_node(&self, node_id: u32) -> Arc<Mutex<MemoryStorageServiceClient<InterceptedService<Channel, AuthInterceptor>>>> {
-        
-        unimplemented!("well, let's get it")
+        {
+            let storage_service_nodes = self.storage_service_nodes.lock().await;
+            if let Some(client) = storage_service_nodes.get(&node_id) {
+                return client.clone();
+            }
+        }
+
+        let endpoint = self.controller_client.lock().await.get_memory_storage_node_by_id(GetMemoryStorageNodeByIdRequest {
+            node_id: Some(StorageNodeId {
+                id: node_id,
+            }),
+        }).await.unwrap().into_inner().endpoint;
+
+        let client = Arc::new(Mutex::new(MemoryStorageServiceClient::with_interceptor(
+            Endpoint::from_str(&endpoint).unwrap().connect().await.unwrap(), 
+            AuthInterceptor::new(self.token.clone())
+        )));
+
+        self.storage_service_nodes.lock().await.insert(node_id, client.clone());
+
+        client
     }
 }
