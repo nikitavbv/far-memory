@@ -9,7 +9,7 @@ use {
         far_memory_client::FarMemoryClient,
         block_map::{LocalBlockMap, RemoteBlockMap},
         block_allocator::BlockAllocator,
-        block_writer::WriteRequest,
+        block_writer::{WriteRequest, BlockWriter},
     },
 };
 
@@ -17,6 +17,7 @@ pub struct FarMemoryByteBuffer {
     local_block_map: LocalBlockMap,
     remote_block_map: RemoteBlockMap,
     block_allocator: BlockAllocator,
+    block_writer: BlockWriter,
 }
 
 impl FarMemoryByteBuffer {
@@ -24,7 +25,8 @@ impl FarMemoryByteBuffer {
         Self {
             local_block_map: LocalBlockMap::new(far_memory_block_size),
             remote_block_map: RemoteBlockMap::new(),
-            block_allocator: BlockAllocator::new(client),
+            block_allocator: BlockAllocator::new(client.clone()),
+            block_writer: BlockWriter::new(client),
         }
     }
 
@@ -54,7 +56,8 @@ impl FarMemoryByteBuffer {
             bytes_offset += block_slice.len() as usize;
         }
 
-        // TODO: perform actual writes
-        panic!("write requests are: {:?}", write_requests);
+        for request in write_requests {
+            self.block_writer.perform_write(request).await;
+        }
     }
 }
