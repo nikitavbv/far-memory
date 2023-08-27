@@ -20,7 +20,10 @@ use {
         TableCellMargins,
         TableAlignmentType,
     },
+    crate::components::test_component::TestComponent,
 };
+
+pub mod components;
 
 #[derive(Parser, Debug)]
 struct Args {   
@@ -177,15 +180,16 @@ fn main() {
                     .add_paragraph(Paragraph::new()
                     .align(AlignmentType::Left)
                     .add_run(Run::new()
-                    .size(14 * 2)
-                    .add_text("Засвідчую, що у цій магістерській дисертації")
-                    .add_break(BreakType::TextWrapping)
-                    .add_text("немає запозичень з праць інших авторів без")
-                    .add_break(BreakType::TextWrapping)
-                    .add_text("відповідних посилань.")
-                    .add_break(BreakType::TextWrapping)
-                    .add_text("Студент (-ка) ")
-                    .add_image(Pic::new(&line()).size(800000, 17000))))
+                        .size(14 * 2)
+                        .add_text("Засвідчую, що у цій магістерській дисертації")
+                        .add_break(BreakType::TextWrapping)
+                        .add_text("немає запозичень з праць інших авторів без")
+                        .add_break(BreakType::TextWrapping)
+                        .add_text("відповідних посилань.")
+                        .add_break(BreakType::TextWrapping)
+                        .add_text("Студент (-ка) ")
+                        .add_image(Pic::new(&line()).size(800000, 17000))
+                    ))
                     .width(6000, WidthType::Dxa),
             ]),
         ]).align(TableAlignmentType::Right).set_borders(TableBorders::new().clear_all()))
@@ -194,6 +198,8 @@ fn main() {
             .align(AlignmentType::Center)
             .add_run(Run::new().add_text("Київ – 2023 року"))
         )
+        .add_paragraph(Paragraph::new().add_run(Run::new().add_break(BreakType::Page)))
+        .add_test_component()
         .build()
         .pack(file)
         .unwrap();
