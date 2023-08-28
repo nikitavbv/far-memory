@@ -195,7 +195,13 @@ impl TaskSection for Docx {
             .add_table(Table::new(vec![
                 TableRow::new(vec![
                     TableCell::new()
-                        .add_paragraph(Paragraph::new().add_run(Run::new().add_text("№ з/п")))
+                        .add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text("№ з/п"))),
+                    TableCell::new()
+                        .add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text("Назва етапів виконання магістерської дисертації"))),
+                    TableCell::new()
+                        .add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text("Термін виконання"))),
+                    TableCell::new()
+                        .add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text("Примітка"))),
                 ])
             ]))
     }
