@@ -13,7 +13,7 @@ impl Content {
             mentor_name: "Павлов Олександр Анатолійович".to_owned(),
             mentor_title: "д.т.н., проф., засл.діяч".to_owned(),
             research_object: "віддалена памʼять у розподілених системах".to_owned(),
-            research_subject: "Rust".to_owned(), // TODO
+            research_subject: "???".to_owned(), // TODO
         }
     }
 }

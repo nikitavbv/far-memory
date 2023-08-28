@@ -26,6 +26,7 @@ use {
         NumberFormat,
         LevelText,
         LevelJc,
+        VMergeType,
     },
     crate::{
         components::LineComponent,
@@ -325,6 +326,60 @@ fn main() {
             .numbering(NumberingId::new(1), IndentLevel::new(0))
             .align(AlignmentType::Both)
             .add_run(Run::new().add_text(format!("Предмет дослідження – {}.", content.research_subject))))
+        .add_paragraph(Paragraph::new()
+            .line_spacing(LineSpacing::new().before(150))
+            .numbering(NumberingId::new(1), IndentLevel::new(0))
+            .align(AlignmentType::Both)
+            .add_run(Run::new().add_text("Перелік завдань, які потрібно розробити – "))
+            .add_run(Run::new().highlight("yellow").add_text("аналіз проблеми та існуючих рішень; розробка моделі/методу/алгоритму/програмного забезпечення; дослідження ефективності розробленого методу/алгоритму/програмного забезпечення."))
+        )
+        .add_paragraph(Paragraph::new()
+            .line_spacing(LineSpacing::new().before(150))
+            .numbering(NumberingId::new(1), IndentLevel::new(0))
+            .align(AlignmentType::Both)
+            .add_run(Run::new().add_text("Орієнтовний перелік графічного (ілюстративного) матеріалу – 3 плакати"))
+        )
+        .add_paragraph(Paragraph::new()
+            .line_spacing(LineSpacing::new().before(150))
+            .numbering(NumberingId::new(1), IndentLevel::new(0))
+            .align(AlignmentType::Both)
+            .add_run(Run::new().add_text("Орієнтовний перелік публікацій – одна публікація"))
+        )
+        .add_paragraph(Paragraph::new()
+            .line_spacing(LineSpacing::new().before(150))
+            .numbering(NumberingId::new(1), IndentLevel::new(0))
+            .align(AlignmentType::Both)
+            .add_run(Run::new().add_text("Консультанти розділів дисертації"))
+        )
+        .add_table(Table::new(vec![
+            TableRow::new(vec![
+                TableCell::new()
+                    .add_paragraph(Paragraph::new()
+                        .align(AlignmentType::Center)
+                        .add_run(Run::new()
+                            .add_text("Розділ")
+                        )
+                    )
+                    .vertical_merge(VMergeType::Restart),
+                TableCell::new()
+                    .add_paragraph(Paragraph::new()
+                        .align(AlignmentType::Center)
+                        .add_run(Run::new()
+                            .add_text("Прізвище, ініціали та посада консультанта")
+                        )
+                    )
+                    .vertical_merge(VMergeType::Restart),
+                TableCell::new()
+                    .add_paragraph(Paragraph::new().add_run(Run::new().add_text("Підпис, дата")))
+                    .grid_span(2),
+            ]),
+            TableRow::new(vec![
+                TableCell::new().vertical_merge(VMergeType::Continue),
+                TableCell::new().vertical_merge(VMergeType::Continue),
+                TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().add_text("завдання видав"))),
+                TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().add_text("завдання прийняв"))),
+            ])
+        ]))
         .build()
         .pack(file)
         .unwrap();
