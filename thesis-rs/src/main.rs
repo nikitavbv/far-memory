@@ -354,30 +354,60 @@ fn main() {
         .add_table(Table::new(vec![
             TableRow::new(vec![
                 TableCell::new()
+                    .vertical_align(VAlignType::Center)
                     .add_paragraph(Paragraph::new()
                         .align(AlignmentType::Center)
                         .add_run(Run::new()
+                            .size(12 * 2)
                             .add_text("Розділ")
                         )
                     )
-                    .vertical_merge(VMergeType::Restart),
+                    .vertical_merge(VMergeType::Restart)
+                    .width(3000, WidthType::Dxa),
                 TableCell::new()
+                    .vertical_align(VAlignType::Center)
                     .add_paragraph(Paragraph::new()
                         .align(AlignmentType::Center)
                         .add_run(Run::new()
+                            .size(12 * 2)
                             .add_text("Прізвище, ініціали та посада консультанта")
                         )
                     )
                     .vertical_merge(VMergeType::Restart),
                 TableCell::new()
-                    .add_paragraph(Paragraph::new().add_run(Run::new().add_text("Підпис, дата")))
+                    .vertical_align(VAlignType::Center)
+                    .add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text("Підпис, дата")))
                     .grid_span(2),
             ]),
             TableRow::new(vec![
                 TableCell::new().vertical_merge(VMergeType::Continue),
                 TableCell::new().vertical_merge(VMergeType::Continue),
-                TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().add_text("завдання видав"))),
-                TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().add_text("завдання прийняв"))),
+                TableCell::new().vertical_align(VAlignType::Center).add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text("завдання видав"))),
+                TableCell::new().vertical_align(VAlignType::Center).add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text("завдання прийняв"))),
+            ]),
+            TableRow::new(vec![
+                TableCell::new(),
+                TableCell::new(),
+                TableCell::new(),
+                TableCell::new(),
+            ]),
+        ]))
+        .add_paragraph(Paragraph::new()
+            .line_spacing(LineSpacing::new().before(150))
+            .numbering(NumberingId::new(1), IndentLevel::new(0))
+            .align(AlignmentType::Both)
+            .add_run(Run::new().add_text("Дата видачі завдання "))
+            .add_run(Run::new().highlight("yellow").add_text("«01» вересня 202Х р."))
+        )
+        .add_paragraph(Paragraph::new()
+            .line_spacing(LineSpacing::new().before(150))
+            .align(AlignmentType::Center)
+            .add_run(Run::new().add_text("Календарний план"))
+        )
+        .add_table(Table::new(vec![
+            TableRow::new(vec![
+                TableCell::new()
+                    .add_paragraph(Paragraph::new().add_run(Run::new().add_text("№ з/п")))
             ])
         ]))
         .build()
