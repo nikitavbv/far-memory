@@ -137,7 +137,7 @@ impl TaskSection for Docx {
                 .line_spacing(LineSpacing::new().before(150))
                 .numbering(NumberingId::new(1), IndentLevel::new(0))
                 .align(AlignmentType::Both)
-                .add_run(Run::new().add_text("Консультанти розділів дисертації"))
+                .add_run(Run::new().add_break(BreakType::Page).add_text("Консультанти розділів дисертації"))
             )
             .add_table(Table::new(vec![
                 TableRow::new(vec![
