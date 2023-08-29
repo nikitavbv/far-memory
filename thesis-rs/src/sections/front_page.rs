@@ -112,7 +112,7 @@ impl FrontPageSection for Docx {
                                 .add_break(BreakType::TextWrapping)
                                 .add_text(&content.mentor_title)
                                 .add_break(BreakType::TextWrapping)
-                                .add_text(&content.mentor_name)))
+                                .add_text(&content.mentor.full_name())))
                         .width(7000, WidthType::Dxa),
                     TableCell::new()
                         .add_paragraph(Paragraph::new()

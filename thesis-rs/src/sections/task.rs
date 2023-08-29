@@ -1,5 +1,5 @@
 use {
-    docx_rs::{Docx, Paragraph, Run, BreakType, LineSpacing, AlignmentType, Table, TableRow, TableCell, WidthType, TableBorders, NumberingId, IndentLevel, VAlignType, VMergeType},
+    docx_rs::{Docx, Paragraph, Run, BreakType, LineSpacing, AlignmentType, Table, TableRow, TableCell, WidthType, TableBorders, NumberingId, IndentLevel, VAlignType, VMergeType, TableCellMargins},
     crate::{
         components::LineComponent,
         content::Content,
@@ -89,7 +89,7 @@ impl TaskSection for Docx {
                     .add_text(format!(
                         "Тема дисертації «{}», науковий керівник дисертації {} {}, затверджені наказом по університету від ", 
                         content.topic, 
-                        content.mentor_name, 
+                        content.mentor.full_name(), 
                         content.mentor_title
                     )))
                 .add_run(Run::new()
@@ -195,14 +195,80 @@ impl TaskSection for Docx {
             .add_table(Table::new(vec![
                 TableRow::new(vec![
                     TableCell::new()
-                        .add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text("№ з/п"))),
+                        .vertical_align(VAlignType::Center)
+                        .add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text("№ з/п")))
+                        .width(500, WidthType::Dxa),
                     TableCell::new()
-                        .add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text("Назва етапів виконання магістерської дисертації"))),
+                        .vertical_align(VAlignType::Center)
+                        .add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text("Назва етапів виконання").add_break(BreakType::TextWrapping).add_text("магістерської дисертації")))
+                        .width(5800, WidthType::Dxa),
                     TableCell::new()
-                        .add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text("Термін виконання"))),
+                        .vertical_align(VAlignType::Center)
+                        .add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text("Термін виконання")))
+                        .width(2000, WidthType::Dxa),
                     TableCell::new()
-                        .add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text("Примітка"))),
-                ])
-            ]))
+                        .vertical_align(VAlignType::Center)
+                        .add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text("Примітка")))
+                        .width(1200, WidthType::Dxa),
+                ]),
+                calendar_plan_empty_row(1),
+                calendar_plan_empty_row(2),
+                calendar_plan_empty_row(3),
+                calendar_plan_empty_row(4),
+                calendar_plan_empty_row(5),
+                calendar_plan_empty_row(6),
+                TableRow::new(vec![
+                    TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text("7"))),
+                    TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text("Виконання експериментальних досліджень"))),
+                    TableCell::new(),
+                    TableCell::new(),
+                ]),
+                TableRow::new(vec![
+                    TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text("8"))),
+                    TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text("Оформлення пояснювальної записки"))),
+                    TableCell::new(),
+                    TableCell::new(),
+                ]),
+                TableRow::new(vec![
+                    TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text("9"))),
+                    TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text("Подання дисертації на попередній захист "))),
+                    TableCell::new().add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text("22.11.2023"))),
+                    TableCell::new(),
+                ]),
+                TableRow::new(vec![
+                    TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text("10"))),
+                    TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text("Подання дисертації на захист"))),
+                    TableCell::new().add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text("06.12.2023"))),
+                    TableCell::new(),
+                ]),
+            ]).margins(TableCellMargins::new().margin(0, 80, 0, 80)))
+            .add_paragraph(Paragraph::new())
+            .add_table(Table::new(vec![
+                TableRow::new(vec![
+                    TableCell::new().width(400, WidthType::Dxa),
+                    TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().add_text("Студент"))).width(6300, WidthType::Dxa),
+                    TableCell::new().add_paragraph(Paragraph::new()
+                        .align(AlignmentType::Right)
+                        .add_run(Run::new().add_text(format!("Нікіта {}", "Волобуєв".to_uppercase()))
+                    )),
+                ]),
+                TableRow::new(vec![
+                    TableCell::new(),
+                    TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().add_text("Науковий керівник"))),
+                    TableCell::new().add_paragraph(Paragraph::new()
+                        .align(AlignmentType::Right)
+                        .add_run(Run::new().add_text(format!("{} {}", content.mentor.first_name, content.mentor.last_name.to_uppercase()))
+                    )),
+                ]),
+            ]).clear_all_border().margins(TableCellMargins::new().margin_bottom(400, WidthType::Dxa)))
     }
+}
+
+fn calendar_plan_empty_row(index: u32) -> TableRow {
+    TableRow::new(vec![
+        TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text(index.to_string()))),
+        TableCell::new(),
+        TableCell::new(),
+        TableCell::new(),
+    ])
 }
