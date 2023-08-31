@@ -1,5 +1,4 @@
 use {
-    tracing::info,
     tonic::{
         codegen::InterceptedService,
         transport::{Endpoint, Channel},
