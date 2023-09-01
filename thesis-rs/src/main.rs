@@ -1,6 +1,7 @@
 use {
     std::process::Command,
     clap::Parser,
+    tracing::info,
     docx_rs::{
         Docx,
         PageMargin, 
@@ -15,6 +16,7 @@ use {
     crate::{
         sections::{FrontPageSection, TaskSection},
         content::Content,
+        utils::init_logging,
     },
 };
 
@@ -22,6 +24,7 @@ pub mod components;
 pub mod sections;
 
 pub mod content;
+pub mod utils;
 
 #[derive(Parser, Debug)]
 struct Args {   
@@ -30,12 +33,14 @@ struct Args {
 }
 
 fn main() {
+    init_logging();
+
     let args = Args::parse();
 
     let path = "./thesis.docx";
     let file = std::fs::File::create(path).unwrap();
 
-    println!("generating thesis to {:?}", path);
+    info!("generating thesis to {:?}", path);
 
     let content = Content::new();
 
@@ -68,10 +73,10 @@ fn main() {
         .unwrap();
 
     if args.pdf {
-        println!("converting to pdf");
+        info!("converting to pdf");
         Command::new("docx2pdf").args(["./thesis.docx", "./thesis.pdf"]).output().unwrap();
     
-        println!("done, opening resulting file");
+        info!("done, opening resulting file");
         Command::new("open").args(["./thesis.pdf"]).output().unwrap();
     }
 }

@@ -1,7 +1,7 @@
 use {
     docx_rs::{Docx, Paragraph, Run, BreakType, LineSpacing, AlignmentType, Table, TableRow, TableCell, WidthType, TableBorders, NumberingId, IndentLevel, VAlignType, VMergeType, TableCellMargins},
     crate::{
-        components::LineComponent,
+        components::{LineComponent, PlaceholderComponent},
         content::Content,
     },
 };
@@ -92,16 +92,14 @@ impl TaskSection for Docx {
                         content.mentor.full_name(), 
                         content.mentor_title
                     )))
-                .add_run(Run::new()
-                    .highlight("yellow")
-                    .add_text("«27» жовтня 2021 р. № 3587-с"))
+                .add_placeholder_component("«27» жовтня 2021 р. № 3587-с", "update with correct date and number after it is issued")
             )
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(150))
                 .numbering(NumberingId::new(1), IndentLevel::new(0))
                 .align(AlignmentType::Both)
                 .add_run(Run::new().add_text("Термін подання студентом дисертації "))
-                .add_run(Run::new().highlight("yellow").add_text("«06» грудня 2023 р."))
+                .add_placeholder_component("«06» грудня 2023 р.", "update with correct date for thesis submit")
             )
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(150))
@@ -113,13 +111,18 @@ impl TaskSection for Docx {
                 .line_spacing(LineSpacing::new().before(150))
                 .numbering(NumberingId::new(1), IndentLevel::new(0))
                 .align(AlignmentType::Both)
-                .add_run(Run::new().add_text(format!("Предмет дослідження – {}.", content.research_subject))))
+                .add_run(Run::new().add_text("Предмет дослідження – "))
+                .add_placeholder_component(&content.research_subject, "update with correct research subject")
+                .add_run(Run::new().add_text(".")))
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(150))
                 .numbering(NumberingId::new(1), IndentLevel::new(0))
                 .align(AlignmentType::Both)
                 .add_run(Run::new().add_text("Перелік завдань, які потрібно розробити – "))
-                .add_run(Run::new().highlight("yellow").add_text("аналіз проблеми та існуючих рішень; розробка моделі/методу/алгоритму/програмного забезпечення; дослідження ефективності розробленого методу/алгоритму/програмного забезпечення."))
+                .add_placeholder_component(
+                    "аналіз проблеми та існуючих рішень; розробка моделі/методу/алгоритму/програмного забезпечення; дослідження ефективності розробленого методу/алгоритму/програмного забезпечення.", 
+                    "update with correct task list"
+                )
             )
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(150))
@@ -185,7 +188,7 @@ impl TaskSection for Docx {
                 .numbering(NumberingId::new(1), IndentLevel::new(0))
                 .align(AlignmentType::Both)
                 .add_run(Run::new().add_text("Дата видачі завдання "))
-                .add_run(Run::new().highlight("yellow").add_text("«01» вересня 202Х р."))
+                .add_placeholder_component("«01» вересня 202Х р.", "update with correct date once it is known")
             )
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(150))
@@ -219,7 +222,7 @@ impl TaskSection for Docx {
                 calendar_plan_empty_row(6),
                 TableRow::new(vec![
                     TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text("7"))),
-                    TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text("Виконання експериментальних досліджень"))),
+                    TableCell::new().add_paragraph(Paragraph::new().add_placeholder_component("Виконання експериментальних досліджень", "fill this table")),
                     TableCell::new(),
                     TableCell::new(),
                 ]),

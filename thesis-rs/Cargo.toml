@@ -6,3 +6,5 @@ edition = "2021"
 [dependencies]
 docx-rs = "0.4.7"
 clap = { version = "4.3.21", features = ["derive"] }
+tracing = "0.1.37"
+tracing-subscriber = "0.3.16"
