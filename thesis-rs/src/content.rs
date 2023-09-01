@@ -37,3 +37,8 @@ impl Person {
         format!("{} {} {}", self.first_name, self.last_name, self.surname)
     }
 }
+
+pub enum Language {
+    English,
+    Ukrainian,
+}

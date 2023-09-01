@@ -14,8 +14,8 @@ use {
         LevelJc,
     },
     crate::{
-        sections::{FrontPageSection, TaskSection},
-        content::Content,
+        sections::{FrontPageSection, TaskSection, AbstractSection},
+        content::{Content, Language},
         utils::init_logging,
     },
 };
@@ -68,6 +68,8 @@ fn main() {
         )
         .add_front_page_section(&content)
         .add_task_section(&content)
+        .add_abstract_section(&content, &Language::Ukrainian)
+        .add_abstract_section(&content, &Language::English)
         .build()
         .pack(file)
         .unwrap();

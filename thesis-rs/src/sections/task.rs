@@ -264,6 +264,7 @@ impl TaskSection for Docx {
                     )),
                 ]),
             ]).clear_all_border().margins(TableCellMargins::new().margin_bottom(400, WidthType::Dxa)))
+            .add_paragraph(Paragraph::new().add_run(Run::new().add_break(BreakType::Page)))
     }
 }
 
