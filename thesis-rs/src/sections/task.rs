@@ -2,7 +2,7 @@ use {
     docx_rs::{Docx, Paragraph, Run, BreakType, LineSpacing, AlignmentType, Table, TableRow, TableCell, WidthType, TableBorders, NumberingId, IndentLevel, VAlignType, VMergeType, TableCellMargins},
     crate::{
         components::{LineComponent, PlaceholderComponent},
-        content::Content,
+        content::{Content, Language},
     },
 };
 
@@ -105,7 +105,7 @@ impl TaskSection for Docx {
                 .line_spacing(LineSpacing::new().before(150))
                 .numbering(NumberingId::new(1), IndentLevel::new(0))
                 .align(AlignmentType::Both)
-                .add_run(Run::new().add_text(format!("Об’єкт дослідження – {}.", content.research_object)))
+                .add_run(Run::new().add_text(format!("Об’єкт дослідження – {}.", content.research_object.for_language(&Language::Ukrainian))))
             )
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(150))

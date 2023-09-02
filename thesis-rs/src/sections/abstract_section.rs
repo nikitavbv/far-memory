@@ -57,6 +57,31 @@ impl AbstractSection for Docx {
             &Language::Ukrainian => "посилань на джерела",
         };
 
+        let text_topicality = match language {
+            &Language::English => "Topicality",
+            &Language::Ukrainian => "Актуальність теми",
+        };
+
+        let text_topicality_description = match language {
+            &Language::English => "Examines the problem of ...",
+            &Language::Ukrainian => "У роботі розглянуто проблему в такій-то області з таким-то об’єктом, показано основні особливості існуючих рішень проблеми, їх переваги та недоліки. Виявлено потребу в удосконаленні/розробці того-то."
+        };
+
+        let text_aim_of_study = match language {
+            &Language::English => "The aim of the study",
+            &Language::Ukrainian => "Мета дослідження",
+        };
+
+        let text_aim_of_study_description = match language {
+            &Language::English => "The main target is ...",
+            &Language::Ukrainian => "Основною метою є покращити/підвищити швидкість/зменшити використання ...",
+        };
+
+        let text_object_of_research = match language {
+            &Language::English => "Object of research",
+            &Language::Ukrainian => "Об’єкт дослідження",
+        };
+
         self
             .add_paragraph(Paragraph::new()
                 .align(AlignmentType::Center)
@@ -69,6 +94,7 @@ impl AbstractSection for Docx {
             .add_paragraph(Paragraph::new()
                 .add_tab(Tab::new().pos(710))
                 .line_spacing(LineSpacing::new().line(24 * 15).before(200))
+                .align(AlignmentType::Both)
                 .add_run(Run::new().add_tab().add_text(format!("{} – ", text_explanatory_note_size)))
                 .add_placeholder_component(total_pages.to_string(), "replace with an actual number of pages")
                 .add_text_component(format!(" {} ", text_pages_and_contains))
@@ -84,7 +110,22 @@ impl AbstractSection for Docx {
             .add_paragraph(Paragraph::new()
                 .add_tab(Tab::new().pos(710))
                 .line_spacing(LineSpacing::new().line(24 * 15))
-                .add_run(Run::new().add_tab().bold().add_text("Topicality."))
+                .align(AlignmentType::Both)
+                .add_run(Run::new().add_tab().bold().add_text(format!("{}. ", text_topicality)))
+                .add_placeholder_component(text_topicality_description, "replace with correct topicality")
+            )
+            .add_paragraph(Paragraph::new()
+                .add_tab(Tab::new().pos(710))
+                .line_spacing(LineSpacing::new().line(24 * 15))
+                .align(AlignmentType::Both)
+                .add_run(Run::new().add_tab().bold().add_text(format!("{}. ", text_aim_of_study)))
+                .add_placeholder_component(text_aim_of_study_description, "replace with correct description")
+            )
+            .add_paragraph(Paragraph::new()
+                .add_tab(Tab::new().pos(710))
+                .line_spacing(LineSpacing::new().line(24 * 15))
+                .align(AlignmentType::Both)
+                .add_text_component(format!("{}: ", text_object_of_research))
             )
             .add_paragraph(Paragraph::new().add_run(Run::new().add_break(BreakType::Page)))
     }
