@@ -108,10 +108,7 @@ impl AbstractSection for Docx {
                     .add_text(text_title.to_uppercase())
                 )
             )
-            .add_paragraph(Paragraph::new()
-                .add_tab(Tab::new().pos(710))
-                .line_spacing(LineSpacing::new().line(24 * 15).before(200))
-                .align(AlignmentType::Both)
+            .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().add_text(format!("{} – ", text_explanatory_note_size)))
                 .add_placeholder_component(total_pages.to_string(), "replace with an actual number of pages")
                 .add_text_component(format!(" {} ", text_pages_and_contains))
@@ -124,30 +121,18 @@ impl AbstractSection for Docx {
                 .add_placeholder_component(total_references.to_string(), "replace with an actual number of references")
                 .add_text_component(format!(" {}.", text_references))
             )
-            .add_paragraph(Paragraph::new()
-                .add_tab(Tab::new().pos(710))
-                .line_spacing(LineSpacing::new().line(24 * 15))
-                .align(AlignmentType::Both)
+            .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().bold().add_text(format!("{}. ", text_topicality)))
                 .add_placeholder_component(text_topicality_description, "replace with correct topicality")
             )
-            .add_paragraph(Paragraph::new()
-                .add_tab(Tab::new().pos(710))
-                .line_spacing(LineSpacing::new().line(24 * 15))
-                .align(AlignmentType::Both)
+            .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().bold().add_text(format!("{}. ", text_aim_of_study)))
                 .add_placeholder_component(text_aim_of_study_description, "replace with correct description")
             )
-            .add_paragraph(Paragraph::new()
-                .add_tab(Tab::new().pos(710))
-                .line_spacing(LineSpacing::new().line(24 * 15))
-                .align(AlignmentType::Both)
+            .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().add_text(format!("{}: ", text_object_of_research)).add_text(content.research_object.for_language(language)).add_text("."))
             )
-            .add_paragraph(Paragraph::new()
-                .add_tab(Tab::new().pos(710))
-                .line_spacing(LineSpacing::new().line(24 * 15))
-                .align(AlignmentType::Both)
+            .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().add_text(format!("{}: ", MultiLanguageString::new(
                     "Subject of research",
                     "Предмет дослідження"
@@ -155,10 +140,7 @@ impl AbstractSection for Docx {
                 .add_placeholder_component(content.research_subject.for_language(language), "update research subject")
                 .add_text_component(".")
             )
-            .add_paragraph(Paragraph::new()
-                .add_tab(Tab::new().pos(710))
-                .line_spacing(LineSpacing::new().line(24 * 15))
-                .align(AlignmentType::Both)
+            .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().add_text(MultiLanguageString::new(
                     "To achieve this goal, the ",
                     "Для реалізації поставленої мети "
@@ -181,10 +163,7 @@ impl AbstractSection for Docx {
                 MultiLanguageString::new("second task", "друге завдання"),
                 MultiLanguageString::new("third task", "третє завдання"),
             ], language)
-            .add_paragraph(Paragraph::new()
-                .add_tab(Tab::new().pos(710))
-                .line_spacing(LineSpacing::new().line(24 * 15))
-                .align(AlignmentType::Both)
+            .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().bold().add_text(MultiLanguageString::new("The scientific novelty", "Наукова новизна").for_language(language)))
                 .add_text_component(" ")
                 .add_placeholder_component(MultiLanguageString::new(
@@ -192,10 +171,7 @@ impl AbstractSection for Docx {
                     "результатів магістерської дисертації полягає в тому, що запропоновано архітектурне рішення для побудови програмного забезпечення для створення торгового портфелю, яке на відміну від інших надає користувачеві очікуваний результат при мінімальних затратах часу та кількості необхідних дій для початку роботи. Результат досягнутий шляхом розробки модернізованого алгоритму оптимізації"
                 ).for_language(language), "update scientific novelty to a real one")
             )
-            .add_paragraph(Paragraph::new()
-                .add_tab(Tab::new().pos(710))
-                .line_spacing(LineSpacing::new().line(24 * 15))
-                .align(AlignmentType::Both)
+            .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().bold().add_text(MultiLanguageString::new("The practical value", "Практичне значення").for_language(language)))
                 .add_text_component(" ")
                 .add_placeholder_component(MultiLanguageString::new(
@@ -203,10 +179,7 @@ impl AbstractSection for Docx {
                     "отриманих результатів полягає в тому, що реалізовані методи поєднані в межах одного застосунку і максимально прості у використанні для користувача. Також реалізовано АРІ-інтерфейс, за допомогою якого результати роботи алгоритмів можуть з легкістю отримувати і застосовувати сторонні сервіси. Дана система може бути використана там-то."
                 ).for_language(language), "update practical value to a real one")
             )
-            .add_paragraph(Paragraph::new()
-                .add_tab(Tab::new().pos(710))
-                .line_spacing(LineSpacing::new().line(24 * 15))
-                .align(AlignmentType::Both)
+            .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().bold().add_text(MultiLanguageString::new("Relationship with working with scientific programs, plans, topics.", "Зв’язок з науковими програмами, планами, темами.").for_language(language)))
                 .add_text_component(" ")
                 .add_text_component(MultiLanguageString::new(
@@ -215,10 +188,7 @@ impl AbstractSection for Docx {
                 ).for_language(language))
                 .add_text_component(".")
             )
-            .add_paragraph(Paragraph::new()
-                .add_tab(Tab::new().pos(710))
-                .line_spacing(LineSpacing::new().line(24 * 15))
-                .align(AlignmentType::Both)
+            .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().bold().add_text(MultiLanguageString::new("Approbation", "Апробація").for_language(language)).add_text("."))
                 .add_text_component(" ")
                 .add_text_component(MultiLanguageString::new(
@@ -232,10 +202,7 @@ impl AbstractSection for Docx {
                 ).for_language(language), "update practical value to a real one")
                 .add_text_component(".")
             )
-            .add_paragraph(Paragraph::new()
-                .add_tab(Tab::new().pos(710))
-                .line_spacing(LineSpacing::new().line(24 * 15))
-                .align(AlignmentType::Both)
+            .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().bold().add_text(MultiLanguageString::new("Publications", "Публікації").for_language(language)).add_text("."))
                 .add_text_component(" ")
                 .add_text_component(MultiLanguageString::new(
@@ -281,18 +248,14 @@ impl TasksComponent for Docx {
                         NumberFormat::new("bullet"),
                         LevelText::new("– "),
                         LevelJc::new("left")
-                    ).indent(Some(1100 + 300), Some(docx_rs::SpecialIndentType::Hanging(300)), None, None)
-                    )
+                    ).indent(Some(1100 + 300), Some(docx_rs::SpecialIndentType::Hanging(300)), None, None))
             )
             .add_numbering(Numbering::new(tasks_numbering, tasks_numbering));
 
         for i in 0..tasks.len() {
             let task = tasks.get(i).unwrap();
 
-            document = document.add_paragraph(Paragraph::new()
-                .add_tab(Tab::new().pos(710))
-                .line_spacing(LineSpacing::new().line(24 * 15))
-                .align(AlignmentType::Both)
+            document = document.add_paragraph_with_abstract_style_component(Paragraph::new()
                 .numbering(NumberingId::new(tasks_numbering), IndentLevel::new(0))
                 .add_placeholder_component(task.for_language(language), "replace with correct task list")
                 .add_text_component(if i == tasks.len() - 1 { "." } else { ";" })
@@ -326,13 +289,20 @@ impl PublicationsComponent for Docx {
 
         publications.into_iter()
             .fold(document, |document, publication| 
-                document.add_paragraph(Paragraph::new()
-                    .add_tab(Tab::new().pos(710))
-                    .line_spacing(LineSpacing::new().line(24 * 15))
-                    .align(AlignmentType::Both)
+                document.add_paragraph_with_abstract_style_component(Paragraph::new()
                     .numbering(NumberingId::new(numbering), IndentLevel::new(0))
                     .add_placeholder_component(publication.for_language(language), "replace with correct publication list")
                 )
             )
+    }
+}
+
+trait ParagraphWithAbstractStyleComponent {
+    fn add_paragraph_with_abstract_style_component(self, paragraph: Paragraph) -> Self;
+}
+
+impl ParagraphWithAbstractStyleComponent for Docx {
+    fn add_paragraph_with_abstract_style_component(self, paragraph: Paragraph) -> Self {
+        self.add_paragraph(paragraph.add_tab(Tab::new().pos(710)).line_spacing(LineSpacing::new().line(24 * 15)).align(AlignmentType::Both))
     }
 }
