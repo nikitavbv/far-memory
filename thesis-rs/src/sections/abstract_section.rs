@@ -3,7 +3,6 @@ use {
         Docx, 
         Paragraph, 
         Run, 
-        BreakType, 
         AlignmentType, 
         Tab, 
         LineSpacing, 
@@ -20,7 +19,7 @@ use {
     crate::{
         content::{Content, Language, MultiLanguageString},
         context::Context,
-        components::PlaceholderComponent,
+        components::{PlaceholderComponent, PageBreakComponent},
     },
 };
 
@@ -180,7 +179,7 @@ impl AbstractSection for Docx {
             .add_tasks_component(context, &[
                 MultiLanguageString::new("first task", "перше завдання")
             ], language)
-            .add_paragraph(Paragraph::new().add_run(Run::new().add_break(BreakType::Page)))
+            .add_page_break_component()
     }
 }
 
