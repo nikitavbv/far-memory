@@ -224,17 +224,29 @@ impl AbstractSection for Docx {
             ], language)
             .add_keywords_component(&[
                 MultiLanguageString::new(
-                    "CACHE",
-                    "КЛАСТЕРИЗАЦІЯ"
+                    "Far memory",
+                    "Віддалена памʼять"
                 ),
                 MultiLanguageString::new(
-                    "JDBC",
-                    "ОПТИМАЛЬНИЙ ТОРГОВИЙ ПОРТФЕЛЬ"
+                    "Distributed systems",
+                    "Розподілені системи"
                 ),
                 MultiLanguageString::new(
-                    "UNDERCHANGEABLE DATA",
-                    "ОПТИМІЗАЦІЯ"
-                )
+                    "Computer networks",
+                    "Комп'ютерні мережі"
+                ),
+                MultiLanguageString::new(
+                    "Data structures",
+                    "Структури даних"
+                ),
+                MultiLanguageString::new(
+                    "Computer networks",
+                    "Комп'ютерні мережі"
+                ),
+                MultiLanguageString::new(
+                    "Linux",
+                    "Linux"
+                ),
             ], language)
             .add_page_break_component()
     }
