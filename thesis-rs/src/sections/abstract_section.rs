@@ -177,7 +177,9 @@ impl AbstractSection for Docx {
                 .add_text_component(":")
             )
             .add_tasks_component(context, &[
-                MultiLanguageString::new("first task", "перше завдання")
+                MultiLanguageString::new("first task", "перше завдання"),
+                MultiLanguageString::new("second task", "друге завдання"),
+                MultiLanguageString::new("third task", "третє завдання"),
             ], language)
             .add_page_break_component()
     }
@@ -206,10 +208,11 @@ impl TasksComponent for Docx {
                 AbstractNumbering::new(tasks_numbering)
                     .add_level(Level::new(
                         0,
-                        Start::new(42),
+                        Start::new(0),
                         NumberFormat::new("bullet"),
-                        LevelText::new("-"),
-                        LevelJc::new("left"))
+                        LevelText::new("– "),
+                        LevelJc::new("left")
+                    ).indent(Some(1100 + 300), Some(docx_rs::SpecialIndentType::Hanging(300)), None, None)
                     )
             )
             .add_numbering(Numbering::new(tasks_numbering, tasks_numbering));
