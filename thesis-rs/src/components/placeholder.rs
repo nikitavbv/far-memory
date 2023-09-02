@@ -4,11 +4,11 @@ use {
 };
 
 pub trait PlaceholderComponent {
-    fn add_placeholder_component(self, text: &str, description: &str) -> Self;
+    fn add_placeholder_component(self, text: impl Into<String>, description: &str) -> Self;
 }
 
 impl PlaceholderComponent for Paragraph {
-    fn add_placeholder_component(self, text: &str, description: &str) -> Self {
+    fn add_placeholder_component(self, text: impl Into<String>, description: &str) -> Self {
         warn!("Adding placeholder with description \"{}\"", description);
         
         self.add_run(Run::new()
