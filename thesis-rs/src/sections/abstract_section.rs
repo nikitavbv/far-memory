@@ -181,6 +181,75 @@ impl AbstractSection for Docx {
                 MultiLanguageString::new("second task", "друге завдання"),
                 MultiLanguageString::new("third task", "третє завдання"),
             ], language)
+            .add_paragraph(Paragraph::new()
+                .add_tab(Tab::new().pos(710))
+                .line_spacing(LineSpacing::new().line(24 * 15))
+                .align(AlignmentType::Both)
+                .add_run(Run::new().add_tab().bold().add_text(MultiLanguageString::new("The scientific novelty", "Наукова новизна").for_language(language)))
+                .add_text_component(" ")
+                .add_placeholder_component(MultiLanguageString::new(
+                    "of the results of the master's dissertation is ...",
+                    "результатів магістерської дисертації полягає в тому, що запропоновано архітектурне рішення для побудови програмного забезпечення для створення торгового портфелю, яке на відміну від інших надає користувачеві очікуваний результат при мінімальних затратах часу та кількості необхідних дій для початку роботи. Результат досягнутий шляхом розробки модернізованого алгоритму оптимізації"
+                ).for_language(language), "update scientific novelty to a real one")
+            )
+            .add_paragraph(Paragraph::new()
+                .add_tab(Tab::new().pos(710))
+                .line_spacing(LineSpacing::new().line(24 * 15))
+                .align(AlignmentType::Both)
+                .add_run(Run::new().add_tab().bold().add_text(MultiLanguageString::new("The practical value", "Практичне значення").for_language(language)))
+                .add_text_component(" ")
+                .add_placeholder_component(MultiLanguageString::new(
+                    "of the obtained results is ...",
+                    "отриманих результатів полягає в тому, що реалізовані методи поєднані в межах одного застосунку і максимально прості у використанні для користувача. Також реалізовано АРІ-інтерфейс, за допомогою якого результати роботи алгоритмів можуть з легкістю отримувати і застосовувати сторонні сервіси. Дана система може бути використана там-то."
+                ).for_language(language), "update practical value to a real one")
+            )
+            .add_paragraph(Paragraph::new()
+                .add_tab(Tab::new().pos(710))
+                .line_spacing(LineSpacing::new().line(24 * 15))
+                .align(AlignmentType::Both)
+                .add_run(Run::new().add_tab().bold().add_text(MultiLanguageString::new("Relationship with working with scientific programs, plans, topics.", "Зв’язок з науковими програмами, планами, темами.").for_language(language)))
+                .add_text_component(" ")
+                .add_text_component(MultiLanguageString::new(
+                    "Work was performed at the Department of Informatics and Software Engineering of the National Technical University of Ukraine «Kyiv Polytechnic Institute. Igor Sikorsky»",
+                    "Робота виконувалась на кафедрі інформатики та програмної інженерії Національного технічного університету України \"Київський політехнічний інститут імені Ігоря Сікорського\""
+                ).for_language(language))
+                .add_text_component(".")
+            )
+            .add_paragraph(Paragraph::new()
+                .add_tab(Tab::new().pos(710))
+                .line_spacing(LineSpacing::new().line(24 * 15))
+                .align(AlignmentType::Both)
+                .add_run(Run::new().add_tab().bold().add_text(MultiLanguageString::new("Approbation", "Апробація").for_language(language)).add_text("."))
+                .add_text_component(" ")
+                .add_text_component(MultiLanguageString::new(
+                    "The scientific provisions of the dissertation were tested at the",
+                    "Наукові положення дисертації пройшли апробацію на"
+                ).for_language(language))
+                .add_text_component(" ")
+                .add_placeholder_component(MultiLanguageString::new(
+                    "Fifth All-Ukrainian Scientific and Practical Conference of Young Scientists and Students \"Information Systems and Management Technologies\" (ISTU- 2020) - Kyiv",
+                    "V всеукраїнській науково-практичній конференції молодих вчених та студентів «Інформаційні системи та технології управління» (ІСТУ-2020) – м. Київ"
+                ).for_language(language), "update practical value to a real one")
+                .add_text_component(".")
+            )
+            .add_paragraph(Paragraph::new()
+                .add_tab(Tab::new().pos(710))
+                .line_spacing(LineSpacing::new().line(24 * 15))
+                .align(AlignmentType::Both)
+                .add_run(Run::new().add_tab().bold().add_text(MultiLanguageString::new("Publications", "Публікації").for_language(language)).add_text("."))
+                .add_text_component(" ")
+                .add_text_component(MultiLanguageString::new(
+                    "The scientific provisions of the dissertation published in",
+                    "Наукові положення дисертації опубліковані в"
+                ).for_language(language))
+                .add_text_component(":")
+            )
+            .add_publications_component(context, &[
+                MultiLanguageString::new(
+                    "Yasenova A.V. The application of clustering methods on the foreign exchange market / A.V. Yasenova, O.A. Khalus // Proceedings of the Fifth All-Ukrainian Scientific and Practical Conference of Young Scientists and Students \"Information Systems and Management Technologies\" (ISTU- 2020) - Kyiv: NTUU “KPI them. Igor Sikorsky”, November 26-27, 2020.",
+                    "Ясенова А.В. Застосування алгоритмів кластеризації на ринку іноземних валют/ А.В.Ясенова, О.А. Халус // Матеріали V всеукраїнської науковопрактичної конференції молодих вчених та студентів «Інформаційні системи та технології управління» (ІСТУ-2020) – м. Київ: НТУУ «КПІ ім. Ігоря Сікорського», 26-27 листопада 2020 р."
+                ),
+            ], language)
             .add_page_break_component()
     }
 }
@@ -231,5 +300,39 @@ impl TasksComponent for Docx {
         }
 
         document
+    }
+}
+
+trait PublicationsComponent {
+    fn add_publications_component(self, context: &mut Context, publications: &[MultiLanguageString], language: &Language) -> Self;
+}
+
+impl PublicationsComponent for Docx {
+    fn add_publications_component(self, context: &mut Context, publications: &[MultiLanguageString], language: &Language) -> Self {
+        let numbering = context.next_numbering_id();
+
+        let document = self
+            .add_abstract_numbering(
+                AbstractNumbering::new(numbering)
+                    .add_level(Level::new(
+                        0,
+                        Start::new(1),
+                        NumberFormat::new("decimal"),
+                        LevelText::new("%1) "),
+                        LevelJc::new("left"))
+                    )
+            )
+            .add_numbering(Numbering::new(numbering, numbering));
+
+        publications.into_iter()
+            .fold(document, |document, publication| 
+                document.add_paragraph(Paragraph::new()
+                    .add_tab(Tab::new().pos(710))
+                    .line_spacing(LineSpacing::new().line(24 * 15))
+                    .align(AlignmentType::Both)
+                    .numbering(NumberingId::new(numbering), IndentLevel::new(0))
+                    .add_placeholder_component(publication.for_language(language), "replace with correct publication list")
+                )
+            )
     }
 }
