@@ -1,13 +1,17 @@
-use docx_rs::{Docx, TableOfContents, Paragraph, Run};
+use docx_rs::{Docx, TableOfContents, Paragraph, Run, AlignmentType, TabLeaderType};
 
 pub trait TableOfContentsSection {
-    fn add_table_of_contents_component(self) -> Self;
+    fn add_table_of_contents_section(self) -> Self;
 }
 
 impl TableOfContentsSection for Docx {
-    fn add_table_of_contents_component(self) -> Self {
+    fn add_table_of_contents_section(self) -> Self {
         self
-            .add_table_of_contents(TableOfContents::new().heading_styles_range(1, 3).alias("Table of contents").auto())
-            .add_paragraph(Paragraph::new().add_run(Run::new().add_text("hello world")).style("Heading1").page_break_before(true))
+            .add_paragraph(Paragraph::new().page_break_before(true).align(AlignmentType::Center).add_run(Run::new().add_text("Зміст".to_uppercase())))
+            .add_table_of_contents(TableOfContents::new()
+                .heading_styles_range(1, 3)
+                .tab_leader_type(Some(TabLeaderType::None))
+                .auto()
+            )
     }
 }

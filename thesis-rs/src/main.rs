@@ -10,7 +10,13 @@ use {
         StyleType,
     },
     crate::{
-        sections::{FrontPageSection, TaskSection, AbstractSection, TableOfContentsSection},
+        sections::{
+            FrontPageSection, 
+            TaskSection, 
+            AbstractSection, 
+            TableOfContentsSection,
+            AbbreviationsListSection,
+        },
         content::{Content, Language},
         context::Context,
         utils::init_logging,
@@ -59,7 +65,8 @@ fn main() {
         .add_task_section(&mut context, &content)
         .add_abstract_section(&mut context, &content, &Language::Ukrainian)
         .add_abstract_section(&mut context, &content, &Language::English)
-        .add_table_of_contents_component()
+        .add_table_of_contents_section()
+        .add_abbreviations_list_section()
         .build()
         .pack(file)
         .unwrap();
