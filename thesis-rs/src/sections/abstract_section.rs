@@ -71,15 +71,15 @@ impl AbstractSection for Docx {
                 .line_spacing(LineSpacing::new().line(24 * 15).before(200))
                 .add_run(Run::new().add_tab().add_text(format!("{} – ", text_explanatory_note_size)))
                 .add_placeholder_component(total_pages.to_string(), "replace with an actual number of pages")
-                .add_run(Run::new().add_text(format!(" {} ", text_pages_and_contains)))
+                .add_text_component(format!(" {} ", text_pages_and_contains))
                 .add_placeholder_component(total_pictures.to_string(), "replace with an actual number of pictures")
-                .add_run(Run::new().add_text(format!(" {}, ", text_pictures)))
+                .add_text_component(format!(" {}, ", text_pictures))
                 .add_placeholder_component(total_tables.to_string(), "replace with an actual number of tables")
-                .add_run(Run::new().add_text(format!(" {}, ", text_tables)))
+                .add_text_component(format!(" {}, ", text_tables))
                 .add_placeholder_component(total_applications.to_string(), "replace with an actual number of applications")
-                .add_run(Run::new().add_text(format!(" {}, ", text_applications)))
+                .add_text_component(format!(" {}, ", text_applications))
                 .add_placeholder_component(total_references.to_string(), "replace with an actual number of references")
-                .add_run(Run::new().add_text(format!(" {}.", text_references)))
+                .add_text_component(format!(" {}.", text_references))
             )
             .add_paragraph(Paragraph::new()
                 .add_tab(Tab::new().pos(710))
@@ -87,5 +87,15 @@ impl AbstractSection for Docx {
                 .add_run(Run::new().add_tab().bold().add_text("Topicality."))
             )
             .add_paragraph(Paragraph::new().add_run(Run::new().add_break(BreakType::Page)))
+    }
+}
+
+trait TextComponent {
+    fn add_text_component(self, text: impl Into<String>) -> Self;
+}
+
+impl TextComponent for Paragraph {
+    fn add_text_component(self, text: impl Into<String>) -> Self {
+        self.add_run(Run::new().add_text(text))
     }
 }
