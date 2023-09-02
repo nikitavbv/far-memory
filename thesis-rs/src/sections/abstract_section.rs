@@ -1,17 +1,35 @@
 use {
-    docx_rs::{Docx, Paragraph, Run, BreakType, AlignmentType, Tab, LineSpacing, NumberingId, IndentLevel},
+    docx_rs::{
+        Docx, 
+        Paragraph, 
+        Run, 
+        BreakType, 
+        AlignmentType, 
+        Tab, 
+        LineSpacing, 
+        NumberingId, 
+        IndentLevel,
+        Numbering,
+        AbstractNumbering,
+        Level,
+        Start,
+        NumberFormat,
+        LevelText,
+        LevelJc,
+    },
     crate::{
         content::{Content, Language, MultiLanguageString},
+        context::Context,
         components::PlaceholderComponent,
     },
 };
 
 pub trait AbstractSection {
-    fn add_abstract_section(self, content: &Content, language: &Language) -> Self;
+    fn add_abstract_section(self, context: &mut Context, content: &Content, language: &Language) -> Self;
 }
 
 impl AbstractSection for Docx {
-    fn add_abstract_section(self, content: &Content, language: &Language) -> Self {
+    fn add_abstract_section(self, context: &mut Context, content: &Content, language: &Language) -> Self {
         let text_title = match language {
             &Language::English => "Abstract",
             &Language::Ukrainian => "Реферат",
@@ -159,7 +177,7 @@ impl AbstractSection for Docx {
                 ).for_language(language))
                 .add_text_component(":")
             )
-            .add_tasks_component(&[
+            .add_tasks_component(context, &[
                 MultiLanguageString::new("first task", "перше завдання")
             ], language)
             .add_paragraph(Paragraph::new().add_run(Run::new().add_break(BreakType::Page)))
@@ -177,12 +195,25 @@ impl TextComponent for Paragraph {
 }
 
 trait TasksComponent {
-    fn add_tasks_component(self, tasks: &[MultiLanguageString], language: &Language) -> Self;
+    fn add_tasks_component(self, context: &mut Context, tasks: &[MultiLanguageString], language: &Language) -> Self;
 }
 
 impl TasksComponent for Docx {
-    fn add_tasks_component(self, tasks: &[MultiLanguageString], language: &Language) -> Self {
-        let mut document = self;
+    fn add_tasks_component(self, context: &mut Context, tasks: &[MultiLanguageString], language: &Language) -> Self {
+        let tasks_numbering = context.next_numbering_id();
+
+        let mut document = self
+            .add_abstract_numbering(
+                AbstractNumbering::new(tasks_numbering)
+                    .add_level(Level::new(
+                        0,
+                        Start::new(42),
+                        NumberFormat::new("bullet"),
+                        LevelText::new("-"),
+                        LevelJc::new("left"))
+                    )
+            )
+            .add_numbering(Numbering::new(tasks_numbering, tasks_numbering));
 
         for i in 0..tasks.len() {
             let task = tasks.get(i).unwrap();
@@ -191,8 +222,7 @@ impl TasksComponent for Docx {
                 .add_tab(Tab::new().pos(710))
                 .line_spacing(LineSpacing::new().line(24 * 15))
                 .align(AlignmentType::Both)
-                .add_run(Run::new().add_tab().add_tab())
-                .add_text_component("– ")
+                .numbering(NumberingId::new(tasks_numbering), IndentLevel::new(0))
                 .add_placeholder_component(task.for_language(language), "replace with correct task list")
                 .add_text_component(if i == tasks.len() - 1 { "." } else { ";" })
             );

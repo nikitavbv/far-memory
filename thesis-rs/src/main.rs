@@ -5,17 +5,12 @@ use {
     docx_rs::{
         Docx,
         PageMargin, 
-        RunFonts, 
-        AbstractNumbering,
-        Level,
-        Start,
-        NumberFormat,
-        LevelText,
-        LevelJc,
+        RunFonts,
     },
     crate::{
         sections::{FrontPageSection, TaskSection, AbstractSection},
         content::{Content, Language},
+        context::Context,
         utils::init_logging,
     },
 };
@@ -24,6 +19,7 @@ pub mod components;
 pub mod sections;
 
 pub mod content;
+pub mod context;
 pub mod utils;
 
 #[derive(Parser, Debug)]
@@ -42,6 +38,7 @@ fn main() {
 
     info!("generating thesis to {:?}", path);
 
+    let mut context = Context::new();
     let content = Content::new();
 
     Docx::new()
@@ -55,31 +52,10 @@ fn main() {
         .default_fonts(RunFonts::new().cs("Times New Roman"))
         .default_size(28) // 14
         .default_tab_stop(0)
-        .add_abstract_numbering(
-            AbstractNumbering::new(1)
-                .add_level(Level::new(
-                    0,
-                    Start::new(1),
-                    NumberFormat::new("decimal"),
-                    LevelText::new("%1. "),
-                    LevelJc::new("start")
-                )
-            )
-        )
-        .add_abstract_numbering(
-            AbstractNumbering::new(2)
-                .add_level(Level::new(
-                    0,
-                    Start::new(1),
-                    NumberFormat::new("decimal"),
-                    LevelText::new("- "),
-                    LevelJc::new("start")
-                ))
-        )
         .add_front_page_section(&content)
-        .add_task_section(&content)
-        .add_abstract_section(&content, &Language::Ukrainian)
-        .add_abstract_section(&content, &Language::English)
+        .add_task_section(&mut context, &content)
+        .add_abstract_section(&mut context, &content, &Language::Ukrainian)
+        .add_abstract_section(&mut context, &content, &Language::English)
         .build()
         .pack(file)
         .unwrap();

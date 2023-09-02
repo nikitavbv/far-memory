@@ -1,18 +1,55 @@
 use {
-    docx_rs::{Docx, Paragraph, Run, BreakType, LineSpacing, AlignmentType, Table, TableRow, TableCell, WidthType, TableBorders, NumberingId, IndentLevel, VAlignType, VMergeType, TableCellMargins},
+    docx_rs::{
+        Docx, 
+        Paragraph, 
+        Run, 
+        BreakType, 
+        LineSpacing, 
+        AlignmentType, 
+        Table, 
+        TableRow, 
+        TableCell, 
+        WidthType, 
+        TableBorders, 
+        NumberingId, 
+        IndentLevel, 
+        VAlignType, 
+        VMergeType, 
+        TableCellMargins,
+        AbstractNumbering,
+        Level,
+        Start,
+        NumberFormat,
+        LevelText,
+        LevelJc,
+    },
     crate::{
         components::{LineComponent, PlaceholderComponent},
         content::{Content, Language},
+        context::Context,
     },
 };
 
 pub trait TaskSection {
-    fn add_task_section(self, content: &Content) -> Self;
+    fn add_task_section(self, context: &mut Context, content: &Content) -> Self;
 }
 
 impl TaskSection for Docx {
-    fn add_task_section(self, content: &Content) -> Self {
+    fn add_task_section(self, context: &mut Context, content: &Content) -> Self {
+        let numbering = context.next_numbering_id();
+
         self
+            .add_abstract_numbering(
+                AbstractNumbering::new(numbering)
+                    .add_level(Level::new(
+                        0,
+                        Start::new(1),
+                        NumberFormat::new("decimal"),
+                        LevelText::new("%1. "),
+                        LevelJc::new("start")
+                    )
+                )
+            )
             .add_paragraph(Paragraph::new()
                 .add_run(Run::new()
                     .size(28)
@@ -83,7 +120,7 @@ impl TaskSection for Docx {
             )
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(150))
-                .numbering(NumberingId::new(1), IndentLevel::new(0))
+                .numbering(NumberingId::new(numbering), IndentLevel::new(0))
                 .align(AlignmentType::Both)
                 .add_run(Run::new()
                     .add_text(format!(
@@ -96,27 +133,27 @@ impl TaskSection for Docx {
             )
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(150))
-                .numbering(NumberingId::new(1), IndentLevel::new(0))
+                .numbering(NumberingId::new(numbering), IndentLevel::new(0))
                 .align(AlignmentType::Both)
                 .add_run(Run::new().add_text("Термін подання студентом дисертації "))
                 .add_placeholder_component("«06» грудня 2023 р.", "update with correct date for thesis submit")
             )
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(150))
-                .numbering(NumberingId::new(1), IndentLevel::new(0))
+                .numbering(NumberingId::new(numbering), IndentLevel::new(0))
                 .align(AlignmentType::Both)
                 .add_run(Run::new().add_text(format!("Об’єкт дослідження – {}.", content.research_object.for_language(&Language::Ukrainian))))
             )
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(150))
-                .numbering(NumberingId::new(1), IndentLevel::new(0))
+                .numbering(NumberingId::new(numbering), IndentLevel::new(0))
                 .align(AlignmentType::Both)
                 .add_run(Run::new().add_text("Предмет дослідження – "))
                 .add_placeholder_component(content.research_subject.for_language(&Language::Ukrainian), "update with correct research subject")
                 .add_run(Run::new().add_text(".")))
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(150))
-                .numbering(NumberingId::new(1), IndentLevel::new(0))
+                .numbering(NumberingId::new(numbering), IndentLevel::new(0))
                 .align(AlignmentType::Both)
                 .add_run(Run::new().add_text("Перелік завдань, які потрібно розробити – "))
                 .add_placeholder_component(
@@ -126,19 +163,19 @@ impl TaskSection for Docx {
             )
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(150))
-                .numbering(NumberingId::new(1), IndentLevel::new(0))
+                .numbering(NumberingId::new(numbering), IndentLevel::new(0))
                 .align(AlignmentType::Both)
                 .add_run(Run::new().add_text("Орієнтовний перелік графічного (ілюстративного) матеріалу – 3 плакати"))
             )
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(150))
-                .numbering(NumberingId::new(1), IndentLevel::new(0))
+                .numbering(NumberingId::new(numbering), IndentLevel::new(0))
                 .align(AlignmentType::Both)
                 .add_run(Run::new().add_text("Орієнтовний перелік публікацій – одна публікація"))
             )
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(150))
-                .numbering(NumberingId::new(1), IndentLevel::new(0))
+                .numbering(NumberingId::new(numbering), IndentLevel::new(0))
                 .align(AlignmentType::Both)
                 .add_run(Run::new().add_break(BreakType::Page).add_text("Консультанти розділів дисертації"))
             )
@@ -185,7 +222,7 @@ impl TaskSection for Docx {
             ]))
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(150))
-                .numbering(NumberingId::new(1), IndentLevel::new(0))
+                .numbering(NumberingId::new(numbering), IndentLevel::new(0))
                 .align(AlignmentType::Both)
                 .add_run(Run::new().add_text("Дата видачі завдання "))
                 .add_placeholder_component("«01» вересня 202Х р.", "update with correct date once it is known")
