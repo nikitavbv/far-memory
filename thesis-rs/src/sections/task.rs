@@ -112,7 +112,7 @@ impl TaskSection for Docx {
                 .numbering(NumberingId::new(1), IndentLevel::new(0))
                 .align(AlignmentType::Both)
                 .add_run(Run::new().add_text("Предмет дослідження – "))
-                .add_placeholder_component(&content.research_subject, "update with correct research subject")
+                .add_placeholder_component(content.research_subject.for_language(&Language::Ukrainian), "update with correct research subject")
                 .add_run(Run::new().add_text(".")))
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(150))

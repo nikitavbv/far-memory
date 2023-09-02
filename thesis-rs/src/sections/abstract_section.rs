@@ -1,7 +1,7 @@
 use {
-    docx_rs::{Docx, Paragraph, Run, BreakType, AlignmentType, Tab, LineSpacing},
+    docx_rs::{Docx, Paragraph, Run, BreakType, AlignmentType, Tab, LineSpacing, NumberingId, IndentLevel},
     crate::{
-        content::{Content, Language},
+        content::{Content, Language, MultiLanguageString},
         components::PlaceholderComponent,
     },
 };
@@ -125,8 +125,43 @@ impl AbstractSection for Docx {
                 .add_tab(Tab::new().pos(710))
                 .line_spacing(LineSpacing::new().line(24 * 15))
                 .align(AlignmentType::Both)
-                .add_text_component(format!("{}: ", text_object_of_research))
+                .add_run(Run::new().add_tab().add_text(format!("{}: ", text_object_of_research)).add_text(content.research_object.for_language(language)).add_text("."))
             )
+            .add_paragraph(Paragraph::new()
+                .add_tab(Tab::new().pos(710))
+                .line_spacing(LineSpacing::new().line(24 * 15))
+                .align(AlignmentType::Both)
+                .add_run(Run::new().add_tab().add_text(format!("{}: ", MultiLanguageString::new(
+                    "Subject of research",
+                    "Предмет дослідження"
+                ).for_language(language))))
+                .add_placeholder_component(content.research_subject.for_language(language), "update research subject")
+                .add_text_component(".")
+            )
+            .add_paragraph(Paragraph::new()
+                .add_tab(Tab::new().pos(710))
+                .line_spacing(LineSpacing::new().line(24 * 15))
+                .align(AlignmentType::Both)
+                .add_run(Run::new().add_tab().add_text(MultiLanguageString::new(
+                    "To achieve this goal, the ",
+                    "Для реалізації поставленої мети "
+                ).for_language(language)))
+                .add_run(Run::new()
+                    .bold()
+                    .add_text(MultiLanguageString::new(
+                        "following tasks",
+                        "сформульовані наступні завдання"
+                    ).for_language(language))
+                )
+                .add_text_component(MultiLanguageString::new(
+                    " were formulated",
+                    ""
+                ).for_language(language))
+                .add_text_component(":")
+            )
+            .add_tasks_component(&[
+                MultiLanguageString::new("first task", "перше завдання")
+            ], language)
             .add_paragraph(Paragraph::new().add_run(Run::new().add_break(BreakType::Page)))
     }
 }
@@ -138,5 +173,31 @@ trait TextComponent {
 impl TextComponent for Paragraph {
     fn add_text_component(self, text: impl Into<String>) -> Self {
         self.add_run(Run::new().add_text(text))
+    }
+}
+
+trait TasksComponent {
+    fn add_tasks_component(self, tasks: &[MultiLanguageString], language: &Language) -> Self;
+}
+
+impl TasksComponent for Docx {
+    fn add_tasks_component(self, tasks: &[MultiLanguageString], language: &Language) -> Self {
+        let mut document = self;
+
+        for i in 0..tasks.len() {
+            let task = tasks.get(i).unwrap();
+
+            document = document.add_paragraph(Paragraph::new()
+                .add_tab(Tab::new().pos(710))
+                .line_spacing(LineSpacing::new().line(24 * 15))
+                .align(AlignmentType::Both)
+                .add_run(Run::new().add_tab().add_tab())
+                .add_text_component("– ")
+                .add_placeholder_component(task.for_language(language), "replace with correct task list")
+                .add_text_component(if i == tasks.len() - 1 { "." } else { ";" })
+            );
+        }
+
+        document
     }
 }

@@ -66,6 +66,16 @@ fn main() {
                 )
             )
         )
+        .add_abstract_numbering(
+            AbstractNumbering::new(2)
+                .add_level(Level::new(
+                    0,
+                    Start::new(1),
+                    NumberFormat::new("decimal"),
+                    LevelText::new("- "),
+                    LevelJc::new("start")
+                ))
+        )
         .add_front_page_section(&content)
         .add_task_section(&content)
         .add_abstract_section(&content, &Language::Ukrainian)
