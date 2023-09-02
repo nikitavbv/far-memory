@@ -6,9 +6,11 @@ use {
         Docx,
         PageMargin, 
         RunFonts,
+        Style,
+        StyleType,
     },
     crate::{
-        sections::{FrontPageSection, TaskSection, AbstractSection},
+        sections::{FrontPageSection, TaskSection, AbstractSection, TableOfContentsSection},
         content::{Content, Language},
         context::Context,
         utils::init_logging,
@@ -52,10 +54,12 @@ fn main() {
         .default_fonts(RunFonts::new().cs("Times New Roman"))
         .default_size(28) // 14
         .default_tab_stop(0)
+        .add_style(Style::new("Heading1", StyleType::Paragraph).name("Heading 1"))
         .add_front_page_section(&content)
         .add_task_section(&mut context, &content)
         .add_abstract_section(&mut context, &content, &Language::Ukrainian)
         .add_abstract_section(&mut context, &content, &Language::English)
+        .add_table_of_contents_component()
         .build()
         .pack(file)
         .unwrap();
