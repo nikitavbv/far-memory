@@ -63,7 +63,7 @@ fn main() {
         .default_size(28) // 14
         .default_tab_stop(0)
         .add_style(Style::new("Heading1", StyleType::Paragraph).name("Heading 1").bold())
-        .add_style(Style::new("Heading2", StyleType::Paragraph).name("Heading 2"))
+        .add_style(Style::new("Heading2", StyleType::Paragraph).name("Heading 2").bold())
         .add_front_page_section(&content)
         .add_task_section(&mut context, &content)
         .add_abstract_section(&mut context, &content, &Language::Ukrainian)
