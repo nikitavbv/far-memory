@@ -17,6 +17,7 @@ use {
             TableOfContentsSection,
             AbbreviationsListSection,
             IntroSection,
+            MainSection,
         },
         content::{Content, Language},
         context::Context,
@@ -69,6 +70,7 @@ fn main() {
         .add_table_of_contents_section()
         .add_abbreviations_list_section()
         .add_intro_section(&mut context)
+        .add_main_section()
         .build()
         .pack(file)
         .unwrap();
