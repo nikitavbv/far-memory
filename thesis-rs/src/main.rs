@@ -18,6 +18,8 @@ use {
             AbbreviationsListSection,
             IntroSection,
             MainSection,
+            ConclusionsSection,
+            ReferencesSection,
         },
         content::{Content, Language},
         context::Context,
@@ -72,6 +74,8 @@ fn main() {
         .add_abbreviations_list_section()
         .add_intro_section(&mut context)
         .add_main_section(&mut context)
+        .add_conclusions_section()
+        .add_references_section(&mut context)
         .build()
         .pack(file)
         .unwrap();
