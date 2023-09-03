@@ -1,7 +1,7 @@
 use {
-    docx_rs::{Docx, Paragraph, LineSpacing, Run, Tab, AlignmentType, AbstractNumbering, Level, Start, NumberFormat, LevelText, LevelJc, SpecialIndentType, Numbering, NumberingId, IndentLevel},
+    docx_rs::{Docx, Paragraph, LineSpacing, Run, Tab, AlignmentType, Pic},
     crate::{
-        components::{SectionHeaderComponent, UnorderedListComponent},
+        components::{SectionHeaderComponent, UnorderedListComponent, ImageComponent},
         context::{Context, SectionContext},
     },
 };
@@ -14,8 +14,6 @@ impl MainSection for Docx {
     fn add_main_section(self, context: &mut Context) -> Self {
         let section_index = context.next_section_index();
         let mut section_context = SectionContext::new();
-
-        let resource_type_numbering = context.next_numbering_id();
 
         self.add_section_header_placeholder_component(
             format!("{}  Аналіз проблеми", section_index).to_uppercase(), 
@@ -80,5 +78,13 @@ impl MainSection for Docx {
             "сервери, на яких більша частина памʼяті є вільною".to_owned(),
             "сервери, які могли б цю памʼять використовувати, якщо мали би до неї доступ".to_owned(),
         ])
+        .add_paragraph(
+            Paragraph::new()
+                .add_tab(Tab::new().pos(710))
+                .line_spacing(LineSpacing::new().line(24 * 15))
+                .align(AlignmentType::Both)
+                .add_run(Run::new().add_tab().add_text("Програмне забезпечення першого типу зазвичай має “вузьке місце” у ресурсах процесору (наприклад, виконує задачі кодування даних, або простого обміну даними), програмне забезпечення другого - у ресурсах памʼяті (зазвичай це аналіз великих масивів даних або просто у програмного забезпечення є деякий великий набір даних, який йому потрібен для роботи). Використання памʼяті диску для розширення основної памʼяті не є оптимальним - через великий час доступу (а в хмарній інфраструктурі в додаток до цього зазвичай диски не є локальними, а розміщені віддалено на локальній інфраструктурі). У порівнянні з часом доступу до диску час доступу до даних у памʼяті іншого серверу є значно меншим (хоча все ще більшим за той випадок, коли дані доступні локально)."))
+        )
+        .add_image_component(context, "images/image1.png")
     }
 }

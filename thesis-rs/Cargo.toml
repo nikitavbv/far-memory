@@ -8,3 +8,4 @@ docx-rs = { git = "https://github.com/nikitavbv/docx-rs" } # supports tab leader
 clap = { version = "4.3.21", features = ["derive"] }
 tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
+image = "0.24.7"

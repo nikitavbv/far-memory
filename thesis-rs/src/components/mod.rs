@@ -1,4 +1,5 @@
 pub use self::{
+    image::ImageComponent,
     line::LineComponent,
     page_break::PageBreakComponent,
     placeholder::PlaceholderComponent,
@@ -6,6 +7,7 @@ pub use self::{
     unordered_list::UnorderedListComponent,
 };
 
+pub mod image;
 pub mod line;
 pub mod page_break;
 pub mod placeholder;
