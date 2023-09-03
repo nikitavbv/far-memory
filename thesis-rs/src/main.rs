@@ -62,7 +62,8 @@ fn main() {
         .default_fonts(RunFonts::new().cs("Times New Roman"))
         .default_size(28) // 14
         .default_tab_stop(0)
-        .add_style(Style::new("Heading1", StyleType::Paragraph).name("Heading 1"))
+        .add_style(Style::new("Heading1", StyleType::Paragraph).name("Heading 1").bold())
+        .add_style(Style::new("Heading2", StyleType::Paragraph).name("Heading 2"))
         .add_front_page_section(&content)
         .add_task_section(&mut context, &content)
         .add_abstract_section(&mut context, &content, &Language::Ukrainian)
@@ -70,7 +71,7 @@ fn main() {
         .add_table_of_contents_section()
         .add_abbreviations_list_section()
         .add_intro_section(&mut context)
-        .add_main_section()
+        .add_main_section(&mut context)
         .build()
         .pack(file)
         .unwrap();
