@@ -1,8 +1,8 @@
 use {
-    docx_rs::{Docx, Paragraph, LineSpacing, Run, Tab, AlignmentType, Pic},
+    docx_rs::{Docx, Paragraph, LineSpacing, Run, Tab, AlignmentType},
     crate::{
         components::{SectionHeaderComponent, UnorderedListComponent, ImageComponent},
-        context::{Context, SectionContext},
+        context::Context,
     },
 };
 
@@ -13,7 +13,6 @@ pub trait MainSection {
 impl MainSection for Docx {
     fn add_main_section(self, context: &mut Context) -> Self {
         let section_index = context.next_section_index();
-        let mut section_context = SectionContext::new();
 
         self.add_section_header_placeholder_component(
             format!("{}  Аналіз проблеми", section_index).to_uppercase(), 
@@ -24,7 +23,7 @@ impl MainSection for Docx {
                 .add_tab(Tab::new().pos(710))
                 .line_spacing(LineSpacing::new().before(300).line(24 * 15))
                 .style("Heading2")
-                .add_run(Run::new().add_tab().add_text(format!("{}.{}   ", section_index, section_context.next_subsection_index())).add_text("Ресурси обладнання у розподілених системах та проблема їх ефективного використання"))
+                .add_run(Run::new().add_tab().add_text(format!("{}.{}   ", section_index, context.next_subsection_index(section_index))).add_text("Ресурси обладнання у розподілених системах та проблема їх ефективного використання"))
         )
         .add_paragraph(
             Paragraph::new()
@@ -85,6 +84,32 @@ impl MainSection for Docx {
                 .align(AlignmentType::Both)
                 .add_run(Run::new().add_tab().add_text("Програмне забезпечення першого типу зазвичай має “вузьке місце” у ресурсах процесору (наприклад, виконує задачі кодування даних, або простого обміну даними), програмне забезпечення другого - у ресурсах памʼяті (зазвичай це аналіз великих масивів даних або просто у програмного забезпечення є деякий великий набір даних, який йому потрібен для роботи). Використання памʼяті диску для розширення основної памʼяті не є оптимальним - через великий час доступу (а в хмарній інфраструктурі в додаток до цього зазвичай диски не є локальними, а розміщені віддалено на локальній інфраструктурі). У порівнянні з часом доступу до диску час доступу до даних у памʼяті іншого серверу є значно меншим (хоча все ще більшим за той випадок, коли дані доступні локально)."))
         )
-        .add_image_component(context, "images/image1.png")
+        .add_image_component(
+            context, 
+            section_index, 
+            "images/image1.png", 
+            "Схематичне зображення принципу роботи Far Memory"
+        )
+        .add_paragraph(
+            Paragraph::new()
+                .add_tab(Tab::new().pos(710))
+                .line_spacing(LineSpacing::new().line(24 * 15))
+                .align(AlignmentType::Both)
+                .add_run(Run::new().add_tab().add_text("Це все робить використання такої віддаленої памʼяті привабливим для випадків, коли можна знайти сторінки памʼяті, доступ до яких відбувається порівняно не часто, перемістити їх у віддалену памʼять та звільнити місце для даних, доступ до яких відбувається частіше."))
+        )
+        .add_paragraph(
+            Paragraph::new()
+                .add_tab(Tab::new().pos(710))
+                .line_spacing(LineSpacing::new().before(300).line(24 * 15))
+                .style("Heading2")
+                .add_run(Run::new().add_tab().add_text(format!("{}.{}   ", section_index, context.next_subsection_index(section_index))).add_text("Аналіз існуючих реалізацій віддаленої памʼяті"))
+        )
+        .add_paragraph(
+            Paragraph::new()
+                .add_tab(Tab::new().pos(710))
+                .line_spacing(LineSpacing::new().line(24 * 15))
+                .align(AlignmentType::Both)
+                .add_run(Run::new().add_tab().add_text("Аналіз існуючих реалізацій віддаленої памʼяті має на меті проаналізувати існуючі реалізації, їх архітектуру, причини певних рішень. Ціллю є дізнатися які з вже досліджених підходів є ефективними та знайти відповіді на наступні дослідницькі питання:"))
+        )
     }
 }

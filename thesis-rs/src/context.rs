@@ -1,13 +1,13 @@
 pub struct Context {
     numbering_id_counter: usize,
-    section_counter: usize,
+    sections: Vec<SectionContext>,
 }
 
 impl Context {
     pub fn new() -> Self {
         Self {
             numbering_id_counter: 0,
-            section_counter: 0,
+            sections: Vec::new(),
         }
     }
 
@@ -17,24 +17,43 @@ impl Context {
     }
 
     pub fn next_section_index(&mut self) -> usize {
-        self.section_counter += 1;
-        self.section_counter
+        self.sections.push(SectionContext::new());
+        self.sections.len()
+    }
+
+    fn section(&mut self, section_index: usize) -> &mut SectionContext {
+        self.sections.get_mut(section_index - 1).unwrap()
+    }
+
+    pub fn next_subsection_index(&mut self, section_index: usize) -> usize {
+        self.section(section_index).next_subsection_index()
+    }
+
+    pub fn next_image_index(&mut self, section_index: usize) -> usize {
+        self.section(section_index).next_image_index()
     }
 }
 
-pub struct SectionContext {
+struct SectionContext {
     subsection_counter: usize,
+    image_counter: usize,
 }
 
 impl SectionContext {
     pub fn new() -> Self {
         Self {
             subsection_counter: 0,
+            image_counter: 0,
         }
     }
 
     pub fn next_subsection_index(&mut self) -> usize {
         self.subsection_counter += 1;
         self.subsection_counter
+    }
+
+    pub fn next_image_index(&mut self) -> usize {
+        self.image_counter += 1;
+        self.image_counter
     }
 }
