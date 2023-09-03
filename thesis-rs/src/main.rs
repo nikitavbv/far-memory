@@ -16,6 +16,7 @@ use {
             AbstractSection, 
             TableOfContentsSection,
             AbbreviationsListSection,
+            IntroSection,
         },
         content::{Content, Language},
         context::Context,
@@ -67,6 +68,7 @@ fn main() {
         .add_abstract_section(&mut context, &content, &Language::English)
         .add_table_of_contents_section()
         .add_abbreviations_list_section()
+        .add_intro_section(&mut context)
         .build()
         .pack(file)
         .unwrap();
