@@ -1,7 +1,7 @@
 use {
     docx_rs::{Docx, Paragraph, LineSpacing, Run, Tab, AlignmentType, AbstractNumbering, Level, Start, NumberFormat, LevelText, LevelJc, SpecialIndentType, Numbering, NumberingId, IndentLevel},
     crate::{
-        components::SectionHeaderComponent,
+        components::{SectionHeaderComponent, UnorderedListComponent},
         context::{Context, SectionContext},
     },
 };
@@ -16,7 +16,6 @@ impl MainSection for Docx {
         let mut section_context = SectionContext::new();
 
         let resource_type_numbering = context.next_numbering_id();
-        let server_types_numbering = context.next_numbering_id();
 
         self.add_section_header_placeholder_component(
             format!("{}  Аналіз проблеми", section_index).to_uppercase(), 
@@ -43,49 +42,12 @@ impl MainSection for Docx {
                 .align(AlignmentType::Both)
                 .add_run(Run::new().add_tab().add_text("Під час своєї роботи на цьому обладнанні, програмне забезпечення може використовувати наступні його ресурси:"))
         )
-        .add_abstract_numbering(
-            AbstractNumbering::new(resource_type_numbering)
-                .add_level(Level::new(
-                    0,
-                    Start::new(0),
-                    NumberFormat::new("bullet"),
-                    LevelText::new("– "),
-                    LevelJc::new("left")
-                ).indent(None, Some(SpecialIndentType::FirstLine(725)), None, None))
-        )
-        .add_numbering(Numbering::new(resource_type_numbering, resource_type_numbering))
-        .add_paragraph(
-            Paragraph::new()
-                .add_tab(Tab::new().pos(710))
-                .line_spacing(LineSpacing::new().line(24 * 15))
-                .align(AlignmentType::Both)
-                .numbering(NumberingId::new(resource_type_numbering), IndentLevel::new(0))
-                .add_run(Run::new().add_text("процесорний час;"))
-        )
-        .add_paragraph(
-            Paragraph::new()
-                .add_tab(Tab::new().pos(710))
-                .line_spacing(LineSpacing::new().line(24 * 15))
-                .align(AlignmentType::Both)
-                .numbering(NumberingId::new(resource_type_numbering), IndentLevel::new(0))
-                .add_run(Run::new().add_text("оперативна памʼять;"))
-        )
-        .add_paragraph(
-            Paragraph::new()
-                .add_tab(Tab::new().pos(710))
-                .line_spacing(LineSpacing::new().line(24 * 15))
-                .align(AlignmentType::Both)
-                .numbering(NumberingId::new(resource_type_numbering), IndentLevel::new(0))
-                .add_run(Run::new().add_text("постійна памʼять на різних типах сховища, таких як жорсткі диски, твердотільні накопичувачі на ін.;"))
-        )
-        .add_paragraph(
-            Paragraph::new()
-                .add_tab(Tab::new().pos(710))
-                .line_spacing(LineSpacing::new().line(24 * 15))
-                .align(AlignmentType::Both)
-                .numbering(NumberingId::new(resource_type_numbering), IndentLevel::new(0))
-                .add_run(Run::new().add_text("спеціалізовані пристрої, такі як графічні прискорювачі."))
-        )
+        .add_unordered_list_component(context, vec![
+            "процесорний час".to_owned(),
+            "оперативна памʼять".to_owned(),
+            "постійна памʼять на різних типах сховища, таких як жорсткі диски, твердотільні накопичувачі на ін.".to_owned(),
+            "спеціалізовані пристрої, такі як графічні прискорювачі".to_owned(),
+        ])
         .add_paragraph(
             Paragraph::new()
                 .add_tab(Tab::new().pos(710))
@@ -114,16 +76,9 @@ impl MainSection for Docx {
                 .align(AlignmentType::Both)
                 .add_run(Run::new().add_tab().add_text("Суть цього методу полягає в тому, що сервери у центрі обробки данних (і програмне забезпечення, що на них розгорнуте) можна поділити на два типи:"))
         )
-        .add_abstract_numbering(
-            AbstractNumbering::new(server_types_numbering)
-                .add_level(Level::new(
-                    0,
-                    Start::new(0),
-                    NumberFormat::new("bullet"),
-                    LevelText::new("– "),
-                    LevelJc::new("left")
-                ).indent(None, Some(SpecialIndentType::FirstLine(725)), None, None))
-        )
-        .add_numbering(Numbering::new(server_types_numbering, server_types_numbering))
+        .add_unordered_list_component(context, vec![
+            "сервери, на яких більша частина памʼяті є вільною".to_owned(),
+            "сервери, які могли б цю памʼять використовувати, якщо мали би до неї доступ".to_owned(),
+        ])
     }
 }
