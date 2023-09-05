@@ -10,18 +10,8 @@ use {
         StyleType,
     },
     crate::{
-        sections::{
-            FrontPageSection, 
-            TaskSection, 
-            AbstractSection, 
-            TableOfContentsSection,
-            AbbreviationsListSection,
-            IntroSection,
-            MainSection,
-            ConclusionsSection,
-            ReferencesSection,
-        },
-        content::{Content, Language},
+        documents::thesis::ThesisDocument,
+        content::Content,
         context::Context,
         utils::init_logging,
     },
@@ -67,16 +57,7 @@ fn main() {
         .default_tab_stop(0)
         .add_style(Style::new("Heading1", StyleType::Paragraph).name("Heading 1").bold())
         .add_style(Style::new("Heading2", StyleType::Paragraph).name("Heading 2").bold())
-        .add_front_page_section(&content)
-        .add_task_section(&mut context, &content)
-        .add_abstract_section(&mut context, &content, &Language::Ukrainian)
-        .add_abstract_section(&mut context, &content, &Language::English)
-        .add_table_of_contents_section()
-        .add_abbreviations_list_section()
-        .add_intro_section(&mut context)
-        .add_main_section(&mut context)
-        .add_conclusions_section()
-        .add_references_section(&mut context)
+        .add_thesis_document(&mut context, &content)
         .build()
         .pack(file)
         .unwrap();
