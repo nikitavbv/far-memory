@@ -53,11 +53,12 @@ fn main() {
         .default_fonts(RunFonts::new().cs("Arial").hi_ansi("Arial"))
         .default_size(2 * 11)
         .default_tab_stop(0)
-        .add_topic_card_document(&content)
+        .add_topic_card_document(&mut context, &content)
         .build()
         .pack(&path)
         .unwrap();
 
+    let mut context = Context::new();
     let path = "./output/thesis.docx";
     let file = std::fs::File::create(path).unwrap();
     info!("generating thesis to {:?}", path);
