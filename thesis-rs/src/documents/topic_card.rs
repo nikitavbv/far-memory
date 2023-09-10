@@ -23,7 +23,7 @@ use {
         IndentLevel,
     },
     crate::{
-        content::Content,
+        content::{Content, Language},
         context::Context,
     },
 };
@@ -34,11 +34,18 @@ pub trait TopicCardDocument {
 
 impl TopicCardDocument for Docx {
     fn add_topic_card_document(self, context: &mut Context, content: &Content) -> Self {
-        let text_problem = r#"
-Середній рівень використання оперативної памʼяті у сучасних великих центрах обробки даних (датацентрах) становить приблизно 60%. 
-Оператори центрів обобки даних зацікавлені у ефективному використанні ресурсів, тому що це дозволяє використовувати менше фізичних вузлів (серверного обладнання) для розгортання програмного забезпечення 
-та знизити витрати на нього.
+        let text_problem = r#"Середній рівень використання оперативної памʼяті у сучасних великих центрах обробки даних (датацентрах) становить приблизно 60%. 
+Оператори центрів обробки даних зацікавлені у ефективному використанні ресурсів, тому що це дозволяє використовувати менше фізичних вузлів (серверного обладнання) для розгортання програмного забезпечення 
+та знизити витрати на сервери. Одним зі способів збільшення ефективності використання оперативної памʼяті є підхід що називається Far Memory (віддалена памʼять).
         "#;
+        let text_problem_2 = r#"Суть цього методу полягає в тому, що 
+програми, які потребують значних обʼємів памʼяті (сховища даних, та сервіси щовиконують обробку даних у цих сховищах) можуть передавати деякі блоки памʼяті на зберігання у памʼять інших серверів, які мають низький 
+рівень використання оперативної памʼяті. У порівнянні з використанням файлу підкачки (swap file), перевага віддаленої памʼяті полягає у більш низькому рівні затримки (latency) та більш високій відмовостійкості. 
+        "#;
+        let text_problem_3 = "Існуючі реалізації Far Memory є або пропрієтарними (та недоступними для використання ззовні компаній що іх розробили - наприклад Google) або не мають необхідного функціоналу для використання на практиці.";
+
+        let text_goal = r#"Розробити архітектуру програмного засобу та її відкриту реалізацію, яка надає віддалену памʼять у розподіленій системі з багатьох вузлів, є простою у розгортанні та інтеграції у нове та існуюче програмне забезпечення.
+Архітектура реалізації віддаленої памʼяті повинна передбачати відмовостійкість (дані не втрачаються при виході з ладу вузлів) та достатній рівень швидкодії (вищий за показник для файлу підкачки на локальному диску)."#;
 
         self
             .add_paragraph(Paragraph::new().add_run(Run::new().add_break(BreakType::TextWrapping)))
@@ -62,13 +69,15 @@ impl TopicCardDocument for Docx {
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(300))
                 .add_run(Run::new().add_text("Проблема, що розглядається").size(2 * 14).color("#434343")))
-            .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().before(100)).align(AlignmentType::Both).add_run(Run::new().add_text(text_problem)))
+            .add_paragraph(Paragraph::new().add_tab(Tab::new().pos(710)).line_spacing(LineSpacing::new().before(100)).align(AlignmentType::Both).add_run(Run::new().add_tab().add_text(text_problem)))
+            .add_paragraph(Paragraph::new().add_tab(Tab::new().pos(710)).align(AlignmentType::Both).add_run(Run::new().add_tab().add_text(text_problem_2)))
+            .add_paragraph(Paragraph::new().add_tab(Tab::new().pos(710)).align(AlignmentType::Both).add_run(Run::new().add_tab().add_text(text_problem_3)))
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(300))
                 .add_run(Run::new().add_text("Мета").size(2 * 14).color("#434343")))
-            .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().before(100)).add_run(Run::new().add_text("Підвищити швидкість роботи, якість або надійність (вказати критерії) / розширити рамки використання / забезпечити певну властивість ПЗ, тощо.")))
-            .add_paragraph(Paragraph::new().add_run(Run::new().add_text("Об'єкт дослідження: програмне забезпечення для")))
-            .add_paragraph(Paragraph::new().add_run(Run::new().add_text("Предмет дослідження: процеси розроблення, модифікації, аналізу, забезпечення якості, впровадження і супроводження програмного забезпечення")))
+            .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().before(100)).add_run(Run::new().add_text(text_goal)))
+            .add_paragraph(Paragraph::new().add_run(Run::new().add_text("Об'єкт дослідження: ").add_text(content.research_object.for_language(&Language::Ukrainian)).add_text(".")))
+            .add_paragraph(Paragraph::new().add_run(Run::new().add_text("Предмет дослідження: ").add_text(content.research_subject.for_language(&Language::Ukrainian)).add_text(".")))
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(300))
                 .add_run(Run::new().add_text("Задачі, що вирішуються в роботі").size(2 * 14).color("#434343")))
