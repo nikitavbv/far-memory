@@ -34,6 +34,8 @@ pub trait TopicCardDocument {
 
 impl TopicCardDocument for Docx {
     fn add_topic_card_document(self, context: &mut Context, content: &Content) -> Self {
+        let text_problem = "Середній рівень використання оперативної памʼяті у сучасних великих центрах обробки даних (датацентрах) становить приблизно 60%. Це створює необхідність ...";
+
         self
             .add_paragraph(Paragraph::new().add_run(Run::new().add_break(BreakType::TextWrapping)))
             .add_table(Table::new(vec![
@@ -56,7 +58,7 @@ impl TopicCardDocument for Docx {
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(300))
                 .add_run(Run::new().add_text("Проблема, що розглядається").size(2 * 14).color("#434343")))
-            .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().before(100)).add_run(Run::new().add_text("Середній рівень використання ...")))
+            .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().before(100)).add_run(Run::new().add_text(text_problem)))
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(300))
                 .add_run(Run::new().add_text("Мета").size(2 * 14).color("#434343")))

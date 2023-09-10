@@ -1,5 +1,5 @@
 use {
-    std::process::Command,
+    std::{process::Command, fs},
     clap::Parser,
     tracing::info,
     docx_rs::{
@@ -40,6 +40,8 @@ fn main() {
 
     let mut context = Context::new();
     let content = Content::new();
+
+    fs::create_dir_all("./output").unwrap();
 
     let path = std::fs::File::create("./output/іп22мп_волобуєв_КАРТКА.docx").unwrap();
     Docx::new()
