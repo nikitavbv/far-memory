@@ -39,13 +39,13 @@ impl TopicCardDocument for Docx {
             .add_table(Table::new(vec![
                 TableRow::new(vec![
                     TableCell::new()
-                        .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().after(100).before(60)).add_run(Run::new().size(2 * 10).add_text("група")))
+                        .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().after(100).before(60)).add_run(Run::new().size(2 * 10).add_text("ІП-22мп")))
                         .width(1500, WidthType::Dxa),
                     TableCell::new()
-                        .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().after(100).before(60)).add_run(Run::new().size(2 * 10).add_text("студент")))
+                        .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().after(100).before(60)).add_run(Run::new().size(2 * 10).add_text("Волобуєв Нікіта")))
                         .width(6000, WidthType::Dxa),
                     TableCell::new()
-                        .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().after(100).before(60)).add_run(Run::new().size(2 * 10).add_text("керівник")))
+                        .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().after(100).before(60)).add_run(Run::new().size(2 * 10).add_text(content.mentor.full_name())))
                         .width(4000, WidthType::Dxa),
                 ]),
             ]))
@@ -56,7 +56,7 @@ impl TopicCardDocument for Docx {
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(300))
                 .add_run(Run::new().add_text("Проблема, що розглядається").size(2 * 14).color("#434343")))
-            .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().before(100)).add_run(Run::new().add_text("Один абзац про проблему.")))
+            .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().before(100)).add_run(Run::new().add_text("Середній рівень використання ...")))
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(300))
                 .add_run(Run::new().add_text("Мета").size(2 * 14).color("#434343")))
