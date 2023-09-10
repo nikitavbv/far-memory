@@ -13,7 +13,10 @@ impl Content {
             mentor: Person::new("Павлов".to_owned(), "Олександр".to_owned(), "Анатолійович".to_owned()),
             mentor_title: "д.т.н., проф., засл.діяч".to_owned(),
             research_object: MultiLanguageString::new("far memory in distributed systems", "віддалена памʼять у розподілених системах"),
-            research_subject: MultiLanguageString::new("???", "???"), // TODO
+            research_subject: MultiLanguageString::new(
+                "methods for ensuring fast access to data blocks in far memory, their replication, far memory deployment and integration into software", 
+                "методи забезпечення швидкого доступу до блоків даних у віддаленій памʼяті, їх реплікація, розгортання та інтеграція віддаленої памʼяті у програмне забезпечення"
+            ),
         }
     }
 }
