@@ -3,7 +3,6 @@ use {
         Docx, 
         Paragraph, 
         Run, 
-        BreakType, 
         Table, 
         TableRow, 
         TableCell, 
@@ -47,8 +46,24 @@ impl TopicCardDocument for Docx {
         let text_goal = r#"Розробити архітектуру програмного засобу та її відкриту реалізацію, яка надає віддалену памʼять у розподіленій системі з багатьох вузлів, є простою у розгортанні та інтеграції у нове та існуюче програмне забезпечення.
 Архітектура реалізації віддаленої памʼяті повинна передбачати відмовостійкість (дані не втрачаються при виході з ладу вузлів) та достатній рівень швидкодії (вищий за показник для файлу підкачки на локальному диску)."#;
 
+        let text_target = "Планується розробити методи та реалізацію програмного засобу для надання віддаленої памʼяті у розподіленій системі.";
+
+        let tasks = vec![
+            "аналіз існуючих рішень".to_owned(),
+            "розробити методи інтеграції віддаленої памʼяті у нове та існуюче програмне забезпечення".to_owned(),
+            "розробити архітектуру, структуру та взаємодію компонентів віддаленої памʼяті".to_owned(),
+            "оптимізувати затримку доступу до блоків у віддаленій памʼяті".to_owned(),
+            "розробити методи забезпечення відмовостійкості системи".to_owned(),
+            "оцінка ефективності запропонованого рішення".to_owned(),
+        ];
+
+        let text_scientific_novelty = "Удосконалено методи інтеграції віддаленої памʼяті у розподілених системах, підходи до зниження затримки та підвищення відмовстійкості.".to_owned();
+
+        let text_practical_significance = r#"Розроблено програмне забезпечення з відкритим кодом, що надає засоби для розгортання програмно-визначеної віддаленої памʼяті
+ у розподілених системах, інтеграції у нове та існуюче програмне забезпечення. Показники швидкодії цього класу памʼяті перевищують значення для файлу підкачки на локальному диску. 
+ Реалізація віддаленої памʼяті забезпечує доступ до блоків даних у випадку виходу з ладу вузлів системи."#;
+
         self
-            .add_paragraph(Paragraph::new().add_run(Run::new().add_break(BreakType::TextWrapping)))
             .add_table(Table::new(vec![
                 TableRow::new(vec![
                     TableCell::new()
@@ -75,29 +90,23 @@ impl TopicCardDocument for Docx {
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(300))
                 .add_run(Run::new().add_text("Мета").size(2 * 14).color("#434343")))
-            .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().before(100)).add_run(Run::new().add_text(text_goal)))
-            .add_paragraph(Paragraph::new().add_run(Run::new().add_text("Об'єкт дослідження: ").add_text(content.research_object.for_language(&Language::Ukrainian)).add_text(".")))
-            .add_paragraph(Paragraph::new().add_run(Run::new().add_text("Предмет дослідження: ").add_text(content.research_subject.for_language(&Language::Ukrainian)).add_text(".")))
+            .add_paragraph(Paragraph::new().add_tab(Tab::new().pos(710)).line_spacing(LineSpacing::new().before(100)).align(AlignmentType::Both).add_run(Run::new().add_tab().add_text(text_goal)))
+            .add_paragraph(Paragraph::new().add_tab(Tab::new().pos(710)).add_run(Run::new().add_tab().add_text("Об'єкт дослідження: ").add_text(content.research_object.for_language(&Language::Ukrainian)).add_text(".")))
+            .add_paragraph(Paragraph::new().add_tab(Tab::new().pos(710)).add_run(Run::new().add_tab().add_text("Предмет дослідження: ").add_text(content.research_subject.for_language(&Language::Ukrainian)).add_text(".")))
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(300))
                 .add_run(Run::new().add_text("Задачі, що вирішуються в роботі").size(2 * 14).color("#434343")))
-            .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().before(100)).add_run(Run::new().add_text("Планується глобальна задача.")))
+            .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().before(100)).add_run(Run::new().add_text(text_target)))
             .add_paragraph(Paragraph::new().add_run(Run::new().add_text("Задачі, що вирішуються:")))
-            .add_unordered_list_component(context, vec![
-                "аналіз існуючих рішень".to_owned(),
-                "".to_owned(),
-                "".to_owned(),
-                "оцінка ефективності запропонованого рішення".to_owned(),
-            ])
+            .add_unordered_list_component(context, tasks)
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(300))
                 .add_run(Run::new().add_text("Наукова новизна").size(2 * 14).color("#434343")))
-            .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().before(100)).add_run(Run::new().add_text("Удосконалено / Набуло подальшого розвитку.")))
-            .add_paragraph(Paragraph::new().add_run(Run::new().add_text("(формально: фраза з “Рекомендацій науковим керівникам магістрів щодо вибору тем”, наприклад:  нові або вдосконалені методи, способи, підходи, що підвищують ефективність розроблення ПЗ або його модифікації)")))
+            .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().before(100)).add_run(Run::new().add_text(text_scientific_novelty)))
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(300))
                 .add_run(Run::new().add_text("Практичне значення").size(2 * 14).color("#434343")))
-            .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().before(100)).add_run(Run::new().add_text("Запропоновано / Розроблено таке-то програмне забезпечення або архітектура, тощо")))
+            .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().before(100)).align(AlignmentType::Both).add_run(Run::new().add_text(text_practical_significance)))
     }
 }
 
