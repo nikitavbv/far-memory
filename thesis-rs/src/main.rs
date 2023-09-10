@@ -60,6 +60,11 @@ fn main() {
         .pack(&path)
         .unwrap();
 
+    if args.pdf {
+        info!("converting topic card to pdf");
+        Command::new("docx2pdf").args(["./output/іп22мп_волобуєв_КАРТКА.docx", "./output/іп22мп_волобуєв_КАРТКА.pdf"]).output().unwrap();
+    }
+
     let mut context = Context::new();
     let path = "./output/thesis.docx";
     let file = std::fs::File::create(path).unwrap();
@@ -83,7 +88,7 @@ fn main() {
         .unwrap();
 
     if args.pdf {
-        info!("converting to pdf");
+        info!("converting thesis to pdf");
         Command::new("docx2pdf").args(["./output/thesis.docx", "./output/thesis.pdf"]).output().unwrap();
     
         if args.open {
