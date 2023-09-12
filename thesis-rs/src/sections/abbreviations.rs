@@ -1,6 +1,6 @@
 use {
-    docx_rs::{Docx, Run, Paragraph, AlignmentType, Table, TableRow, TableCell, LineSpacing},
-    crate::components::PlaceholderComponent,
+    docx_rs::{Docx, Run, Paragraph, AlignmentType, LineSpacing},
+    crate::components::ParagraphComponent,
 };
 
 pub trait AbbreviationsListSection {
@@ -14,21 +14,9 @@ impl AbbreviationsListSection for Docx {
             .style("Heading1")
             .page_break_before(true)
             .align(AlignmentType::Center)
-            .add_run(Run::new().add_text("Перелік умовних позначень, СИМВОЛІВ, ОДИНИЦЬ, СКОРОЧЕНЬ І ТЕРМІНІВ"))
+            .add_run(Run::new().add_text("Перелік умовних позначень".to_uppercase()))
         )
-            .add_table(Table::new(vec![
-                TableRow::new(vec![
-                    TableCell::new()
-                        .add_paragraph(Paragraph::new().add_placeholder_component("API", "add some real terms")),
-                    TableCell::new()
-                        .add_paragraph(Paragraph::new().add_placeholder_component("– Application programming interface, прикладний програмний Інтерфейс", "add some real terms")),
-                ]),
-                TableRow::new(vec![
-                    TableCell::new()
-                        .add_paragraph(Paragraph::new().add_placeholder_component("Розподілена система", "add some real terms")),
-                    TableCell::new()
-                        .add_paragraph(Paragraph::new().add_placeholder_component("–Програмне забезпечення, що складається з декількох компонентів, що виконуються на різних фізичних вузлах.", "add some real terms")),
-                ])
-            ]).clear_all_border())
+        .add_paragraph_placeholder_component("JDBC – прикладний програмний інтерфейс Java, який визначає методи, з допомогою яких програмне забезпечення на Java здійснює доступ до бази даних;", "add some real definitions")
+        .add_paragraph_placeholder_component("Cache – проміжний буфер з швидким доступом, що містить інформацію, яка може бути запрошена з найбільшою ймовірністю.", "add some real definitions")
     }
 }
