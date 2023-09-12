@@ -19,7 +19,8 @@ impl MainSection for Docx {
     fn add_main_section(self, context: &mut Context) -> Self {
         let section_index = context.next_section_index();
 
-        self.add_section_header_placeholder_component(
+        self
+        .add_section_header_placeholder_component(
             format!("{}  Аналіз проблеми", section_index).to_uppercase(), 
             "check how this section should be named properly"
         )

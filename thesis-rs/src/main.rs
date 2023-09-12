@@ -28,6 +28,9 @@ pub mod utils;
 #[derive(Parser, Debug)]
 struct Args {   
     #[arg(short, long)]
+    card: bool,
+
+    #[arg(short, long)]
     pdf: bool,
     #[arg(short, long)]
     open: bool,
@@ -43,26 +46,28 @@ fn main() {
 
     fs::create_dir_all("./output").unwrap();
 
-    let path = std::fs::File::create("./output/іп22мп_волобуєв_КАРТКА.docx").unwrap();
-    Docx::new()
-        .page_margin(
-            PageMargin::new()
-                .left(mm_to_twentieth_of_a_point(10.0))
-                .top(mm_to_twentieth_of_a_point(10.0))
-                .bottom(mm_to_twentieth_of_a_point(9.6))
-                .right(mm_to_twentieth_of_a_point(9.7))   
-        )
-        .default_fonts(RunFonts::new().cs("Arial").hi_ansi("Arial"))
-        .default_size(2 * 11)
-        .default_tab_stop(0)
-        .add_topic_card_document(&mut context, &content)
-        .build()
-        .pack(&path)
-        .unwrap();
+    if args.card {
+        let path = std::fs::File::create("./output/іп22мп_волобуєв_КАРТКА.docx").unwrap();
+        Docx::new()
+            .page_margin(
+                PageMargin::new()
+                    .left(mm_to_twentieth_of_a_point(10.0))
+                    .top(mm_to_twentieth_of_a_point(10.0))
+                    .bottom(mm_to_twentieth_of_a_point(9.6))
+                    .right(mm_to_twentieth_of_a_point(9.7))   
+            )
+            .default_fonts(RunFonts::new().cs("Arial").hi_ansi("Arial"))
+            .default_size(2 * 11)
+            .default_tab_stop(0)
+            .add_topic_card_document(&mut context, &content)
+            .build()
+            .pack(&path)
+            .unwrap();
 
-    if args.pdf {
-        info!("converting topic card to pdf");
-        Command::new("docx2pdf").args(["./output/іп22мп_волобуєв_КАРТКА.docx", "./output/іп22мп_волобуєв_КАРТКА.pdf"]).output().unwrap();
+        if args.pdf {
+            info!("converting topic card to pdf");
+            Command::new("docx2pdf").args(["./output/іп22мп_волобуєв_КАРТКА.docx", "./output/іп22мп_волобуєв_КАРТКА.pdf"]).output().unwrap();
+        }
     }
 
     let mut context = Context::new();
