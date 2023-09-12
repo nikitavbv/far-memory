@@ -43,9 +43,6 @@ impl TopicCardDocument for Docx {
         "#;
         let text_problem_3 = "Існуючі реалізації Far Memory є або пропрієтарними (та недоступними для використання ззовні компаній що іх розробили - наприклад Google) або не мають необхідного функціоналу для використання на практиці.";
 
-        let text_goal = r#"Розробити архітектуру програмного засобу та її відкриту реалізацію, яка надає віддалену памʼять у розподіленій системі з багатьох вузлів, є простою у розгортанні та інтеграції у нове та існуюче програмне забезпечення.
-Архітектура реалізації віддаленої памʼяті повинна передбачати відмовостійкість (дані не втрачаються при виході з ладу вузлів) та достатній рівень швидкодії (вищий за показник для файлу підкачки на локальному диску)."#;
-
         let text_target = "Планується розробити методи та реалізацію програмного засобу для надання віддаленої памʼяті у розподіленій системі.";
 
         let tasks = vec![
@@ -90,7 +87,7 @@ impl TopicCardDocument for Docx {
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(300))
                 .add_run(Run::new().add_text("Мета").size(2 * 14).color("#434343")))
-            .add_paragraph(Paragraph::new().add_tab(Tab::new().pos(710)).line_spacing(LineSpacing::new().before(100)).align(AlignmentType::Both).add_run(Run::new().add_tab().add_text(text_goal)))
+            .add_paragraph(Paragraph::new().add_tab(Tab::new().pos(710)).line_spacing(LineSpacing::new().before(100)).align(AlignmentType::Both).add_run(Run::new().add_tab().add_text(&content.aim_of_study_short_ua)))
             .add_paragraph(Paragraph::new().add_tab(Tab::new().pos(710)).add_run(Run::new().add_tab().add_text("Об'єкт дослідження: ").add_text(content.research_object.for_language(&Language::Ukrainian)).add_text(".")))
             .add_paragraph(Paragraph::new().add_tab(Tab::new().pos(710)).add_run(Run::new().add_tab().add_text("Предмет дослідження: ").add_text(content.research_subject.for_language(&Language::Ukrainian)).add_text(".")))
             .add_paragraph(Paragraph::new()

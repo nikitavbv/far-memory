@@ -90,11 +90,6 @@ impl AbstractSection for Docx {
             &Language::Ukrainian => "Мета дослідження",
         };
 
-        let text_aim_of_study_description = match language {
-            &Language::English => "The main target is ...",
-            &Language::Ukrainian => "Основною метою є покращити/підвищити швидкість/зменшити використання ...",
-        };
-
         let text_object_of_research = match language {
             &Language::English => "Object of research",
             &Language::Ukrainian => "Об’єкт дослідження",
@@ -128,7 +123,7 @@ impl AbstractSection for Docx {
             )
             .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().bold().add_text(format!("{}. ", text_aim_of_study)))
-                .add_placeholder_component(text_aim_of_study_description, "replace with correct description")
+                .add_run(Run::new().add_text(content.aim_of_study.for_language(language)))
             )
             .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().add_text(format!("{}: ", text_object_of_research)).add_text(content.research_object.for_language(language)).add_text("."))
