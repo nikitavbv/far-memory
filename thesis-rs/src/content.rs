@@ -13,7 +13,11 @@ impl Content {
         let aim_of_study_short_ua = "Розробити архітектуру програмного засобу та її відкриту реалізацію, яка надає віддалену памʼять у розподіленій системі з багатьох вузлів, є простою у розгортанні та інтеграції у нове та існуюче програмне забезпечення. Архітектура реалізації віддаленої памʼяті повинна передбачати відмовостійкість (дані не втрачаються при виході з ладу вузлів) та достатній рівень швидкодії (вищий за показник для файлу підкачки на локальному диску).".to_owned();
         let aim_of_study = MultiLanguageString::new(
             "The main target is to develop a software architecture and its open implementation that provides far memory in a multi-node distributed system, is easy to deploy and integrate into new and existing software. The architecture of the implementation of remote memory should provide fault tolerance (no data is lost when nodes fail) and a sufficient level of performance (higher than the performance of swap file on the local disk).",
-            format!("Основною метою є {}{}", aim_of_study_short_ua.chars().nth(0).unwrap().to_lowercase(), aim_of_study_short_ua.chars().skip(1).collect::<String>()),
+            format!(
+                "Основною метою є {}{}", 
+                aim_of_study_short_ua.chars().nth(0).unwrap().to_lowercase(), 
+                aim_of_study_short_ua.chars().skip(1).collect::<String>()
+            ),
         );
 
         Self {
