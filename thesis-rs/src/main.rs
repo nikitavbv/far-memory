@@ -1,3 +1,8 @@
+/*
+requirements: https://ela.kpi.ua/bitstream/123456789/49978/1/Mahisterska_dysertatsiia.pdf
+examples: https://ela.kpi.ua/handle/123456789/21930
+*/
+
 use {
     std::{process::Command, fs},
     clap::Parser,
