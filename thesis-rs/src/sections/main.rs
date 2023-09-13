@@ -1,3 +1,5 @@
+use crate::components::MarkdownComponent;
+
 use {
     docx_rs::{Docx, Paragraph, LineSpacing, Run, Tab},
     crate::{
@@ -53,7 +55,9 @@ impl MainSection for Docx {
             перевищувати 20 % обсягу основної частини магістерської дисертації. */
         
         self
-            .add_section_header_component(format!("{}  Огляд існуючих методів надання віддаленої памʼяті", section_index).to_uppercase())
+            .add_markdown_component(context, r#"
+# Огляд існуючих методів надання віддаленої памʼяті
+            "#.trim())
             .add_paragraph(
                 Paragraph::new()
                     .add_tab(Tab::new().pos(710))

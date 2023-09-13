@@ -1,6 +1,7 @@
 pub use self::{
     image::ImageComponent,
     line::LineComponent,
+    markdown::MarkdownComponent,
     page_break::PageBreakComponent,
     paragraph::ParagraphComponent,
     placeholder::PlaceholderComponent,
@@ -10,6 +11,7 @@ pub use self::{
 
 pub mod image;
 pub mod line;
+pub mod markdown;
 pub mod page_break;
 pub mod paragraph;
 pub mod placeholder;
