@@ -6,6 +6,7 @@ pub struct Content {
     pub aim_of_study: MultiLanguageString, // Мета
     pub research_object: MultiLanguageString, // об’єкт дослідження
     pub research_subject: MultiLanguageString, // предмет дослідження
+    pub keywords: Vec<MultiLanguageString>,
 }
 
 impl Content {
@@ -31,6 +32,33 @@ impl Content {
                 "methods for ensuring fast access to data blocks in far memory, their replication, far memory deployment and integration into software", 
                 "методи забезпечення швидкого доступу до блоків даних у віддаленій памʼяті, їх реплікація, розгортання та інтеграція віддаленої памʼяті у програмне забезпечення"
             ),
+            // TODO:
+            keywords: vec![
+                MultiLanguageString::new(
+                    "Far memory",
+                    "Віддалена памʼять"
+                ),
+                MultiLanguageString::new(
+                    "Distributed systems",
+                    "Розподілені системи"
+                ),
+                MultiLanguageString::new(
+                    "Computer networks",
+                    "Комп'ютерні мережі"
+                ),
+                MultiLanguageString::new(
+                    "Data structures",
+                    "Структури даних"
+                ),
+                MultiLanguageString::new(
+                    "Computer networks",
+                    "Комп'ютерні мережі"
+                ),
+                MultiLanguageString::new(
+                    "Linux",
+                    "Linux"
+                ),
+            ],
         }
     }
 }

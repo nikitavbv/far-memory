@@ -25,6 +25,8 @@ async fn main() -> std::io::Result<()> {
     let config = Config::load();
     let far_memory_block_size = 2 * 1024 * 1024;
 
+    let x = 42;
+
     if config.controller_enabled() {
         run_controller_server(config.access_token(), config.controller_storage_nodes()).await;
     }

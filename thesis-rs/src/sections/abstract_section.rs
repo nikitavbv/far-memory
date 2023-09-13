@@ -217,32 +217,7 @@ impl AbstractSection for Docx {
                     "Ясенова А.В. Огляд алгоритмів кластеризації // Матеріали науковопрактичної конференції молодих вчених та студентів «Інформаційні технології – м. Київ: НАУ, 6-7 вересня 2020 р."
                 )
             ], language)
-            .add_keywords_component(&[
-                MultiLanguageString::new(
-                    "Far memory",
-                    "Віддалена памʼять"
-                ),
-                MultiLanguageString::new(
-                    "Distributed systems",
-                    "Розподілені системи"
-                ),
-                MultiLanguageString::new(
-                    "Computer networks",
-                    "Комп'ютерні мережі"
-                ),
-                MultiLanguageString::new(
-                    "Data structures",
-                    "Структури даних"
-                ),
-                MultiLanguageString::new(
-                    "Computer networks",
-                    "Комп'ютерні мережі"
-                ),
-                MultiLanguageString::new(
-                    "Linux",
-                    "Linux"
-                ),
-            ], language)
+            .add_keywords_component(&content.keywords, language)
             .add_page_break_component()
     }
 }
