@@ -1,8 +1,8 @@
 use {
     docx_rs::{Docx, Paragraph, Tab, LineSpacing, Run},
-    markdown::{Block, Span},
+    markdown::{Block, Span, ListItem},
     crate::{
-        components::SectionHeaderComponent,
+        components::{SectionHeaderComponent, ParagraphComponent, UnorderedListComponent},
         context::Context,
     },
 };
@@ -50,6 +50,25 @@ impl MarkdownComponent for Docx {
                         other => panic!("markdown headers with size {} are not supported yet", other)
                     }
                 },
+                Block::Paragraph(spans) => {
+                    let paragraph_text = spans.into_iter()
+                        .fold("".to_owned(), |prev, span| format!("{}{}", prev, match span {
+                            Span::Text(text) => text,
+                            other => panic!("unexpected span in markdown paragraph: {:?}", other),
+                        }));
+
+                    document.add_paragraph_component(paragraph_text)
+                },
+                Block::UnorderedList(list) => {
+                    document.add_unordered_list_component(context, list.into_iter().map(|item| match item {
+                        ListItem::Simple(spans) => spans.into_iter()
+                            .fold("".to_owned(), |prev, span| format!("{}{}", prev, match span {
+                                Span::Text(text) => text,
+                                other => panic!("unexpected span in markdown list: {:?}", other),
+                            })),
+                        other => panic!("this type of markdown list items is not currently supported: {:?}", other),
+                    }).collect())
+                }
                 other => panic!("unexpected markdown block: {:?}", other)
             }
         }
