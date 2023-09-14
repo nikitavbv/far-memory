@@ -82,22 +82,21 @@ impl MainSection for Docx {
                 "Схематичне зображення принципу роботи Far Memory"
             )
             .add_paragraph_component("Це все робить використання такої віддаленої памʼяті привабливим для випадків, коли можна знайти сторінки памʼяті, доступ до яких відбувається порівняно не часто, перемістити їх у віддалену памʼять та звільнити місце для даних, доступ до яких відбувається частіше.")    
+            .add_paragraph(
+                Paragraph::new()
+                    .add_tab(Tab::new().pos(710))
+                    .line_spacing(LineSpacing::new().before(300).line(24 * 15))
+                    .style("Heading2")
+                    .add_run(Run::new().add_tab().add_text(format!("{}.{}   ", section_index, context.next_subsection_index(section_index))).add_text("Огляд існуючих реалізацій віддаленої памʼяті"))
+            )
+            .add_paragraph_placeholder_component("Аналіз існуючих реалізацій віддаленої памʼяті має на меті проаналізувати існуючі реалізації, їх архітектуру, причини певних рішень. Ціллю є дізнатися які з вже досліджених підходів є ефективними та знайти відповіді на наступні дослідницькі питання:", "replace this with a better intro. Generally, I need to point out what to focus on while analyzing existing implementations")
+            .add_unordered_list_component(context, vec![
+                "З яких компонентів складаються системи віддаленої памʼяті, що працюють в розподілених системах?".to_owned(),
+                "Яким чином вони інтегруються в існуюче та нове програмне забезпечення?".to_owned(),
+                "Що впливає на швидкодію системи та які є методи її покращення?".to_owned(),
+                "За рахунок чого забезпечується відмовостійкість?".to_owned(),
+            ])
             // previous text goes below
-        .add_paragraph(
-            Paragraph::new()
-                .add_tab(Tab::new().pos(710))
-                .line_spacing(LineSpacing::new().before(300).line(24 * 15))
-                .style("Heading2")
-                .add_run(Run::new().add_tab().add_text(format!("{}.{}   ", section_index, context.next_subsection_index(section_index))).add_text("Аналіз існуючих реалізацій віддаленої памʼяті"))
-        )
-        .add_paragraph_component("Аналіз існуючих реалізацій віддаленої памʼяті має на меті проаналізувати існуючі реалізації, їх архітектуру, причини певних рішень. Ціллю є дізнатися які з вже досліджених підходів є ефективними та знайти відповіді на наступні дослідницькі питання:")
-        .add_unordered_list_component(context, vec![
-            "З яких компонентів складаються системи віддаленої памʼяті, що працюють в розподілених системах?".to_owned(),
-            "Яким чином вони інтегруються в існуюче та нове програмне забезпечення?".to_owned(),
-            "Що впливає на швидкодію системи та які є методи її покращення?".to_owned(),
-            "За рахунок чого забезпечується відмовостійкість?".to_owned(),
-        ])
-        .add_paragraph_component("Відповіді на ці питання дозволять коректно розробити архітектуру рішення, що розглядається в межах цього курсового проекту, уникнути можливих помилок.")
         .add_paragraph(
             Paragraph::new()
                 .add_tab(Tab::new().pos(710))
