@@ -1,10 +1,8 @@
-use crate::components::MarkdownComponent;
-
 use {
     docx_rs::{Docx, Paragraph, LineSpacing, Run, Tab},
     crate::{
         components::{
-            SectionHeaderComponent, 
+            MarkdownComponent,
             UnorderedListComponent, 
             ImageComponent,
             ParagraphComponent,
@@ -57,14 +55,9 @@ impl MainSection for Docx {
         self
             .add_markdown_component(context, r#"
 # Огляд існуючих методів надання віддаленої памʼяті
+
+## Ресурси обладнання у розподілених системах та проблема їх ефективного використання
             "#.trim())
-            .add_paragraph(
-                Paragraph::new()
-                    .add_tab(Tab::new().pos(710))
-                    .line_spacing(LineSpacing::new().before(300).line(24 * 15))
-                    .style("Heading2")
-                    .add_run(Run::new().add_tab().add_text(format!("{}.{}   ", section_index, context.next_subsection_index(section_index))).add_text("Ресурси обладнання у розподілених системах та проблема їх ефективного використання"))
-            )
             .add_paragraph_component("Будь-який сучасний центр обробки даних складається з великої кількості серверного та мережевого обладнання. На цьому обладнанні виконується програмне забезпечення, що обробляє запити від користувачів та може бути частинами розподілених систем.")
             .add_paragraph_component("Під час своєї роботи на цьому обладнанні, програмне забезпечення може використовувати наступні його ресурси:")
             .add_unordered_list_component(context, vec![
