@@ -14,6 +14,7 @@ pub enum Block {
     UnorderedList(Vec<String>),
     Image(ImageBlock),
     Placeholder(Box<Block>, String),
+    Multiple(Vec<Block>),
 }
 
 #[derive(Debug, Clone)]
@@ -40,38 +41,43 @@ impl ImageBlock {
 }
 
 pub fn render_blocks_to_docx(mut document: Docx, context: &mut Context, blocks: Vec<Block>) -> Docx {
-    let mut section_index = 0;
-
     for block in blocks {
-        document = match block {
-            Block::SectionHeader(text) => {
-                section_index = context.next_section_index();
-                document.add_section_header_component(format!("{}   {}", section_index, text))
-            },
-            Block::SubsectionHeader(text) => {
-                let subsection_index = context.next_subsection_index(section_index);
-
-                document.add_paragraph(
-                    Paragraph::new()
-                        .add_tab(Tab::new().pos(710))
-                        .line_spacing(LineSpacing::new().before(300).line(24 * 15))
-                        .style("Heading2")
-                        .add_run(Run::new().add_tab().add_text(format!("{}.{}   {}", section_index, subsection_index, text)))
-                )
-            },
-            Block::Paragraph(text) => document.add_paragraph_component(text),
-            Block::UnorderedList(list) => document.add_unordered_list_component(context, list),
-            Block::Image(image) => document.add_image_component(context, section_index, &image.path(), &image.description()),
-            Block::Placeholder(inner, description) => {
-                match *inner {
-                    Block::Paragraph(text) => document.add_paragraph_placeholder_component(text, description),
-                    other => panic!("block type not supported for placeholder: {:?}", other),
-                }
-            },
-        }
+        document = render_block_to_docx_with_params(document, context, None, block)
     }
 
     document
+}
+
+fn render_block_to_docx_with_params(document: Docx, context: &mut Context, placeholder: Option<String>, block: Block) -> Docx {
+    match block {
+        Block::SectionHeader(text) => {
+            let text = format!("{}   {}", context.next_section_index(), text);
+
+            match placeholder {
+                Some(v) => document.add_section_header_placeholder_component(text, v),
+                None => document.add_section_header_component(text),
+            }
+        },
+        Block::SubsectionHeader(text) => {
+            let subsection_index = context.next_subsection_index(context.last_section_index());
+
+            document.add_paragraph(
+                Paragraph::new()
+                    .add_tab(Tab::new().pos(710))
+                    .line_spacing(LineSpacing::new().before(300).line(24 * 15))
+                    .style("Heading2")
+                    .add_run(Run::new().add_tab().add_text(format!("{}.{}   {}", context.last_section_index(), subsection_index, text)))
+            )
+        },
+        Block::Paragraph(text) => match placeholder {
+            Some(v) => document.add_paragraph_placeholder_component(text, v),
+            None => document.add_paragraph_component(text),
+        },
+        Block::UnorderedList(list) => document.add_unordered_list_component(context, list),
+        Block::Image(image) => document.add_image_component(context, context.last_section_index(), &image.path(), &image.description()),
+        Block::Placeholder(inner, description) => render_block_to_docx_with_params(document, context, Some(description), *inner),
+        Block::Multiple(blocks) => blocks.into_iter().fold(document, |doc, block| render_block_to_docx_with_params(doc, context, placeholder.clone(), block)),
+    }
 }
 
 pub fn subsection_header(text: impl Into<String>) -> Block {

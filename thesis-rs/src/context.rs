@@ -16,9 +16,13 @@ impl Context {
         self.numbering_id_counter
     }
 
+    pub fn last_section_index(&self) -> usize {
+        self.sections.len()
+    }
+
     pub fn next_section_index(&mut self) -> usize {
         self.sections.push(SectionContext::new());
-        self.sections.len()
+        self.last_section_index()
     }
 
     fn section(&mut self, section_index: usize) -> &mut SectionContext {
