@@ -6,8 +6,10 @@ use {
             UnorderedListComponent, 
             ImageComponent,
             ParagraphComponent,
+            SectionHeaderComponent,
         },
         context::Context,
+        engine::Block,
     },
 };
 
@@ -17,8 +19,6 @@ pub trait MainSection {
 
 impl MainSection for Docx {
     fn add_main_section(self, context: &mut Context) -> Self {
-        let section_index = 1;
-
         /* from https://ela.kpi.ua/bitstream/123456789/49978/1/Mahisterska_dysertatsiia.pdf:
             Перший розділ містить порівняльний аналіз актуального наукового,
             інноваційного та практичного світового та вітчизняного здобутку у чіткій
@@ -51,13 +51,37 @@ impl MainSection for Docx {
             і напрямів їх подальшого усунення та вирішення, що забезпечує актуальність
             магістерського дослідження. Загальний обсяг огляду літератури не повинен
             перевищувати 20 % обсягу основної частини магістерської дисертації. */
-        
-        self
+
+        let content = vec![
+            Block::SectionHeader("Огляд існуючих методів надання віддаленої памʼяті".to_owned()),
+            Block::SubsectionHeader("Ресурси обладнання у розподілених системах та проблема їх ефективного використання".to_owned()),
+        ];
+
+        let mut document = self;
+        let mut section_index = 0;
+
+        for block in content {
+            document = match block {
+                Block::SectionHeader(text) => {
+                    section_index = context.next_section_index();
+                    document.add_section_header_component(format!("{}   {}", section_index, text))
+                },
+                Block::SubsectionHeader(text) => {
+                    let subsection_index = context.next_subsection_index(section_index);
+
+                    document.add_paragraph(
+                        Paragraph::new()
+                            .add_tab(Tab::new().pos(710))
+                            .line_spacing(LineSpacing::new().before(300).line(24 * 15))
+                            .style("Heading2")
+                            .add_run(Run::new().add_tab().add_text(format!("{}.{}   {}", section_index, subsection_index, text)))
+                    )
+                },
+            }
+        }
+
+        document
             .add_markdown_component(context, r#"
-# Огляд існуючих методів надання віддаленої памʼяті
-
-## Ресурси обладнання у розподілених системах та проблема їх ефективного використання
-
 Будь-який сучасний центр обробки даних складається з великої кількості серверного та мережевого обладнання. На цьому обладнанні виконується програмне забезпечення, що обробляє запити від користувачів та 
 може бути частинами розподілених систем.
 

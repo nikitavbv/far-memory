@@ -1,3 +1,4 @@
 pub enum Block {
-    Header(String),
+    SectionHeader(String),
+    SubsectionHeader(String),
 }
