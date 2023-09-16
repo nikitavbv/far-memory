@@ -14,7 +14,7 @@ pub struct Content {
     pub research_object: MultiLanguageString, // об’єкт дослідження
     pub research_subject: MultiLanguageString, // предмет дослідження
     pub keywords: Vec<MultiLanguageString>,
-    pub main: Vec<Block>,
+    pub main: Block,
 }
 
 impl Content {

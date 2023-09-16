@@ -40,12 +40,8 @@ impl ImageBlock {
     }
 }
 
-pub fn render_blocks_to_docx(mut document: Docx, context: &mut Context, blocks: Vec<Block>) -> Docx {
-    for block in blocks {
-        document = render_block_to_docx_with_params(document, context, None, block)
-    }
-
-    document
+pub fn render_block_to_docx(document: Docx, context: &mut Context, block: Block) -> Docx {
+    render_block_to_docx_with_params(document, context, None, block)
 }
 
 fn render_block_to_docx_with_params(document: Docx, context: &mut Context, placeholder: Option<String>, block: Block) -> Docx {

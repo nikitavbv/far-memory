@@ -3,7 +3,7 @@ use {
     crate::{
         context::Context,
         content::Content,
-        engine::render_blocks_to_docx,
+        engine::render_block_to_docx,
     },
 };
 
@@ -13,6 +13,6 @@ pub trait MainSection {
 
 impl MainSection for Docx {
     fn add_main_section(self, context: &mut Context, content: &Content) -> Self {
-        render_blocks_to_docx(self, context, content.main.clone())
+        render_block_to_docx(self, context, content.main.clone())
     }
 }

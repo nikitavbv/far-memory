@@ -1,6 +1,6 @@
 use crate::engine::{Block, ImageBlock, subsection_header, paragraph, unordered_list};
 
-pub fn main_content() -> Vec<Block> {
+pub fn main_content() -> Block {
         /* from https://ela.kpi.ua/bitstream/123456789/49978/1/Mahisterska_dysertatsiia.pdf:
             Перший розділ містить порівняльний аналіз актуального наукового,
             інноваційного та практичного світового та вітчизняного здобутку у чіткій
@@ -34,7 +34,7 @@ pub fn main_content() -> Vec<Block> {
             магістерського дослідження. Загальний обсяг огляду літератури не повинен
             перевищувати 20 % обсягу основної частини магістерської дисертації. */
 
-    vec![
+    Block::Multiple(vec![
         Block::SectionHeader("Огляд існуючих методів надання віддаленої памʼяті".to_owned()),
         Block::SubsectionHeader("Ресурси обладнання у розподілених системах та проблема їх ефективного використання".to_owned()),
         Block::Paragraph(r#"Будь-який сучасний центр обробки даних складається з великої кількості серверного та мережевого обладнання. На цьому обладнанні виконується програмне забезпечення, що обробляє запити від користувачів та 
@@ -220,5 +220,5 @@ pub fn main_content() -> Vec<Block> {
             ])),
             "process this text".to_owned(),
         ),
-    ]
+    ])
 }
