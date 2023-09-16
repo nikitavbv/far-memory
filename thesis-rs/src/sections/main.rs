@@ -8,7 +8,7 @@ use {
             SectionHeaderComponent,
         },
         context::Context,
-        engine::Block,
+        engine::{Block, ImageBlock},
     },
 };
 
@@ -75,6 +75,9 @@ impl MainSection for Docx {
             ]),
             Block::Paragraph(r#"Програмне забезпечення першого типу зазвичай має “вузьке місце” у ресурсах процесору (наприклад, виконує задачі кодування даних, або простого обміну даними), програмне забезпечення другого - у ресурсах памʼяті 
 (зазвичай це аналіз великих масивів даних або просто у програмного забезпечення є деякий великий набір даних, який йому потрібен для роботи). Використання памʼяті диску для розширення основної памʼяті не є оптимальним - через великий час доступу (а в хмарній інфраструктурі в додаток до цього зазвичай диски не є локальними, а розміщені віддалено на окремій інфраструктурі). У порівнянні з часом доступу до диску час доступу до даних у памʼяті іншого серверу є значно меншим (хоча все ще більшим за той випадок, коли дані доступні локально)."#.to_owned()),
+            Block::Image(ImageBlock::new("images/image1.png".to_owned(), "Схематичне зображення принципу роботи Far Memory block".to_owned())),
+            Block::Paragraph("Це все робить використання такої віддаленої памʼяті привабливим для випадків, коли можна знайти сторінки памʼяті, доступ до яких відбувається порівняно не часто, перемістити їх у віддалену памʼять та звільнити місце для даних, доступ до яких відбувається частіше.".to_owned()),
+            Block::SubsectionHeader("Огляд існуючих реалізацій віддаленої памʼяті".to_owned()),
         ];
 
         let mut document = self;
@@ -99,24 +102,11 @@ impl MainSection for Docx {
                 },
                 Block::Paragraph(text) => document.add_paragraph_component(text),
                 Block::UnorderedList(list) => document.add_unordered_list_component(context, list),
+                Block::Image(image) => document.add_image_component(context, section_index, &image.path(), &image.description()),
             }
         }
 
         document
-            .add_image_component(
-                context, 
-                section_index, 
-                "images/image1.png", 
-                "Схематичне зображення принципу роботи Far Memory"
-            )
-            .add_paragraph_component("Це все робить використання такої віддаленої памʼяті привабливим для випадків, коли можна знайти сторінки памʼяті, доступ до яких відбувається порівняно не часто, перемістити їх у віддалену памʼять та звільнити місце для даних, доступ до яких відбувається частіше.")    
-            .add_paragraph(
-                Paragraph::new()
-                    .add_tab(Tab::new().pos(710))
-                    .line_spacing(LineSpacing::new().before(300).line(24 * 15))
-                    .style("Heading2")
-                    .add_run(Run::new().add_tab().add_text(format!("{}.{}   ", section_index, context.next_subsection_index(section_index))).add_text("Огляд існуючих реалізацій віддаленої памʼяті"))
-            )
             .add_paragraph_placeholder_component("Аналіз існуючих реалізацій віддаленої памʼяті має на меті проаналізувати існуючі реалізації, їх архітектуру, причини певних рішень. Ціллю є дізнатися які з вже досліджених підходів є ефективними та знайти відповіді на наступні дослідницькі питання:", "replace this with a better intro. Generally, I need to point out what to focus on while analyzing existing implementations")
             .add_unordered_list_component(context, vec![
                 "З яких компонентів складаються системи віддаленої памʼяті, що працюють в розподілених системах?".to_owned(),
