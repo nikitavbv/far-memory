@@ -73,3 +73,15 @@ pub fn render_blocks_to_docx(mut document: Docx, context: &mut Context, blocks: 
 
     document
 }
+
+pub fn subsection_header(text: impl Into<String>) -> Block {
+    Block::SubsectionHeader(text.into())
+}
+
+pub fn paragraph(text: impl Into<String>) -> Block {
+    Block::Paragraph(text.into())
+}
+
+pub fn unordered_list(list: Vec<String>) -> Block {
+    Block::UnorderedList(list)
+}
