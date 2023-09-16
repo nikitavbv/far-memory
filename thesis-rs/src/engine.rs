@@ -6,7 +6,7 @@ use {
     },
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Block {
     SectionHeader(String),
     SubsectionHeader(String),
@@ -16,7 +16,7 @@ pub enum Block {
     Placeholder(Box<Block>, String),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ImageBlock {
     path: String,
     description: String,
