@@ -7,7 +7,6 @@ use {
             AbstractSection, 
             TableOfContentsSection,
             AbbreviationsListSection,
-            IntroSection,
             ReferencesSection,
         },
         context::Context,
@@ -29,7 +28,6 @@ impl ThesisDocument for Docx {
             .add_abstract_section(context, &content, &Language::English)
             .add_table_of_contents_section()
             .add_abbreviations_list_section()
-            .add_intro_section(context)
             .add_text_block(context, content.main.clone())
             .add_references_section(context)
     }
