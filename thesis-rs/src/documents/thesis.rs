@@ -8,12 +8,12 @@ use {
             TableOfContentsSection,
             AbbreviationsListSection,
             IntroSection,
-            MainSection,
             ConclusionsSection,
             ReferencesSection,
         },
         context::Context,
         content::{Content, Language},
+        engine::TextBlockComponent,
     },
 };
 
@@ -31,7 +31,7 @@ impl ThesisDocument for Docx {
             .add_table_of_contents_section()
             .add_abbreviations_list_section()
             .add_intro_section(context)
-            .add_main_section(context, &content)
+            .add_text_block(context, content.main.clone())
             .add_conclusions_section()
             .add_references_section(context)
     }

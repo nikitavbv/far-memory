@@ -87,3 +87,13 @@ pub fn paragraph(text: impl Into<String>) -> Block {
 pub fn unordered_list(list: Vec<String>) -> Block {
     Block::UnorderedList(list)
 }
+
+pub trait TextBlockComponent {
+    fn add_text_block(self, context: &mut Context, block: Block) -> Self;
+}
+
+impl TextBlockComponent for Docx {
+    fn add_text_block(self, context: &mut Context, block: Block) -> Self {
+        render_block_to_docx(self, context, block)
+    }
+}
