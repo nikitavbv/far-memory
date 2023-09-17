@@ -8,7 +8,6 @@ use {
             TableOfContentsSection,
             AbbreviationsListSection,
             IntroSection,
-            ConclusionsSection,
             ReferencesSection,
         },
         context::Context,
@@ -32,7 +31,6 @@ impl ThesisDocument for Docx {
             .add_abbreviations_list_section()
             .add_intro_section(context)
             .add_text_block(context, content.main.clone())
-            .add_conclusions_section()
             .add_references_section(context)
     }
 }
