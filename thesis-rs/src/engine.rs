@@ -1,5 +1,5 @@
 use {
-    docx_rs::{Docx, Paragraph, Tab, LineSpacing, Run},
+    docx_rs::{Docx, Paragraph, Tab, LineSpacing, Run, AbstractNumbering, Level, Start, NumberFormat, LevelText, LevelJc, SpecialIndentType, NumberingId, AlignmentType, Numbering, IndentLevel},
     crate::{
         context::Context,
         components::{SectionHeaderComponent, ParagraphComponent, UnorderedListComponent, ImageComponent},
@@ -15,6 +15,7 @@ pub enum Block {
     Image(ImageBlock),
     Placeholder(Box<Block>, String),
     Multiple(Vec<Block>),
+    ReferencesList(Vec<String>),
 }
 
 #[derive(Debug, Clone)]
@@ -73,6 +74,29 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, place
         Block::Image(image) => document.add_image_component(context, context.last_section_index(), &image.path(), &image.description()),
         Block::Placeholder(inner, description) => render_block_to_docx_with_params(document, context, Some(description), *inner),
         Block::Multiple(blocks) => blocks.into_iter().fold(document, |doc, block| render_block_to_docx_with_params(doc, context, placeholder.clone(), block)),
+        Block::ReferencesList(references) => {
+            let numbering = context.next_numbering_id();
+
+            let document = document
+                .add_abstract_numbering(
+                    AbstractNumbering::new(numbering)
+                        .add_level(Level::new(
+                            0,
+                            Start::new(1),
+                            NumberFormat::new("decimal"),
+                            LevelText::new("%1. "),
+                            LevelJc::new("start")
+                        ).indent(None, Some(SpecialIndentType::Hanging(300)), None, None)
+                    )
+                )
+                .add_numbering(Numbering::new(numbering, numbering));
+
+            references.into_iter().fold(document, |document, reference| document.add_paragraph(Paragraph::new()
+                .line_spacing(LineSpacing::new().line(24 * 15))
+                .numbering(NumberingId::new(numbering), IndentLevel::new(0))
+                .align(AlignmentType::Both)
+                .add_run(Run::new().add_text(reference))))
+        },
     }
 }
 
