@@ -1,9 +1,18 @@
-use crate::{
-    engine::{Block, ImageBlock, subsection_header, paragraph, unordered_list},
-    content::Language,
+use {
+    docx_rs::{Docx, Style, StyleType, RunFonts, PageMargin},
+    crate::{
+        engine::{Block, ImageBlock, subsection_header, paragraph, unordered_list},
+        content::Language,
+        utils::mm_to_twentieth_of_a_point,
+    },
 };
 
-pub fn main_content() -> Block {
+pub fn thesis_content() -> Block {
+    /*
+    requirements: https://ela.kpi.ua/bitstream/123456789/49978/1/Mahisterska_dysertatsiia.pdf
+    examples: https://ela.kpi.ua/handle/123456789/21930
+    */
+
     /* from https://ela.kpi.ua/bitstream/123456789/49978/1/Mahisterska_dysertatsiia.pdf:
         Перший розділ містить порівняльний аналіз актуального наукового,
         інноваційного та практичного світового та вітчизняного здобутку у чіткій
@@ -297,4 +306,20 @@ pub fn main_content() -> Block {
             "Understanding InfiniBand and RDMA [Електронний ресурс] // Red Hat Customer Portal. Режим доступу до ресурсу: https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/configuring_infiniband_and_rdma_networks/understanding-infiniband-and-rdma_configuring-infiniband-and-rdma-networks".to_owned(),
         ])
     ])
+}
+
+pub fn thesis_docx_template() -> Docx {
+    Docx::new()
+        .page_margin(
+            PageMargin::new()
+                .left(mm_to_twentieth_of_a_point(30.0))
+                .top(mm_to_twentieth_of_a_point(20.0))
+                .bottom(mm_to_twentieth_of_a_point(20.0))
+                .right(mm_to_twentieth_of_a_point(10.0))
+        )
+        .default_fonts(RunFonts::new().cs("Times New Roman"))
+        .default_size(28) // 14
+        .default_tab_stop(0)
+        .add_style(Style::new("Heading1", StyleType::Paragraph).name("Heading 1").bold())
+        .add_style(Style::new("Heading2", StyleType::Paragraph).name("Heading 2").bold())
 }

@@ -1,9 +1,10 @@
-use {
-    crate::engine::Block,
-    self::main::main_content,
+pub use self::{
+    thesis::{thesis_content, thesis_docx_template},
+    topic_card::topic_card_docx_template,
 };
 
-pub mod main;
+pub mod thesis;
+pub mod topic_card;
 
 pub struct Content {
     pub topic: String,
@@ -14,7 +15,6 @@ pub struct Content {
     pub research_object: MultiLanguageString, // об’єкт дослідження
     pub research_subject: MultiLanguageString, // предмет дослідження
     pub keywords: Vec<MultiLanguageString>,
-    pub main: Block,
 }
 
 impl Content {
@@ -67,7 +67,6 @@ impl Content {
                     "Linux"
                 ),
             ],
-            main: main_content(),
         }
     }
 }

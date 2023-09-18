@@ -1,4 +1,4 @@
-use crate::components::FrontPageSection;
+use crate::components::{FrontPageSection, TopicCardDocument};
 
 use {
     docx_rs::{
@@ -42,6 +42,7 @@ pub enum Block {
     AbstractSection(Language),
     TaskSection,
     FrontPage,
+    TopicCard,
 }
 
 #[derive(Debug, Clone)]
@@ -131,6 +132,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
         Block::AbstractSection(language) => document.add_abstract_section(context, content, &language),
         Block::TaskSection => document.add_task_section(context, content),
         Block::FrontPage => document.add_front_page_section(content),
+        Block::TopicCard => document.add_topic_card_document(context, content),
     }
 }
 
@@ -153,5 +155,42 @@ pub trait TextBlockComponent {
 impl TextBlockComponent for Docx {
     fn add_text_block(self, context: &mut Context, content: &Content, block: Block) -> Self {
         render_block_to_docx(self, context, content, block)
+    }
+}
+
+pub struct Document {
+    name: String,
+    content: Block,
+
+    docx_template: Docx,
+}
+
+impl Document {
+    pub fn new(name: &str, content: Block) -> Self {
+        Self {
+            name: name.to_owned(),
+            content,
+
+            docx_template: Docx::new(),
+        }
+    }
+
+    pub fn with_docx_template(self, docx_template: Docx) -> Self {
+        Self {
+            docx_template,
+            ..self
+        }    
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn docx(&self) -> Docx {
+        self.docx_template.clone()
+    }
+
+    pub fn content(&self) -> Block {
+        self.content.clone()
     }
 }

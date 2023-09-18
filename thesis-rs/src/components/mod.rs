@@ -9,6 +9,7 @@ pub use self::{
     placeholder::PlaceholderComponent,
     section_header::SectionHeaderComponent,
     task::TaskSection,
+    topic_card::TopicCardDocument,
     unordered_list::UnorderedListComponent,
 };
 
@@ -22,4 +23,5 @@ pub mod paragraph;
 pub mod placeholder;
 pub mod section_header;
 pub mod task;
+pub mod topic_card;
 pub mod unordered_list;

@@ -1,29 +1,16 @@
-/*
-requirements: https://ela.kpi.ua/bitstream/123456789/49978/1/Mahisterska_dysertatsiia.pdf
-examples: https://ela.kpi.ua/handle/123456789/21930
-*/
-
 use {
     std::{process::Command, fs},
     clap::Parser,
     tracing::info,
-    docx_rs::{
-        Docx,
-        PageMargin, 
-        RunFonts,
-        Style,
-        StyleType,
-    },
     crate::{
-        documents::{ThesisDocument, TopicCardDocument},
-        content::Content,
+        content::{Content, thesis_content, thesis_docx_template, topic_card_docx_template},
         context::Context,
         utils::init_logging,
+        engine::{Document, Block, TextBlockComponent},
     },
 };
 
 pub mod components;
-pub mod documents;
 
 pub mod content;
 pub mod context;
@@ -46,68 +33,38 @@ fn main() {
 
     let args = Args::parse();
 
-    let mut context = Context::new();
-    let content = Content::new();
-
     fs::create_dir_all("./output").unwrap();
 
+    let content = Content::new();
+    let mut documents = vec![
+        Document::new("thesis", thesis_content()).with_docx_template(thesis_docx_template()),
+    ];
+
     if args.card {
-        let path = std::fs::File::create("./output/іп22мп_волобуєв_КАРТКА.docx").unwrap();
-        Docx::new()
-            .page_margin(
-                PageMargin::new()
-                    .left(mm_to_twentieth_of_a_point(10.0))
-                    .top(mm_to_twentieth_of_a_point(10.0))
-                    .bottom(mm_to_twentieth_of_a_point(9.6))
-                    .right(mm_to_twentieth_of_a_point(9.7))   
-            )
-            .default_fonts(RunFonts::new().cs("Arial").hi_ansi("Arial"))
-            .default_size(2 * 11)
-            .default_tab_stop(0)
-            .add_topic_card_document(&mut context, &content)
+        documents.push(
+            Document::new("іп22мп_волобуєв_КАРТКА", Block::TopicCard).with_docx_template(topic_card_docx_template())
+        );
+    }
+
+    for document in documents {
+        let mut context = Context::new();
+
+        let docx_path = format!("./output/{}.docx", document.name());
+        let docx_file = fs::File::create(&docx_path).unwrap();
+        info!("generating {} to {:?}", document.name(), docx_file);
+
+        document.docx()
+            .add_text_block(&mut context, &content, document.content())
             .build()
-            .pack(&path)
+            .pack(docx_file)
             .unwrap();
 
         if args.pdf {
-            info!("converting topic card to pdf");
-            Command::new("docx2pdf").args(["./output/іп22мп_волобуєв_КАРТКА.docx", "./output/іп22мп_волобуєв_КАРТКА.pdf"]).output().unwrap();
+            info!("converting {} to pdf", document.name());
+            let pdf_path = format!("./output/{}.pdf", document.name());
+
+            Command::new("docx2pdf").args([docx_path, pdf_path]).output().unwrap();
         }
     }
 
-    let mut context = Context::new();
-    let path = "./output/thesis.docx";
-    let file = std::fs::File::create(path).unwrap();
-    info!("generating thesis to {:?}", path);
-    Docx::new()
-        .page_margin(
-            PageMargin::new()
-                .left(mm_to_twentieth_of_a_point(30.0))
-                .top(mm_to_twentieth_of_a_point(20.0))
-                .bottom(mm_to_twentieth_of_a_point(20.0))
-                .right(mm_to_twentieth_of_a_point(10.0))
-        )
-        .default_fonts(RunFonts::new().cs("Times New Roman"))
-        .default_size(28) // 14
-        .default_tab_stop(0)
-        .add_style(Style::new("Heading1", StyleType::Paragraph).name("Heading 1").bold())
-        .add_style(Style::new("Heading2", StyleType::Paragraph).name("Heading 2").bold())
-        .add_thesis_document(&mut context, &content)
-        .build()
-        .pack(&file)
-        .unwrap();
-
-    if args.pdf {
-        info!("converting thesis to pdf");
-        Command::new("docx2pdf").args(["./output/thesis.docx", "./output/thesis.pdf"]).output().unwrap();
-    
-        if args.open {
-            info!("done, opening resulting file");
-            Command::new("open").args(["./thesis.pdf"]).output().unwrap();
-        }
-    }
-}
-
-fn mm_to_twentieth_of_a_point(mm: f32) -> i32 {
-    (mm * 56.6929133858).round() as i32
 }
