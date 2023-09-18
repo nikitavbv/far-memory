@@ -21,7 +21,8 @@ use {
     },
     crate::{
         context::Context,
-        components::{SectionHeaderComponent, ParagraphComponent, UnorderedListComponent, ImageComponent},
+        content::{Content, Language},
+        components::{SectionHeaderComponent, ParagraphComponent, UnorderedListComponent, ImageComponent, AbstractSection},
     },
 };
 
@@ -36,6 +37,7 @@ pub enum Block {
     Multiple(Vec<Block>),
     ReferencesList(Vec<String>),
     TableOfContents,
+    AbstractSection(Language),
 }
 
 #[derive(Debug, Clone)]
@@ -61,11 +63,11 @@ impl ImageBlock {
     }
 }
 
-pub fn render_block_to_docx(document: Docx, context: &mut Context, block: Block) -> Docx {
-    render_block_to_docx_with_params(document, context, None, block)
+pub fn render_block_to_docx(document: Docx, context: &mut Context, content: &Content, block: Block) -> Docx {
+    render_block_to_docx_with_params(document, context, content, None, block)
 }
 
-fn render_block_to_docx_with_params(document: Docx, context: &mut Context, placeholder: Option<String>, block: Block) -> Docx {
+fn render_block_to_docx_with_params(document: Docx, context: &mut Context, content: &Content, placeholder: Option<String>, block: Block) -> Docx {
     match block {
         Block::SectionHeader(text) => {
             let text = format!("{}   {}", context.next_section_index(), text);
@@ -92,8 +94,8 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, place
         },
         Block::UnorderedList(list) => document.add_unordered_list_component(context, list),
         Block::Image(image) => document.add_image_component(context, context.last_section_index(), &image.path(), &image.description()),
-        Block::Placeholder(inner, description) => render_block_to_docx_with_params(document, context, Some(description), *inner),
-        Block::Multiple(blocks) => blocks.into_iter().fold(document, |doc, block| render_block_to_docx_with_params(doc, context, placeholder.clone(), block)),
+        Block::Placeholder(inner, description) => render_block_to_docx_with_params(document, context, content, Some(description), *inner),
+        Block::Multiple(blocks) => blocks.into_iter().fold(document, |doc, block| render_block_to_docx_with_params(doc, context, content, placeholder.clone(), block)),
         Block::ReferencesList(references) => {
             let numbering = context.next_numbering_id();
 
@@ -122,6 +124,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, place
             .tab_leader_type(Some(TabLeaderType::None))
             .auto()
         ),
+        Block::AbstractSection(language) => document.add_abstract_section(context, content, &language),
     }
 }
 
@@ -138,11 +141,11 @@ pub fn unordered_list(list: Vec<String>) -> Block {
 }
 
 pub trait TextBlockComponent {
-    fn add_text_block(self, context: &mut Context, block: Block) -> Self;
+    fn add_text_block(self, context: &mut Context, content: &Content, block: Block) -> Self;
 }
 
 impl TextBlockComponent for Docx {
-    fn add_text_block(self, context: &mut Context, block: Block) -> Self {
-        render_block_to_docx(self, context, block)
+    fn add_text_block(self, context: &mut Context, content: &Content, block: Block) -> Self {
+        render_block_to_docx(self, context, content, block)
     }
 }

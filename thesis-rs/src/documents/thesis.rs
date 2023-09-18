@@ -4,10 +4,9 @@ use {
         sections::{            
             FrontPageSection, 
             TaskSection, 
-            AbstractSection, 
         },
         context::Context,
-        content::{Content, Language},
+        content::Content,
         engine::TextBlockComponent,
     },
 };
@@ -21,8 +20,6 @@ impl ThesisDocument for Docx {
         self
             .add_front_page_section(&content)
             .add_task_section(context, &content)
-            .add_abstract_section(context, &content, &Language::Ukrainian)
-            .add_abstract_section(context, &content, &Language::English)
-            .add_text_block(context, content.main.clone())
+            .add_text_block(context, &content, content.main.clone())
     }
 }

@@ -92,6 +92,7 @@ impl Person {
     }
 }
 
+#[derive(Debug, Clone)]
 pub enum Language {
     English,
     Ukrainian,

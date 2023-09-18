@@ -1,4 +1,5 @@
 pub use self::{
+    abstract_section::AbstractSection,
     image::ImageComponent,
     line::LineComponent,
     markdown::MarkdownComponent,
@@ -9,6 +10,7 @@ pub use self::{
     unordered_list::UnorderedListComponent,
 };
 
+pub mod abstract_section;
 pub mod image;
 pub mod line;
 pub mod markdown;
