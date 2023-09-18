@@ -38,6 +38,9 @@ pub fn main_content() -> Block {
         перевищувати 20 % обсягу основної частини магістерської дисертації. */
 
     Block::Multiple(vec![
+        // front page
+        Block::FrontPage,
+
         // task
         Block::TaskSection,
 

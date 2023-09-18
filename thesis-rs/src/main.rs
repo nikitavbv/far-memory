@@ -24,7 +24,6 @@ use {
 
 pub mod components;
 pub mod documents;
-pub mod sections;
 
 pub mod content;
 pub mod context;

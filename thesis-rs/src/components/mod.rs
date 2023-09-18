@@ -1,5 +1,6 @@
 pub use self::{
     abstract_section::AbstractSection,
+    front_page::FrontPageSection,
     image::ImageComponent,
     line::LineComponent,
     markdown::MarkdownComponent,
@@ -12,6 +13,7 @@ pub use self::{
 };
 
 pub mod abstract_section;
+pub mod front_page;
 pub mod image;
 pub mod line;
 pub mod markdown;

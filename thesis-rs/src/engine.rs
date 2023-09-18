@@ -1,3 +1,5 @@
+use crate::components::FrontPageSection;
+
 use {
     docx_rs::{
         Docx, 
@@ -39,6 +41,7 @@ pub enum Block {
     TableOfContents,
     AbstractSection(Language),
     TaskSection,
+    FrontPage,
 }
 
 #[derive(Debug, Clone)]
@@ -127,6 +130,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
         ),
         Block::AbstractSection(language) => document.add_abstract_section(context, content, &language),
         Block::TaskSection => document.add_task_section(context, content),
+        Block::FrontPage => document.add_front_page_section(content),
     }
 }
 
