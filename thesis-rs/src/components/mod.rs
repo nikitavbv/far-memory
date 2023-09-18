@@ -7,6 +7,7 @@ pub use self::{
     paragraph::ParagraphComponent,
     placeholder::PlaceholderComponent,
     section_header::SectionHeaderComponent,
+    task::TaskSection,
     unordered_list::UnorderedListComponent,
 };
 
@@ -18,4 +19,5 @@ pub mod page_break;
 pub mod paragraph;
 pub mod placeholder;
 pub mod section_header;
+pub mod task;
 pub mod unordered_list;

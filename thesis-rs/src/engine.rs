@@ -22,7 +22,7 @@ use {
     crate::{
         context::Context,
         content::{Content, Language},
-        components::{SectionHeaderComponent, ParagraphComponent, UnorderedListComponent, ImageComponent, AbstractSection},
+        components::{SectionHeaderComponent, ParagraphComponent, UnorderedListComponent, ImageComponent, AbstractSection, TaskSection},
     },
 };
 
@@ -38,6 +38,7 @@ pub enum Block {
     ReferencesList(Vec<String>),
     TableOfContents,
     AbstractSection(Language),
+    TaskSection,
 }
 
 #[derive(Debug, Clone)]
@@ -125,6 +126,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
             .auto()
         ),
         Block::AbstractSection(language) => document.add_abstract_section(context, content, &language),
+        Block::TaskSection => document.add_task_section(context, content),
     }
 }
 

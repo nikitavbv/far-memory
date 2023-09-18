@@ -1,4 +1,7 @@
-use crate::engine::{Block, ImageBlock, subsection_header, paragraph, unordered_list};
+use crate::{
+    engine::{Block, ImageBlock, subsection_header, paragraph, unordered_list},
+    content::Language,
+};
 
 pub fn main_content() -> Block {
     /* from https://ela.kpi.ua/bitstream/123456789/49978/1/Mahisterska_dysertatsiia.pdf:
@@ -35,6 +38,13 @@ pub fn main_content() -> Block {
         перевищувати 20 % обсягу основної частини магістерської дисертації. */
 
     Block::Multiple(vec![
+        // task
+        Block::TaskSection,
+
+        // abstract
+        Block::AbstractSection(Language::Ukrainian),
+        Block::AbstractSection(Language::English),
+
         // table of contents
         Block::Placeholder(Box::new(Block::SectionHeader("Зміст".to_uppercase())), "remove numbering".to_owned()),
         Block::TableOfContents,
