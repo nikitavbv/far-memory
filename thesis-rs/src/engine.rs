@@ -1,5 +1,24 @@
 use {
-    docx_rs::{Docx, Paragraph, Tab, LineSpacing, Run, AbstractNumbering, Level, Start, NumberFormat, LevelText, LevelJc, SpecialIndentType, NumberingId, AlignmentType, Numbering, IndentLevel},
+    docx_rs::{
+        Docx, 
+        Paragraph, 
+        Tab, 
+        LineSpacing, 
+        Run, 
+        AbstractNumbering, 
+        Level, 
+        Start, 
+        NumberFormat, 
+        LevelText, 
+        LevelJc, 
+        SpecialIndentType, 
+        NumberingId, 
+        AlignmentType, 
+        Numbering, 
+        IndentLevel,
+        TableOfContents,
+        TabLeaderType,
+    },
     crate::{
         context::Context,
         components::{SectionHeaderComponent, ParagraphComponent, UnorderedListComponent, ImageComponent},
@@ -16,6 +35,7 @@ pub enum Block {
     Placeholder(Box<Block>, String),
     Multiple(Vec<Block>),
     ReferencesList(Vec<String>),
+    TableOfContents,
 }
 
 #[derive(Debug, Clone)]
@@ -97,6 +117,11 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, place
                 .align(AlignmentType::Both)
                 .add_run(Run::new().add_text(reference))))
         },
+        Block::TableOfContents => document.add_table_of_contents(TableOfContents::new()
+            .heading_styles_range(1, 3)
+            .tab_leader_type(Some(TabLeaderType::None))
+            .auto()
+        ),
     }
 }
 

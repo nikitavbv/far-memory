@@ -35,6 +35,10 @@ pub fn main_content() -> Block {
         перевищувати 20 % обсягу основної частини магістерської дисертації. */
 
     Block::Multiple(vec![
+        // table of contents
+        Block::Placeholder(Box::new(Block::SectionHeader("Зміст".to_uppercase())), "remove numbering".to_owned()),
+        Block::TableOfContents,
+
         // abbreviations
         Block::Placeholder(Box::new(Block::SectionHeader("Перелік умовних позначень".to_uppercase())), "remove numbering".to_owned()),
         Block::Placeholder(
