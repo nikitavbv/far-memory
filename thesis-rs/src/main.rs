@@ -17,6 +17,7 @@ pub mod context;
 pub mod engine;
 pub mod utils;
 
+
 #[derive(Parser, Debug)]
 struct Args {   
     #[arg(short, long)]
@@ -51,10 +52,13 @@ fn main() {
 
         let docx_path = format!("./output/{}.docx", document.name());
         let docx_file = fs::File::create(&docx_path).unwrap();
-        info!("generating {} to {:?}", document.name(), docx_file);
+        info!("generating {} to {:?}", document.name(), docx_path);
+
+        let document_content = document.content();
+        print_placeholders(&document_content);
 
         document.docx()
-            .add_text_block(&mut context, &content, document.content())
+            .add_text_block(&mut context, &content, document_content)
             .build()
             .pack(docx_file)
             .unwrap();
@@ -66,5 +70,15 @@ fn main() {
             Command::new("docx2pdf").args([docx_path, pdf_path]).output().unwrap();
         }
     }
+}
 
+fn print_placeholders(block: &Block) {
+    match &block {
+        &Block::Placeholder(v, desc) => {
+            println!("placeholder: {:?}", desc);
+            print_placeholders(&*v)
+        },
+        &Block::Multiple(v) => v.iter().for_each(print_placeholders),
+        _ => {},
+    }
 }
