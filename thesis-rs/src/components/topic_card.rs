@@ -45,15 +45,6 @@ impl TopicCardDocument for Docx {
 
         let text_target = "Планується розробити методи та реалізацію програмного засобу для надання віддаленої памʼяті у розподіленій системі.";
 
-        let tasks = vec![
-            "аналіз існуючих рішень".to_owned(),
-            "розробити методи інтеграції віддаленої памʼяті у нове та існуюче програмне забезпечення".to_owned(),
-            "розробити архітектуру, структуру та взаємодію компонентів віддаленої памʼяті".to_owned(),
-            "оптимізувати затримку доступу до блоків у віддаленій памʼяті".to_owned(),
-            "розробити методи забезпечення відмовостійкості системи".to_owned(),
-            "оцінка ефективності запропонованого рішення".to_owned(),
-        ];
-
         let text_scientific_novelty = "Удосконалено методи інтеграції віддаленої памʼяті у розподілених системах, підходи до зниження затримки та підвищення відмовстійкості.".to_owned();
 
         let text_practical_significance = r#"Розроблено програмне забезпечення з відкритим кодом, що надає засоби для розгортання програмно-визначеної віддаленої памʼяті
@@ -95,7 +86,7 @@ impl TopicCardDocument for Docx {
                 .add_run(Run::new().add_text("Задачі, що вирішуються в роботі").size(2 * 14).color("#434343")))
             .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().before(100)).add_run(Run::new().add_text(text_target)))
             .add_paragraph(Paragraph::new().add_run(Run::new().add_text("Задачі, що вирішуються:")))
-            .add_unordered_list_component(context, tasks)
+            .add_unordered_list_component(context, content.tasks.clone())
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(300))
                 .add_run(Run::new().add_text("Наукова новизна").size(2 * 14).color("#434343")))

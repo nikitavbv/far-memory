@@ -149,17 +149,13 @@ impl TaskSection for Docx {
                 .numbering(NumberingId::new(numbering), IndentLevel::new(0))
                 .align(AlignmentType::Both)
                 .add_run(Run::new().add_text("Предмет дослідження – "))
-                .add_placeholder_component(content.research_subject.for_language(&Language::Ukrainian), "update with correct research subject")
+                .add_run(Run::new().add_text(content.research_subject.for_language(&Language::Ukrainian)))
                 .add_run(Run::new().add_text(".")))
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(150))
                 .numbering(NumberingId::new(numbering), IndentLevel::new(0))
                 .align(AlignmentType::Both)
-                .add_run(Run::new().add_text("Перелік завдань, які потрібно розробити – "))
-                .add_placeholder_component(
-                    "аналіз проблеми та існуючих рішень; розробка моделі/методу/алгоритму/програмного забезпечення; дослідження ефективності розробленого методу/алгоритму/програмного забезпечення.", 
-                    "update with correct task list"
-                )
+                .add_run(Run::new().add_text("Перелік завдань, які потрібно розробити – ").add_text(format!("{}.", content.tasks.join("; "))))
             )
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(150))
