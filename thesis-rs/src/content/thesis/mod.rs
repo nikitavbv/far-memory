@@ -284,6 +284,9 @@ pub fn thesis_content() -> Block {
             "improve conclusions".to_owned(),
         ),
 
+        Block::SectionHeader("Опис програмного та технічного забезпечення".to_owned()),
+        Block::Placeholder(Box::new(paragraph("some text here")), "add some text here".to_owned()),
+
         Block::Placeholder(
             Box::new(Block::Multiple(vec![
                 Block::Placeholder(Box::new(Block::SectionHeader("Висновок".to_owned())), "remove numbering".to_owned()),
