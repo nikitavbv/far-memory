@@ -236,5 +236,8 @@ pub fn main_section() -> Block {
 
         Block::SectionHeader("Опис програмного та технічного забезпечення".to_owned()),
         Block::Placeholder(Box::new(paragraph("some text here")), "add some text here".to_owned()),
+
+        Block::SectionHeader("Маркетинговий аналіз стартап-проекту".to_owned()),
+        Block::Placeholder(Box::new(paragraph("some text here")), "add some text here".to_owned()),
     ])
 }
