@@ -136,6 +136,19 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
     }
 }
 
+pub fn render_block_to_html(block: Block) -> String {
+    match block {
+        Block::SectionHeader(text) => format!("<h1>{}</h1>", html_escape::encode_text(&text)),
+        Block::SubsectionHeader(text) => format!("<h2>{}</h2>", html_escape::encode_text(&text)),
+        Block::Paragraph(text) => format!("<p>{}</p>", html_escape::encode_text(&text)),
+        Block::UnorderedList(text) => format!("<ul>{}</ul>", text.iter().map(|v| format!("<li>{}</li>", html_escape::encode_text(&v))).collect::<String>()),
+        Block::Image(image) => format!("<img src=\"{}\" />", image.path()),
+        Block::Placeholder(inner, _text) => format!("<p style=\"background-color: yellow;\">{}</p>", render_block_to_html(*inner)),
+        Block::Multiple(blocks) => blocks.into_iter().map(render_block_to_html).collect::<String>(),
+        other => format!("block of this type is not supported: {:?}", other),
+    }
+}
+
 pub fn subsection_header(text: impl Into<String>) -> Block {
     Block::SubsectionHeader(text.into())
 }

@@ -6,7 +6,7 @@ use {
         content::{Content, thesis_content, thesis_docx_template, topic_card_docx_template},
         context::Context,
         utils::init_logging,
-        engine::{Document, Block, TextBlockComponent},
+        engine::{Document, Block, TextBlockComponent, render_block_to_html},
     },
 };
 
@@ -24,9 +24,13 @@ struct Args {
     card: bool,
 
     #[arg(short, long)]
-    pdf: bool,
+    docx: bool,
+
     #[arg(short, long)]
-    open: bool,
+    html: bool,
+
+    #[arg(short, long)]
+    pdf: bool,
 }
 
 fn main() {
@@ -55,13 +59,19 @@ fn main() {
         info!("generating {} to {:?}", document.name(), docx_path);
 
         let document_content = document.content();
-        print_placeholders(&document_content);
 
-        document.docx()
-            .add_text_block(&mut context, &content, document_content)
-            .build()
-            .pack(docx_file)
-            .unwrap();
+        if args.html {
+            let html = render_block_to_html(document_content.clone());
+            fs::write(format!("./output/{}.html", document.name()), html).unwrap();
+        }
+
+        if args.docx || args.pdf {
+            document.docx()
+                .add_text_block(&mut context, &content, document_content)
+                .build()
+                .pack(docx_file)
+                .unwrap();
+        }
 
         if args.pdf {
             info!("converting {} to pdf", document.name());
@@ -69,16 +79,5 @@ fn main() {
 
             Command::new("docx2pdf").args([docx_path, pdf_path]).output().unwrap();
         }
-    }
-}
-
-fn print_placeholders(block: &Block) {
-    match &block {
-        &Block::Placeholder(v, desc) => {
-            println!("placeholder: {:?}", desc);
-            print_placeholders(&*v)
-        },
-        &Block::Multiple(v) => v.iter().for_each(print_placeholders),
-        _ => {},
     }
 }
