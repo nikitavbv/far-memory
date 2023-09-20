@@ -137,6 +137,23 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
 }
 
 pub fn render_block_to_html(block: Block) -> String {
+    format!(
+        r#"
+        <html>
+            <head>
+                <meta charset="utf-8" />
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+                <script type="text/javascript" src="https://livejs.com/live.js"></script>
+            </head>
+
+            <body>{}</body>
+        </html>
+        "#,
+        render_block_to_html_inner(block)
+    )
+}
+
+fn render_block_to_html_inner(block: Block) -> String {
     match block {
         Block::SectionHeader(text) => format!("<h1>{}</h1>", html_escape::encode_text(&text)),
         Block::SubsectionHeader(text) => format!("<h2>{}</h2>", html_escape::encode_text(&text)),
@@ -145,7 +162,7 @@ pub fn render_block_to_html(block: Block) -> String {
         Block::Image(image) => format!("<img src=\"{}\" />", image.path()),
         Block::Placeholder(inner, _text) => format!("<p style=\"background-color: yellow;\">{}</p>", render_block_to_html(*inner)),
         Block::Multiple(blocks) => blocks.into_iter().map(render_block_to_html).collect::<String>(),
-        other => format!("block of this type is not supported: {:?}", other),
+        other => format!("<div>block of this type is not supported: {:?}</div>", other),
     }
 }
 

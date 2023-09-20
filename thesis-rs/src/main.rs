@@ -56,16 +56,20 @@ fn main() {
 
         let docx_path = format!("./output/{}.docx", document.name());
         let docx_file = fs::File::create(&docx_path).unwrap();
-        info!("generating {} to {:?}", document.name(), docx_path);
 
         let document_content = document.content();
 
         if args.html {
+            let html_path = format!("./output/{}.html", document.name());
+            info!("generating {} to {:?}", document.name(), html_path);
+
             let html = render_block_to_html(document_content.clone());
-            fs::write(format!("./output/{}.html", document.name()), html).unwrap();
+            fs::write(html_path, html).unwrap();
         }
 
         if args.docx || args.pdf {
+            info!("generating {} to {:?}", document.name(), docx_path);
+
             document.docx()
                 .add_text_block(&mut context, &content, document_content)
                 .build()
