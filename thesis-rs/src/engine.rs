@@ -1,6 +1,5 @@
-use crate::components::{FrontPageSection, TopicCardDocument};
-
 use {
+    tracing::warn,
     docx_rs::{
         Docx, 
         Paragraph, 
@@ -24,7 +23,16 @@ use {
     crate::{
         context::Context,
         content::{Content, Language},
-        components::{SectionHeaderComponent, ParagraphComponent, UnorderedListComponent, ImageComponent, AbstractSection, TaskSection},
+        components::{
+            SectionHeaderComponent,
+            ParagraphComponent, 
+            UnorderedListComponent, 
+            ImageComponent, 
+            AbstractSection, 
+            TaskSection,
+            FrontPageSection, 
+            TopicCardDocument,
+        },
     },
 };
 
@@ -222,5 +230,26 @@ impl Document {
 
     pub fn content(&self) -> Block {
         self.content.clone()
+    }
+}
+
+pub fn print_placeholders(block: &Block) {
+    match &block {
+        Block::Placeholder(inner, placeholder) => {
+            warn!("adding placeholder with description: {:?}", placeholder);
+            print_placeholders(&*inner);
+        },
+        Block::Multiple(multiple) => multiple.iter().for_each(print_placeholders),
+        Block::SectionHeader(_) => (),
+        Block::SubsectionHeader(_) => (),
+        Block::Paragraph(_) => (),
+        Block::UnorderedList(_) => (),
+        Block::Image(_) => (),
+        Block::ReferencesList(_) => (),
+        Block::TableOfContents => (),
+        Block::AbstractSection(_) => (),
+        Block::TaskSection => (),
+        Block::FrontPage => (),
+        Block::TopicCard => (),
     }
 }

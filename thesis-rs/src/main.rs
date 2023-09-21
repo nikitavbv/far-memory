@@ -6,7 +6,7 @@ use {
         content::{Content, thesis_content, thesis_docx_template, topic_card_docx_template},
         context::Context,
         utils::init_logging,
-        engine::{Document, Block, TextBlockComponent, render_block_to_html},
+        engine::{Document, Block, TextBlockComponent, render_block_to_html, print_placeholders},
     },
 };
 
@@ -57,7 +57,10 @@ fn main() {
         let docx_path = format!("./output/{}.docx", document.name());
         let docx_file = fs::File::create(&docx_path).unwrap();
 
+        info!("building {}", document.name());
+
         let document_content = document.content();
+        print_placeholders(&document_content);
 
         if args.html {
             let html_path = format!("./output/{}.html", document.name());
