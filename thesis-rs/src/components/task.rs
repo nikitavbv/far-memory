@@ -246,7 +246,12 @@ impl TaskSection for Docx {
                         .add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text("Примітка")))
                         .width(1200, WidthType::Dxa),
                 ]),
-                calendar_plan_empty_row(1),
+                TableRow::new(vec![
+                    TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text("1"))),
+                    TableCell::new().add_paragraph(Paragraph::new().add_placeholder_component("Систематизація результатів огляду літератури", "fill this table")),
+                    TableCell::new(),
+                    TableCell::new(),
+                ]),
                 calendar_plan_empty_row(2),
                 calendar_plan_empty_row(3),
                 calendar_plan_empty_row(4),
