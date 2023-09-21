@@ -42,7 +42,7 @@ fn main() {
 
     let content = Content::new();
     let mut documents = vec![
-        Document::new("thesis", thesis_content()).with_docx_template(thesis_docx_template()),
+        Document::new("thesis", thesis_content(&content)).with_docx_template(thesis_docx_template()),
     ];
 
     if args.card {

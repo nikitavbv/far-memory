@@ -1,4 +1,5 @@
 use {
+    std::{process::Command, fs::File},
     tracing::warn,
     docx_rs::{
         Docx, 
@@ -22,7 +23,7 @@ use {
     },
     crate::{
         context::Context,
-        content::{Content, Language},
+        content::{Content, Language, AbstractContent},
         components::{
             SectionHeaderComponent,
             ParagraphComponent, 
@@ -47,7 +48,7 @@ pub enum Block {
     Multiple(Vec<Block>),
     ReferencesList(Vec<String>),
     TableOfContents,
-    AbstractSection(Language),
+    AbstractSection(Language, AbstractContent),
     TaskSection,
     FrontPage,
     TopicCard,
@@ -137,7 +138,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
             .tab_leader_type(Some(TabLeaderType::None))
             .auto()
         ),
-        Block::AbstractSection(language) => document.add_abstract_section(context, content, &language),
+        Block::AbstractSection(language, abstract_content) => document.add_abstract_section(context, content, &abstract_content, &language),
         Block::TaskSection => document.add_task_section(context, content),
         Block::FrontPage => document.add_front_page_section(content),
         Block::TopicCard => document.add_topic_card_document(context, content),
@@ -247,9 +248,28 @@ pub fn print_placeholders(block: &Block) {
         Block::Image(_) => (),
         Block::ReferencesList(_) => (),
         Block::TableOfContents => (),
-        Block::AbstractSection(_) => (),
+        Block::AbstractSection(_, _) => (),
         Block::TaskSection => (),
         Block::FrontPage => (),
         Block::TopicCard => (),
     }
+}
+
+pub fn count_pages(docx: Docx, content: &Content, block: &Block) -> u32 {
+    let mut context = Context::new();
+
+    let docx_path = "./output/tmp.docx";
+    let pdf_path = "./output/tmp.pdf";
+
+    docx
+        .add_text_block(&mut context, content, block.clone())
+        .build()
+        .pack(File::create(docx_path).unwrap())
+        .unwrap();
+
+    let res = Command::new("docx2pdf").args([docx_path, pdf_path]).output().unwrap();
+    println!("res: {:?}", res);
+
+    let pdf = lopdf::Document::load(pdf_path).unwrap();
+    pdf.get_pages().len() as u32
 }

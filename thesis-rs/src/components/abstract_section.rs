@@ -18,18 +18,18 @@ use {
         SpecialIndentType,
     },
     crate::{
-        content::{Content, Language, MultiLanguageString},
+        content::{Content, Language, MultiLanguageString, AbstractContent},
         context::Context,
         components::{PlaceholderComponent, PageBreakComponent},
     },
 };
 
 pub trait AbstractSection {
-    fn add_abstract_section(self, context: &mut Context, content: &Content, language: &Language) -> Self;
+    fn add_abstract_section(self, context: &mut Context, content: &Content, abstract_content: &AbstractContent, language: &Language) -> Self;
 }
 
 impl AbstractSection for Docx {
-    fn add_abstract_section(self, context: &mut Context, content: &Content, language: &Language) -> Self {
+    fn add_abstract_section(self, context: &mut Context, content: &Content, abstract_content: &AbstractContent, language: &Language) -> Self {
         let text_title = match language {
             &Language::English => "Abstract",
             &Language::Ukrainian => "Реферат",
@@ -39,8 +39,6 @@ impl AbstractSection for Docx {
             &Language::English => "Explanatory note size",
             &Language::Ukrainian => "Розмір пояснювальної записки",
         };
-
-        let total_pages = 90;
 
         let text_pages_and_contains = match language {
             &Language::English => "pages, contains",
@@ -105,8 +103,7 @@ impl AbstractSection for Docx {
                 )
             )
             .add_paragraph_with_abstract_style_component(Paragraph::new()
-                .add_run(Run::new().add_tab().add_text(format!("{} – ", text_explanatory_note_size)))
-                .add_placeholder_component(total_pages.to_string(), "replace with an actual number of pages")
+                .add_run(Run::new().add_tab().add_text(format!("{} – {}", text_explanatory_note_size, abstract_content.total_pages)))
                 .add_text_component(format!(" {} ", text_pages_and_contains))
                 .add_placeholder_component(total_pictures.to_string(), "replace with an actual number of pictures")
                 .add_text_component(format!(" {}, ", text_pictures))

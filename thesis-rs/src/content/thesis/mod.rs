@@ -1,8 +1,8 @@
 use {
     docx_rs::{Docx, Style, StyleType, RunFonts, PageMargin},
     crate::{
-        engine::{Block, paragraph, unordered_list},
-        content::Language,
+        engine::{Block, paragraph, unordered_list, count_pages},
+        content::{Language, AbstractContent, Content},
         utils::mm_to_twentieth_of_a_point,
     },
     self::main_section::main_section,
@@ -10,7 +10,20 @@ use {
 
 mod main_section;
 
-pub fn thesis_content() -> Block {
+pub fn thesis_content(content: &Content) -> Block {
+    let abstract_placeholder_content = AbstractContent {
+        total_pages: 42,
+    };
+    let content_with_placeholders = thesis_content_inner(abstract_placeholder_content);
+
+    let true_total_pages = count_pages(thesis_docx_template(), content, &content_with_placeholders) - 1; // front page does not count
+
+    thesis_content_inner(AbstractContent {
+        total_pages: true_total_pages,
+    })
+}
+
+fn thesis_content_inner(abstract_content: AbstractContent) -> Block {
     /*
     requirements: https://ela.kpi.ua/bitstream/123456789/49978/1/Mahisterska_dysertatsiia.pdf
     examples: https://ela.kpi.ua/handle/123456789/21930
@@ -23,8 +36,8 @@ pub fn thesis_content() -> Block {
         Block::TaskSection,
 
         // abstract
-        Block::AbstractSection(Language::Ukrainian),
-        Block::AbstractSection(Language::English),
+        Block::AbstractSection(Language::Ukrainian, abstract_content.clone()),
+        Block::AbstractSection(Language::English, abstract_content),
 
         // table of contents
         Block::Placeholder(Box::new(Block::SectionHeader("Зміст".to_uppercase())), "remove numbering".to_owned()),

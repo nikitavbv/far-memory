@@ -125,3 +125,8 @@ impl MultiLanguageString {
         }.to_owned()
     }
 }
+
+#[derive(Debug, Clone)]
+pub struct AbstractContent {
+    pub total_pages: u32,
+}
