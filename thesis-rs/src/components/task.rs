@@ -246,41 +246,56 @@ impl TaskSection for Docx {
                         .add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text("Примітка")))
                         .width(1200, WidthType::Dxa),
                 ]),
-                TableRow::new(vec![
-                    TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text("1"))),
-                    TableCell::new().add_paragraph(Paragraph::new().add_placeholder_component("Систематизація результатів огляду літератури", "fill this table")),
-                    TableCell::new(),
-                    TableCell::new(),
-                ]),
-                calendar_plan_empty_row(2),
-                calendar_plan_empty_row(3),
-                calendar_plan_empty_row(4),
-                calendar_plan_empty_row(5),
-                calendar_plan_empty_row(6),
-                TableRow::new(vec![
-                    TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text("7"))),
-                    TableCell::new().add_paragraph(Paragraph::new().add_placeholder_component("Виконання експериментальних досліджень", "fill this table")),
-                    TableCell::new(),
-                    TableCell::new(),
-                ]),
-                TableRow::new(vec![
-                    TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text("8"))),
-                    TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text("Оформлення пояснювальної записки"))),
-                    TableCell::new(),
-                    TableCell::new(),
-                ]),
-                TableRow::new(vec![
-                    TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text("9"))),
-                    TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text("Подання дисертації на попередній захист "))),
-                    TableCell::new().add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text("22.11.2023"))),
-                    TableCell::new(),
-                ]),
-                TableRow::new(vec![
-                    TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text("10"))),
-                    TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text("Подання дисертації на захист"))),
-                    TableCell::new().add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text("06.12.2023"))),
-                    TableCell::new(),
-                ]),
+                calendar_plan_row(
+                    1,
+                    "Систематизація результатів огляду літератури",
+                    "",
+                ),
+                calendar_plan_row(
+                    2,
+                    "",
+                    ""
+                ),
+                calendar_plan_row(
+                    3,
+                    "",
+                    ""
+                ),
+                calendar_plan_row(
+                    4,
+                    "",
+                    ""
+                ),
+                calendar_plan_row(
+                    5,
+                    "",
+                    ""
+                ),
+                calendar_plan_row(
+                    6,
+                    "",
+                    ""
+                ),
+                calendar_plan_row(
+                    7,
+                    "Виконання експериментальних досліджень",
+                    "01.11.2023",
+                ),
+                calendar_plan_row(
+                    8,
+                    "Оформлення пояснювальної записки",
+                    "10.11.2023",
+                ),
+                calendar_plan_row(
+                    9,
+                    "Подання дисертації на попередній захист ",
+                    "22.11.2023",
+                ),
+                calendar_plan_row(
+                    10,
+                    "Подання дисертації на захист",
+                    "06.12.2023",
+                ),
             ]).margins(TableCellMargins::new().margin(0, 80, 0, 80)))
             .add_paragraph(Paragraph::new())
             .add_table(Table::new(vec![
@@ -305,11 +320,11 @@ impl TaskSection for Docx {
     }
 }
 
-fn calendar_plan_empty_row(index: u32) -> TableRow {
+fn calendar_plan_row(index: u32, entry_title: &str, date: &str) -> TableRow {
     TableRow::new(vec![
         TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text(index.to_string()))),
-        TableCell::new(),
-        TableCell::new(),
+        TableCell::new().add_paragraph(Paragraph::new().add_run(Run::new().size(12 * 2).add_text(entry_title))),
+        TableCell::new().add_paragraph(Paragraph::new().align(AlignmentType::Center).add_run(Run::new().size(12 * 2).add_text(date))),
         TableCell::new(),
     ])
 }
