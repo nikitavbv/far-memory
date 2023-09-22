@@ -1,7 +1,7 @@
 use {
     docx_rs::{Docx, Style, StyleType, RunFonts, PageMargin},
     crate::{
-        engine::{Block, paragraph, unordered_list, count_pages},
+        engine::{Block, paragraph, unordered_list, count_pages, count_images},
         content::{Language, AbstractContent, Content},
         utils::mm_to_twentieth_of_a_point,
     },
@@ -11,15 +11,19 @@ use {
 mod main_section;
 
 pub fn thesis_content(content: &Content) -> Block {
+    let main = main_section();
+
     let abstract_placeholder_content = AbstractContent {
         total_pages: 42,
+        total_images: count_images(&main),
     };
-    let content_with_placeholders = thesis_content_inner(abstract_placeholder_content);
+    let content_with_placeholders = thesis_content_inner(abstract_placeholder_content.clone());
 
     let true_total_pages = count_pages(thesis_docx_template(), content, &content_with_placeholders) - 1; // front page does not count
 
     thesis_content_inner(AbstractContent {
         total_pages: true_total_pages,
+        total_images: abstract_placeholder_content.total_images,
     })
 }
 

@@ -129,4 +129,76 @@ impl MultiLanguageString {
 #[derive(Debug, Clone)]
 pub struct AbstractContent {
     pub total_pages: u32,
+    pub total_images: u32,
+}
+
+pub struct EnglishNumeralString {
+    word: String,
+}
+
+impl EnglishNumeralString {
+    pub fn new(word: String) -> Self {
+        Self {
+            word,
+        }
+    }
+
+    pub fn for_value(&self, value: u32) -> String {
+        if value == 1 {
+            self.word.clone()
+        } else {
+            format!("{}s", self.word)
+        }
+    }
+}
+
+pub struct UkrainianNumeralString {
+    word: String, // зображення
+    word_gen: String, // зображень
+}
+
+impl UkrainianNumeralString {
+    pub fn new(word: String, word_gen: String) -> Self {
+        Self {
+            word,
+            word_gen,
+        }
+    }
+
+    pub fn for_value(&self, value: u32) -> String {
+        // TODO: fix this
+        self.word.clone()
+    }
+}
+
+pub struct MultiLanguageNumeralString {
+    english: EnglishNumeralString,
+    ukrainian: UkrainianNumeralString,
+}
+
+impl MultiLanguageNumeralString {
+    pub fn new(english: EnglishNumeralString, ukrainian: UkrainianNumeralString) -> Self {
+        Self {
+            english,
+            ukrainian,
+        }
+    }
+
+    pub fn for_language_and_value(&self, language: &Language, value: u32) -> String {
+        match language {
+            Language::English => self.english.for_value(value),
+            Language::Ukrainian => self.ukrainian.for_value(value),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn numeral_ukrainian_simple() {
+        let numeral = UkrainianNumeralString::new("ілюстрація".to_owned(), "ілюстації".to_owned());
+        assert_eq!(numeral.for_value(2), "ілюстрації");
+    }
 }

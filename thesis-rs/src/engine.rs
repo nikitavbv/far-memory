@@ -267,9 +267,26 @@ pub fn count_pages(docx: Docx, content: &Content, block: &Block) -> u32 {
         .pack(File::create(docx_path).unwrap())
         .unwrap();
 
-    let res = Command::new("docx2pdf").args([docx_path, pdf_path]).output().unwrap();
-    println!("res: {:?}", res);
+    Command::new("docx2pdf").args([docx_path, pdf_path]).output().unwrap();
 
     let pdf = lopdf::Document::load(pdf_path).unwrap();
     pdf.get_pages().len() as u32
+}
+
+pub fn count_images(block: &Block) -> u32 {
+    match &block {
+        Block::Placeholder(inner, _) => count_images(&*inner),
+        Block::Multiple(multiple) => multiple.iter().map(count_images).sum(),
+        Block::SectionHeader(_) => 0,
+        Block::SubsectionHeader(_) => 0,
+        Block::Paragraph(_) => 0,
+        Block::UnorderedList(_) => 0,
+        Block::Image(_) => 1,
+        Block::ReferencesList(_) => 0,
+        Block::TableOfContents => 0,
+        Block::AbstractSection(_, _) => 0,
+        Block::TaskSection => 0,
+        Block::FrontPage => 0,
+        Block::TopicCard => 0,
+    }
 }

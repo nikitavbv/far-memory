@@ -18,7 +18,7 @@ use {
         SpecialIndentType,
     },
     crate::{
-        content::{Content, Language, MultiLanguageString, AbstractContent},
+        content::{Content, Language, MultiLanguageString, AbstractContent, MultiLanguageNumeralString, EnglishNumeralString, UkrainianNumeralString},
         context::Context,
         components::{PlaceholderComponent, PageBreakComponent},
     },
@@ -45,12 +45,10 @@ impl AbstractSection for Docx {
             &Language::Ukrainian => "аркушів, містить",
         };
 
-        let total_pictures = 16;
-
-        let text_pictures = match language {
-            &Language::English => "illustrations",
-            &Language::Ukrainian => "ілюстрацій",
-        };
+        let text_pictures = MultiLanguageNumeralString::new(
+            EnglishNumeralString::new("illustration".to_owned()),
+            UkrainianNumeralString::new("ілюстрація".to_owned(), "ілюстації".to_owned()),
+        );
 
         let total_tables = 26;
 
@@ -104,9 +102,8 @@ impl AbstractSection for Docx {
             )
             .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().add_text(format!("{} – {}", text_explanatory_note_size, abstract_content.total_pages)))
-                .add_text_component(format!(" {} ", text_pages_and_contains))
-                .add_placeholder_component(total_pictures.to_string(), "replace with an actual number of pictures")
-                .add_text_component(format!(" {}, ", text_pictures))
+                .add_text_component(format!(" {} {}", text_pages_and_contains, abstract_content.total_images))
+                .add_text_component(format!(" {}, ", text_pictures.for_language_and_value(language, abstract_content.total_images)))
                 .add_placeholder_component(total_tables.to_string(), "replace with an actual number of tables")
                 .add_text_component(format!(" {}, ", text_tables))
                 .add_placeholder_component(total_applications.to_string(), "replace with an actual number of applications")
