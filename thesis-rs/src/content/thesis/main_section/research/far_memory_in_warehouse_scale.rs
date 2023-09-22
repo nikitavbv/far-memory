@@ -1,5 +1,17 @@
 use crate::engine::Block;
 
+/**
+ * "Software-Defined Far Memory in Warehouse-Scale Computers"
+ * see: https://storage.googleapis.com/pub-tools-public-publication-data/pdf/9bb06ab825a127bef4e33c488eaa659d6856225a.pdf
+ * (taking notes on page 2)
+ * 
+ * autotuning
+ *  - uses machine learning to optimize the control plane based on the fleet-wide behaviour.
+ *  - fast far memory model estimating behaviour under different configurations
+ *  - design space exploration guided by machine learning algorithm called Gaussian Process (GP) Bandit.
+ *  - improves the efficiency of the system by an additional 30% relative to heuristic-based approaches.
+ */
+
 pub fn far_memory_in_warehouse_scale() -> Block {
     Block::Multiple(vec![
         Block::SubsectionHeader("Software-Defined Far Memory in Warehouse-Scale Computers".to_owned()),
