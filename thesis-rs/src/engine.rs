@@ -1,5 +1,5 @@
 use {
-    std::{process::Command, fs::File},
+    std::{process::Command, fs::File, io::ErrorKind},
     tracing::warn,
     docx_rs::{
         Docx, 
@@ -21,6 +21,7 @@ use {
         TableOfContents,
         TabLeaderType,
     },
+    thiserror::Error,
     crate::{
         context::Context,
         content::{Content, Language, AbstractContent},
@@ -36,6 +37,12 @@ use {
         },
     },
 };
+
+#[derive(Error, Debug)]
+pub enum PageCountingError {
+    #[error("No pdf converter installed")]
+    NoPdfConverterInstalled,
+}
 
 #[derive(Debug, Clone)]
 pub enum Block {
@@ -255,7 +262,7 @@ pub fn print_placeholders(block: &Block) {
     }
 }
 
-pub fn count_pages(docx: Docx, content: &Content, block: &Block) -> u32 {
+pub fn count_pages(docx: Docx, content: &Content, block: &Block) -> Result<u32, PageCountingError> {
     let mut context = Context::new();
 
     let docx_path = "./output/tmp.docx";
@@ -267,10 +274,14 @@ pub fn count_pages(docx: Docx, content: &Content, block: &Block) -> u32 {
         .pack(File::create(docx_path).unwrap())
         .unwrap();
 
-    Command::new("docx2pdf").args([docx_path, pdf_path]).output().unwrap();
+    if let Err(err) = Command::new("docx2pdf").args([docx_path, pdf_path]).output() {
+        if err.kind() == ErrorKind::NotFound {
+            return Err(PageCountingError::NoPdfConverterInstalled.into());
+        }
+    };
 
     let pdf = lopdf::Document::load(pdf_path).unwrap();
-    pdf.get_pages().len() as u32
+    Ok(pdf.get_pages().len() as u32)
 }
 
 pub fn count_images(block: &Block) -> u32 {

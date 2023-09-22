@@ -1,7 +1,8 @@
 use {
+    tracing::warn,
     docx_rs::{Docx, Style, StyleType, RunFonts, PageMargin},
     crate::{
-        engine::{Block, paragraph, unordered_list, count_pages, count_images},
+        engine::{Block, paragraph, unordered_list, count_pages, count_images, PageCountingError},
         content::{Language, AbstractContent, Content},
         utils::mm_to_twentieth_of_a_point,
     },
@@ -19,7 +20,15 @@ pub fn thesis_content(content: &Content) -> Block {
     };
     let content_with_placeholders = thesis_content_inner(abstract_placeholder_content.clone());
 
-    let true_total_pages = count_pages(thesis_docx_template(), content, &content_with_placeholders) - 1; // front page does not count
+    let true_total_pages = match count_pages(thesis_docx_template(), content, &content_with_placeholders) {
+        Ok(v) => v - 1, // front page does not count
+        Err(err) => match err {
+            PageCountingError::NoPdfConverterInstalled => {
+                warn!("Cannot count pages, because pdf converter tool is not installed. Using \"0\" as the number of pages.");
+                0
+            }
+        }
+    }; 
 
     thesis_content_inner(AbstractContent {
         total_pages: true_total_pages,
