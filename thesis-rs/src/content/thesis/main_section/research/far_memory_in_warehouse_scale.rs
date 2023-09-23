@@ -3,15 +3,36 @@ use crate::engine::Block;
 /**
  * "Software-Defined Far Memory in Warehouse-Scale Computers"
  * see: https://storage.googleapis.com/pub-tools-public-publication-data/pdf/9bb06ab825a127bef4e33c488eaa659d6856225a.pdf
- * (taking notes on page 2)
+ * (taking notes on page 5)
+ * 
+ * - goal is to design a robust and effective control plane for latge-scale deployment of zswap (which is far memory).
+ * - performance is treated as a first-class constraint.
+ * - quality of the cold page identification algorithm impacts both memory savings and application impact.
+ *   - system tries to find the lowest cold age threshold that satisfies the given performance constraints in order to maximize the
+ *   memory savings under the defined SLO (in other words, system tries to mark as many pages as cold as possible while keeping the
+ *   performance at a level defined by SLO).
+ * - zswap is triggered only when a host memory node runs out of memory and tries to compress pages until it makes enough room to avoid
+ * out-of-memory situations.
+ *   - the primary difference from existing mechanism is around when to compress pages, or when to migrate pages from near memory to
+ *   far memory.
+ *   - unlike zswap in the Linux kernel, this system identifies cold memory pages in the background and proactively compresses them,
+ *   so that the extra free memory can be used to schedule more jobs to the machine.
+ * 
+ * terms
+ *  - cold page - memory page that has not been accessed beyond a threshold of T seconds.
+ *  - promotion rate - rate of accesses to cold memory pages.
+ * 
+ * challenges:
+ * - system has to accurately control its aggressiveness to minimize the impact on application performance (i.e. latency should be low).
+ * - be resilient to the variation of cold memory behaviour accross different machines, clusters and jobs (i.e. should adapt to the 
+ * environment).
  * 
  * autotuning
  *  - uses machine learning to optimize the control plane based on the fleet-wide behaviour.
- *  - fast far memory model estimating behaviour under different configurations
+ *  - fast far memory model estimating behaviour under different configurations.
  *  - design space exploration guided by machine learning algorithm called Gaussian Process (GP) Bandit.
  *  - improves the efficiency of the system by an additional 30% relative to heuristic-based approaches.
  */
-
 pub fn far_memory_in_warehouse_scale() -> Block {
     Block::Multiple(vec![
         Block::SubsectionHeader("Software-Defined Far Memory in Warehouse-Scale Computers".to_owned()),
