@@ -3,10 +3,10 @@ use crate::engine::Block;
 /**
  * "Software-Defined Far Memory in Warehouse-Scale Computers"
  * see: https://storage.googleapis.com/pub-tools-public-publication-data/pdf/9bb06ab825a127bef4e33c488eaa659d6856225a.pdf
- * (taking notes on page 9)
  * 
  * "maximize memory savings while meeting performance SLOs".
  * 
+ * - nothing is stored remotely. This is all about compression and decompression with zswap.
  * - goal is to design a robust and effective control plane for latge-scale deployment of zswap (which is far memory).
  * - performance is treated as a first-class constraint.
  * - quality of the cold page identification algorithm impacts both memory savings and application impact.
