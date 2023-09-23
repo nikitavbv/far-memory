@@ -3,7 +3,9 @@ use crate::engine::Block;
 /**
  * "Software-Defined Far Memory in Warehouse-Scale Computers"
  * see: https://storage.googleapis.com/pub-tools-public-publication-data/pdf/9bb06ab825a127bef4e33c488eaa659d6856225a.pdf
- * (taking notes on page 6)
+ * (taking notes on page 9)
+ * 
+ * "maximize memory savings while meeting performance SLOs".
  * 
  * - goal is to design a robust and effective control plane for latge-scale deployment of zswap (which is far memory).
  * - performance is treated as a first-class constraint.
@@ -17,7 +19,12 @@ use crate::engine::Block;
  *       - working set size is defined as the total number of pages that are accessed within minimum cold age threshold.
  *       - the exact value of P depends on the performance difference between near memory and far memory.
  *         - empirically defined P to be 0.2%/min for their use-case to be optimal based on A/B-testing at scale.
- *   - promotion histogram is built to determine the lowest cold age threshold that meets the promotion rate SLO.
+ *   - promotion histogram is built to determine the lowest cold age threshold that meets the promotion rate SLO. Number of pages
+ *   is also tracked to know what working set size is.
+ *     - but this threshold is good for the past, not for the current workload. That's why K-th percentile is computed for the past
+ *     when picking threshold for next minute.
+ *     - ML-based Autotuner picks parameters for Node Agent which peeks Cold Age Threshold.
+ * 
  * - zswap is triggered only when a host memory node runs out of memory and tries to compress pages until it makes enough room to avoid
  * out-of-memory situations.
  *   - the primary difference from existing mechanism is around when to compress pages, or when to migrate pages from near memory to
@@ -35,11 +42,25 @@ use crate::engine::Block;
  * - be resilient to the variation of cold memory behaviour accross different machines, clusters and jobs (i.e. should adapt to the 
  * environment).
  * 
+ * integration
+ * - zswap-based
+ * 
+ * cold page identification
+ * - relies only on the working set size, promotion histogram and the cold page histogram.
+ * - offline what-if analysis is possible.
+ * - stats are exported in 5-minute perioud aggregations over telemetry infrastructure.
+ * 
  * autotuning
  *  - uses machine learning to optimize the control plane based on the fleet-wide behaviour.
  *  - fast far memory model estimating behaviour under different configurations.
- *  - design space exploration guided by machine learning algorithm called Gaussian Process (GP) Bandit.
+ *  - design space exploration guided by machine learning algorithm called Gaussian Process (GP) Bandit (black-box optimization).
  *  - improves the efficiency of the system by an additional 30% relative to heuristic-based approaches.
+ *  - K-th percentile and S (time until zswap starts) are tunable hyperparameters for the control plane.
+ *  - optimization pipeline steps:
+ *    - run GP bandit over the existing observations and obtrain parameter configurations to be explored.
+ *    - run the far memory model with a one week trace from the entire WSC and estimate the size of cold memory and promotion range.
+ *    - add new observations to the pool and go back to step 1 until the maximum number of iterations is reached.
+ *    - the best configuration is deployed.
  */
 pub fn far_memory_in_warehouse_scale() -> Block {
     Block::Multiple(vec![
