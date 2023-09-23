@@ -3,7 +3,7 @@ use crate::engine::Block;
 /**
  * "Software-Defined Far Memory in Warehouse-Scale Computers"
  * see: https://storage.googleapis.com/pub-tools-public-publication-data/pdf/9bb06ab825a127bef4e33c488eaa659d6856225a.pdf
- * (taking notes on page 5)
+ * (taking notes on page 6)
  * 
  * - goal is to design a robust and effective control plane for latge-scale deployment of zswap (which is far memory).
  * - performance is treated as a first-class constraint.
@@ -11,6 +11,13 @@ use crate::engine::Block;
  *   - system tries to find the lowest cold age threshold that satisfies the given performance constraints in order to maximize the
  *   memory savings under the defined SLO (in other words, system tries to mark as many pages as cold as possible while keeping the
  *   performance at a level defined by SLO).
+ *   - performance SLO is based on the promotion rate.
+ *     - target promotion rate is normalized by how "big" each job is.
+ *     - SLO is keeping the promotion rate below P% of the application's working set size per minute.
+ *       - working set size is defined as the total number of pages that are accessed within minimum cold age threshold.
+ *       - the exact value of P depends on the performance difference between near memory and far memory.
+ *         - empirically defined P to be 0.2%/min for their use-case to be optimal based on A/B-testing at scale.
+ *   - promotion histogram is built to determine the lowest cold age threshold that meets the promotion rate SLO.
  * - zswap is triggered only when a host memory node runs out of memory and tries to compress pages until it makes enough room to avoid
  * out-of-memory situations.
  *   - the primary difference from existing mechanism is around when to compress pages, or when to migrate pages from near memory to
@@ -21,6 +28,7 @@ use crate::engine::Block;
  * terms
  *  - cold page - memory page that has not been accessed beyond a threshold of T seconds.
  *  - promotion rate - rate of accesses to cold memory pages.
+ *    - equivalent to the number of unique pages in far memory that are accessed in a unit of time.
  * 
  * challenges:
  * - system has to accurately control its aggressiveness to minimize the impact on application performance (i.e. latency should be low).
