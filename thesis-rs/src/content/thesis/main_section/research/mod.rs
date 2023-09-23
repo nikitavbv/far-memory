@@ -4,6 +4,7 @@ use {
         aifm::aifm,
         carbink::carbink,
         far_memory_in_warehouse_scale::far_memory_in_warehouse_scale,
+        hydra::hydra,
         rdma::rdma,
     }
 };
@@ -11,6 +12,7 @@ use {
 mod aifm;
 mod carbink;
 mod far_memory_in_warehouse_scale;
+mod hydra;
 mod rdma;
 
 pub fn research() -> Block {
@@ -53,6 +55,7 @@ pub fn research() -> Block {
         ]),
 
         rdma(),
+        hydra(),
         far_memory_in_warehouse_scale(),
         carbink(),
         aifm(),

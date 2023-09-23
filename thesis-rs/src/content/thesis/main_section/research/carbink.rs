@@ -1,5 +1,12 @@
 use crate::engine::Block;
 
+/**
+ * "Carbink: Fault-tolerant Far Memory"
+ * see: https://www.usenix.org/system/files/osdi22-zhou-yang.pdf
+ * 
+ * erasure-coding
+ * remote memory compaction
+ */
 pub fn carbink() -> Block {
     Block::Multiple(vec![
         Block::SubsectionHeader("Carbink: Fault-Tolerant Far Memory".to_owned()),
