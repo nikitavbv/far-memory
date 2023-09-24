@@ -3,7 +3,7 @@ use crate::engine::{Block, paragraph};
 /**
  * "Hydra : Resilient and Highly Available Remote Memory"
  * see https://www.usenix.org/system/files/fast22-lee.pdf
- * (currently at page 7).
+ * (currently at page 13).
  * 
  * cons:
  * - it uses RDMA (requires NIC that supports it).
@@ -19,19 +19,24 @@ use crate::engine::{Block, paragraph};
  * - compression.
  * 
  * Erasure coding works better for larger chunks for data.
- * CodingSets - coding group placement algorithm for erasure-coded data.
+ * CodingSets (inspired by copysets) - coding group placement algorithm for erasure-coded data.
  * 
  * components:
  * - resilience manager - coordinates erasure-coded resilience operations during remote read/write.
+ *   - implemented as a loadable kernel moudle.
  * - resource monitor - handles the memory management in a remote machine.
+ *   - implemented as a user-space program.
  * 
  * improving reliability:
- * - different modes of erasure coding
+ * - different modes of erasure coding.
+ * - when a remote machine becomes unreachable, ongoing I/O operations are resent to other available machines.
  * 
  * improving latency:
  * - during remote write, resilience manager applies erasure coding to splits, encodes them using Reed-Solomon codes
  * and decreases latency by avoiding the batch waiting time.
  * - resilience manager sends the data splits first, then encodes and sens the parity splits asynchronously.
+ * - a page can be decoded as soon as any k splits arrive out of k + delta.
+ * - smaller RDMA messages lead to lower latency.
  */
 pub fn hydra() -> Block {
     Block::Multiple(vec![
