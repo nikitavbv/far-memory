@@ -3,7 +3,8 @@ use crate::engine::{Block, paragraph};
 /**
  * "Hydra : Resilient and Highly Available Remote Memory"
  * see https://www.usenix.org/system/files/fast22-lee.pdf
- * (currently at page 13).
+ * 
+ * TL;DR: Using CodingSets and RDMA hardware to achieve low latency and high-availability.
  * 
  * cons:
  * - it uses RDMA (requires NIC that supports it).
