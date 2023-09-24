@@ -3,7 +3,7 @@ use crate::engine::Block;
 /**
  * "Carbink: Fault-tolerant Far Memory"
  * see: https://www.usenix.org/system/files/osdi22-zhou-yang.pdf
- * (currently on page 3)
+ * (currently on page 5)
  * 
  * - erasure-coding
  * - remote memory compaction
@@ -14,8 +14,21 @@ use crate::engine::Block;
  * - runs pauseless defragmentation threads in the background to solve the fragmentation in far RAM.
  * - allows computation to be offloaded to remote memory nodes.
  * 
+ * architecture
+ * - compute nodes - single-process applications that want to use far memory.
+ * - memory nodes - provide far memory for compute nodes.
+ * - memory manager - tracks the liveness of compute nodes and memory nodes.
+ *   - implemented as a replicated state machine.
+ *   - it is assumed that it will not fail.
+ * 
  * integration
  * - exposes far memory to developers via application-level remotable pointers.
+ * - does not require custom hardware.
+ * 
+ * reliability
+ * - liveness of compute nodes and memory nodes is tracked via heartbeats.
+ * - when a compute node fails, memory manager instructs memory nodes to deallocate.
+ * - when a memory node fails, memory manager deregisters the node's regions from the global pool of memory.
  */
 pub fn carbink() -> Block {
     Block::Multiple(vec![
