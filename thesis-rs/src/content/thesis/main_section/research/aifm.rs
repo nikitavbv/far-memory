@@ -3,7 +3,6 @@ use crate::engine::{Block, paragraph, subsection_header};
 /**
  * "AIFM: High-Performance, Application-Integrated Far Memory"
  * see: https://www.usenix.org/system/files/osdi20-ruan.pdf
- * (currently at page 8)
  * 
  * - because data structures convey their semantics to the runtime, AIFM supports custom prefetching remote data
  * in remotable list and streaming of remote data the avoid the polluting the local memory cache.
@@ -28,6 +27,14 @@ use crate::engine::{Block, paragraph, subsection_header};
  * memory.
  * - kernel bypass networking.
  * - green threads to avoid expensive context switching.
+ * - pauseless evacuation.
+ * 
+ * integration:
+ * - evacuator maintains local free memory ratio above the specified value (0.12 by default).
+ * - activities necessary for evacuation are prioritized by scheduler to avoid running out of memory.
+ * - remoteable data structures: array, vector, list, stack, queue, hashtable (table index is local, but key-value 
+ * is remote).
+ * - TCP-remote backend and SSD backend.
  */
 pub fn aifm() -> Block {
     Block::Placeholder(
