@@ -3,7 +3,7 @@ use crate::engine::{Block, paragraph, subsection_header};
 /**
  * "AIFM: High-Performance, Application-Integrated Far Memory"
  * see: https://www.usenix.org/system/files/osdi20-ruan.pdf
- * (currently at page 5)
+ * (currently at page 8)
  * 
  * - because data structures convey their semantics to the runtime, AIFM supports custom prefetching remote data
  * in remotable list and streaming of remote data the avoid the polluting the local memory cache.
@@ -12,6 +12,22 @@ use crate::engine::{Block, paragraph, subsection_header};
  * - API for data structure developers to build remoteable data structures.
  * - remote servers may run a counterpart AIFM runtime and perform custom logic over data structures, avoidinig 
  * multiple roundtrips.
+ * 
+ * core abstractions:
+ * - remoteable pointers.
+ * - derefernce scopes.
+ * - evacuation handles.
+ * - remote devices.
+ * 
+ * latency:
+ * - hot path for local access is carefully optimized and takes five x86-64 machine instructions.
+ * - hotness tracking - when dereferencing, hot bit of a pointer is set. Under memory pressure, this is taken into
+ * account when choosing which objects to evacute to remote memory.
+ * - FSM is used to predict future accesses (it is updated on each dereference). When pattern is detected, prefetcher
+ * threads swap in objects from the remote server. With enough prefetching, application threads always access local
+ * memory.
+ * - kernel bypass networking.
+ * - green threads to avoid expensive context switching.
  */
 pub fn aifm() -> Block {
     Block::Placeholder(
