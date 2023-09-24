@@ -3,7 +3,6 @@ use crate::engine::Block;
 /**
  * "Carbink: Fault-tolerant Far Memory"
  * see: https://www.usenix.org/system/files/osdi22-zhou-yang.pdf
- * (currently on page 11)
  * 
  * - erasure-coding
  * - remote memory compaction
