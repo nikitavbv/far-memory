@@ -3,9 +3,19 @@ use crate::engine::Block;
 /**
  * "Carbink: Fault-tolerant Far Memory"
  * see: https://www.usenix.org/system/files/osdi22-zhou-yang.pdf
+ * (currently on page 3)
  * 
- * erasure-coding
- * remote memory compaction
+ * - erasure-coding
+ * - remote memory compaction
+ * - swapping at granularity of spans because erasure coding requires equal-sized blocks.
+ * - grouping cold objects together and hot objects together.
+ * - one-sided remote memory accesses to minimize network utilization.
+ * - erasure coding scheme allows to fetch a far memory region using a single network request.
+ * - runs pauseless defragmentation threads in the background to solve the fragmentation in far RAM.
+ * - allows computation to be offloaded to remote memory nodes.
+ * 
+ * integration
+ * - exposes far memory to developers via application-level remotable pointers.
  */
 pub fn carbink() -> Block {
     Block::Multiple(vec![
