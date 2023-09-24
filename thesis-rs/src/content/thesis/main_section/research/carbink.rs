@@ -3,7 +3,7 @@ use crate::engine::Block;
 /**
  * "Carbink: Fault-tolerant Far Memory"
  * see: https://www.usenix.org/system/files/osdi22-zhou-yang.pdf
- * (currently on page 6)
+ * (currently on page 11)
  * 
  * - erasure-coding
  * - remote memory compaction
@@ -13,6 +13,8 @@ use crate::engine::Block;
  * - erasure coding scheme allows to fetch a far memory region using a single network request.
  * - runs pauseless defragmentation threads in the background to solve the fragmentation in far RAM.
  * - allows computation to be offloaded to remote memory nodes.
+ * - remote compaction - threads running on compute nodes find pairs of spans to create a new spanset without dead
+ * space.
  * 
  * terms:
  * - span - contiguous set of pages that contain objects of the same size class (configuration parameters borrowed
@@ -21,6 +23,7 @@ use crate::engine::Block;
  * - region table - maps the Region ID of the allocated region to the associated far memory node.
  * - swap-in amplification - penalties, when node swaps in span containing multiple objects, but only uses a small
  * number of these objects.
+ * - spanset - a group of equal-sized spans.
  * 
  * architecture
  * - compute nodes - single-process applications that want to use far memory.
@@ -47,6 +50,12 @@ use crate::engine::Block;
  * - liveness of compute nodes and memory nodes is tracked via heartbeats.
  * - when a compute node fails, memory manager instructs memory nodes to deallocate.
  * - when a memory node fails, memory manager deregisters the node's regions from the global pool of memory.
+ * - parity data is computed across all spans in the spanset. To reconstruct a span, a compute node merely has to
+ * contact the single memory node which stores the span.
+ * - RPCs involve software-level overheads, so one sided RMA is used.
+ * - planned and unplanned failures
+ *   - for planned, memory manager orchestrates
+ * - degraded read - in case of failure, reads may be a bit slower because spans are reconstructed from parity data.
  */
 pub fn carbink() -> Block {
     Block::Multiple(vec![
