@@ -1,5 +1,18 @@
 use crate::engine::{Block, paragraph, subsection_header};
 
+/**
+ * "AIFM: High-Performance, Application-Integrated Far Memory"
+ * see: https://www.usenix.org/system/files/osdi20-ruan.pdf
+ * (currently at page 5)
+ * 
+ * - because data structures convey their semantics to the runtime, AIFM supports custom prefetching remote data
+ * in remotable list and streaming of remote data the avoid the polluting the local memory cache.
+ * - application-integrated far memory avoids I/O amplification (swapping a full 4KB memory page independent of the
+ * object's actual memory size).
+ * - API for data structure developers to build remoteable data structures.
+ * - remote servers may run a counterpart AIFM runtime and perform custom logic over data structures, avoidinig 
+ * multiple roundtrips.
+ */
 pub fn aifm() -> Block {
     Block::Placeholder(
         Box::new(Block::Multiple(vec![
