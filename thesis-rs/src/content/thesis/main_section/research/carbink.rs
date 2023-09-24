@@ -3,7 +3,7 @@ use crate::engine::Block;
 /**
  * "Carbink: Fault-tolerant Far Memory"
  * see: https://www.usenix.org/system/files/osdi22-zhou-yang.pdf
- * (currently on page 5)
+ * (currently on page 6)
  * 
  * - erasure-coding
  * - remote memory compaction
@@ -14,6 +14,14 @@ use crate::engine::Block;
  * - runs pauseless defragmentation threads in the background to solve the fragmentation in far RAM.
  * - allows computation to be offloaded to remote memory nodes.
  * 
+ * terms:
+ * - span - contiguous set of pages that contain objects of the same size class (configuration parameters borrowed
+ * from TCMalloc).
+ * - region - 1GB or larger.
+ * - region table - maps the Region ID of the allocated region to the associated far memory node.
+ * - swap-in amplification - penalties, when node swaps in span containing multiple objects, but only uses a small
+ * number of these objects.
+ * 
  * architecture
  * - compute nodes - single-process applications that want to use far memory.
  * - memory nodes - provide far memory for compute nodes.
@@ -23,6 +31,16 @@ use crate::engine::Block;
  * 
  * integration
  * - exposes far memory to developers via application-level remotable pointers.
+ *   - when application allocates a new object, Carbink rounds the object size up to the nearest size class and
+ *     assigns a free object slot from an appropriate span.
+ *   - after a compute node swaps in a far span, the node deallocates the far span.
+ *   - filtering threads iterate through the objects in locally-resident spans and move those objects to different
+ *     local spans.
+ *   - object shuffling to create hot spans and cold spans. When local memory pressure is high, Carbink's eviction
+ *     threads prefer to swap out spansets containing cold spans.
+ *     - object hotness is tracked using GC-style read/write barriers. CLOCK algorithm is used to work with the
+ *     hotness byte.
+ *   - far memory is swapped into local memory at the granularity of a span.
  * - does not require custom hardware.
  * 
  * reliability
