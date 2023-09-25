@@ -56,4 +56,10 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: thesis
-        path: thesis-rs/thesis.docx
+        path: thesis-rs/output/thesis.docx
+    - run: echo "hello github pages" > thesis-rs/output/index.html
+    - uses: actions/upload-artifact@v3
+      with:
+        name: github-pages
+        path: thesis-rs/output/thesis.html
+    - uses: actions/deploy-pages@v2
