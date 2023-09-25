@@ -107,6 +107,7 @@ fn thesis_content_inner(abstract_content: AbstractContent) -> Block {
 }
 
 pub fn thesis_docx_template() -> Docx {
+    // formatting: https://drive.google.com/file/d/1XzGVVvXRREoc6HGYMpjZFywzsWzRa01l/view
     Docx::new()
         .page_margin(
             PageMargin::new()
