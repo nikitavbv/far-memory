@@ -68,4 +68,5 @@ jobs:
       with:
         name: github-pages
         path: thesis-rs/output/index.html
-    - uses: actions/deploy-pages@v2
+    - id: deployment
+      uses: actions/deploy-pages@v2
