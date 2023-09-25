@@ -64,5 +64,5 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: github-pages
-        path: thesis-rs/output/thesis.html
+        path: thesis-rs/output/index.html
     - uses: actions/deploy-pages@v2
