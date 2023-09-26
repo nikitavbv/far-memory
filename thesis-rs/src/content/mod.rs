@@ -3,6 +3,7 @@ pub use self::{
     topic_card::topic_card_docx_template,
 };
 
+pub mod documentation;
 pub mod thesis;
 pub mod topic_card;
 

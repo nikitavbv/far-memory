@@ -3,7 +3,13 @@ use {
     clap::Parser,
     tracing::info,
     crate::{
-        content::{Content, thesis_content, thesis_docx_template, topic_card_docx_template},
+        content::{
+            Content, 
+            thesis_content, 
+            thesis_docx_template,
+            topic_card_docx_template,
+            documentation::documentation,
+        },
         context::Context,
         utils::init_logging,
         engine::{Document, Block, TextBlockComponent, render_block_to_html, print_placeholders},
@@ -22,6 +28,9 @@ pub mod utils;
 struct Args {   
     #[arg(short, long)]
     card: bool,
+
+    #[arg(short, long)]
+    docs: bool,
 
     #[arg(short, long)]
     docx: bool,
@@ -48,6 +57,12 @@ fn main() {
     if args.card {
         documents.push(
             Document::new("іп22мп_волобуєв_КАРТКА", Block::TopicCard).with_docx_template(topic_card_docx_template())
+        );
+    }
+
+    if args.docs {
+        documents.push(
+            Document::new("documentation", documentation()),
         );
     }
 
