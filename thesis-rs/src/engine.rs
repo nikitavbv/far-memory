@@ -159,7 +159,21 @@ pub fn render_block_to_html(block: Block) -> String {
             <head>
                 <meta charset="utf-8" />
                 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+                <link rel="preconnect" href="https://fonts.googleapis.com">
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
                 <script type="text/javascript" src="https://livejs.com/live.js"></script>
+                <style>
+                    body {{
+                        margin: 0 15vw;
+                        background: #eee;
+                        font-family: 'Open Sans', sans-serif;
+                    }}
+
+                    h1 {{
+                        font-weight: 400;
+                    }}
+                </style>
             </head>
 
             <body>{}</body>
