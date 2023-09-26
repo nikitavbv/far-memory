@@ -1,6 +1,6 @@
 # far memory
 
-Documentation can be found on [nikitavbv.github.io/far-memory](nikitavbv.github.io/far-memory).
+Documentation can be found on [nikitavbv.github.io/far-memory](https://nikitavbv.github.io/far-memory).
 
 Currently supports creating block device that connects to one remote memory storage server.
 
