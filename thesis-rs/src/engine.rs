@@ -174,8 +174,13 @@ pub fn render_block_to_html(block: Block) -> String {
                         line-height: 1.6;
                     }}
 
-                    h1 {{
+                    h1, h2 {{
                         font-weight: 400;
+                        margin: 1em 0 0 0;
+                    }}
+
+                    h2 {{
+                        color: #4b4b4b;
                     }}
 
                     .note {{
@@ -183,6 +188,10 @@ pub fn render_block_to_html(block: Block) -> String {
                         border-radius: 3px;
                         color: #fff;
                         padding: 0.3em 1em;
+                    }}
+
+                    p {{
+                        margin: 0;
                     }}
                 </style>
             </head>
@@ -201,8 +210,8 @@ fn render_block_to_html_inner(block: Block) -> String {
         Block::Paragraph(text) => format!("<p>{}</p>", html_escape::encode_text(&text)),
         Block::UnorderedList(text) => format!("<ul>{}</ul>", text.iter().map(|v| format!("<li>{}</li>", html_escape::encode_text(&v))).collect::<String>()),
         Block::Image(image) => format!("<img src=\"{}\" />", image.path()),
-        Block::Placeholder(inner, _text) => format!("<p style=\"background-color: yellow;\">{}</p>", render_block_to_html(*inner)),
-        Block::Multiple(blocks) => blocks.into_iter().map(render_block_to_html).collect::<String>(),
+        Block::Placeholder(inner, _text) => format!("<div style=\"background-color: yellow;\">{}</div>", render_block_to_html_inner(*inner)),
+        Block::Multiple(blocks) => blocks.into_iter().map(render_block_to_html_inner).collect::<String>(),
         Block::Note(text) => format!("<div class=\"note\">{}</div>", html_escape::encode_text(&text)),
         other => format!("<div>block of this type is not supported: {:?}</div>", other),
     }
