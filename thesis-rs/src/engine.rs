@@ -59,6 +59,7 @@ pub enum Block {
     TaskSection,
     FrontPage,
     TopicCard,
+    Note(String),
 }
 
 #[derive(Debug, Clone)]
@@ -149,6 +150,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
         Block::TaskSection => document.add_task_section(context, content),
         Block::FrontPage => document.add_front_page_section(content),
         Block::TopicCard => document.add_topic_card_document(context, content),
+        Block::Note(_) => panic!("note block is not supported in docx"),
     }
 }
 
@@ -165,13 +167,22 @@ pub fn render_block_to_html(block: Block) -> String {
                 <script type="text/javascript" src="https://livejs.com/live.js"></script>
                 <style>
                     body {{
-                        margin: 0 15vw;
+                        max-width: 768px;
+                        margin: 0 auto;
                         background: #eee;
                         font-family: 'Open Sans', sans-serif;
+                        line-height: 1.6;
                     }}
 
                     h1 {{
                         font-weight: 400;
+                    }}
+
+                    .note {{
+                        background: #1f8dd6;
+                        border-radius: 3px;
+                        color: #fff;
+                        padding: 0.3em 1em;
                     }}
                 </style>
             </head>
@@ -192,6 +203,7 @@ fn render_block_to_html_inner(block: Block) -> String {
         Block::Image(image) => format!("<img src=\"{}\" />", image.path()),
         Block::Placeholder(inner, _text) => format!("<p style=\"background-color: yellow;\">{}</p>", render_block_to_html(*inner)),
         Block::Multiple(blocks) => blocks.into_iter().map(render_block_to_html).collect::<String>(),
+        Block::Note(text) => format!("<div class=\"note\">{}</div>", html_escape::encode_text(&text)),
         other => format!("<div>block of this type is not supported: {:?}</div>", other),
     }
 }
@@ -273,6 +285,7 @@ pub fn print_placeholders(block: &Block) {
         Block::TaskSection => (),
         Block::FrontPage => (),
         Block::TopicCard => (),
+        Block::Note(_) => (),
     }
 }
 
@@ -313,5 +326,6 @@ pub fn count_images(block: &Block) -> u32 {
         Block::TaskSection => 0,
         Block::FrontPage => 0,
         Block::TopicCard => 0,
+        Block::Note(_) => 0,
     }
 }

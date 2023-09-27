@@ -27,6 +27,9 @@ pub mod utils;
 #[derive(Parser, Debug)]
 struct Args {   
     #[arg(short, long)]
+    thesis: bool,
+
+    #[arg(short, long)]
     card: bool,
 
     #[arg(short, long)]
@@ -51,8 +54,13 @@ fn main() {
 
     let content = Content::new();
     let mut documents = vec![
-        Document::new("thesis", thesis_content(&content)).with_docx_template(thesis_docx_template()),
     ];
+
+    if args.thesis {
+        documents.push(
+            Document::new("thesis", thesis_content(&content)).with_docx_template(thesis_docx_template()),
+        );
+    }
 
     if args.card {
         documents.push(
