@@ -34,10 +34,23 @@ pub fn documentation() -> Block {
       - but it also can be solved using compaction.
     - mlockall can be used to prevent swapping.
     - tracking stats for objects is too much of an overhead. Tracking for pages would work better.
+    - for simplification, object IDs can be considered static.
 
     backends:
     - remote RAM (erasure coding should be a part of the backend implementation, because some backends may not need it).
     - SSD.
+
+    when new object is created:
+    - assign ID.
+    - put it in local memory.
+
+    when object is accessed:
+    - if object is in local memory, provide access to it and done.
+    - if object is in far memory, swap it in.
+    
+    when running out of local memory:
+    - pick objects that can be swapped out according to some score (scoring function can be optimized. The simplest one is time since last access).
+    - pack them into span and save to backend.
     */
 
     Block::Multiple(vec![
