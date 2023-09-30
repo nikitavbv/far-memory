@@ -10,7 +10,7 @@ pub fn documentation() -> Block {
       - for implementation, split into arrays (treat them as objects) of N bytes, keep some of them in RAM and some of them remote.
 
     - record stats for all objects (not blocks).
-      - object id.
+      - object id and tags.
       - instance id.
       - timestamp.
       - access count within a window.
@@ -18,6 +18,24 @@ pub fn documentation() -> Block {
       - this will allow to optimize models offline.
       - tracking some metrics to know what latency is overall if is SLO is breached or not would also be cool.
         - it is probably possible to track each interaction with smart pointer/swap device.
+
+    - latency optimization.
+      - stats are grouped by object id.
+      - for each object, we also take tags and access stats.
+      - optimization model: current layout -> optimization steps.
+        - layout: which objects go to which pages.
+        - optimization step is "move object X to span Y".
+        - model performance can be estimated by running over a stream of events in simulation.
+        - I also need some kind of a model to predict which blocks should be swapped in.
+          - maybe: input is access events and stats for some window and output is which objects/spans should be pre-loaded.
+
+    - spans are needed for reliability. It is difficult to erasure code individual objects.
+    - fragmentation is a problem and it is solved with size classes. With stats tracking, size classes can be picked automatically.
+      - but it also can be solved using compaction.
+
+    backends:
+    - remote RAM.
+    - SSD.
     */
 
     Block::Multiple(vec![
