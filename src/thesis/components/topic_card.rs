@@ -21,7 +21,7 @@ use {
         NumberingId,
         IndentLevel,
     },
-    crate::{
+    crate::thesis::{
         content::{Content, Language},
         context::Context,
     },

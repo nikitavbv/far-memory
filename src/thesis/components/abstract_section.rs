@@ -17,7 +17,7 @@ use {
         LevelJc,
         SpecialIndentType,
     },
-    crate::{
+    crate::thesis::{
         content::{Content, Language, MultiLanguageString, AbstractContent, MultiLanguageNumeralString, EnglishNumeralString, UkrainianNumeralString},
         context::Context,
         components::{PlaceholderComponent, PageBreakComponent},

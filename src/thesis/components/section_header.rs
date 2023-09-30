@@ -1,6 +1,6 @@
 use {
     docx_rs::{Docx, Paragraph, LineSpacing, AlignmentType, Run},
-    crate::components::PlaceholderComponent,
+    crate::thesis::components::PlaceholderComponent,
 };
 
 pub trait SectionHeaderComponent {

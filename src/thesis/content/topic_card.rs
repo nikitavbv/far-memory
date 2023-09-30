@@ -1,6 +1,6 @@
 use {
     docx_rs::{Docx, PageMargin, RunFonts},
-    crate::utils::mm_to_twentieth_of_a_point,
+    crate::thesis::utils::mm_to_twentieth_of_a_point,
 };
 
 pub fn topic_card_docx_template() -> Docx {

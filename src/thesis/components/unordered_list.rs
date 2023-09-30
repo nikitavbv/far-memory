@@ -17,7 +17,7 @@ use {
         Run,
         IndentLevel,
     },
-    crate::context::Context,
+    crate::thesis::context::Context,
 };
 
 pub trait UnorderedListComponent {

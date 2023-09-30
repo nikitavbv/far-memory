@@ -1,5 +1,5 @@
 use {
-    crate::engine::{Block, ImageBlock, subsection_header, paragraph, unordered_list},
+    crate::thesis::engine::{Block, ImageBlock, subsection_header, paragraph, unordered_list},
     self::research::research,
 };
 

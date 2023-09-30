@@ -1,6 +1,6 @@
 use {
     docx_rs::{Docx, Paragraph, Run, BreakType, AlignmentType, Table, TableRow, TableCell, LineSpacing, WidthType, TableBorders, VAlignType, TableCellMargins, TableAlignmentType},
-    crate::{
+    crate::thesis::{
         components::LineComponent,
         content::Content,
     },

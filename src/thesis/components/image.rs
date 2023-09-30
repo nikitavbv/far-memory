@@ -1,6 +1,6 @@
 use {
     docx_rs::{Docx, Paragraph, Tab, LineSpacing, AlignmentType, Run, Pic},
-    crate::context::Context,
+    crate::thesis::context::Context,
 };
 
 pub trait ImageComponent {

@@ -1,4 +1,4 @@
-use crate::engine::{Block, paragraph, subsection_header};
+use crate::thesis::engine::{Block, paragraph, subsection_header};
 
 /**
  * "AIFM: High-Performance, Application-Integrated Far Memory"

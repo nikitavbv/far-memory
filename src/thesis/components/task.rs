@@ -23,7 +23,7 @@ use {
         LevelText,
         LevelJc,
     },
-    crate::{
+    crate::thesis::{
         components::{LineComponent, PlaceholderComponent},
         content::{Content, Language},
         context::Context,

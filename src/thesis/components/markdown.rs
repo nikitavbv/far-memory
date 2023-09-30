@@ -1,7 +1,7 @@
 use {
     docx_rs::{Docx, Paragraph, Tab, LineSpacing, Run},
     markdown::{Block, Span, ListItem},
-    crate::{
+    crate::thesis::{
         components::{SectionHeaderComponent, ParagraphComponent, UnorderedListComponent},
         context::Context,
     },

@@ -2,7 +2,7 @@ use {
     std::{process::Command, fs},
     clap::Parser,
     tracing::info,
-    crate::{
+    crate::thesis::{
         content::{
             Content, 
             thesis_content, 
@@ -14,6 +14,7 @@ use {
         utils::init_logging,
         engine::{Document, Block, TextBlockComponent, render_block_to_html, print_placeholders},
     },
+    super::Args,
 };
 
 pub mod components;
@@ -23,33 +24,7 @@ pub mod context;
 pub mod engine;
 pub mod utils;
 
-
-#[derive(Parser, Debug)]
-struct Args {   
-    #[arg(short, long)]
-    thesis: bool,
-
-    #[arg(short, long)]
-    card: bool,
-
-    #[arg(short, long)]
-    docs: bool,
-
-    #[arg(short, long)]
-    docx: bool,
-
-    #[arg(short, long)]
-    html: bool,
-
-    #[arg(short, long)]
-    pdf: bool,
-}
-
-fn main() {
-    init_logging();
-
-    let args = Args::parse();
-
+pub fn build_thesis(args: &Args) {
     fs::create_dir_all("./output").unwrap();
 
     let content = Content::new();

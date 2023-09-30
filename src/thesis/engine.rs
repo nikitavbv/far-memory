@@ -22,7 +22,7 @@ use {
         TabLeaderType,
     },
     thiserror::Error,
-    crate::{
+    crate::thesis::{
         context::Context,
         content::{Content, Language, AbstractContent},
         components::{

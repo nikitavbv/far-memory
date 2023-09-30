@@ -1,7 +1,7 @@
 use {
     tracing::warn,
     docx_rs::{Docx, Style, StyleType, RunFonts, PageMargin},
-    crate::{
+    crate::thesis::{
         engine::{Block, paragraph, unordered_list, count_pages, count_images, PageCountingError},
         content::{Language, AbstractContent, Content},
         utils::mm_to_twentieth_of_a_point,
