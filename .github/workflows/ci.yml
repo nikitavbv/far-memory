@@ -4,7 +4,7 @@ name: Continuous integration
 
 jobs:
   build:
-    name: server build
+    name: build
     runs-on: ubuntu-latest
     permissions:
       pages: write
@@ -46,17 +46,15 @@ jobs:
     #      ghcr.io/nikitavbv/far-memory/far-memory:latest
     #      ghcr.io/nikitavbv/far-memory/far-memory:0.1.${{ github.run_number }}
     - run: cargo run --release -- --thesis
-      working-directory: thesis-rs
     - uses: actions/upload-artifact@v3
       with:
         name: thesis
-        path: thesis-rs/output/thesis.docx
+        path: output/thesis.docx
     - run: cargo run --release -- --docs --html
-      working-directory: thesis-rs
-    - run: mkdir thesis-rs/output/documentation && mv thesis-rs/output/documentation.html thesis-rs/output/documentation/index.html
+    - run: mkdir output/documentation && mv output/documentation.html output/documentation/index.html
     - uses: actions/upload-pages-artifact@v2
       with:
-        path: thesis-rs/output/documentation
+        path: output/documentation
     - uses: actions/configure-pages@v3
     - id: deployment
       uses: actions/deploy-pages@v2
