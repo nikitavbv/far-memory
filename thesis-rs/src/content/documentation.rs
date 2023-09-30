@@ -2,55 +2,33 @@ use crate::engine::Block;
 
 pub fn documentation() -> Block {
     /*
-    methods of integration (there does not seem to be other methods other than these two that I have read about):
+    ideas for methods of integration (there does not seem to be other methods other than these two that I have read about):
     - smart pointers - preferred way.
       - it makes sense to follow the same approach as carbink with size classes for objects.
-      - it makes sense to optimize objects placement in spans to keep hot objects together.
     - swap device.
-      - for implementation, split into arrays (treat them as objects) of N bytes, keep some of them in RAM and some of them remote.
-
-    - record stats for all objects (not blocks).
-      - object id and tags.
-      - instance id.
-      - timestamp.
-      - access count within a window.
-    - record events when a page is swapped in or moved to remote memory and why.
-      - this will allow to optimize models offline.
-      - tracking some metrics to know what latency is overall if is SLO is breached or not would also be cool.
-        - it is probably possible to track each interaction with smart pointer/swap device.
-
-    - latency optimization.
-      - stats are grouped by object id.
-      - for each object, we also take tags and access stats.
-      - optimization model: current layout -> optimization steps.
-        - layout: which objects go to which pages.
-        - optimization step is "move object X to span Y".
-        - model performance can be estimated by running over a stream of events in simulation.
-        - I also need some kind of a model to predict which blocks should be swapped in.
-          - maybe: input is access events and stats for some window and output is which objects/spans should be pre-loaded.
-
-    - spans are needed for reliability. It is difficult to erasure code individual objects.
-    - fragmentation is a problem and it is solved with size classes. With stats tracking, size classes can be picked automatically.
-      - but it also can be solved using compaction.
-    - mlockall can be used to prevent swapping.
-    - tracking stats for objects is too much of an overhead. Tracking for pages would work better.
-    - for simplification, object IDs can be considered static.
-
+      - for implementation, split it into spans in sequence.
     backends:
     - remote RAM (erasure coding should be a part of the backend implementation, because some backends may not need it).
     - SSD.
 
-    when new object is created:
-    - assign ID.
-    - put it in local memory.
+    ideas for demo app:
+    - LLM inference. Object allocation is static and read-only (keep weights in far memory).
+      - mlockall can be used to prevent swapping.
 
-    when object is accessed:
-    - if object is in local memory, provide access to it and done.
-    - if object is in far memory, swap it in.
-    
-    when running out of local memory:
-    - pick objects that can be swapped out according to some score (scoring function can be optimized. The simplest one is time since last access).
-    - pack them into span and save to backend.
+    ideas for improving latency:
+    - track stats for spans, not for objects, because it is less overhead.
+    - for now, keep span id assignment static.
+    - optimize objects placement in spans (keep hot objects together).
+    - record stats for spans (access time) - that will allow to perform offline simulations.
+      - stat can be access time within a window.
+      - swap in/out events.
+      - tracking some metrics to know what latency is overall if is SLO is breached or not would also be cool.
+        - it is probably possible to track each interaction with smart pointer/swap device.
+      - model for eviction.
+      - model for prefetching.
+      - model for shuffling.
+    - fragmentation is a problem to solve later. The simplest way to solve it is size classes.
+      - size classes can be tuned by model, by the way.
     */
 
     Block::Multiple(vec![
