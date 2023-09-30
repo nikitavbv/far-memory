@@ -32,9 +32,11 @@ pub fn documentation() -> Block {
     - spans are needed for reliability. It is difficult to erasure code individual objects.
     - fragmentation is a problem and it is solved with size classes. With stats tracking, size classes can be picked automatically.
       - but it also can be solved using compaction.
+    - mlockall can be used to prevent swapping.
+    - tracking stats for objects is too much of an overhead. Tracking for pages would work better.
 
     backends:
-    - remote RAM.
+    - remote RAM (erasure coding should be a part of the backend implementation, because some backends may not need it).
     - SSD.
     */
 
