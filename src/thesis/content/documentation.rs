@@ -1,4 +1,4 @@
-use crate::thesis::engine::Block;
+use crate::thesis::engine::{Block, subsection_header};
 
 pub fn documentation() -> Block {
     /*
@@ -37,5 +37,6 @@ pub fn documentation() -> Block {
 need to be able to refer to this documentation when talking to thesis supervisors and other people from the university. I will probably add English translation later."#.to_owned()),
         Block::SubsectionHeader("Віддалена памʼять".to_owned()),
         Block::Placeholder(Box::new(Block::Paragraph("Віддалена памʼять - тип памʼяті що знаходиться на віддалених вузлах у розподіленій системі.".to_owned())), "add text explaining what it is".to_owned()),
+        subsection_header("Підзадачі".to_owned()),
     ])
 }
