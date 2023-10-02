@@ -22,22 +22,22 @@ mod utils;
 
 #[derive(Parser, Debug)]
 pub struct Args {
-    #[arg(short, long)]
+    #[arg(long)]
     thesis: bool,
 
-    #[arg(short, long)]
+    #[arg(long)]
     card: bool,
 
-    #[arg(short, long)]
+    #[arg(long)]
     docs: bool,
 
-    #[arg(short, long)]
+    #[arg(long)]
     docx: bool,
 
-    #[arg(short, long)]
+    #[arg(long)]
     html: bool,
 
-    #[arg(short, long)]
+    #[arg(long)]
     pdf: bool,
 }
 
