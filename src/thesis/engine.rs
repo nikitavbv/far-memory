@@ -48,7 +48,7 @@ pub enum PageCountingError {
 pub enum Block {
     SectionHeader(String),
     SubsectionHeader(String),
-    Paragraph(String),
+    Paragraph(TextSpan),
     UnorderedList(Vec<String>),
     Image(ImageBlock),
     Placeholder(Box<Block>, String),
@@ -60,6 +60,11 @@ pub enum Block {
     FrontPage,
     TopicCard,
     Note(String),
+}
+
+#[derive(Debug, Clone)]
+pub enum TextSpan {
+    Regular(String),
 }
 
 #[derive(Debug, Clone)]
@@ -111,8 +116,8 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
             )
         },
         Block::Paragraph(text) => match placeholder {
-            Some(v) => document.add_paragraph_placeholder_component(text, v),
-            None => document.add_paragraph_component(text),
+            Some(v) => document.add_paragraph_placeholder_component(text.to_plaintext(), v),
+            None => document.add_paragraph_component(text.to_plaintext()),
         },
         Block::UnorderedList(list) => document.add_unordered_list_component(context, list),
         Block::Image(image) => document.add_image_component(context, context.last_section_index(), &image.path(), &image.description()),
@@ -218,13 +223,19 @@ fn render_block_to_html_inner(block: Block) -> String {
     match block {
         Block::SectionHeader(text) => format!("<h1>{}</h1>", html_escape::encode_text(&text)),
         Block::SubsectionHeader(text) => format!("<h2>{}</h2>", html_escape::encode_text(&text)),
-        Block::Paragraph(text) => format!("<p>{}</p>", html_escape::encode_text(&text)),
+        Block::Paragraph(text) => format!("<p>{}</p>", render_text_span_to_html(text)),
         Block::UnorderedList(text) => format!("<ul>{}</ul>", text.iter().map(|v| format!("<li>{}</li>", html_escape::encode_text(&v))).collect::<String>()),
         Block::Image(image) => format!("<img src=\"{}\" /><div class=\"image-description\">{}</div>", image.path(), html_escape::encode_text(&image.description())),
         Block::Placeholder(inner, _text) => format!("<div style=\"background-color: yellow;\">{}</div>", render_block_to_html_inner(*inner)),
         Block::Multiple(blocks) => blocks.into_iter().map(render_block_to_html_inner).collect::<String>(),
         Block::Note(text) => format!("<div class=\"note\">{}</div>", html_escape::encode_text(&text)),
         other => format!("<div>block of this type is not supported: {:?}</div>", other),
+    }
+}
+
+fn render_text_span_to_html(span: TextSpan) -> String {
+    match span {
+        TextSpan::Regular(text) => html_escape::encode_text(&text).to_string(),
     }
 }
 
@@ -236,7 +247,7 @@ pub fn subsection_header(text: impl Into<String>) -> Block {
     Block::SubsectionHeader(text.into())
 }
 
-pub fn paragraph(text: impl Into<String>) -> Block {
+pub fn paragraph(text: impl Into<TextSpan>) -> Block {
     Block::Paragraph(text.into())
 }
 
@@ -351,5 +362,25 @@ pub fn count_images(block: &Block) -> u32 {
         Block::FrontPage => 0,
         Block::TopicCard => 0,
         Block::Note(_) => 0,
+    }
+}
+
+impl TextSpan {
+    fn to_plaintext(&self) -> String {
+        match self {
+            TextSpan::Regular(text) => text.to_owned(),
+        }
+    }
+}
+
+impl Into<TextSpan> for String {
+    fn into(self) -> TextSpan {
+        TextSpan::Regular(self)
+    }
+}
+
+impl Into<TextSpan> for &str {
+    fn into(self) -> TextSpan {
+        TextSpan::Regular(self.to_owned())
     }
 }
