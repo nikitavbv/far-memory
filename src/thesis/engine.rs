@@ -195,6 +195,7 @@ pub fn render_block_to_html(block: Block) -> String {
                         border-radius: 3px;
                         color: #fff;
                         padding: 0.3em 1em;
+                        text-align: justify;
                     }}
 
                     p {{

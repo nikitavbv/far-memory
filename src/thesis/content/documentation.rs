@@ -24,6 +24,53 @@ pub fn documentation() -> Block {
         - it is probably possible to track each interaction with smart pointer/swap device.
     */
 
+    /*struct FarMemory<T> {
+      inner: T,
+    }
+
+    impl<T> FarMemory<T> {
+      pub fn new(inner: T) -> Self {
+        Self {
+          inner,
+        }
+      }
+    }
+
+    use std::ops::Deref;
+    impl<T> Deref for FarMemory<T> {
+      type Target = T;
+
+      fn deref(&self) -> &Self::Target {
+          unimplemented!()
+      }
+    }
+
+    struct ApplicationData;
+
+    impl ApplicationData {
+      pub fn new() -> Self {
+        Self
+      }
+
+      fn do_something_with_data(&self) {
+      }
+    }
+
+    fn using_far_memory_in_application() {
+      // this is how application data is normally accessed in application.
+      let local_data = ApplicationData::new();
+      local_data.do_something_with_data();
+
+      // application data placed in far memory, under FarMemory smart pointer. From now on, this data
+      // is managed by far memory and swapped between local and remote memory transparently.
+      let far_memory_data = FarMemory::new(local_data);
+
+      // when data is accessed, it is automatically moved into local memory.
+      far_memory_data.do_something_with_data();
+
+      // when data is not accessed, it may be moved back to remote memory.
+    }*/
+
     Block::Multiple(vec![
         section_header("far memory"),
         Block::Note(r#"Please note that most parts of documentation for this project are in Ukrainian because I am working on this in scope of my thesis at Kyiv Polytechnic Institute and I
@@ -86,5 +133,16 @@ need to be able to refer to this documentation when talking to thesis supervisor
         paragraph("Розміщення частин даних на різних вузлах також дозволяє знизити час доступу до данних, оскільки достатньо отримати дані лише з частини вузлів для відновлення сторінки памʼяті у локальній памʼяті."),
 
         subsection_header("Інтеграція у існуюче та нове програмне забезпечення"),
+        paragraph(
+          "Для інтеграції у нове програмне забезпечення (те, де є можливість змінювати реалізацію) доцільним є використання розумних показчиків (з існуючих реалізацій так робить Carbink та AIFM). В межах цієї роботи створюється бібліотека на мові програмування Rust, 
+          яка надає можливість розробнику обирати які дані будуть зберігатися у віддаленій памʼяті. Бібліотека керує переміщенням даних у та з віддаленої памʼяті автоматично. Створення реалізацій структур даних призначених для
+          роботи з віддаленою памʼяттю (як у AIFM) не розглядається, оскільки їх використання можна уникнути, якщо автоматичне завантаження сторінок паʼяті працює достатньо ефективно."
+        ),
+        Block::Image(ImageBlock::new("integration.png".to_owned(), "використання розумного показчика для розміщення даних у віддаленій памʼяті".to_owned())),
+        paragraph(
+          "Для інтеграції у існуюче програмне забезпечення, або те, яке написане на інших мовах програмування можна використовувати механізм підкачки (swapping) памʼяті у операційній системі. На відміну від звичайного swap, який 
+          розміщується на диску, в цьому випадку swap розміщується на віртуальному блоковому пристрої, блоки якого відповідають сторінкам у віддаленій памʼяті. Реалізація блокового пристрою використовує ту ж реалізацію переміщення
+          сторінок між локальною та віддаленою памʼяттю, що і для інтеграції на основі розмуних показчиків."
+        )
     ])
 }
