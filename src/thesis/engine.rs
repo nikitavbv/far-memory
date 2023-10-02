@@ -65,6 +65,8 @@ pub enum Block {
 #[derive(Debug, Clone)]
 pub enum TextSpan {
     Regular(String),
+    Bold(String),
+    Multiple(Vec<TextSpan>),
 }
 
 #[derive(Debug, Clone)]
@@ -168,7 +170,7 @@ pub fn render_block_to_html(block: Block) -> String {
                 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
                 <link rel="preconnect" href="https://fonts.googleapis.com">
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-                <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+                <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
                 <script type="text/javascript" src="https://livejs.com/live.js"></script>
                 <style>
                     body {{
@@ -236,6 +238,8 @@ fn render_block_to_html_inner(block: Block) -> String {
 fn render_text_span_to_html(span: TextSpan) -> String {
     match span {
         TextSpan::Regular(text) => html_escape::encode_text(&text).to_string(),
+        TextSpan::Bold(text) => format!("<b>{}</b>", html_escape::encode_text(&text)),
+        TextSpan::Multiple(texts) => texts.into_iter().map(render_text_span_to_html).collect::<String>(),
     }
 }
 
@@ -369,6 +373,8 @@ impl TextSpan {
     fn to_plaintext(&self) -> String {
         match self {
             TextSpan::Regular(text) => text.to_owned(),
+            TextSpan::Bold(text) => text.to_owned(),
+            TextSpan::Multiple(texts) => texts.iter().map(|v| v.to_plaintext()).collect::<String>(),
         }
     }
 }
@@ -382,5 +388,11 @@ impl Into<TextSpan> for String {
 impl Into<TextSpan> for &str {
     fn into(self) -> TextSpan {
         TextSpan::Regular(self.to_owned())
+    }
+}
+
+impl Into<TextSpan> for Vec<TextSpan> {
+    fn into(self) -> TextSpan {
+        TextSpan::Multiple(self)
     }
 }
