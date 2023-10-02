@@ -199,6 +199,7 @@ pub fn render_block_to_html(block: Block) -> String {
 
                     p {{
                         margin: 0;
+                        text-align: justify;
                     }}
 
                     img {{

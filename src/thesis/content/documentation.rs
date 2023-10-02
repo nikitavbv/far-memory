@@ -18,7 +18,6 @@ pub fn documentation() -> Block {
     ideas for improving latency:
     - track stats for spans, not for objects, because it is less overhead.
     - for now, keep span id assignment static.
-    - optimize objects placement in spans (keep hot objects together).
     - record stats for spans (access time) - that will allow to perform offline simulations.
       - stat can be access time within a window.
       - swap in/out events.
@@ -48,10 +47,19 @@ need to be able to refer to this documentation when talking to thesis supervisor
         subsection_header("Зниження затримки доступу (latency)"),
         paragraph("Затримка доступу до памʼяті має прямий вплив на швидкодію програмного забезпечення, тому її потрібно мінімізувати. Час читання даних з оперативної памʼяті нижчий за час читання даних по мережі, тому зниження затримки базується на тому, що потрібні дані вчасно переміщуються з памʼяті віддалених вузлів до оперативної памʼяті."),
         Block::Image(ImageBlock::new("latency.jpg".to_owned(), "затримка доступу до даних у віддаленій памʼяті".to_owned())),
-        paragraph("Способи зниження затримки:"),
+        paragraph("Способи зниження затримки, які можна розглянути для використання:"),
         paragraph(vec![
           TextSpan::Bold("- групування обʼєктів".to_owned()),
-          ", доступ до яких відбувається частіше, у сторінки (spans)...".into(),
+          " таким чином, щоб обʼєкти доступ до яких відбувається частіше, знаходились в \"гарячих сторінках (spans)\". Обʼєкти, доступ до яких відбувається рідше, попадають у \"холодні сторінки\". Таким чином, у локальній памʼяті знаходиться більше гарячих обʼєктів і кількість запитів до інших вузлів знижається.".into(),
+          r#" Такий підхід використовується у Carbink, де окремий потік переміщує обʼєкти між локальними сторінками для більш ефективного групування."#.into(),
+        ]),
+        paragraph(vec![
+          TextSpan::Bold("- запит сторінок наперед".to_owned()),
+          r#". Наприклад у AIFM структури даних оптимізвані завчасно завантажувати наступні сторінки. Наприклад, у масиві або списку під час ітерації завантажується наступни сторінки."#.into(),
+        ]),
+        paragraph(vec![
+          TextSpan::Bold("Моя думка:".to_owned()),
+          r#" існуючі реалізації спираються на прості еврістики: рахування кількості доступів до обʼєктів для їх групування, запит наступної сторінки для структури даних..."#.into(),
         ]),
 
         subsection_header("Забезпечення відмовостійкості"),
