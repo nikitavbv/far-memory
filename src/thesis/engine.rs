@@ -169,7 +169,7 @@ pub fn render_block_to_html(block: Block) -> String {
                     body {{
                         max-width: 768px;
                         margin: 0 auto;
-                        background: #eee;
+                        background-color: #fcfcfc;
                         font-family: 'Open Sans', sans-serif;
                         line-height: 1.6;
                     }}

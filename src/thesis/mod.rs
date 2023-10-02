@@ -59,10 +59,10 @@ pub fn build_thesis(args: &Args) {
         print_placeholders(&document_content);
 
         if args.html {
-            let html_path = format!("./output/{}.html", document.name());
+            let html_path = format!("./output/{}/index.html", document.name());
             info!("generating {} to {:?}", document.name(), html_path);
 
-            copy_images_to_output(&document_content);
+            copy_images_to_output(&format!("./output/{}", document.name()), &document_content);
 
             let html = render_block_to_html(document_content.clone());
             fs::write(html_path, html).unwrap();
@@ -87,17 +87,19 @@ pub fn build_thesis(args: &Args) {
     }
 }
 
-fn copy_images_to_output(block: &Block) {
+fn copy_images_to_output(path: &str, block: &Block) {
     match block {
         Block::SectionHeader(_) => (),
         Block::SubsectionHeader(_) => (),
         Block::Paragraph(_) => (),
         Block::UnorderedList(_) => (),
         Block::Image(image) => {
-            fs::copy(format!("./images/{}", image.path()), format!("./output/{}", image.path())).unwrap();
+            fs::create_dir_all(path).unwrap();
+            let output_path = std::path::Path::new(path).join(image.path());
+            fs::copy(format!("./images/{}", image.path()), output_path).unwrap();
         },
-        Block::Placeholder(inner, _) => copy_images_to_output(&*inner),
-        Block::Multiple(inner) => inner.iter().for_each(copy_images_to_output),
+        Block::Placeholder(inner, _) => copy_images_to_output(path, &*inner),
+        Block::Multiple(inner) => inner.iter().for_each(|v| copy_images_to_output(path, v)),
         Block::ReferencesList(_) => (),
         Block::TableOfContents => (),
         Block::AbstractSection(_, _) => (),
