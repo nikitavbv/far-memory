@@ -1,29 +1,6 @@
 use crate::thesis::engine::{Block, subsection_header, section_header, paragraph, ImageBlock, TextSpan};
 
 pub fn documentation() -> Block {
-    /*
-    ideas for methods of integration (there does not seem to be other methods other than these two that I have read about):
-    - smart pointers - preferred way.
-      - it makes sense to follow the same approach as carbink with size classes for objects.
-    - swap device.
-      - for implementation, split it into spans in sequence.
-    backends:
-    - remote RAM (erasure coding should be a part of the backend implementation, because some backends may not need it).
-    - SSD.
-
-    ideas for demo app:
-    - LLM inference. Object allocation is static and read-only (keep weights in far memory).
-      - mlockall can be used to prevent swapping.
-
-    ideas for improving latency:
-    - track stats for spans, not for objects, because it is less overhead.
-    - for now, keep span id assignment static.
-    - record stats for spans (access time) - that will allow to perform offline simulations.
-      - stat can be access time within a window.
-      - swap in/out events.
-        - it is probably possible to track each interaction with smart pointer/swap device.
-    */
-
     /*struct FarMemory<T> {
       inner: T,
     }
@@ -77,7 +54,14 @@ pub fn documentation() -> Block {
 need to be able to refer to this documentation when talking to thesis supervisors and other people from the university. I will probably add English translation later."#.to_owned()),
         
         section_header("Віддалена памʼять"),
-        paragraph("Віддалена памʼять - тип памʼяті що знаходиться на віддалених вузлах у розподіленій системі."),
+        paragraph(
+          "Віддалена памʼять - клас памʼяті, дані якого зберігаються на пристроях з часом доступу більшим ніж у оперативної памʼяті (диски, віддалені вузли - у цій роботі розглядається останнє) та 
+          методи які забезечують доступ до цих даних з рівнем затримки, відмовостійкістю та легкістю використання прийнятним для використання у прикладному програмному забезпеченні."
+        ),
+        paragraph("Ціллю віддаленої памʼяті є підвищення рівню використання оперативної памʼяті у датацентрах (у сучасному датацентрі рівень використання RAM становить близько 60%). Більш високий рівень використання
+        памʼяті забезпечується наданням доступу до памʼяті вузлів з вільною памʼяттю вузлам які її можуть використати."),
+        paragraph("Віддалена памʼять є актуальною навіть при віртуалізації та надмірній підписці (oversubscription) ресурсів, тому що вільна памʼять залишається навіть при дуже ефективному планувальнику задач. Крім цього, 
+        використання віддаленої памʼяті дозволяє працювати з обсягом даних що перевищує фізичний обʼєм памʼяті на вузлі без значних змін у код програмного забезпечення."),
         
         section_header("Формалізація задачі"),
         paragraph("Для прикладного програмного забезпечення, в яке інтегрована віддалена памʼять, максимізувати частку даних що зберігається у віддаленій памʼяті при умові дотримання вимог швидкодії."),
@@ -143,6 +127,6 @@ need to be able to refer to this documentation when talking to thesis supervisor
           "Для інтеграції у існуюче програмне забезпечення, або те, яке написане на інших мовах програмування можна використовувати механізм підкачки (swapping) памʼяті у операційній системі. На відміну від звичайного swap, який 
           розміщується на диску, в цьому випадку swap розміщується на віртуальному блоковому пристрої, блоки якого відповідають сторінкам у віддаленій памʼяті. Реалізація блокового пристрою використовує ту ж реалізацію переміщення
           сторінок між локальною та віддаленою памʼяттю, що і для інтеграції на основі розмуних показчиків."
-        )
+        ),
     ])
 }
