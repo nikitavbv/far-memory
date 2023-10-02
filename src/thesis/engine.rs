@@ -193,6 +193,17 @@ pub fn render_block_to_html(block: Block) -> String {
                     p {{
                         margin: 0;
                     }}
+
+                    img {{
+                        width: 100%;
+                        height: auto;
+                    }}
+
+                    .image-description {{
+                        width: 100%;
+                        text-align: center;
+                        font-style: italic;
+                    }}
                 </style>
             </head>
 
@@ -209,7 +220,7 @@ fn render_block_to_html_inner(block: Block) -> String {
         Block::SubsectionHeader(text) => format!("<h2>{}</h2>", html_escape::encode_text(&text)),
         Block::Paragraph(text) => format!("<p>{}</p>", html_escape::encode_text(&text)),
         Block::UnorderedList(text) => format!("<ul>{}</ul>", text.iter().map(|v| format!("<li>{}</li>", html_escape::encode_text(&v))).collect::<String>()),
-        Block::Image(image) => format!("<img src=\"{}\" />", image.path()),
+        Block::Image(image) => format!("<img src=\"{}\" /><div class=\"image-description\">{}</div>", image.path(), html_escape::encode_text(&image.description())),
         Block::Placeholder(inner, _text) => format!("<div style=\"background-color: yellow;\">{}</div>", render_block_to_html_inner(*inner)),
         Block::Multiple(blocks) => blocks.into_iter().map(render_block_to_html_inner).collect::<String>(),
         Block::Note(text) => format!("<div class=\"note\">{}</div>", html_escape::encode_text(&text)),

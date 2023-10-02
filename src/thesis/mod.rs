@@ -1,6 +1,5 @@
 use {
     std::{process::Command, fs},
-    clap::Parser,
     tracing::info,
     crate::thesis::{
         content::{
@@ -11,7 +10,6 @@ use {
             documentation::documentation,
         },
         context::Context,
-        utils::init_logging,
         engine::{Document, Block, TextBlockComponent, render_block_to_html, print_placeholders},
     },
     super::Args,
@@ -64,6 +62,8 @@ pub fn build_thesis(args: &Args) {
             let html_path = format!("./output/{}.html", document.name());
             info!("generating {} to {:?}", document.name(), html_path);
 
+            copy_images_to_output(&document_content);
+
             let html = render_block_to_html(document_content.clone());
             fs::write(html_path, html).unwrap();
         }
@@ -84,5 +84,26 @@ pub fn build_thesis(args: &Args) {
 
             Command::new("docx2pdf").args([docx_path, pdf_path]).output().unwrap();
         }
+    }
+}
+
+fn copy_images_to_output(block: &Block) {
+    match block {
+        Block::SectionHeader(_) => (),
+        Block::SubsectionHeader(_) => (),
+        Block::Paragraph(_) => (),
+        Block::UnorderedList(_) => (),
+        Block::Image(image) => {
+            fs::copy(format!("./images/{}", image.path()), format!("./output/{}", image.path())).unwrap();
+        },
+        Block::Placeholder(inner, _) => copy_images_to_output(&*inner),
+        Block::Multiple(inner) => inner.iter().for_each(copy_images_to_output),
+        Block::ReferencesList(_) => (),
+        Block::TableOfContents => (),
+        Block::AbstractSection(_, _) => (),
+        Block::TaskSection => (),
+        Block::FrontPage => (),
+        Block::TopicCard => (),
+        Block::Note(_) => (),
     }
 }

@@ -1,4 +1,4 @@
-use crate::thesis::engine::{Block, subsection_header, section_header, paragraph};
+use crate::thesis::engine::{Block, subsection_header, section_header, paragraph, ImageBlock, unordered_list};
 
 pub fn documentation() -> Block {
     /*
@@ -46,7 +46,13 @@ need to be able to refer to this documentation when talking to thesis supervisor
         paragraph("Нижче наведені підзадачі які потрібно виіршити для реалізації віддаленої памʼяті у порядку їх важливості."),
 
         subsection_header("Зниження затримки доступу (latency)"),
-        paragraph("Затримка доступу до памʼяті має прямий вплив на швидкодію програмного забезпечення, тому її потрібно мінімізувати. Час читання даних з оперативної памʼяті нижчий за час читання даних по мережі, ..."),
+        paragraph("Затримка доступу до памʼяті має прямий вплив на швидкодію програмного забезпечення, тому її потрібно мінімізувати. Час читання даних з оперативної памʼяті нижчий за час читання даних по мережі, тому зниження затримки базується на тому, що потрібні дані вчасно переміщуються з памʼяті віддалених вузлів до оперативної памʼяті."),
+        Block::Image(ImageBlock::new("latency.jpg".to_owned(), "затримка доступу до даних у віддаленій памʼяті".to_owned())),
+        paragraph("Способи зниження затримки:"),
+        unordered_list(vec![
+          "...".to_owned(),
+          "...".to_owned(),
+        ]),
 
         subsection_header("Забезпечення відмовостійкості"),
 
