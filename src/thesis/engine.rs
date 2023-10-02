@@ -217,6 +217,10 @@ fn render_block_to_html_inner(block: Block) -> String {
     }
 }
 
+pub fn section_header(text: impl Into<String>) -> Block {
+    Block::SectionHeader(text.into())
+}
+
 pub fn subsection_header(text: impl Into<String>) -> Block {
     Block::SubsectionHeader(text.into())
 }
