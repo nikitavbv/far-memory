@@ -198,7 +198,7 @@ pub fn render_block_to_html(block: Block) -> String {
                     }}
 
                     p {{
-                        margin: 0;
+                        margin: 0 0 12px 0;
                         text-align: justify;
                     }}
 
@@ -211,6 +211,7 @@ pub fn render_block_to_html(block: Block) -> String {
                         width: 100%;
                         text-align: center;
                         font-style: italic;
+                        margin-bottom: 12px;
                     }}
                 </style>
             </head>
