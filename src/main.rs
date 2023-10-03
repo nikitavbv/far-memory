@@ -8,10 +8,12 @@ use {
         memory_storage::run_memory_storage_server,
         controller::run_controller_server,
         thesis::build_thesis,
+        demo::llm_inference::run_llm_inference_demo,
     },
 };
 
 mod client;
+mod demo;
 mod thesis;
 
 mod config;
@@ -22,6 +24,10 @@ mod utils;
 
 #[derive(Parser, Debug)]
 pub struct Args {
+    #[arg(long)]
+    llm_inference_demo: bool,
+
+    // thesis
     #[arg(long)]
     thesis: bool,
 
@@ -46,8 +52,9 @@ async fn main() -> std::io::Result<()> {
     init_logging();
     let args = Args::parse();
 
-    if args.thesis || args.card || args.docs {
-        let x = 42;
+    if args.llm_inference_demo {
+        run_llm_inference_demo();
+    } else if args.thesis || args.card || args.docs {
         build_thesis(&args);
     } else {
         info!("running far-memory");
