@@ -4,65 +4,88 @@ use {
 };
 
 // based on this amazing implementation: https://github.com/karpathy/llama2.c/blob/master/run.c
+// and this fork of it: https://github.com/gaxler/llama2.rs/blob/llama2-rs/llama2-rs/src/main.rs
 
-struct Transformer;
+const CONF_VALS: usize = 7;
+const CONF_SIZE: usize = std::mem::size_of::<[i32; CONF_VALS]>();
 
-#[repr(C, packed)]
-#[derive(Debug)]
 struct Config {
-    dim: i32, // transformer dimension
-    hidden_dim: i32, // for ffn layers
-    n_layers: i32, // number of layers
-    n_heads: i32, // number of query heads
-    n_kv_heads: i32, // number of key/value heads (can be < query heads of multiquery)
-    vocab_size: i32, // vocabulary size, usually 256 (byte-level)
-    seq_len: i32, // max sequence length
+    dim: usize,
+    hidden_dim: usize,
+    n_layers: usize,
+    n_heads: usize,
+    n_kv_heads: usize,
+    vocab_size: usize,
+    seq_len: usize,
+    shared_weights: bool,
 }
 
-impl Transformer {
-    pub fn build_transformer(&self, checkpoint_path: &str) {
-        self.read_checkpoint(checkpoint_path);
-        // malloc_run_state is not needed
-    }
+impl Config {
+    fn from_file(path: &str) -> Self {
+        let mut model_bin = File::open(path).unwrap();
+        let mut buffer = [0; CONF_SIZE];
+        model_bin.read_exact(&mut buffer).unwrap();
+        let raw_conf = unsafe { mem::transmute::<[u8; CONF_SIZE], [i32; CONF_VALS]>(buffer) };
+        let (vocab_size, shared_weights) = if raw_conf[5] < 0 {
+            (-raw_conf[5] as usize, true)
+        } else {
+            (raw_conf[5] as usize, false)
+        };
 
-    pub fn read_checkpoint(&self, checkpoint_path: &str) {
-        // TODO: implement reading Config
-        let mut config: Config = unsafe { mem::zeroed() };
-        let mut buf_reader = BufReader::new(File::open(checkpoint_path).unwrap());
-
-        let config_size = mem::size_of::<Config>();
-        unsafe {
-            let config_slice = slice::from_raw_parts_mut(&mut config as *mut _ as *mut u8, config_size);
-            buf_reader.read_exact(config_slice).unwrap();
+        Self {
+            dim: raw_conf[0] as usize,
+            hidden_dim: raw_conf[1] as usize,
+            n_layers: raw_conf[2] as usize,
+            n_heads: raw_conf[3] as usize,
+            n_kv_heads: raw_conf[4] as usize,
+            vocab_size,
+            seq_len: raw_conf[6] as usize,
+            shared_weights,
         }
-        // negative vocab size is hacky way of signaling unshared weights. bit yikes.
-        let shared_weights = if config.vocab_size > 0 { 1 } else { 0 };
-        config.vocab_size = config.vocab_size.abs();
-        // TODO: read model files.
+    }
+}
 
-        // TODO: implement remaining
+struct Vocab {
+    bytes: Vec<u8>,
+    offsets: Vec<usize>,
+}
+
+impl Vocab {
+    pub fn from_file(vocab_size: usize, path: &str) -> Self {
+        let mut bytes = Vec::<u8>::new();
+        let mut offsets = vec![0usize; 1];
+        let mut vocab_bin = File::open(path).unwrap();
+        let mut len = [0; 4];
+        let mut val = [0; 1];
+        for vs in 0..vocab_size {
+            vocab_bin.read_exact(&mut len).unwrap();
+            let l = unsafe { mem::transmute::<[u8; 4], i32>(len) };
+            offsets.push(offsets.last().unwrap() + l as usize);
+            (0..l).for_each(|_| {
+                vocab_bin.read_exact(&mut val).unwrap();
+                bytes.extend(val);
+            });
+        }
+
+        assert_eq!(offsets.len(), vocab_size + 1);
+
+        Self {
+            bytes,
+            offsets,
+        }
     }
 }
 
 pub fn run_llm_inference_demo() {
     info!("running llm inference demo");
 
-    // default parameters
-    let checkpoint_path = "./data/stories15M.bin";
-    let tokenizer_path = "tokenizer.bin";
-    let temperature = 1.0;
-    let topp = 0.9;
-    let steps = 256;
-    let prompt: Option<String> = None;
-    let rng_seed = 0;
-    // mode is chat
-    // system_prompt is none
+    let model_path = "./data/stories15M.bin";
+    let temperature = 0;
+    let tokenizer_path = "./data/tokenizer.bin";
 
-    // arguments parsing is not performed for simplicity
-    // parameter validation/overrides is skipped, because arguments are not provided by user
+    let config = Config::from_file(&model_path);
+    let seq_len = config.seq_len;
 
-    // build transformer via the model .bin file
-    let transformer = Transformer;
-    transformer.build_transformer(&checkpoint_path);
-    // TODO: continue implementation
+    let vocab = Vocab::from_file(config.vocab_size, tokenizer_path);
+    // TODO: finish implementation
 }
