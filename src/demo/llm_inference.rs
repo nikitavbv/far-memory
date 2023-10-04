@@ -76,6 +76,45 @@ impl Vocab {
     }
 }
 
+struct LlamaWeights<Layer, Rms, Emb, Buf> {
+    /// (vocab_size, dim)
+    embeddings: Emb,
+    layers: Vec<Layer>,
+    /// (dim,)
+    rms_final: Rms,
+    /// (seq_len, head_size/2)
+    rope_real: Buf,
+    /// (seq_len, head_size/2)
+    rope_imag: Buf,
+    wcls: Option<Emb>,
+}
+
+struct LayerWeights<Lin, Rms, Buf> {
+    rms_attn: Rms,
+    rms_ffn: Rms,
+    wq: Lin,
+    wk: Lin,
+    wv: Lin,
+    wo: Lin,
+    w1: Lin,
+    w2: Lin,
+    w3: Lin,
+    /// (seq_len, dim)
+    k_cache: Buf,
+    /// (seq_len, dim)
+    v_cache: Buf,
+}
+
+type Ty = f32;
+type CPULayerFloat = LayerWeights<Vec<Ty>, Vec<Ty>, Vec<Ty>>;
+type Llama2CPUFloat = LlamaWeights<CPULayerFloat, Vec<Ty>, Vec<Ty>, Vec<Ty>>;
+
+impl Llama2CPUFloat {
+    fn load_weights(cfg: &Config, path: &str) -> Self {
+        unimplemented!()
+    }
+}
+
 pub fn run_llm_inference_demo() {
     info!("running llm inference demo");
 
@@ -87,5 +126,7 @@ pub fn run_llm_inference_demo() {
     let seq_len = config.seq_len;
 
     let vocab = Vocab::from_file(config.vocab_size, tokenizer_path);
-    // TODO: finish implementation
+    let mut weights = LlamaWeights::load_weights(&config, &model_path);
+
+    unimplemented!()
 }
