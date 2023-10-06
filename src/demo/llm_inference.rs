@@ -112,7 +112,196 @@ type Llama2CPUFloat = LlamaWeights<CPULayerFloat, Vec<Ty>, Vec<Ty>, Vec<Ty>>;
 impl Llama2CPUFloat {
     fn load_weights(cfg: &Config, path: &str) -> Self {
         let (weights, wcls) = load_raw_karpathy(cfg, path);
+        let embeddings = weights[0].clone();
 
+        // Go over all layered weights, and make layer chunk out of them
+        let mut w_layer_iters = weights[1..10]
+            .iter()
+            .map(|v| {
+                let csize = v.len() / cfg.n_layers;
+                v.chunks(csize).map(|l| l.to_vec())
+            })
+            .collect::<Vec<_>>();
+
+        let layers = (0..cfg.n_layers)
+            .map(|l| LayerWeights::<Vec<Ty>, Vec<Ty>, Vec<Ty>> {
+                rms_attn: w_layer_iters[0].next().unwrap(),
+                wq: w_layer_iters[1].next().unwrap(),
+                wk: w_layer_iters[2].next().unwrap(),
+                wv: w_layer_iters[3].next().unwrap(),
+                wo: w_layer_iters[4].next().unwrap(),
+                rms_ffn: w_layer_iters[5].next().unwrap(),
+                w1: w_layer_iters[6].next().unwrap(),
+                w2: w_layer_iters[7].next().unwrap(),
+                w3: w_layer_iters[8].next().unwrap(),
+                k_cache: vec![0 as Ty; cfg.seq_len * cfg.dim],
+                v_cache: vec![0 as Ty; cfg.seq_len * cfg.dim],
+            })
+            .collect();
+
+        let rms_final = weights[10].clone();
+        let rope_real = weights[11].clone();
+        let rope_imag = weights[12].clone();
+
+        Self {
+            embeddings,
+            layers,
+            rms_final,
+            rope_real,
+            rope_imag,
+            wcls,
+        }
+    }
+}
+
+struct ExecutionState<Buffer> {
+    /// Shape:(dim,)
+    x: Buffer,
+    /// Shape:(dim,)
+    xb: Buffer,
+    /// Shape:(dim,)
+    xb2: Buffer,
+    /// Shape:(hidden_dim,)
+    h1: Buffer,
+    /// Shape:(hidden_dim,)
+    h2: Buffer,
+    /// (dim,): Q, buffers
+    q: Buffer,
+    /// (dim,): K buffer
+    k: Buffer,
+    /// (dim,): V buffer
+    v: Buffer,
+    /// (n_heads, seq_len): Attention Weight Buffer
+    att: Buffer,
+    /// Logits: (vocab_size, )
+    logits: Buffer,
+}
+
+/// Helper to simplify buffer init
+pub trait DefaultBuffer {
+    fn zeros(size: usize) -> Self;
+}
+
+impl DefaultBuffer for Vec<Ty> {
+    fn zeros(size: usize) -> Self {
+        vec![0 as Ty; size]
+    }
+}
+
+impl <T: DefaultBuffer> ExecutionState<T> {
+    fn init(cfg: &Config) -> Self {
+        Self {
+            x: T::zeros(cfg.dim),
+            xb: T::zeros(cfg.dim),
+            xb2: T::zeros(cfg.dim),
+            h1: T::zeros(cfg.hidden_dim),
+            h2: T::zeros(cfg.hidden_dim),
+            q: T::zeros(cfg.dim),
+            k: T::zeros(cfg.dim),
+            v: T::zeros(cfg.dim),
+            att: T::zeros(cfg.n_heads * cfg.seq_len),
+            logits: T::zeros(cfg.vocab_size),
+        }
+    }
+}
+
+impl EmbeddingTable<Vec<Ty>> for Vec<Ty> {
+    fn token_to_resid_stream(&self, token: usize, dst: &mut Vec<Ty>, cfg: &Config) {
+        unimplemented!()
+    }
+}
+
+impl LinearWeight<Vec<Ty>> for Vec<Ty> {
+    fn mat_vec(&self, vec: &Vec<Ty>, dst: &mut Vec<Ty>) {
+        unimplemented!()
+    }
+}
+
+impl RMSNormWeight<Vec<Ty>> for Vec<Ty> {
+    fn rms_norm(&self, vec: &Vec<Ty>, out: &mut Vec<Ty>) {
+        unimplemented!()
+    }
+
+    fn inplace_rms_norm(&self, vec: &mut Vec<Ty>) {
+        unimplemented!()
+    }
+}
+
+/// Execute Llama step
+pub trait LlamaExecuter<Buffer> {
+    fn step(&mut self, token: usize, pos: usize, cfg: &Config, state: &mut ExecutionState<Buffer>);
+}
+
+/// Execute Llama layer
+pub trait LlamaLayer<Buffer> {
+    /// RMS norm residual stream and get Q,K,V matrices
+    fn rms_and_qkv(&self, config: &Config, state: &mut ExecutionState<Buffer>);
+    /// Rotate q and k heads according to position in seq (RoPE)
+    fn rope(&self, pos: usize, cfg: &Config, state: &mut ExecutionState<Buffer>, rope_imag: &Buffer, rope_real: &Buffer);
+    /// Cache sequence of Q, K (to be used for attention computation)
+    fn cache_kv(&mut self, pos: usize, cfg: &Config, state: &ExecutionState<Buffer>);
+    /// (per head) Calculate Attention weights, accumulate value according to weights
+    fn attention(&self, pos: usize, cfg: &Config, state: &ExecutionState<Buffer>);
+    /// Merge all heads and add result to residula stream
+    fn merge_heads_to_resid_stream(&self, state: &mut ExecutionState<Buffer>);
+    /// RMS norm residual stream,
+    /// apply FeedForward to normalized
+    /// add to residual stream
+    fn ffn(&self, state: &mut ExecutionState<Buffer>);
+}
+
+pub trait LinearWeight<T> {
+    fn mat_vec(&self, vec: &T, dst: &mut T);
+}
+
+pub trait RMSNormWeight<T> {
+    fn rms_norm(&self, vec: &T, out: &mut T);
+    fn inplace_rms_norm(&self, vec: &mut T);
+}
+
+pub trait EmbeddingTable<Buf>: LinearWeight<Buf> {
+    fn token_to_resid_stream(&self, token: usize, dst: &mut Buf, cfg: &Config);
+}
+
+// f32 CPU implementation of Llama2
+impl<L, Rms, Emb> LlamaExecuter<Vec<Ty>> for LlamaWeights<L, Rms, Emb, Vec<Ty>>
+where
+    L: LlamaLayer<Vec<Ty>>,
+    Rms: RMSNormWeight<Vec<Ty>>,
+    Emb: EmbeddingTable<Vec<Ty>>,
+{
+    fn step(&mut self, token: usize, pos: usize, cfg: &Config, state: &mut ExecutionState<Vec<Ty>>) {
+        unimplemented!()
+    }
+}
+
+// f32 Implementation of Llama2 layer
+impl<Lin, Rms> LlamaLayer<Vec<Ty>> for LayerWeights<Lin, Rms, Vec<Ty>>
+where
+    Lin: LinearWeight<Vec<Ty>>,
+    Rms: RMSNormWeight<Vec<Ty>>,
+{
+    fn rms_and_qkv(&self, config: &Config, state: &mut ExecutionState<Vec<Ty>>) {
+        unimplemented!()
+    }
+
+    fn rope(&self, pos: usize, cfg: &Config, state: &mut ExecutionState<Vec<Ty>>, rope_imag: &Vec<Ty>, rope_real: &Vec<Ty>) {
+        unimplemented!()
+    }
+
+    fn cache_kv(&mut self, pos: usize, cfg: &Config, state: &ExecutionState<Vec<Ty>>) {
+        unimplemented!()
+    }
+
+    fn attention(&self, pos: usize, cfg: &Config, state: &ExecutionState<Vec<Ty>>) {
+        unimplemented!()
+    }
+
+    fn merge_heads_to_resid_stream(&self, state: &mut ExecutionState<Vec<Ty>>) {
+        unimplemented!()
+    }
+
+    fn ffn(&self, state: &mut ExecutionState<Vec<Ty>>) {
         unimplemented!()
     }
 }
@@ -146,7 +335,14 @@ fn load_raw_karpathy(cfg: &Config, path: &str) -> ([Vec<Ty>; 13], Option<Vec<Ty>
 }
 
 fn _alloc_and_read(file: &mut File, size: usize) -> Vec<Ty> {
-    unimplemented!()
+    let bytes_to_read = size * std::mem::size_of::<Ty>();
+    let mut raw_w_data = vec![0; bytes_to_read];
+    file.read_exact(&mut raw_w_data).unwrap();
+    unsafe {
+        let float_ptr = raw_w_data.as_ptr() as *const Ty;
+        let data = std::slice::from_raw_parts(float_ptr, size);
+        data.to_vec()
+    }
 }
 
 pub fn run_llm_inference_demo() {
@@ -161,6 +357,16 @@ pub fn run_llm_inference_demo() {
 
     let vocab = Vocab::from_file(config.vocab_size, tokenizer_path);
     let mut weights = LlamaWeights::load_weights(&config, &model_path);
+
+    let mut state = ExecutionState::<Vec<Ty>>::init(&config);
+    let mut probs = vec![0 as Ty; config.vocab_size];
+
+    let mut pos = 0;
+    let mut token = 1;
+    while pos < seq_len {
+        weights.step(token, pos, &config, &mut state);
+        unimplemented!()
+    }
 
     unimplemented!()
 }
