@@ -1,5 +1,5 @@
 use {
-    std::{io::{BufReader, Read}, fs::File, mem, slice},
+    std::{io::{BufReader, Read, Seek, SeekFrom}, fs::File, mem, slice},
     tracing::info,
 };
 
@@ -111,8 +111,42 @@ type Llama2CPUFloat = LlamaWeights<CPULayerFloat, Vec<Ty>, Vec<Ty>, Vec<Ty>>;
 
 impl Llama2CPUFloat {
     fn load_weights(cfg: &Config, path: &str) -> Self {
+        let (weights, wcls) = load_raw_karpathy(cfg, path);
+
         unimplemented!()
     }
+}
+
+/// Load raw weights from Karpathy's models
+fn load_raw_karpathy(cfg: &Config, path: &str) -> ([Vec<Ty>; 13], Option<Vec<Ty>>) {
+    let mut model_bin = File::open(path).unwrap();
+    
+    model_bin.seek(SeekFrom::Start(CONF_SIZE as u64)).unwrap();
+
+    let mut f = |s: usize| _alloc_and_read(&mut model_bin, s);
+    let head_size = cfg.dim / cfg.n_heads;
+    (
+        [
+            f(cfg.vocab_size * cfg.dim),
+            f(cfg.n_layers * cfg.dim),
+            f(cfg.n_layers * cfg.dim * cfg.dim),
+            f(cfg.n_layers * cfg.dim * cfg.dim),
+            f(cfg.n_layers * cfg.dim * cfg.dim),
+            f(cfg.n_layers * cfg.dim * cfg.dim),
+            f(cfg.n_layers * cfg.dim),
+            f(cfg.n_layers * cfg.dim * cfg.hidden_dim),
+            f(cfg.n_layers * cfg.dim * cfg.hidden_dim),
+            f(cfg.n_layers * cfg.dim * cfg.hidden_dim),
+            f(cfg.dim),
+            f(cfg.seq_len * (head_size / 2)),
+            f(cfg.seq_len * (head_size / 2)),
+        ],
+        cfg.shared_weights.then(|| f(cfg.vocab_size * cfg.dim)),
+    )
+}
+
+fn _alloc_and_read(file: &mut File, size: usize) -> Vec<Ty> {
+    unimplemented!()
 }
 
 pub fn run_llm_inference_demo() {
