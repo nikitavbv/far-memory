@@ -484,6 +484,7 @@ dependencies = [
  "lru",
  "markdown",
  "prost",
+ "quantiles",
  "rand",
  "serde",
  "thiserror",
@@ -1292,6 +1293,12 @@ checksum = "7f6d64c71eb498fe9eae14ce4ec935c555749aef511cca85b5568910d6e48001"
 dependencies = [
  "bytemuck",
 ]
+
+[[package]]
+name = "quantiles"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c10fa813fb26fb6c321a6f3085b5ade4cb4730d08d0b9e70a3759136940957f2"
 
 [[package]]
 name = "quote"

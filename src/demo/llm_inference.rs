@@ -1,7 +1,8 @@
 use {
-    std::{io::{self, Read, Seek, SeekFrom, Write}, fs::File, mem, slice},
+    std::{io::{self, Read, Seek, SeekFrom, Write}, fs::File, mem, time::Instant},
     tracing::info,
     rand::{rngs::SmallRng, SeedableRng, Rng},
+    quantiles::ckms::CKMS,
 };
 
 // based on this amazing implementation: https://github.com/karpathy/llama2.c/blob/master/run.c
@@ -578,7 +579,13 @@ pub fn run_llm_inference_demo() {
         }
     }
 
-    while pos < seq_len {
+    let started_at = Instant::now();
+    let mut time_per_token = CKMS::<f32>::new(0.001);
+    let mut total_tokens_generated = 0;
+
+    while pos < seq_len && (Instant::now() - started_at).as_secs() < 10 * 60 {
+        let token_started_at = Instant::now();
+
         weights.step(token, pos, &config, &mut state);
         
         let next = if temperature == 0 as Ty {
@@ -599,11 +606,21 @@ pub fn run_llm_inference_demo() {
             cdf_sample(&probs)
         };
 
+        let token_time = (Instant::now() - token_started_at).as_secs_f32();
+        time_per_token.insert(token_time);
+
         print!("{}", vocab.get_token(next));
         io::stdout().flush().unwrap();
         pos += 1;
         token = next;
+        total_tokens_generated += 1;
     }
 
-    info!("done")
+    info!(
+        "done, total tokens generated: {}, total time: {} seconds, time per token avg: {} seconds, p95: {} seconds", 
+        total_tokens_generated, 
+        (Instant::now() - started_at).as_secs_f32(),
+        time_per_token.query(0.5).unwrap().1, 
+        time_per_token.query(0.9).unwrap().1
+    );
 }
