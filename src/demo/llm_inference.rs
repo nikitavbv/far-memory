@@ -542,12 +542,21 @@ unsafe fn _unchecked_slice<Q>(s: &[Q], offset: usize, size: usize) -> &[Q] {
 pub fn run_llm_inference_demo() {
     info!("running llm inference demo");
 
-    let model_path = "./data/llama2_7b_chat.bin"; // "./data/stories15M.bin";
+    let llama = false;
+
+    let model_path = if llama {
+        "./data/llama2_7b_chat.bin"
+    } else {
+        "./data/stories15M.bin"
+    };
+
     let temperature = 0 as Ty;
     let tokenizer_path = "./data/tokenizer.bin";
 
     let config = Config::from_file(&model_path);
     let seq_len = config.seq_len;
+
+    let encoded_prompt = [1, 390, 504, 338, 278, 1900, 8720, 4086, 1363]; // Rust is the best programming language because
 
     let vocab = Vocab::from_file(config.vocab_size, tokenizer_path);
     let mut weights = LlamaWeights::load_weights(&config, &model_path);
@@ -557,6 +566,13 @@ pub fn run_llm_inference_demo() {
 
     let mut pos = 0;
     let mut token = 1;
+
+    for prompt_token in encoded_prompt {
+        weights.step(prompt_token, pos, &config, &mut state);
+        pos += 1;
+        token = prompt_token;
+    }
+
     while pos < seq_len {
         weights.step(token, pos, &config, &mut state);
         
