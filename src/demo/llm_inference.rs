@@ -542,7 +542,7 @@ unsafe fn _unchecked_slice<Q>(s: &[Q], offset: usize, size: usize) -> &[Q] {
 pub fn run_llm_inference_demo() {
     info!("running llm inference demo");
 
-    let model_path = "./data/stories15M.bin";
+    let model_path = "./data/llama2_7b_chat.bin"; // "./data/stories15M.bin";
     let temperature = 0 as Ty;
     let tokenizer_path = "./data/tokenizer.bin";
 
