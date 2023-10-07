@@ -164,10 +164,16 @@ an important problem because of that.",
             .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().bold().add_text(MultiLanguageString::new("The practical value", "Практичне значення").for_language(language)))
                 .add_text_component(" ")
-                .add_placeholder_component(MultiLanguageString::new(
-                    "of the obtained results is ...",
-                    "отриманих результатів полягає в тому, що ..."
-                ).for_language(language), "update practical value to a real one")
+                .add_text_component(MultiLanguageString::new(
+                    "of the obtained results is that far memory methods and software are simple to deploy and do not require any significant changes to the 
+software where far memory is integrated to. Far memory reduces the usage of RAM on a computing node without affecting performance and fault tolerance of the software 
+above the acceptable level. This system can be used to optimize the utilization of the data center resources by being integrated into the software that has data access
+patterns that allow the usage of such a class of memory as far memory.",
+                    "отриманих результатів полягає в тому, що методи та програмне забезпечення для надання віддаленої памʼяті є простими для розгортання, не 
+вимагає значних змін у програмне забезпечення при інтеграції. Віддалена памʼять знижує використання оперативної памʼяті на обчислювальному вузлі при цьому не перевищуючи 
+допустимий рівень впливу на швидкодію та відмовостійкість програмного забезпечення. Дана система може бути використана для оптимізації використання ресурсів центру 
+обробки даних у програмному забезпченні параметри роботи якого дозволяють використання такого класу памʼяті як віддалена памʼять."
+                ).for_language(language))
             )
             .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().bold().add_text(MultiLanguageString::new("Relationship with working with scientific programs, plans, topics.", "Зв’язок з науковими програмами, планами, темами.").for_language(language)))
