@@ -420,6 +420,27 @@ pub fn count_applications(block: &Block) -> u32 {
     }
 }
 
+pub fn count_references(block: &Block) -> u32 {
+    match &block {
+        Block::Placeholder(inner, _) => count_references(&*inner),
+        Block::Multiple(multiple) => multiple.iter().map(count_references).sum(),
+        Block::SectionHeader(_) => 0,
+        Block::SubsectionHeader(_) => 0,
+        Block::Paragraph(_) => 0,
+        Block::UnorderedList(_) => 0,
+        Block::Image(_) => 0,
+        Block::ReferencesList(refs) => refs.len() as u32,
+        Block::TableOfContents => 0,
+        Block::AbstractSection(_, _) => 0,
+        Block::TaskSection => 0,
+        Block::FrontPage => 0,
+        Block::TopicCard => 0,
+        Block::Note(_) => 0,
+        Block::Table => 0,
+        Block::Application => 0,
+    }
+}
+
 impl TextSpan {
     fn to_plaintext(&self) -> String {
         match self {

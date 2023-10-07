@@ -60,13 +60,15 @@ impl AbstractSection for Docx {
             UkrainianNumeralString::new("додаток".to_owned(), "додатки".to_owned(), "додатків".to_owned()),
         );
 
-        let total_references = 35;
-
-        let text_references = match language {
-            &Language::English => "references",
-            &Language::Ukrainian => "посилань на джерела",
-        };
-
+        let text_references = MultiLanguageNumeralString::new(
+            EnglishNumeralString::new("reference".to_owned()),
+            UkrainianNumeralString::new(
+                "посилання на джерела".to_owned(),
+                "посилання на джерела".to_owned(),
+                "посилань на джерела".to_owned(),
+            ),
+        );
+        
         let text_topicality = match language {
             &Language::English => "Topicality",
             &Language::Ukrainian => "Актуальність теми",
@@ -102,8 +104,7 @@ impl AbstractSection for Docx {
                 .add_text_component(format!(" {}, ", text_pictures.for_language_and_value(language, abstract_content.total_images)))
                 .add_text_component(format!("{} {}, ", abstract_content.total_tables, text_tables.for_language_and_value(language, abstract_content.total_tables)))
                 .add_text_component(format!("{} {}, ", abstract_content.total_applications, text_applications.for_language_and_value(language, abstract_content.total_applications)))
-                .add_placeholder_component(total_references.to_string(), "replace with an actual number of references")
-                .add_text_component(format!(" {}.", text_references))
+                .add_text_component(format!("{} {}.", abstract_content.total_references, text_references.for_language_and_value(language, abstract_content.total_references)))
             )
             .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().bold().add_text(format!("{}. ", text_topicality)))

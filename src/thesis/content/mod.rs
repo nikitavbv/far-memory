@@ -133,6 +133,7 @@ pub struct AbstractContent {
     pub total_images: u32,
     pub total_tables: u32,
     pub total_applications: u32,
+    pub total_references: u32,
 }
 
 pub struct EnglishNumeralString {
