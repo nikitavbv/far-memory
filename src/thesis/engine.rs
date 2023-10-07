@@ -61,6 +61,7 @@ pub enum Block {
     TopicCard,
     Note(String),
     Table,
+    Application,
 }
 
 #[derive(Debug, Clone)]
@@ -160,6 +161,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
         Block::TopicCard => document.add_topic_card_document(context, content),
         Block::Note(_) => panic!("note block is not supported in docx"),
         Block::Table => unimplemented!(),
+        Block::Application => unimplemented!(),
     }
 }
 
@@ -329,6 +331,7 @@ pub fn print_placeholders(block: &Block) {
         Block::TopicCard => (),
         Block::Note(_) => (),
         Block::Table => (),
+        Block::Application => (),
     }
 }
 
@@ -371,6 +374,7 @@ pub fn count_images(block: &Block) -> u32 {
         Block::TopicCard => 0,
         Block::Note(_) => 0,
         Block::Table => 0,
+        Block::Application => 0,
     }
 }
 
@@ -391,6 +395,28 @@ pub fn count_tables(block: &Block) -> u32 {
         Block::TopicCard => 0,
         Block::Note(_) => 0,
         Block::Table => 1,
+        Block::Application => 0,
+    }
+}
+
+pub fn count_applications(block: &Block) -> u32 {
+    match &block {
+        Block::Placeholder(inner, _) => count_applications(&*inner),
+        Block::Multiple(multiple) => multiple.iter().map(count_applications).sum(),
+        Block::SectionHeader(_) => 0,
+        Block::SubsectionHeader(_) => 0,
+        Block::Paragraph(_) => 0,
+        Block::UnorderedList(_) => 0,
+        Block::Image(_) => 0,
+        Block::ReferencesList(_) => 0,
+        Block::TableOfContents => 0,
+        Block::AbstractSection(_, _) => 0,
+        Block::TaskSection => 0,
+        Block::FrontPage => 0,
+        Block::TopicCard => 0,
+        Block::Note(_) => 0,
+        Block::Table => 0,
+        Block::Application => 1,
     }
 }
 
