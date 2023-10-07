@@ -616,6 +616,8 @@ pub fn run_llm_inference_demo() {
         total_tokens_generated += 1;
     }
 
+    println!("");
+
     info!(
         "done, total tokens generated: {}, total time: {} seconds, time per token avg: {} seconds, p95: {} seconds", 
         total_tokens_generated, 
