@@ -1,6 +1,7 @@
 use {
     std::{io::{self, Read, Seek, SeekFrom, Write}, fs::File, mem, slice},
     tracing::info,
+    rand::{rngs::SmallRng, SeedableRng, Rng},
 };
 
 // based on this amazing implementation: https://github.com/karpathy/llama2.c/blob/master/run.c
@@ -76,7 +77,9 @@ impl Vocab {
     }
 
     fn get_token(&self, idx: usize) -> &str {
-        unimplemented!()
+        let (st, en) = (self.offsets[idx], self.offsets[idx + 1]);
+        let b = &self.bytes[st..en];
+        std::str::from_utf8(b).unwrap()
     }
 }
 
@@ -235,7 +238,12 @@ impl RMSNormWeight<Vec<Ty>> for Vec<Ty> {
     }
 
     fn inplace_rms_norm(&self, vec: &mut Vec<Ty>) {
-        unimplemented!()
+        let inv_denom = _norm_const(vec);
+
+        let w_it = self.iter();
+        vec.iter_mut()
+            .zip(w_it)
+            .for_each(|(dst, w)| (*dst) *= inv_denom * w);
     }
 }
 
@@ -356,17 +364,83 @@ where
 
         (0..cfg.n_heads).for_each(|h: usize| {
             let q = unsafe { _unchecked_slice(&state.q, h * head_size, head_size) };
+            // head attention weights on len (seq_len, )
+            let att_weights = unsafe { _unchecked_mut_slice(&state.att, h * cfg.seq_len, cfg.seq_len) };
+            let xb = unsafe { _unchecked_mut_slice(&state.xb, h * head_size, head_size) };
+            // head K cache of (seq_len,head_size)
+            let mut head_k_cache = k_cache.chunks_exact(head_size).skip(h).step_by(cfg.n_heads);
 
-            unimplemented!()
+            // do <Q,K> for head
+            for t in 0..=pos {
+                let k = head_k_cache.next().unwrap(); // head_size
+                let score = k
+                    .iter()
+                    .zip(q.iter())
+                    .fold(0 as Ty, |acc, (_k, _q)| acc + _k * _q);
+                let score = score / (head_size as Ty).sqrt();
+                unsafe {
+                    *att_weights.get_unchecked_mut(t) = score;
+                }
+            }
+
+            // head V cache of (seq_len, head_size)
+            let head_v_cache = v_cache.chunks_exact(head_size).skip(h).step_by(cfg.n_heads);
+            inplace_softmax(&mut att_weights[..=pos]);
+            // reset buffer head out buffer
+            xb.iter_mut().for_each(|v| *v = 0 as Ty);
+            // accumulate cached values to current buffer
+            // according to attention prob. (normalized weights)
+            for (vals, p_attn) in head_v_cache.zip(att_weights.iter()).take(pos + 1) {
+                vals.iter()
+                    .zip(xb.iter_mut())
+                    .for_each(|(v, dst)| *dst += v * p_attn)
+            }
         });
     }
 
     fn merge_heads_to_resid_stream(&self, state: &mut ExecutionState<Vec<Ty>>) {
-        unimplemented!()
+        // merge heads
+        // at this point result of all heads is in x[1],
+        // Linearly merge all heads into a new buffer x[2]
+        self.wo.mat_vec(&state.xb, &mut state.xb2);
+
+        // add attention result to residual stream
+        state
+            .x
+            .iter_mut()
+            .zip(state.xb2.iter())
+            .for_each(|(x, xb)| *x += *xb);
     }
 
     fn ffn(&self, state: &mut ExecutionState<Vec<Ty>>) {
-        unimplemented!()
+        // normalize redisual stream before FFN
+        self.rms_ffn.rms_norm(&state.x, &mut state.xb);
+
+        // FFN:
+        // z = SiLU(W1 \dot x) * (W3 \dot x)
+        // out = (W2 \dot z)
+        self.w1.mat_vec(&state.xb, &mut state.h1);
+        self.w3.mat_vec(&state.xb, &mut state.h2);
+
+        // silu hidden
+        for h1 in state.h1.iter_mut() {
+            // 1 / 1 + exp(-hv)
+            let _scaler = (1 as Ty) / ((1 as Ty) + (-*h1).exp());
+            *h1 = *h1 * _scaler;
+        }
+        
+        // combine hidden state with multiplication
+        for (h1, &h2) in state.h1.iter_mut().zip(state.h2.iter()) {
+            *h1 *= h2;
+        }
+        self.w2.mat_vec(&state.h1, &mut state.xb);
+
+        // add FFN result to residual stream
+        state
+            .x
+            .iter_mut()
+            .zip(state.xb.iter())
+            .for_each(|(x, z)| *x += *z);
     }
 }
 
@@ -417,11 +491,28 @@ fn _norm_const(vec: &[Ty]) -> Ty {
 }
 
 fn inplace_softmax(x: &mut [Ty]) {
-    unimplemented!()
+    let max_val = x.iter().fold(Ty::NAN, |acc, &v| v.max(acc));
+    let mut denom = 0 as Ty;
+    for v in x.iter_mut() {
+        *v = (*v - max_val).exp();
+        denom += *v;
+    }
+
+    x.iter_mut().for_each(|v| *v /= denom);
 }
 
 fn cdf_sample(probs: &[Ty]) -> usize {
-    unimplemented!()
+    let mut small_rng = SmallRng::from_entropy();
+
+    let r = small_rng.gen::<Ty>();
+    let mut cdf = 0 as Ty;
+    for (idx, p) in probs.iter().enumerate() {
+        cdf += *p;
+        if r < cdf {
+            return idx;
+        }
+    }
+    probs.len() - 1
 }
 
 fn matmul(out: &mut [Ty], x: &[Ty], w: &[Ty]) {
@@ -435,8 +526,17 @@ fn matmul(out: &mut [Ty], x: &[Ty], w: &[Ty]) {
 }
 
 /// We can safely borrow disjoin parts of slices, but its really hard for the borrow checker to know that this is safe
+unsafe fn _unchecked_mut_slice(s: &[Ty], offset: usize, size: usize) -> &mut [Ty] {
+    let ptr: *mut f32 = s.as_ptr() as *mut Ty;
+    let st = ptr.add(offset);
+    std::slice::from_raw_parts_mut(st, size)
+}
+
+/// We can safely borrow disjoin parts of slices, but its really hard for the borrow checker to know that this is safe
 unsafe fn _unchecked_slice<Q>(s: &[Q], offset: usize, size: usize) -> &[Q] {
-    unimplemented!()
+    let ptr = s.as_ptr();
+    let st = ptr.add(offset);
+    std::slice::from_raw_parts(st, size)
 }
 
 pub fn run_llm_inference_demo() {
@@ -484,5 +584,5 @@ pub fn run_llm_inference_demo() {
         token = next;
     }
 
-    unimplemented!()
+    info!("done")
 }

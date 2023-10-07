@@ -484,6 +484,7 @@ dependencies = [
  "lru",
  "markdown",
  "prost",
+ "rand",
  "serde",
  "thiserror",
  "tokio",

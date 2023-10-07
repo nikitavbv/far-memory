@@ -21,6 +21,7 @@ lopdf = "0.31.0"
 image = "0.24.7"
 docx-rs = { git = "https://github.com/nikitavbv/docx-rs" } # supports tab leader customization for table of contents, see https://github.com/bokuweb/docx-rs/issues/652
 thiserror = "1.0.48"
+rand = "0.8.5"
 
 [build-dependencies]
 tonic-build = "0.9.2"
