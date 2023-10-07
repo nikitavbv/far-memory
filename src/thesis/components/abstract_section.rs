@@ -155,17 +155,18 @@ an important problem because of that.",
             .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().bold().add_text(MultiLanguageString::new("The scientific novelty", "Наукова новизна").for_language(language)))
                 .add_text_component(" ")
-                .add_placeholder_component(MultiLanguageString::new(
-                    "of the results of the master's dissertation is ...",
-                    "результатів магістерської дисертації полягає в тому, що запропоновано архітектурне рішення для побудови програмного забезпечення для створення торгового портфелю, яке на відміну від інших надає користувачеві очікуваний результат при мінімальних затратах часу та кількості необхідних дій для початку роботи. Результат досягнутий шляхом розробки модернізованого алгоритму оптимізації"
-                ).for_language(language), "update scientific novelty to a real one")
+                .add_text_component(MultiLanguageString::new(
+                    "of the results of the master's dissertation is ",
+                    "результатів магістерської дисертації полягає в тому, що "
+                ).for_language(language))
+                .add_text_component(content.scientific_novelty.for_language(language))
             )
             .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().bold().add_text(MultiLanguageString::new("The practical value", "Практичне значення").for_language(language)))
                 .add_text_component(" ")
                 .add_placeholder_component(MultiLanguageString::new(
                     "of the obtained results is ...",
-                    "отриманих результатів полягає в тому, що реалізовані методи поєднані в межах одного застосунку і максимально прості у використанні для користувача. Також реалізовано АРІ-інтерфейс, за допомогою якого результати роботи алгоритмів можуть з легкістю отримувати і застосовувати сторонні сервіси. Дана система може бути використана там-то."
+                    "отриманих результатів полягає в тому, що ..."
                 ).for_language(language), "update practical value to a real one")
             )
             .add_paragraph_with_abstract_style_component(Paragraph::new()

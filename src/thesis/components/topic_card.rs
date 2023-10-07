@@ -45,7 +45,8 @@ impl TopicCardDocument for Docx {
 
         let text_target = "Планується розробити методи та реалізацію програмного засобу для надання віддаленої памʼяті у розподіленій системі.";
 
-        let text_scientific_novelty = "Удосконалено методи інтеграції віддаленої памʼяті у розподілених системах, підходи до зниження затримки та підвищення відмовстійкості.".to_owned();
+        let text_scientific_novelty = content.scientific_novelty.for_language(&Language::Ukrainian);
+        let text_scientific_novelty = format!("{}{}", text_scientific_novelty.chars().nth(0).unwrap().to_uppercase(), text_scientific_novelty.chars().skip(1).collect::<String>());
 
         let text_practical_significance = r#"Розроблено програмне забезпечення з відкритим кодом, що надає засоби для розгортання програмно-визначеної віддаленої памʼяті
  у розподілених системах, інтеграції у нове та існуюче програмне забезпечення. Показники швидкодії цього класу памʼяті перевищують значення для файлу підкачки на локальному диску. 

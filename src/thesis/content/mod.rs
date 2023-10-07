@@ -15,6 +15,7 @@ pub struct Content {
     pub aim_of_study: MultiLanguageString, // Мета
     pub research_object: MultiLanguageString, // об’єкт дослідження
     pub research_subject: MultiLanguageString, // предмет дослідження
+    pub scientific_novelty: MultiLanguageString,
     pub keywords: Vec<MultiLanguageString>,
     pub tasks: Vec<MultiLanguageString>,
 }
@@ -41,6 +42,15 @@ impl Content {
             research_subject: MultiLanguageString::new(
                 "methods of ensuring fast access to data blocks in far memory, their replication, far memory deployment and integration into software", 
                 "методи забезпечення швидкого доступу до блоків даних у віддаленій памʼяті, їх реплікація, розгортання та інтеграція віддаленої памʼяті у програмне забезпечення"
+            ),
+            scientific_novelty: MultiLanguageString::new(
+                "a software architecture for far memory that is proposed. Unlike other implementations, each of which has features that limit its use, this 
+solution uses only openly-available software and hardware components, integrates into new and existing software, provides fault tolreance and low latency of data access. 
+The result was achieved by developing a method of an online optimization of far memory parameters.".to_owned(),
+                "запропоновано архітектурне рішення для побудови програмного забезпечення для надання віддаленої памʼяті. На відміну від інших реалізацій, 
+кожне з яких має особливості що обмежують використання, це рішення використовує тільки загальнодоступні програмні та апаратні компоненти, інтегрується у нове та існуюче 
+програмне забезпечення, забезпечує відмовостійкість та низький рівень затримки доступу до даних. Результат досягнутий шляхом розробки методу онлайн-оптимізації параметрів 
+роботи віддаленої памʼяті.".to_owned(),
             ),
             keywords: vec![
                 MultiLanguageString::new(
