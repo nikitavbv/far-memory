@@ -47,7 +47,7 @@ impl AbstractSection for Docx {
 
         let text_pictures = MultiLanguageNumeralString::new(
             EnglishNumeralString::new("illustration".to_owned()),
-            UkrainianNumeralString::new("ілюстрація".to_owned(), "ілюстації".to_owned()),
+            UkrainianNumeralString::new("ілюстрація".to_owned(), "ілюстації".to_owned(), "ілюстрацій".to_owned()),
         );
 
         let total_tables = 26;

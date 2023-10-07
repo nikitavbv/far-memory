@@ -155,20 +155,27 @@ impl EnglishNumeralString {
 
 pub struct UkrainianNumeralString {
     word: String, // зображення
-    word_gen: String, // зображень
+    word_multi_gen: String, // зображень
+    word_gen: String, // зображеня
 }
 
 impl UkrainianNumeralString {
-    pub fn new(word: String, word_gen: String) -> Self {
+    pub fn new(word: String, word_multi_gen: String, word_gen: String) -> Self {
         Self {
             word,
+            word_multi_gen,
             word_gen,
         }
     }
 
     pub fn for_value(&self, value: u32) -> String {
-        // TODO: fix this
-        self.word.clone()
+        if [0, 5, 6, 7, 8, 9].contains(&(value % 10)) || (10..=20).contains(&value) {
+            self.word_gen.clone()
+        } else if [2, 3, 4].contains(&(value % 10)) {
+            self.word_multi_gen.clone()
+        } else {
+            self.word.clone()
+        }
     }
 }
 
@@ -199,8 +206,37 @@ mod tests {
 
     #[test]
     fn numeral_ukrainian_simple() {
-        let numeral = UkrainianNumeralString::new("ілюстрація".to_owned(), "ілюстації".to_owned());
-        // TODO: finish implementing this test
-        // assert_eq!(numeral.for_value(2), "ілюстрації");
+        let numeral = UkrainianNumeralString::new("ілюстрація".to_owned(), "ілюстрації".to_owned(), "ілюстрацій".to_owned());
+        assert_eq!(numeral.for_value(1), "ілюстрація");
+        assert_eq!(numeral.for_value(2), "ілюстрації");
+        assert_eq!(numeral.for_value(3), "ілюстрації");
+        assert_eq!(numeral.for_value(4), "ілюстрації");
+        assert_eq!(numeral.for_value(5), "ілюстрацій");
+        assert_eq!(numeral.for_value(6), "ілюстрацій");
+        assert_eq!(numeral.for_value(7), "ілюстрацій");
+        assert_eq!(numeral.for_value(8), "ілюстрацій");
+        assert_eq!(numeral.for_value(9), "ілюстрацій");
+        assert_eq!(numeral.for_value(10), "ілюстрацій");
+        assert_eq!(numeral.for_value(11), "ілюстрацій");
+        assert_eq!(numeral.for_value(12), "ілюстрацій");
+        assert_eq!(numeral.for_value(13), "ілюстрацій");
+        assert_eq!(numeral.for_value(14), "ілюстрацій");
+        assert_eq!(numeral.for_value(15), "ілюстрацій");
+        assert_eq!(numeral.for_value(16), "ілюстрацій");
+        assert_eq!(numeral.for_value(17), "ілюстрацій");
+        assert_eq!(numeral.for_value(18), "ілюстрацій");
+        assert_eq!(numeral.for_value(19), "ілюстрацій");
+        assert_eq!(numeral.for_value(20), "ілюстрацій");
+        assert_eq!(numeral.for_value(21), "ілюстрація");
+        assert_eq!(numeral.for_value(22), "ілюстрації");
+        assert_eq!(numeral.for_value(23), "ілюстрації");
+        assert_eq!(numeral.for_value(24), "ілюстрації");
+        assert_eq!(numeral.for_value(25), "ілюстрацій");
+        assert_eq!(numeral.for_value(26), "ілюстрацій");
+        assert_eq!(numeral.for_value(27), "ілюстрацій");
+        assert_eq!(numeral.for_value(28), "ілюстрацій");
+        assert_eq!(numeral.for_value(29), "ілюстрацій");
+        assert_eq!(numeral.for_value(30), "ілюстрацій");
+        assert_eq!(numeral.for_value(31), "ілюстрація");
     }
 }
