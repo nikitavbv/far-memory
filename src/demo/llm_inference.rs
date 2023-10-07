@@ -1,5 +1,5 @@
 use {
-    std::{io::{BufReader, Read, Seek, SeekFrom}, fs::File, mem, slice},
+    std::{io::{self, Read, Seek, SeekFrom, Write}, fs::File, mem, slice},
     tracing::info,
 };
 
@@ -73,6 +73,10 @@ impl Vocab {
             bytes,
             offsets,
         }
+    }
+
+    fn get_token(&self, idx: usize) -> &str {
+        unimplemented!()
     }
 }
 
@@ -206,20 +210,28 @@ impl <T: DefaultBuffer> ExecutionState<T> {
 }
 
 impl EmbeddingTable<Vec<Ty>> for Vec<Ty> {
-    fn token_to_resid_stream(&self, token: usize, dst: &mut Vec<Ty>, cfg: &Config) {
-        unimplemented!()
+    fn token_to_resid_stream(&self, pos: usize, dst: &mut Vec<Ty>, cfg: &Config) {
+        let dim = dst.len();
+        self.chunks_exact(dim)
+            .skip(pos)
+            .take(1)
+            .for_each(|src| dst.as_mut_slice().copy_from_slice(src));
     }
 }
 
 impl LinearWeight<Vec<Ty>> for Vec<Ty> {
     fn mat_vec(&self, vec: &Vec<Ty>, dst: &mut Vec<Ty>) {
-        unimplemented!()
+        matmul(dst, vec, &self); // in_dim is inferred from x. need to remove from this function dig
     }
 }
 
 impl RMSNormWeight<Vec<Ty>> for Vec<Ty> {
     fn rms_norm(&self, vec: &Vec<Ty>, out: &mut Vec<Ty>) {
-        unimplemented!()
+        let inv_denom = _norm_const(vec);
+
+        let w_it = self.iter();
+        let normed = vec.iter().zip(w_it).map(|(xx, ww)| xx * ww * inv_denom);
+        out.iter_mut().zip(normed).for_each(|(dst, src)| *dst = src);
     }
 
     fn inplace_rms_norm(&self, vec: &mut Vec<Ty>) {
@@ -271,7 +283,26 @@ where
     Emb: EmbeddingTable<Vec<Ty>>,
 {
     fn step(&mut self, token: usize, pos: usize, cfg: &Config, state: &mut ExecutionState<Vec<Ty>>) {
-        unimplemented!()
+        // copy token embedding to residual stream
+        self.embeddings.token_to_resid_stream(token, &mut state.x, cfg);
+
+        for ld in self.layers.iter_mut() {
+            ld.rms_and_qkv(cfg, state);
+            ld.rope(pos, cfg, state, &self.rope_imag, &self.rope_real);
+            ld.cache_kv(pos, cfg, state);
+            ld.attention(pos, cfg, state);
+            ld.merge_heads_to_resid_stream(state);
+            ld.ffn(state);
+        }
+
+        self.rms_final.inplace_rms_norm(&mut state.x);
+
+        if self.wcls.is_none() {
+            self.embeddings.mat_vec(&state.x, &mut state.logits);
+        } else {
+            let w = self.wcls.as_ref().unwrap();
+            w.mat_vec(&state.x, &mut state.logits);
+        }
     }
 }
 
@@ -282,19 +313,52 @@ where
     Rms: RMSNormWeight<Vec<Ty>>,
 {
     fn rms_and_qkv(&self, config: &Config, state: &mut ExecutionState<Vec<Ty>>) {
-        unimplemented!()
+        self.rms_attn.rms_norm(&state.x, &mut state.xb);
+        self.wq.mat_vec(&state.xb, &mut state.q);
+        self.wk.mat_vec(&state.xb, &mut state.k);
+        self.wv.mat_vec(&state.xb, &mut state.v);
     }
 
     fn rope(&self, pos: usize, cfg: &Config, state: &mut ExecutionState<Vec<Ty>>, rope_imag: &Vec<Ty>, rope_real: &Vec<Ty>) {
-        unimplemented!()
+        let head_size = cfg.dim / cfg.n_heads;
+
+        let q_heads = state.q.chunks_exact_mut(head_size);
+        let k_heads  = state.k.chunks_exact_mut(head_size);
+
+        for (q, k) in q_heads.zip(k_heads) {
+            let mut re = rope_real[pos * head_size / 2..].iter().take(head_size / 2);
+            let mut im = rope_imag[pos * head_size / 2..].iter().take(head_size / 2);
+
+            for (qq, kk) in q.chunks_exact_mut(2).zip(k.chunks_exact_mut(2)) {
+                let (q0, q1) = (qq[0], qq[1]);
+                let (k0, k1) = (kk[0], kk[1]);
+                let fcr = re.next().unwrap();
+                let fci = im.next().unwrap();
+                qq[0] = q0 * fcr - q1 * fci;
+                qq[1] = q0 * fci + q1 * fcr;
+                kk[0] = k0 * fcr - k1 * fci;
+                kk[1] = k0 * fci + k1 * fcr;
+            }
+        }
     }
 
     fn cache_kv(&mut self, pos: usize, cfg: &Config, state: &ExecutionState<Vec<Ty>>) {
-        unimplemented!()
+        let dst_k = &mut self.k_cache[pos * cfg.dim..(pos + 1) * cfg.dim];
+        let dst_v = &mut self.v_cache[pos * cfg.dim..(pos + 1) * cfg.dim];
+        dst_k.copy_from_slice(&state.k);
+        dst_v.copy_from_slice(&state.v);
     }
 
     fn attention(&self, pos: usize, cfg: &Config, state: &ExecutionState<Vec<Ty>>) {
-        unimplemented!()
+        let head_size = cfg.dim / cfg.n_heads;
+        let k_cache = self.k_cache.as_slice();
+        let v_cache = self.v_cache.as_slice();
+
+        (0..cfg.n_heads).for_each(|h: usize| {
+            let q = unsafe { _unchecked_slice(&state.q, h * head_size, head_size) };
+
+            unimplemented!()
+        });
     }
 
     fn merge_heads_to_resid_stream(&self, state: &mut ExecutionState<Vec<Ty>>) {
@@ -345,11 +409,41 @@ fn _alloc_and_read(file: &mut File, size: usize) -> Vec<Ty> {
     }
 }
 
+#[inline]
+fn _norm_const(vec: &[Ty]) -> Ty {
+    let dim = vec.len() as Ty;
+    let ssq = vec.iter().fold(0f32, |init, &v| init + v * v) / dim;
+    (1 as Ty) / (ssq + 1e-5).sqrt()
+}
+
+fn inplace_softmax(x: &mut [Ty]) {
+    unimplemented!()
+}
+
+fn cdf_sample(probs: &[Ty]) -> usize {
+    unimplemented!()
+}
+
+fn matmul(out: &mut [Ty], x: &[Ty], w: &[Ty]) {
+    let stride = x.len();
+    for (row, out_elem) in w.chunks_exact(stride).zip(out.iter_mut()) {
+        *out_elem = row
+            .iter()
+            .zip(x.iter())
+            .fold(0 as Ty, |acc, (&_w, &_x)| acc + _w * _x);
+    }
+}
+
+/// We can safely borrow disjoin parts of slices, but its really hard for the borrow checker to know that this is safe
+unsafe fn _unchecked_slice<Q>(s: &[Q], offset: usize, size: usize) -> &[Q] {
+    unimplemented!()
+}
+
 pub fn run_llm_inference_demo() {
     info!("running llm inference demo");
 
     let model_path = "./data/stories15M.bin";
-    let temperature = 0;
+    let temperature = 0 as Ty;
     let tokenizer_path = "./data/tokenizer.bin";
 
     let config = Config::from_file(&model_path);
@@ -365,7 +459,29 @@ pub fn run_llm_inference_demo() {
     let mut token = 1;
     while pos < seq_len {
         weights.step(token, pos, &config, &mut state);
-        unimplemented!()
+        
+        let next = if temperature == 0 as Ty {
+            state
+                .logits
+                .iter()
+                .enumerate()
+                .max_by(|(_, a), (_, b)| a.total_cmp(b))
+                .map(|(index, _)| index)
+                .unwrap()
+        } else {
+            state
+                .logits
+                .iter()
+                .zip(probs.iter_mut())
+                .for_each(|(logit, p)| *p = logit / temperature);
+            inplace_softmax(&mut probs);
+            cdf_sample(&probs)
+        };
+
+        print!("{}", vocab.get_token(next));
+        io::stdout().flush().unwrap();
+        pos += 1;
+        token = next;
     }
 
     unimplemented!()
