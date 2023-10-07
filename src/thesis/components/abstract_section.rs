@@ -75,11 +75,16 @@ impl AbstractSection for Docx {
         };
 
         let text_topicality_description = match language {
-            &Language::English => "Examines the problem of ...",
+            &Language::English => "Increasing resource utilization efficiency (random access memory in particular) is an important problem which arises in modern data 
+centers. Memory utilization is uneven between nodes in a computing cluster even with modern schedulers and virtualization. Far memory allows using random-access memory 
+more efficiently and evenly, while also allowing to access more memory than available on a compute node. At the same time, existing implementations and methods of 
+providing far memory have a limited application scope end efficiency, which are defined by their implementation details. Further improvement of far memory methods is 
+an important problem because of that.",
             &Language::Ukrainian => "У сучасних центрах обробки даних актуальним є збільшення ефективності використання ресурсів, зокрема оперативної памʼяті серверів. 
 Навіть при наяві сучасних планувальників задач та віртуалізації, використання памʼяті є неріномірним між вузлами у обчислювальному кластері. Застосування 
 віддаленої памʼяті дозволяє використовувати оперативну памʼять більш оптимально, знижуючи нерівномірність використання цього ресурсу, а також мати доступ до більшого 
-обʼєму памʼяті ніж є доступним на одному вузлі. При цьому, ...",
+обʼєму памʼяті ніж є доступним на одному вузлі. При цьому, існуючі реалізації та методи надання віддаленої памʼяті мають обмежену область застосування та ефективність, 
+зумовлену їх особливостями. Через це, удосконалення методів надання віддаленої памʼяті є актуальним.",
         };
 
         let text_aim_of_study = match language {
@@ -111,7 +116,7 @@ impl AbstractSection for Docx {
             )
             .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().bold().add_text(format!("{}. ", text_topicality)))
-                .add_placeholder_component(text_topicality_description, "replace with correct topicality")
+                .add_text_component(text_topicality_description)
             )
             .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().bold().add_text(format!("{}. ", text_aim_of_study)))
