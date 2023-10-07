@@ -542,7 +542,7 @@ unsafe fn _unchecked_slice<Q>(s: &[Q], offset: usize, size: usize) -> &[Q] {
 pub fn run_llm_inference_demo() {
     info!("running llm inference demo");
 
-    let llama = true;
+    let llama = false;
 
     let model_path = if llama {
         "./data/llama2_7b_chat.bin"
@@ -572,8 +572,10 @@ pub fn run_llm_inference_demo() {
         pos += 1;
         token = prompt_token;
 
-        print!("{}", vocab.get_token(token));
-        io::stdout().flush().unwrap();
+        if pos > 1 {
+            print!("{}", vocab.get_token(token));
+            io::stdout().flush().unwrap();
+        }
     }
 
     while pos < seq_len {
