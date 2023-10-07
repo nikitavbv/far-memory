@@ -86,7 +86,7 @@ impl TopicCardDocument for Docx {
                 .add_run(Run::new().add_text("Задачі, що вирішуються в роботі").size(2 * 14).color("#434343")))
             .add_paragraph(Paragraph::new().line_spacing(LineSpacing::new().before(100)).add_run(Run::new().add_text(text_target)))
             .add_paragraph(Paragraph::new().add_run(Run::new().add_text("Задачі, що вирішуються:")))
-            .add_unordered_list_component(context, content.tasks.clone())
+            .add_unordered_list_component(context, content.tasks.iter().map(|v| v.for_language(&Language::Ukrainian)).collect())
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(300))
                 .add_run(Run::new().add_text("Наукова новизна").size(2 * 14).color("#434343")))

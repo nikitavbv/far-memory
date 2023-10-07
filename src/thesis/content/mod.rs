@@ -16,7 +16,7 @@ pub struct Content {
     pub research_object: MultiLanguageString, // об’єкт дослідження
     pub research_subject: MultiLanguageString, // предмет дослідження
     pub keywords: Vec<MultiLanguageString>,
-    pub tasks: Vec<String>,
+    pub tasks: Vec<MultiLanguageString>,
 }
 
 impl Content {
@@ -39,7 +39,7 @@ impl Content {
             aim_of_study,
             research_object: MultiLanguageString::new("far memory in distributed systems", "віддалена памʼять у розподілених системах"),
             research_subject: MultiLanguageString::new(
-                "methods for ensuring fast access to data blocks in far memory, their replication, far memory deployment and integration into software", 
+                "methods of ensuring fast access to data blocks in far memory, their replication, far memory deployment and integration into software", 
                 "методи забезпечення швидкого доступу до блоків даних у віддаленій памʼяті, їх реплікація, розгортання та інтеграція віддаленої памʼяті у програмне забезпечення"
             ),
             keywords: vec![
@@ -69,12 +69,30 @@ impl Content {
                 ),
             ],
             tasks: vec![
-                "аналіз існуючих рішень".to_owned(),
-                "розробити методи інтеграції віддаленої памʼяті у нове та існуюче програмне забезпечення".to_owned(),
-                "розробити архітектуру, структуру та взаємодію компонентів віддаленої памʼяті".to_owned(),
-                "оптимізувати затримку доступу до блоків у віддаленій памʼяті".to_owned(),
-                "розробити методи забезпечення відмовостійкості системи".to_owned(),
-                "оцінка ефективності запропонованого рішення".to_owned(),
+                MultiLanguageString::new(
+                    "perform analysis of existing far memory implementations and methods".to_owned(), 
+                    "провести аналіз існуючих реалізацій та методів надання віддаленої памʼяті".to_owned(),
+                ),
+                MultiLanguageString::new(
+                    "develop far memory integration methods into new and existing software".to_owned(), 
+                    "розробити методи інтеграції віддаленої памʼяті у нове та існуюче програмне забезпечення".to_owned(),
+                ),
+                MultiLanguageString::new(
+                    "develop architecture, structure and interaction between far memory components".to_owned(), 
+                    "розробити архітектуру, структуру та взаємодію компонентів віддаленої памʼяті".to_owned(),
+                ),
+                MultiLanguageString::new(
+                    "optimize far memory spans access latency".to_owned(), 
+                    "оптимізувати затримку доступу до блоків у віддаленій памʼяті".to_owned(),
+                ),
+                MultiLanguageString::new(
+                    "develop methods to ensure far memory resiliency".to_owned(), 
+                    "розробити методи забезпечення відмовостійкості віддаленої памʼяті".to_owned(),
+                ),
+                MultiLanguageString::new(
+                    "assess solution efficiency".to_owned(), 
+                    "провести оцінку ефективності запропонованого рішення".to_owned(),
+                ),
             ],
         }
     }

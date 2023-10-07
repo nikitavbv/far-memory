@@ -155,7 +155,7 @@ impl TaskSection for Docx {
                 .line_spacing(LineSpacing::new().before(150))
                 .numbering(NumberingId::new(numbering), IndentLevel::new(0))
                 .align(AlignmentType::Both)
-                .add_run(Run::new().add_text("Перелік завдань, які потрібно розробити – ").add_text(format!("{}.", content.tasks.join("; "))))
+                .add_run(Run::new().add_text("Перелік завдань, які потрібно розробити – ").add_text(format!("{}.", content.tasks.iter().map(|v| v.for_language(&Language::Ukrainian)).collect::<Vec<_>>().join("; "))))
             )
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(150))

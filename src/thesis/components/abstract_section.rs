@@ -130,7 +130,7 @@ an important problem because of that.",
                     "Subject of research",
                     "Предмет дослідження"
                 ).for_language(language))))
-                .add_placeholder_component(content.research_subject.for_language(language), "update research subject")
+                .add_text_component(content.research_subject.for_language(language))
                 .add_text_component(".")
             )
             .add_paragraph_with_abstract_style_component(Paragraph::new()
@@ -151,11 +151,7 @@ an important problem because of that.",
                 ).for_language(language))
                 .add_text_component(":")
             )
-            .add_tasks_component(context, &[
-                MultiLanguageString::new("first task", "перше завдання"),
-                MultiLanguageString::new("second task", "друге завдання"),
-                MultiLanguageString::new("third task", "третє завдання"),
-            ], language)
+            .add_tasks_component(context, &content.tasks, language)
             .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().bold().add_text(MultiLanguageString::new("The scientific novelty", "Наукова новизна").for_language(language)))
                 .add_text_component(" ")
@@ -255,7 +251,7 @@ impl TasksComponent for Docx {
 
             document = document.add_paragraph_with_abstract_style_component(Paragraph::new()
                 .numbering(NumberingId::new(tasks_numbering), IndentLevel::new(0))
-                .add_placeholder_component(task.for_language(language), "replace with correct task list")
+                .add_text_component(task.for_language(language))
                 .add_text_component(if i == tasks.len() - 1 { "." } else { ";" })
             );
         }
