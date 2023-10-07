@@ -542,7 +542,7 @@ unsafe fn _unchecked_slice<Q>(s: &[Q], offset: usize, size: usize) -> &[Q] {
 pub fn run_llm_inference_demo() {
     info!("running llm inference demo");
 
-    let llama = false;
+    let llama = true;
 
     let model_path = if llama {
         "./data/llama2_7b_chat.bin"
