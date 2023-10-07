@@ -50,12 +50,10 @@ impl AbstractSection for Docx {
             UkrainianNumeralString::new("ілюстрація".to_owned(), "ілюстації".to_owned(), "ілюстрацій".to_owned()),
         );
 
-        let total_tables = 26;
-
-        let text_tables = match language {
-            &Language::English => "tables",
-            &Language::Ukrainian => "таблиць",
-        };
+        let text_tables = MultiLanguageNumeralString::new(
+            EnglishNumeralString::new("table".to_owned()),
+            UkrainianNumeralString::new("табиця".to_owned(), "таблиці".to_owned(), "таблиць".to_owned()),
+        );
 
         let total_applications = 6;
 
@@ -104,8 +102,7 @@ impl AbstractSection for Docx {
                 .add_run(Run::new().add_tab().add_text(format!("{} – {}", text_explanatory_note_size, abstract_content.total_pages)))
                 .add_text_component(format!(" {} {}", text_pages_and_contains, abstract_content.total_images))
                 .add_text_component(format!(" {}, ", text_pictures.for_language_and_value(language, abstract_content.total_images)))
-                .add_placeholder_component(total_tables.to_string(), "replace with an actual number of tables")
-                .add_text_component(format!(" {}, ", text_tables))
+                .add_text_component(format!("{} {}, ", abstract_content.total_tables, text_tables.for_language_and_value(language, abstract_content.total_tables)))
                 .add_placeholder_component(total_applications.to_string(), "replace with an actual number of applications")
                 .add_text_component(format!(" {}, ", text_applications))
                 .add_placeholder_component(total_references.to_string(), "replace with an actual number of references")

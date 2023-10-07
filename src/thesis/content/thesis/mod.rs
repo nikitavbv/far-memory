@@ -2,7 +2,7 @@ use {
     tracing::warn,
     docx_rs::{Docx, Style, StyleType, RunFonts, PageMargin},
     crate::thesis::{
-        engine::{Block, paragraph, unordered_list, count_pages, count_images, PageCountingError},
+        engine::{Block, paragraph, unordered_list, count_pages, count_images, count_tables, PageCountingError},
         content::{Language, AbstractContent, Content},
         utils::mm_to_twentieth_of_a_point,
     },
@@ -17,6 +17,7 @@ pub fn thesis_content(content: &Content) -> Block {
     let abstract_placeholder_content = AbstractContent {
         total_pages: 42,
         total_images: count_images(&main),
+        total_tables: count_tables(&main),
     };
     let content_with_placeholders = thesis_content_inner(abstract_placeholder_content.clone());
 
@@ -32,7 +33,7 @@ pub fn thesis_content(content: &Content) -> Block {
 
     thesis_content_inner(AbstractContent {
         total_pages: true_total_pages,
-        total_images: abstract_placeholder_content.total_images,
+        ..abstract_placeholder_content
     })
 }
 
