@@ -157,5 +157,13 @@ ML моделі (у тому числі RNN) та ін."#.into(),
           TextSpan::Bold("- far memory in warehouse scale computers".to_owned()),
           " - використовує zswap для зберігання памʼяті на диску, а не у оперативній памʼяті віддалених вузлів.".into(),
         ]),
+
+        section_header("Результати"),
+        /*Block::Table {
+          columns: vec!["what".to_owned(), "latency".to_owned()],
+          rows: vec![
+            vec!["baseline".to_owned(), "good!".to_owned()],
+          ],
+        },*/
     ])
 }

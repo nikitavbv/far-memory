@@ -60,7 +60,10 @@ pub enum Block {
     FrontPage,
     TopicCard,
     Note(String),
-    Table,
+    Table {
+        columns: Vec<String>,
+        rows: Vec<Vec<String>>,
+    },
     Application,
 }
 
@@ -160,7 +163,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
         Block::FrontPage => document.add_front_page_section(content),
         Block::TopicCard => document.add_topic_card_document(context, content),
         Block::Note(_) => panic!("note block is not supported in docx"),
-        Block::Table => unimplemented!(),
+        Block::Table { columns: _, rows: _ } => unimplemented!(),
         Block::Application => unimplemented!(),
     }
 }
@@ -221,6 +224,10 @@ pub fn render_block_to_html(block: Block) -> String {
                         text-decoration: none;
                         color: inherit;
                     }}
+
+                    table {{
+                        width: 100%;
+                    }}
                 </style>
             </head>
 
@@ -261,8 +268,34 @@ fn render_block_to_html_inner(block: Block) -> String {
         Block::Placeholder(inner, _text) => format!("<div style=\"background-color: yellow;\">{}</div>", render_block_to_html_inner(*inner)),
         Block::Multiple(blocks) => blocks.into_iter().map(render_block_to_html_inner).collect::<String>(),
         Block::Note(text) => format!("<div class=\"note\">{}</div>", html_escape::encode_text(&text)),
+        Block::Table { columns, rows } => format!(
+            "<table class=\"pure-table\"><thead><tr>{}</tr></thead><tbody>{}</tbody></table>", 
+            render_table_header_to_html(&columns),
+            render_table_rows_to_html(&rows),
+        ),
         other => format!("<div>block of this type is not supported: {:?}</div>", other),
     }
+}
+
+fn render_table_header_to_html(columns: &[String]) -> String {
+    columns
+        .iter()
+        .map(|v| format!("<th>{}</th>", html_escape::encode_text(v)))
+        .collect()
+}
+
+fn render_table_rows_to_html(rows: &[Vec<String>]) -> String {
+    rows
+        .iter()
+        .map(|v| format!("<tr>{}</tr>", render_table_row_to_html(&v)))
+        .collect()
+}
+
+fn render_table_row_to_html(row: &[String]) -> String {
+    row
+        .iter()
+        .map(|v| format!("<td>{}</td>", html_escape::encode_text(v)))
+        .collect()
 }
 
 fn render_text_span_to_html(span: TextSpan) -> String {
@@ -355,7 +388,7 @@ pub fn print_placeholders(block: &Block) {
         Block::FrontPage => (),
         Block::TopicCard => (),
         Block::Note(_) => (),
-        Block::Table => (),
+        Block::Table { columns: _, rows: _ } => (),
         Block::Application => (),
     }
 }
@@ -398,7 +431,7 @@ pub fn count_images(block: &Block) -> u32 {
         Block::FrontPage => 0,
         Block::TopicCard => 0,
         Block::Note(_) => 0,
-        Block::Table => 0,
+        Block::Table { columns: _, rows: _ } => 0,
         Block::Application => 0,
     }
 }
@@ -419,7 +452,7 @@ pub fn count_tables(block: &Block) -> u32 {
         Block::FrontPage => 0,
         Block::TopicCard => 0,
         Block::Note(_) => 0,
-        Block::Table => 1,
+        Block::Table { columns: _, rows: _ } => 1,
         Block::Application => 0,
     }
 }
@@ -440,7 +473,7 @@ pub fn count_applications(block: &Block) -> u32 {
         Block::FrontPage => 0,
         Block::TopicCard => 0,
         Block::Note(_) => 0,
-        Block::Table => 0,
+        Block::Table { columns: _, rows: _ } => 0,
         Block::Application => 1,
     }
 }
@@ -461,7 +494,7 @@ pub fn count_references(block: &Block) -> u32 {
         Block::FrontPage => 0,
         Block::TopicCard => 0,
         Block::Note(_) => 0,
-        Block::Table => 0,
+        Block::Table { columns: _, rows: _ } => 0,
         Block::Application => 0,
     }
 }
