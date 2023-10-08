@@ -159,11 +159,16 @@ ML моделі (у тому числі RNN) та ін."#.into(),
         ]),
 
         section_header("Результати"),
-        /*Block::Table {
-          columns: vec!["what".to_owned(), "latency".to_owned()],
-          rows: vec![
-            vec!["baseline".to_owned(), "good!".to_owned()],
+        paragraph("Результати інтеграції віддаленої памʼяті у демонстраційне програмне забезпечення (llm inference)."),
+        Block::Table {
+          columns: vec![
+            "реалізація".to_owned(), 
+            "час обробки запиту, c".to_owned(),
+            "використання памʼяті, МБ".to_owned(),
           ],
-        },*/
+          rows: vec![
+            vec!["baseline".to_owned(), "4.95".to_owned(), "27755".to_owned()],
+          ],
+        },
     ])
 }
