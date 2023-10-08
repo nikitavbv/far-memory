@@ -3,6 +3,7 @@ use {
     tracing::info,
     rand::{rngs::SmallRng, SeedableRng, Rng},
     quantiles::ckms::CKMS,
+    crate::utils::allocator::current_memory_usage,
 };
 
 // based on this amazing implementation: https://github.com/karpathy/llama2.c/blob/master/run.c
@@ -543,7 +544,7 @@ unsafe fn _unchecked_slice<Q>(s: &[Q], offset: usize, size: usize) -> &[Q] {
 pub fn run_llm_inference_demo() {
     info!("running llm inference demo");
 
-    let llama = true;
+    let llama = false;
 
     let model_path = if llama {
         "./data/llama2_7b_chat.bin"
@@ -582,6 +583,7 @@ pub fn run_llm_inference_demo() {
     let started_at = Instant::now();
     let mut time_per_token = CKMS::<f32>::new(0.001);
     let mut total_tokens_generated = 0;
+    let mut memory_usage_megabytes: CKMS<f64> = CKMS::<f64>::new(0.001);
 
     while pos < seq_len && (Instant::now() - started_at).as_secs() < 10 * 60 {
         let token_started_at = Instant::now();
@@ -608,6 +610,7 @@ pub fn run_llm_inference_demo() {
 
         let token_time = (Instant::now() - token_started_at).as_secs_f32();
         time_per_token.insert(token_time);
+        memory_usage_megabytes.insert((current_memory_usage() / (1024 * 1024)) as f64);
 
         print!("{}", vocab.get_token(next));
         io::stdout().flush().unwrap();
@@ -619,10 +622,11 @@ pub fn run_llm_inference_demo() {
     println!("");
 
     info!(
-        "done, total tokens generated: {}, total time: {} seconds, time per token avg: {} seconds, p95: {} seconds", 
+        "done, total tokens generated: {}, total time: {} seconds, time per token avg: {} seconds, p95: {} seconds, average memory usage: {} MB", 
         total_tokens_generated, 
         (Instant::now() - started_at).as_secs_f32(),
         time_per_token.query(0.5).unwrap().1, 
-        time_per_token.query(0.9).unwrap().1
+        time_per_token.query(0.9).unwrap().1,
+        memory_usage_megabytes.query(0.5).unwrap().1,
     );
 }
