@@ -216,6 +216,11 @@ pub fn render_block_to_html(block: Block) -> String {
                         font-style: italic;
                         margin-bottom: 12px;
                     }}
+
+                    a {{
+                        text-decoration: none;
+                        color: inherit;
+                    }}
                 </style>
             </head>
 
@@ -228,8 +233,28 @@ pub fn render_block_to_html(block: Block) -> String {
 
 fn render_block_to_html_inner(block: Block) -> String {
     match block {
-        Block::SectionHeader(text) => format!("<h1>{}</h1>", html_escape::encode_text(&text)),
-        Block::SubsectionHeader(text) => format!("<h2>{}</h2>", html_escape::encode_text(&text)),
+        Block::SectionHeader(text) => {
+            let without_whitespaces = text.replace(" ", "_");
+            let id = html_escape::encode_text(&without_whitespaces);
+          
+            format!(
+                "<h1 id=\"{}\"><a href=\"#{}\">{}</a></h1>", 
+                id,
+                id,
+                html_escape::encode_text(&text),
+            )
+        },
+        Block::SubsectionHeader(text) => {
+            let without_whitespaces = text.replace(" ", "_");
+            let id = html_escape::encode_text(&without_whitespaces);
+          
+            format!(
+                "<h2 id=\"{}\"><a href=\"#{}\">{}</a></h2>",
+                id,
+                id,
+                html_escape::encode_text(&text),
+            )
+        },
         Block::Paragraph(text) => format!("<p>{}</p>", render_text_span_to_html(text)),
         Block::UnorderedList(text) => format!("<ul>{}</ul>", text.iter().map(|v| format!("<li>{}</li>", html_escape::encode_text(&v))).collect::<String>()),
         Block::Image(image) => format!("<img src=\"{}\" /><div class=\"image-description\">{}</div>", image.path(), html_escape::encode_text(&image.description())),
