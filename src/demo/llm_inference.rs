@@ -3,7 +3,10 @@ use {
     tracing::info,
     rand::{rngs::SmallRng, SeedableRng, Rng},
     quantiles::ckms::CKMS,
-    crate::utils::allocator::current_memory_usage,
+    crate::{
+        utils::allocator::current_memory_usage,
+        client::FarMemory,
+    },
 };
 
 // based on this amazing implementation: https://github.com/karpathy/llama2.c/blob/master/run.c
@@ -49,8 +52,8 @@ impl Config {
 }
 
 struct Vocab {
-    bytes: Vec<u8>,
-    offsets: Vec<usize>,
+    bytes: FarMemory<Vec<u8>>,
+    offsets: FarMemory<Vec<usize>>,
 }
 
 impl Vocab {
@@ -73,8 +76,8 @@ impl Vocab {
         assert_eq!(offsets.len(), vocab_size + 1);
 
         Self {
-            bytes,
-            offsets,
+            bytes: FarMemory::new(bytes),
+            offsets: FarMemory::new(offsets),
         }
     }
 
@@ -99,15 +102,15 @@ struct LlamaWeights<Layer, Rms, Emb, Buf> {
 }
 
 struct LayerWeights<Lin, Rms, Buf> {
-    rms_attn: Rms,
-    rms_ffn: Rms,
-    wq: Lin,
-    wk: Lin,
-    wv: Lin,
-    wo: Lin,
-    w1: Lin,
-    w2: Lin,
-    w3: Lin,
+    rms_attn: FarMemory<Rms>,
+    rms_ffn: FarMemory<Rms>,
+    wq: FarMemory<Lin>,
+    wk: FarMemory<Lin>,
+    wv: FarMemory<Lin>,
+    wo: FarMemory<Lin>,
+    w1: FarMemory<Lin>,
+    w2: FarMemory<Lin>,
+    w3: FarMemory<Lin>,
     /// (seq_len, dim)
     k_cache: Buf,
     /// (seq_len, dim)
@@ -134,15 +137,15 @@ impl Llama2CPUFloat {
 
         let layers = (0..cfg.n_layers)
             .map(|l| LayerWeights::<Vec<Ty>, Vec<Ty>, Vec<Ty>> {
-                rms_attn: w_layer_iters[0].next().unwrap(),
-                wq: w_layer_iters[1].next().unwrap(),
-                wk: w_layer_iters[2].next().unwrap(),
-                wv: w_layer_iters[3].next().unwrap(),
-                wo: w_layer_iters[4].next().unwrap(),
-                rms_ffn: w_layer_iters[5].next().unwrap(),
-                w1: w_layer_iters[6].next().unwrap(),
-                w2: w_layer_iters[7].next().unwrap(),
-                w3: w_layer_iters[8].next().unwrap(),
+                rms_attn: FarMemory::new(w_layer_iters[0].next().unwrap()),
+                wq: FarMemory::new(w_layer_iters[1].next().unwrap()),
+                wk: FarMemory::new(w_layer_iters[2].next().unwrap()),
+                wv: FarMemory::new(w_layer_iters[3].next().unwrap()),
+                wo: FarMemory::new(w_layer_iters[4].next().unwrap()),
+                rms_ffn: FarMemory::new(w_layer_iters[5].next().unwrap()),
+                w1: FarMemory::new(w_layer_iters[6].next().unwrap()),
+                w2: FarMemory::new(w_layer_iters[7].next().unwrap()),
+                w3: FarMemory::new(w_layer_iters[8].next().unwrap()),
                 k_cache: vec![0 as Ty; cfg.seq_len * cfg.dim],
                 v_cache: vec![0 as Ty; cfg.seq_len * cfg.dim],
             })
