@@ -5,7 +5,7 @@ use {
     quantiles::ckms::CKMS,
     crate::{
         utils::allocator::current_memory_usage,
-        client::FarMemory,
+        client::{FarMemory, FarMemoryBuffer, FarMemoryClient},
     },
 };
 
@@ -52,12 +52,12 @@ impl Config {
 }
 
 struct Vocab {
-    bytes: FarMemory<Vec<u8>>,
+    bytes: FarMemoryBuffer,
     offsets: FarMemory<Vec<usize>>,
 }
 
 impl Vocab {
-    pub fn from_file(vocab_size: usize, path: &str) -> Self {
+    pub fn from_file(client: FarMemoryClient, vocab_size: usize, path: &str) -> Self {
         let mut bytes = Vec::<u8>::new();
         let mut offsets = vec![0usize; 1];
         let mut vocab_bin = File::open(path).unwrap();
@@ -76,15 +76,15 @@ impl Vocab {
         assert_eq!(offsets.len(), vocab_size + 1);
 
         Self {
-            bytes: FarMemory::new(bytes),
+            bytes: FarMemoryBuffer::from_bytes(client, bytes),
             offsets: FarMemory::new(offsets),
         }
     }
 
-    fn get_token(&self, idx: usize) -> &str {
+    fn get_token(&self, idx: usize) -> String {
         let (st, en) = (self.offsets[idx], self.offsets[idx + 1]);
-        let b = &self.bytes[st..en];
-        std::str::from_utf8(b).unwrap()
+        let b = self.bytes.slice(st..en);
+        String::from_utf8(b).unwrap()
     }
 }
 
@@ -547,6 +547,8 @@ unsafe fn _unchecked_slice<Q>(s: &[Q], offset: usize, size: usize) -> &[Q] {
 pub fn run_llm_inference_demo() {
     info!("running llm inference demo");
 
+    let client = FarMemoryClient::new();
+
     let llama = true;
 
     let model_path = if llama {
@@ -563,7 +565,7 @@ pub fn run_llm_inference_demo() {
 
     let encoded_prompt = [1, 390, 504, 338, 278, 1900, 8720, 4086, 1363]; // Rust is the best programming language because
 
-    let vocab = Vocab::from_file(config.vocab_size, tokenizer_path);
+    let vocab = Vocab::from_file(client, config.vocab_size, tokenizer_path);
     let mut weights = LlamaWeights::load_weights(&config, &model_path);
 
     let mut state = ExecutionState::<Vec<Ty>>::init(&config);
