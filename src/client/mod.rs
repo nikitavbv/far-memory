@@ -1,17 +1,20 @@
 use {
-    std::{ops::Deref, collections::HashMap, marker::PhantomData, sync::Arc},
+    std::ops::Deref,
     serde::{Serialize, Deserialize},
 };
 
 pub use self::{
     buffer::FarMemoryBuffer,
+    vec::FarMemoryVec,
     client::FarMemoryClient,
+    backend::in_memory::InMemoryBackend,
 };
 
 pub mod backend;
 
 mod buffer;
 mod client;
+mod vec;
 
 /**
  * - far memory object needs to have reference to client to read and write using it.
@@ -43,19 +46,6 @@ impl<T> Deref for FarMemory<T> {
         match &self.inner {
             FarMemoryInner::Local(t) => t,
             FarMemoryInner::Remote => panic!("oops, it is remote!!!"),
-        }
-    }
-}
-
-// far memory vec
-pub struct FarMemoryVec<T> {
-    _phantom: PhantomData<T>,
-}
-
-impl<T> FarMemoryVec<T> {
-    pub fn new() -> Self {
-        Self {
-            _phantom: PhantomData,
         }
     }
 }

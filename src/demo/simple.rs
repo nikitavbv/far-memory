@@ -1,16 +1,14 @@
 use {
     tracing::info,
-    crate::client::{FarMemoryBuffer, FarMemoryClient, backend::disk::LocalDiskBackend},
+    crate::client::{FarMemoryClient, FarMemoryVec, backend::disk::LocalDiskBackend},
 };
 
 pub fn run_simple_demo() {
     info!("running a simple demo");
 
     let client = FarMemoryClient::new(Box::new(LocalDiskBackend::new()));
-    let buffer = FarMemoryBuffer::from_bytes(client, vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
-    buffer.swap_out();
+    let vec = FarMemoryVec::from_vec(client, vec![10.02, 9.02, 8.02, 7.02, 6.02, 5.02, 4.02, 3.02, 2.02, 1.02]);
 
-    let x = buffer.slice(3..6);
-
-    println!("x is: {:?}", x);
+    let res = vec.get(0);
+    println!("res: {}", res);
 }

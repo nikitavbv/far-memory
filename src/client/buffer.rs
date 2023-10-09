@@ -57,9 +57,8 @@ impl FarMemoryBuffer {
 
         unsafe {
             let src = bytes as *const _ as *const u8;
-            let src = src.offset(offset as isize);
-
-            std::ptr::copy(src, ptr, bytes.len());
+            let dst = ptr.offset(offset as isize);
+            std::ptr::copy(src, dst, bytes.len());
         }
 
         self.len += bytes.len();
@@ -119,11 +118,14 @@ impl Index<usize> for FarMemoryBuffer {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use {
+        crate::client::InMemoryBackend,
+        super::*,
+    };
 
     #[test]
     fn index() {
-        let client = FarMemoryClient::new();
+        let client = FarMemoryClient::new(Box::new(InMemoryBackend::new()));
         let buffer = FarMemoryBuffer::from_bytes(client, vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
 
         assert_eq!(10, buffer.len());
@@ -142,9 +144,18 @@ mod tests {
 
     #[test]
     fn slice() {
-        let client = FarMemoryClient::new();
+        let client = FarMemoryClient::new(Box::new(InMemoryBackend::new()));
         let buffer = FarMemoryBuffer::from_bytes(client, vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
 
         assert_eq!(vec![7, 6, 5], buffer.slice(3..6));
+    }
+
+    #[test]
+    fn append_twice() {
+        let mut buffer = FarMemoryBuffer::new(FarMemoryClient::new(Box::new(InMemoryBackend::new())));
+        buffer.append(vec![1, 2, 3]);
+        buffer.append(vec![4, 5, 6]);
+
+        assert_eq!(vec![1, 2, 3, 4, 5, 6], buffer.slice(0..buffer.len()));
     }
 }
