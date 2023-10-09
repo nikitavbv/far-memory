@@ -7,5 +7,8 @@ pub fn run_simple_demo() {
     info!("running a simple demo");
 
     let client = FarMemoryClient::new();
-    let buffer = FarMemoryBuffer::from_bytes(client, vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);    
+    let buffer = FarMemoryBuffer::from_bytes(client, vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
+
+    let x = buffer[3];
+    println!("x is: {}", x);
 }

@@ -37,8 +37,11 @@ impl FarMemoryClient {
     }
 
     pub fn span_ptr(&self, id: &SpanId) -> *mut u8 {
-        // move it to local memory if needed
-        unimplemented!()
+        let span = &self.spans.read().unwrap()[id];
+        match span {
+            FarMemorySpan::Local(addr) => addr.clone(),
+            FarMemorySpan::Remote => unimplemented!(),
+        }
     }
 
     pub fn span_size(&self) -> usize {

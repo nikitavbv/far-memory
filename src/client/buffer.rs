@@ -1,4 +1,7 @@
-use super::client::{FarMemoryClient, SpanId};
+use {
+    std::ops::Index,
+    super::client::{FarMemoryClient, SpanId},
+};
 
 pub struct FarMemoryBuffer {
     client: FarMemoryClient,
@@ -45,7 +48,17 @@ impl FarMemoryBuffer {
             return;
         }
 
-        unimplemented!()
+        let ptr = self.client.span_ptr(&self.spans[self.spans.len() - 1]);
+        let offset = self.len % self.client.span_size();
+
+        unsafe {
+            let src = bytes as *const _ as *const u8;
+            let src = src.offset(offset as isize);
+
+            std::ptr::copy(src, ptr, bytes.len());
+        }
+
+        self.len += bytes.len();
     }
 
     pub fn len(&self) -> usize {
@@ -54,5 +67,46 @@ impl FarMemoryBuffer {
 
     fn total_capacity(&self) -> usize {
         self.spans.len() * self.client.span_size()
+    }
+}
+
+impl Index<usize> for FarMemoryBuffer {
+    type Output = u8;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        let span_size = self.client.span_size();
+        let span_index = index / span_size;
+        let span_offset = index % span_size;
+
+        let ptr = self.client.span_ptr(&self.spans[span_index]);
+        
+        unsafe {
+            let ptr = ptr.offset(span_offset as isize);
+            &*ptr
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn index() {
+        let client = FarMemoryClient::new();
+        let buffer = FarMemoryBuffer::from_bytes(client, vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
+
+        assert_eq!(10, buffer.len());
+
+        assert_eq!(10, buffer[0]);
+        assert_eq!(9, buffer[1]);
+        assert_eq!(8, buffer[2]);
+        assert_eq!(7, buffer[3]);
+        assert_eq!(6, buffer[4]);
+        assert_eq!(5, buffer[5]);
+        assert_eq!(4, buffer[6]);
+        assert_eq!(3, buffer[7]);
+        assert_eq!(2, buffer[8]);
+        assert_eq!(1, buffer[9]);
     }
 }
