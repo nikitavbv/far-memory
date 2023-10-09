@@ -5,7 +5,7 @@ use {
     quantiles::ckms::CKMS,
     crate::{
         utils::allocator::current_memory_usage,
-        client::{FarMemory, FarMemoryBuffer, FarMemoryClient, backend::in_memory::InMemoryBackend},
+        client::{FarMemory, FarMemoryBuffer, FarMemoryClient, backend::disk::LocalDiskBackend},
     },
 };
 
@@ -547,7 +547,7 @@ unsafe fn _unchecked_slice<Q>(s: &[Q], offset: usize, size: usize) -> &[Q] {
 pub fn run_llm_inference_demo() {
     info!("running llm inference demo");
 
-    let client = FarMemoryClient::new(Box::new(InMemoryBackend::new()));
+    let client = FarMemoryClient::new(Box::new(LocalDiskBackend::new()));
 
     let llama = true;
 

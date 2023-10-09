@@ -23,6 +23,12 @@ enum FarMemorySpan {
     Remote,
 }
 
+impl SpanId {
+    pub fn id(&self) -> u64 {
+        self.0
+    }
+}
+
 impl FarMemoryClient {
     pub fn new(backend: Box<dyn FarMemoryBackend>) -> Self {
         Self {

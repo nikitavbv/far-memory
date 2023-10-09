@@ -1,5 +1,6 @@
 use crate::client::client::SpanId;
 
+pub mod disk;
 pub mod in_memory;
 
 pub trait FarMemoryBackend {
