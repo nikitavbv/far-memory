@@ -1,6 +1,7 @@
 use {
     std::{sync::RwLock, collections::HashMap},
     crate::client::client::SpanId,
+    super::FarMemoryBackend,
 };
 
 pub struct InMemoryBackend {
@@ -13,12 +14,14 @@ impl InMemoryBackend {
             spans: RwLock::new(HashMap::new()),
         }
     }
+}
 
-    pub fn swap_out(&self, id: SpanId, span: &[u8]) {
+impl FarMemoryBackend for InMemoryBackend {
+    fn swap_out(&self, id: SpanId, span: &[u8]) {
         self.spans.write().unwrap().insert(id, span.to_vec());
     }
 
-    pub fn swap_in(&self, id: &SpanId) -> Vec<u8> {
+    fn swap_in(&self, id: &SpanId) -> Vec<u8> {
         self.spans.write().unwrap().remove(id).unwrap()
     }
 }

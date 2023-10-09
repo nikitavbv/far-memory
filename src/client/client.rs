@@ -1,7 +1,10 @@
 use {
     std::{sync::{Arc, atomic::{AtomicU64, Ordering}, RwLock}, collections::HashMap, alloc::{GlobalAlloc, Layout}},
     crate::utils::allocator::GLOBAL,
-    super::backend::in_memory::InMemoryBackend,
+    super::backend::{
+        FarMemoryBackend,
+        in_memory::InMemoryBackend,
+    },
 };
 
 #[derive(Clone, Eq, PartialEq, Hash)]
@@ -12,7 +15,7 @@ pub struct FarMemoryClient {
     span_id_counter: Arc<AtomicU64>,
     spans: Arc<RwLock<HashMap<SpanId, FarMemorySpan>>>,
 
-    backend: Arc<InMemoryBackend>,
+    backend: Arc<Box<dyn FarMemoryBackend>>,
 }
 
 enum FarMemorySpan {
@@ -21,12 +24,12 @@ enum FarMemorySpan {
 }
 
 impl FarMemoryClient {
-    pub fn new() -> Self {
+    pub fn new(backend: Box<dyn FarMemoryBackend>) -> Self {
         Self {
             span_id_counter: Arc::new(AtomicU64::new(0)),
             spans: Arc::new(RwLock::new(HashMap::new())),
 
-            backend: Arc::new(InMemoryBackend::new()),
+            backend: Arc::new(backend),
         }
     }
 

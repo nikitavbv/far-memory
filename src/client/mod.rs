@@ -8,7 +8,7 @@ pub use self::{
     client::FarMemoryClient,
 };
 
-mod backend;
+pub mod backend;
 
 mod buffer;
 mod client;
