@@ -1,5 +1,5 @@
 use {
-    std::ops::Index,
+    std::ops::{Index, Range},
     super::client::{FarMemoryClient, SpanId},
 };
 
@@ -80,10 +80,20 @@ impl Index<usize> for FarMemoryBuffer {
 
         let ptr = self.client.span_ptr(&self.spans[span_index]);
         
+        // todo: lock it somehow to prevent swap out?
         unsafe {
             let ptr = ptr.offset(span_offset as isize);
             &*ptr
         }
+    }
+}
+
+impl Index<Range<usize>> for FarMemoryBuffer {
+    type Output = [u8];
+    
+    fn index(&self, index: Range<usize>) -> &Self::Output {
+        // TODO: think how this can be implemented given that there can be multiple spans
+        unimplemented!()
     }
 }
 
