@@ -1,10 +1,12 @@
 use {
-    tracing::info,
     clap::Parser,
     crate::{
         utils::init_logging,
         thesis::build_thesis,
-        demo::llm_inference::run_llm_inference_demo,
+        demo::{
+            llm_inference::run_llm_inference_demo,
+            simple::run_simple_demo,
+        },
     },
 };
 
@@ -16,6 +18,9 @@ mod utils;
 
 #[derive(Parser, Debug)]
 pub struct Args {
+    #[arg(long)]
+    simple_demo: bool,
+
     #[arg(long)]
     llm_inference_demo: bool,
 
@@ -44,7 +49,9 @@ async fn main() -> std::io::Result<()> {
     init_logging();
     let args = Args::parse();
 
-    if args.llm_inference_demo {
+    if args.simple_demo {
+        run_simple_demo();
+    } else if args.llm_inference_demo {
         run_llm_inference_demo();
     } else if args.thesis || args.card || args.docs {
         build_thesis(&args);

@@ -1,11 +1,11 @@
 use std::{sync::atomic::{AtomicU64, Ordering}, alloc::{GlobalAlloc, System, Layout}};
 
 #[global_allocator]
-static GLOBAL: TrackingAllocator = TrackingAllocator {
+pub static GLOBAL: TrackingAllocator = TrackingAllocator {
     memory_usage: AtomicU64::new(0),
 };
 
-struct TrackingAllocator {
+pub struct TrackingAllocator {
     memory_usage: AtomicU64,
 }
 
