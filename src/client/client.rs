@@ -41,11 +41,29 @@ impl FarMemoryClient {
     }
 
     pub fn span_ptr(&self, id: &SpanId) -> *mut u8 {
-        let span = &self.spans.read().unwrap()[id];
-        match span {
-            FarMemorySpan::Local(addr) => addr.clone(),
-            FarMemorySpan::Remote => unimplemented!(),
+        {
+            let span = &self.spans.read().unwrap()[id];
+            match span {
+                FarMemorySpan::Local(addr) => return addr.clone(),
+                FarMemorySpan::Remote => {
+                    // will need to swap in
+                },
+            };
         }
+
+        // swap in
+        let data = self.backend.swap_in(id);
+
+        let ptr = unsafe {
+            GLOBAL.alloc(self.span_layout())
+        };
+        unsafe {
+            std::ptr::copy(data.as_slice() as *const _ as *const u8, ptr, data.len());
+        }
+
+        self.spans.write().unwrap().insert(id.clone(), FarMemorySpan::Local(ptr.clone()));
+
+        ptr
     }
 
     fn read_span_ptr_to_slice(&self, span_ptr: *mut u8) -> &[u8] {
