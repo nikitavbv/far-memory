@@ -170,5 +170,13 @@ ML моделі (у тому числі RNN) та ін."#.into(),
             vec!["baseline".to_owned(), "4.95".to_owned(), "27755".to_owned()],
           ],
         },
+
+        section_header("Посилання"),
+        paragraph(vec![
+          TextSpan::Link {
+            text: "The Unsafe Rust Programming Language".to_owned(),
+            url: "https://d3m3vilurr.gitbooks.io/the-unsafe-rust-programming-language/content/index.html".to_owned()
+          },
+        ])
     ])
 }

@@ -72,6 +72,10 @@ pub enum TextSpan {
     Regular(String),
     Bold(String),
     Multiple(Vec<TextSpan>),
+    Link {
+        text: String,
+        url: String,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -225,6 +229,10 @@ pub fn render_block_to_html(block: Block) -> String {
                         color: inherit;
                     }}
 
+                    p a {{
+                        color: #686de0;
+                    }}
+
                     table {{
                         width: 100%;
                     }}
@@ -303,6 +311,7 @@ fn render_text_span_to_html(span: TextSpan) -> String {
         TextSpan::Regular(text) => html_escape::encode_text(&text).to_string(),
         TextSpan::Bold(text) => format!("<b>{}</b>", html_escape::encode_text(&text)),
         TextSpan::Multiple(texts) => texts.into_iter().map(render_text_span_to_html).collect::<String>(),
+        TextSpan::Link { text, url } => format!("<a href=\"{}\">{}</a>", url, html_escape::encode_text(&text)),
     }
 }
 
@@ -505,6 +514,7 @@ impl TextSpan {
             TextSpan::Regular(text) => text.to_owned(),
             TextSpan::Bold(text) => text.to_owned(),
             TextSpan::Multiple(texts) => texts.iter().map(|v| v.to_plaintext()).collect::<String>(),
+            TextSpan::Link { text, url: _ } => text.to_owned(),
         }
     }
 }
