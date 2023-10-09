@@ -5,7 +5,7 @@ use {
     quantiles::ckms::CKMS,
     crate::{
         utils::allocator::current_memory_usage,
-        client::{FarMemoryBuffer, FarMemoryClient, backend::disk::LocalDiskBackend},
+        client::{FarMemoryBuffer, FarMemoryClient, LocalDiskBackend, FarMemoryVec},
     },
 };
 
@@ -53,7 +53,7 @@ impl Config {
 
 struct Vocab {
     bytes: FarMemoryBuffer,
-    offsets: Vec<usize>,
+    offsets: FarMemoryVec<usize>,
 }
 
 impl Vocab {
@@ -75,17 +75,17 @@ impl Vocab {
 
         assert_eq!(offsets.len(), vocab_size + 1);
 
-        let bytes = FarMemoryBuffer::from_bytes(client, bytes);
+        let bytes = FarMemoryBuffer::from_bytes(client.clone(), bytes);
         bytes.swap_out();
 
         Self {
             bytes,
-            offsets,
+            offsets: FarMemoryVec::from_vec(client, offsets),
         }
     }
 
     fn get_token(&self, idx: usize) -> String {
-        let (st, en) = (self.offsets[idx], self.offsets[idx + 1]);
+        let (st, en) = (self.offsets.get(idx), self.offsets.get(idx + 1));
         let b = self.bytes.slice(st..en);
         String::from_utf8(b).unwrap()
     }

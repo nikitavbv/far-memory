@@ -7,7 +7,10 @@ pub use self::{
     buffer::FarMemoryBuffer,
     vec::FarMemoryVec,
     client::FarMemoryClient,
-    backend::in_memory::InMemoryBackend,
+    backend::{
+        in_memory::InMemoryBackend,
+        disk::LocalDiskBackend,
+    },
 };
 
 pub mod backend;
