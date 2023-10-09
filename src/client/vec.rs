@@ -30,6 +30,21 @@ impl<T> FarMemoryVec<T> {
         v
     }
 
+    pub fn to_local_vec(&self) -> Vec<T> {
+        let size = std::mem::size_of::<T>();
+
+        let data = self.buffer.slice(0..(self.len() * size));
+        let mut result = Vec::with_capacity(self.len());
+        
+        for i in 0..self.len() {
+            result.push(unsafe {
+                std::ptr::read(data[(i * size)..((i + 1) * size)].as_ptr() as *const _)
+            });
+        }
+
+        result
+    }
+
     pub fn append(&mut self, vec: Vec<T>) {
         for item in vec {
             self.push(item);
@@ -82,5 +97,18 @@ mod tests {
         assert_eq!(3.02, vec.get(7));
         assert_eq!(2.02, vec.get(8));
         assert_eq!(1.02, vec.get(9));
+    }
+
+    #[test]
+    fn to_local_vec() {
+        let vec = FarMemoryVec::from_vec(
+            FarMemoryClient::new(Box::new(InMemoryBackend::new())), 
+            vec![10.02, 9.02, 8.02, 7.02, 6.02, 5.02, 4.02, 3.02, 2.02, 1.02]
+        );
+        
+        assert_eq!(
+            vec![10.02, 9.02, 8.02, 7.02, 6.02, 5.02, 4.02, 3.02, 2.02, 1.02],
+            vec.to_local_vec()
+        );
     }
 }
