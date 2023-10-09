@@ -93,7 +93,8 @@ impl Vocab {
 
 struct LlamaWeights<Layer, Rms, Emb, Buf> {
     /// (vocab_size, dim)
-    embeddings: Emb,
+    embeddings_far: FarMemoryVec<Ty>,
+
     layers: Vec<Layer>,
     /// (dim,)
     rms_final: Rms,
@@ -125,7 +126,7 @@ type CPULayerFloat = LayerWeights<Vec<Ty>, Vec<Ty>, Vec<Ty>>;
 type Llama2CPUFloat = LlamaWeights<CPULayerFloat, Vec<Ty>, Vec<Ty>, Vec<Ty>>;
 
 impl Llama2CPUFloat {
-    fn load_weights(cfg: &Config, path: &str) -> Self {
+    fn load_weights(client: FarMemoryClient, cfg: &Config, path: &str) -> Self {
         let (weights, wcls) = load_raw_karpathy(cfg, path);
         let embeddings = weights[0].clone();
 
@@ -159,7 +160,8 @@ impl Llama2CPUFloat {
         let rope_imag = weights[12].clone();
 
         Self {
-            embeddings,
+            embeddings_far: FarMemoryVec::from_vec(client, embeddings.clone()),
+
             layers,
             rms_final,
             rope_real,
@@ -300,7 +302,8 @@ where
 {
     fn step(&mut self, token: usize, pos: usize, cfg: &Config, state: &mut ExecutionState<Vec<Ty>>) {
         // copy token embedding to residual stream
-        self.embeddings.token_to_resid_stream(token, &mut state.x, cfg);
+        self.embeddings_far.to_local_vec().token_to_resid_stream(token, &mut state.x, cfg);
+        self.embeddings_far.swap_out();
 
         for ld in self.layers.iter_mut() {
             ld.rms_and_qkv(cfg, state);
@@ -314,7 +317,8 @@ where
         self.rms_final.inplace_rms_norm(&mut state.x);
 
         if self.wcls.is_none() {
-            self.embeddings.mat_vec(&state.x, &mut state.logits);
+            self.embeddings_far.to_local_vec().mat_vec(&state.x, &mut state.logits);
+            self.embeddings_far.swap_out();
         } else {
             let w = self.wcls.as_ref().unwrap();
             w.mat_vec(&state.x, &mut state.logits);
@@ -568,8 +572,8 @@ pub fn run_llm_inference_demo() {
 
     let encoded_prompt = [1, 390, 504, 338, 278, 1900, 8720, 4086, 1363]; // Rust is the best programming language because
 
-    let vocab = Vocab::from_file(client, config.vocab_size, tokenizer_path);
-    let mut weights = LlamaWeights::load_weights(&config, &model_path);
+    let vocab = Vocab::from_file(client.clone(), config.vocab_size, tokenizer_path);
+    let mut weights = LlamaWeights::load_weights(client, &config, &model_path);
 
     let mut state = ExecutionState::<Vec<Ty>>::init(&config);
     let mut probs = vec![0 as Ty; config.vocab_size];

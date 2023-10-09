@@ -30,6 +30,10 @@ impl<T> FarMemoryVec<T> {
         v
     }
 
+    pub fn swap_out(&self) {
+        self.buffer.swap_out();
+    }
+
     pub fn to_local_vec(&self) -> Vec<T> {
         let size = std::mem::size_of::<T>();
 
