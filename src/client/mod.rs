@@ -8,6 +8,8 @@ pub use self::{
     client::FarMemoryClient,
 };
 
+mod backend;
+
 mod buffer;
 mod client;
 

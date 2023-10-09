@@ -24,6 +24,10 @@ impl FarMemoryBuffer {
         buffer
     }
 
+    pub fn swap_out(&self) {
+        self.client.swap_out_spans(&self.spans);
+    }
+
     pub fn append(&mut self, bytes: Vec<u8>) {
         let mut i = 0;
     
