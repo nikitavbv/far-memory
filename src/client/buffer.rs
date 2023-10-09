@@ -68,6 +68,31 @@ impl FarMemoryBuffer {
     fn total_capacity(&self) -> usize {
         self.spans.len() * self.client.span_size()
     }
+
+    pub fn slice(&self, range: Range<usize>) -> Vec<u8> {
+        let mut i = range.start;
+        let mut result = Vec::with_capacity(range.len());
+
+        let span_size = self.client.span_size();
+
+        while i < range.end {
+            let span_index = i / span_size;
+            let span_offset = i % span_size;
+
+            let ptr = self.client.span_ptr(&self.spans[span_index]);
+            let bytes_to_read = (span_size - span_offset).min(range.end - i);
+
+            let mut s = unsafe {
+                std::slice::from_raw_parts(ptr.offset(span_offset as isize), bytes_to_read)
+            }.to_vec();
+
+            i += bytes_to_read;
+
+            result.append(&mut s);
+        }
+
+        result
+    }
 }
 
 impl Index<usize> for FarMemoryBuffer {
@@ -80,20 +105,11 @@ impl Index<usize> for FarMemoryBuffer {
 
         let ptr = self.client.span_ptr(&self.spans[span_index]);
         
-        // todo: lock it somehow to prevent swap out?
+        // todo: lock it somehow to prevent swap out? Probably can lock using smart pointers.
         unsafe {
             let ptr = ptr.offset(span_offset as isize);
             &*ptr
         }
-    }
-}
-
-impl Index<Range<usize>> for FarMemoryBuffer {
-    type Output = [u8];
-    
-    fn index(&self, index: Range<usize>) -> &Self::Output {
-        // TODO: think how this can be implemented given that there can be multiple spans
-        unimplemented!()
     }
 }
 
@@ -118,5 +134,13 @@ mod tests {
         assert_eq!(3, buffer[7]);
         assert_eq!(2, buffer[8]);
         assert_eq!(1, buffer[9]);
+    }
+
+    #[test]
+    fn slice() {
+        let client = FarMemoryClient::new();
+        let buffer = FarMemoryBuffer::from_bytes(client, vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
+
+        assert_eq!(vec![7, 6, 5], buffer.slice(3..6));
     }
 }
