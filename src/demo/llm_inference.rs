@@ -75,8 +75,11 @@ impl Vocab {
 
         assert_eq!(offsets.len(), vocab_size + 1);
 
+        let bytes = FarMemoryBuffer::from_bytes(client, bytes);
+        bytes.swap_out();
+
         Self {
-            bytes: FarMemoryBuffer::from_bytes(client, bytes),
+            bytes,
             offsets: FarMemory::new(offsets),
         }
     }
