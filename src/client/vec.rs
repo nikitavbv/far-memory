@@ -38,15 +38,12 @@ impl<T> FarMemoryVec<T> {
         let size = std::mem::size_of::<T>();
 
         let data = self.buffer.slice(0..(self.len() * size));
-        let mut result = Vec::with_capacity(self.len());
-        
-        for i in 0..self.len() {
-            result.push(unsafe {
-                std::ptr::read(data[(i * size)..((i + 1) * size)].as_ptr() as *const _)
-            });
-        }
 
-        result
+        unsafe {
+            let res = Vec::from_raw_parts(data.as_ptr() as *mut T, self.len(), self.len());
+            std::mem::forget(data); // to prevent double free
+            res
+        }
     }
 
     pub fn append(&mut self, vec: Vec<T>) {
