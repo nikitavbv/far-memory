@@ -631,7 +631,7 @@ pub fn run_llm_inference_demo() {
         time_per_token.insert(token_time);
         memory_usage_megabytes.insert((current_memory_usage() / (1024 * 1024)) as f64);
         memory_usage_far_local_megabytes.insert((client.total_local_spans() * client.span_size() / (1024 * 1024)) as f64);
-        memory_usage_far_remote_megabytes.insert((client.total_local_spans() * client.span_size() / (1024 * 1024)) as f64);
+        memory_usage_far_remote_megabytes.insert((client.total_remote_spans() * client.span_size() / (1024 * 1024)) as f64);
 
         print!("{}", vocab.get_token(next));
         io::stdout().flush().unwrap();
