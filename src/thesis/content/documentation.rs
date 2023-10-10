@@ -170,6 +170,7 @@ ML моделі (у тому числі RNN) та ін."#.into(),
             vec!["baseline".to_owned(), "4.95".to_owned(), "27755".to_owned()],
             vec!["far memory for vocab without swapout".to_owned(), "4.9".to_owned(), "27757".to_owned()],
             vec!["far memory for embeddings weights".to_owned(), "5.46".to_owned(), "27258".to_owned()],
+            vec!["swap out threshold".to_owned(), "5.3".to_owned(), "27654".to_owned()],
           ],
         },
 
