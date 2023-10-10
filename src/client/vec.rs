@@ -71,6 +71,11 @@ impl<T> FarMemoryVec<T> {
     pub fn len(&self) -> usize {
         self.len
     }
+
+    pub fn ensure_local_memory_under_limit(&self) {
+        // TODO: remove this. Memory limit should be enforced on swap in.
+        self.buffer.ensure_local_memory_under_limit();
+    }
 }
 
 #[cfg(test)]
@@ -83,7 +88,7 @@ mod tests {
     #[test]
     fn get() {
         let vec = FarMemoryVec::from_vec(
-            FarMemoryClient::new(Box::new(InMemoryBackend::new())), 
+            FarMemoryClient::new(Box::new(InMemoryBackend::new()), 1000), 
             vec![10.02, 9.02, 8.02, 7.02, 6.02, 5.02, 4.02, 3.02, 2.02, 1.02]
         );
         
@@ -103,7 +108,7 @@ mod tests {
     #[test]
     fn to_local_vec() {
         let vec = FarMemoryVec::from_vec(
-            FarMemoryClient::new(Box::new(InMemoryBackend::new())), 
+            FarMemoryClient::new(Box::new(InMemoryBackend::new()), 1000), 
             vec![10.02, 9.02, 8.02, 7.02, 6.02, 5.02, 4.02, 3.02, 2.02, 1.02]
         );
         

@@ -96,6 +96,11 @@ impl FarMemoryBuffer {
 
         result
     }
+
+    pub fn ensure_local_memory_under_limit(&self) {
+        // TODO: remove this. Memory limit should be enforced on swap in.
+        self.client.ensure_local_memory_under_limit();
+    }
 }
 
 impl Index<usize> for FarMemoryBuffer {
@@ -125,7 +130,7 @@ mod tests {
 
     #[test]
     fn index() {
-        let client = FarMemoryClient::new(Box::new(InMemoryBackend::new()));
+        let client = FarMemoryClient::new(Box::new(InMemoryBackend::new()), 1000);
         let buffer = FarMemoryBuffer::from_bytes(client, vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
 
         assert_eq!(10, buffer.len());
@@ -144,7 +149,7 @@ mod tests {
 
     #[test]
     fn slice() {
-        let client = FarMemoryClient::new(Box::new(InMemoryBackend::new()));
+        let client = FarMemoryClient::new(Box::new(InMemoryBackend::new()), 1000);
         let buffer = FarMemoryBuffer::from_bytes(client, vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
 
         assert_eq!(vec![7, 6, 5], buffer.slice(3..6));
@@ -152,7 +157,7 @@ mod tests {
 
     #[test]
     fn append_twice() {
-        let mut buffer = FarMemoryBuffer::new(FarMemoryClient::new(Box::new(InMemoryBackend::new())));
+        let mut buffer = FarMemoryBuffer::new(FarMemoryClient::new(Box::new(InMemoryBackend::new()), 1000));
         buffer.append(vec![1, 2, 3]);
         buffer.append(vec![4, 5, 6]);
 

@@ -16,6 +16,8 @@ pub struct FarMemoryClient {
     spans: Arc<RwLock<HashMap<SpanId, FarMemorySpan>>>,
 
     backend: Arc<Box<dyn FarMemoryBackend>>,
+
+    local_spans_max_threshold: u64,
 }
 
 enum FarMemorySpan {
@@ -30,12 +32,13 @@ impl SpanId {
 }
 
 impl FarMemoryClient {
-    pub fn new(backend: Box<dyn FarMemoryBackend>) -> Self {
+    pub fn new(backend: Box<dyn FarMemoryBackend>, local_spans_max_threshold: u64) -> Self {
         Self {
             span_id_counter: Arc::new(AtomicU64::new(0)),
             spans: Arc::new(RwLock::new(HashMap::new())),
 
             backend: Arc::new(backend),
+            local_spans_max_threshold,
         }
     }
 
@@ -121,6 +124,22 @@ impl FarMemoryClient {
     pub fn total_remote_spans(&self) -> usize {
         self.spans.read().unwrap().len() - self.total_local_spans()
     }
+
+    pub fn ensure_local_memory_under_limit(&self) {
+        let current_local_spans = self.total_local_spans() as u64;
+        if current_local_spans < self.local_spans_max_threshold {
+            return;
+        }
+
+        let spans_to_swap_out = self.local_spans_max_threshold - current_local_spans;
+        let spans_to_swap_out = self.spans.read().unwrap().iter()
+            .filter(|span| span.1.is_remote())
+            .map(|v| v.0.clone())
+            .take(spans_to_swap_out as usize)
+            .collect::<Vec<_>>();
+
+        self.swap_out_spans(&spans_to_swap_out);
+    }
 }
 
 impl FarMemorySpan {
@@ -128,6 +147,13 @@ impl FarMemorySpan {
         match self {
             FarMemorySpan::Local(_) => true,
             FarMemorySpan::Remote => false,
+        }
+    }
+
+    pub fn is_remote(&self) -> bool {
+        match self {
+            FarMemorySpan::Local(_) => false,
+            FarMemorySpan::Remote => true,
         }
     }
 }

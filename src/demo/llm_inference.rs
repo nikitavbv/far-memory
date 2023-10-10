@@ -76,7 +76,6 @@ impl Vocab {
         assert_eq!(offsets.len(), vocab_size + 1);
 
         let bytes = FarMemoryBuffer::from_bytes(client.clone(), bytes);
-        bytes.swap_out();
 
         Self {
             bytes,
@@ -306,7 +305,7 @@ where
     fn step(&mut self, token: usize, pos: usize, cfg: &Config, state: &mut ExecutionState<Vec<Ty>>) {
         // copy token embedding to residual stream
         self.embeddings_far.to_local_vec().token_to_resid_stream(token, &mut state.x, cfg);
-        self.embeddings_far.swap_out();
+        self.embeddings_far.ensure_local_memory_under_limit();
 
         for ld in self.layers.iter_mut() {
             ld.rms_and_qkv(cfg, state);
@@ -321,7 +320,6 @@ where
 
         if self.wcls.is_none() {
             self.embeddings_far.to_local_vec().mat_vec(&state.x, &mut state.logits);
-            self.embeddings_far.swap_out();
         } else {
             let w = self.wcls.as_ref().unwrap();
             w.mat_vec(&state.x, &mut state.logits);
@@ -337,7 +335,7 @@ where
 {
     fn rms_and_qkv(&self, config: &Config, state: &mut ExecutionState<Vec<Ty>>) {
         self.rms_attn.to_local_vec().rms_norm(&state.x, &mut state.xb);
-        self.rms_attn.swap_out();
+        self.rms_attn.ensure_local_memory_under_limit();
 
         self.wq.mat_vec(&state.xb, &mut state.q);
         self.wk.mat_vec(&state.xb, &mut state.k);
@@ -559,7 +557,7 @@ unsafe fn _unchecked_slice<Q>(s: &[Q], offset: usize, size: usize) -> &[Q] {
 pub fn run_llm_inference_demo() {
     info!("running llm inference demo");
 
-    let client = FarMemoryClient::new(Box::new(LocalDiskBackend::new()));
+    let client = FarMemoryClient::new(Box::new(LocalDiskBackend::new()), 200);
 
     let llama = true;
 
