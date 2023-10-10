@@ -599,8 +599,8 @@ pub fn run_llm_inference_demo() {
     let mut time_per_token = CKMS::<f32>::new(0.001);
     let mut total_tokens_generated = 0;
     let mut memory_usage_megabytes: CKMS<f64> = CKMS::<f64>::new(0.001);
-    let mut memory_usage_far_local_megabytes: CKMS<f64> = CKMS::<f64>::new(0.001);
-    let mut memory_usage_far_remote_megabytes: CKMS<f64> = CKMS::<f64>::new(0.001);
+    let mut memory_usage_far_local_spans: CKMS<f64> = CKMS::<f64>::new(0.001);
+    let mut memory_usage_far_remote_spans: CKMS<f64> = CKMS::<f64>::new(0.001);
 
     while pos < seq_len && (Instant::now() - started_at).as_secs() < 10 * 60 {
         let token_started_at = Instant::now();
@@ -628,8 +628,8 @@ pub fn run_llm_inference_demo() {
         let token_time = (Instant::now() - token_started_at).as_secs_f32();
         time_per_token.insert(token_time);
         memory_usage_megabytes.insert((current_memory_usage() / (1024 * 1024)) as f64);
-        memory_usage_far_local_megabytes.insert((client.total_local_spans() * client.span_size() / (1024 * 1024)) as f64);
-        memory_usage_far_remote_megabytes.insert((client.total_remote_spans() * client.span_size() / (1024 * 1024)) as f64);
+        memory_usage_far_local_spans.insert(client.total_local_spans() as f64);
+        memory_usage_far_remote_spans.insert(client.total_remote_spans() as f64);
 
         print!("{}", vocab.get_token(next));
         io::stdout().flush().unwrap();
@@ -649,9 +649,11 @@ pub fn run_llm_inference_demo() {
     );
 
     info!(
-        "average memory usage: {} MB (local), {} MB (far local), {} MB (far remote)",
+        "average memory usage: {} MB (local), {} MB / {} spans (far local), {} MB / {} spans (far remote)",
         memory_usage_megabytes.query(0.5).unwrap().1,
-        memory_usage_far_local_megabytes.query(0.5).unwrap().1,
-        memory_usage_far_remote_megabytes.query(0.5).unwrap().1
+        memory_usage_far_local_spans.query(0.5).unwrap().1 * (client.span_size() / (1024 * 1024)),
+        memory_usage_far_local_spans.query(0.5).unwrap().1,
+        memory_usage_far_remote_spans.query(0.5).unwrap().1 * (client.span_size() / (1024 * 1024)),
+        memory_usage_far_remote_spans.query(0.5).unwrap().1
     )
 }
