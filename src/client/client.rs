@@ -131,7 +131,7 @@ impl FarMemoryClient {
             return;
         }
 
-        let spans_to_swap_out = self.local_spans_max_threshold - current_local_spans;
+        let spans_to_swap_out = current_local_spans - self.local_spans_max_threshold;
         let spans_to_swap_out = self.spans.read().unwrap().iter()
             .filter(|span| span.1.is_local())
             .map(|v| v.0.clone())
