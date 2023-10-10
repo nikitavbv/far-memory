@@ -133,7 +133,7 @@ impl FarMemoryClient {
 
         let spans_to_swap_out = self.local_spans_max_threshold - current_local_spans;
         let spans_to_swap_out = self.spans.read().unwrap().iter()
-            .filter(|span| span.1.is_remote())
+            .filter(|span| span.1.is_local())
             .map(|v| v.0.clone())
             .take(spans_to_swap_out as usize)
             .collect::<Vec<_>>();
