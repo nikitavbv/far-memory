@@ -651,9 +651,9 @@ pub fn run_llm_inference_demo() {
     info!(
         "average memory usage: {} MB (local), {} MB / {} spans (far local), {} MB / {} spans (far remote)",
         memory_usage_megabytes.query(0.5).unwrap().1,
-        memory_usage_far_local_spans.query(0.5).unwrap().1 * (client.span_size() / (1024 * 1024)),
+        memory_usage_far_local_spans.query(0.5).unwrap().1 as usize * (client.span_size() / (1024 * 1024)),
         memory_usage_far_local_spans.query(0.5).unwrap().1,
-        memory_usage_far_remote_spans.query(0.5).unwrap().1 * (client.span_size() / (1024 * 1024)),
+        memory_usage_far_remote_spans.query(0.5).unwrap().1 as usize * (client.span_size() / (1024 * 1024)),
         memory_usage_far_remote_spans.query(0.5).unwrap().1
     )
 }
