@@ -113,4 +113,21 @@ impl FarMemoryClient {
             GLOBAL.dealloc(ptr, self.span_layout());
         }
     }
+
+    pub fn total_local_spans(&self) -> usize {
+        self.spans.read().unwrap().iter().filter(|v| v.1.is_local()).count()
+    }
+
+    pub fn total_remote_spans(&self) -> usize {
+        self.spans.read().unwrap().len() - self.total_local_spans()
+    }
+}
+
+impl FarMemorySpan {
+    pub fn is_local(&self) -> bool {
+        match self {
+            FarMemorySpan::Local(_) => true,
+            FarMemorySpan::Remote => false,
+        }
+    }
 }
