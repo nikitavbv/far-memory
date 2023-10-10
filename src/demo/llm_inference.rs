@@ -93,6 +93,7 @@ impl Vocab {
 
 struct LlamaWeights<Layer, Rms, Emb, Buf> {
     /// (vocab_size, dim)
+    // embeddings: Emb,
     embeddings_far: FarMemoryVec<Ty>,
 
     layers: Vec<Layer>,
@@ -106,7 +107,9 @@ struct LlamaWeights<Layer, Rms, Emb, Buf> {
 }
 
 struct LayerWeights<Lin, Rms, Buf> {
-    rms_attn: Rms,
+    // rms_attn: Rms,
+    rms_attn: FarMemoryVec<Ty>,
+
     rms_ffn: Rms,
     wq: Lin,
     wk: Lin,
@@ -141,7 +144,7 @@ impl Llama2CPUFloat {
 
         let layers = (0..cfg.n_layers)
             .map(|l| LayerWeights::<Vec<Ty>, Vec<Ty>, Vec<Ty>> {
-                rms_attn: w_layer_iters[0].next().unwrap(),
+                rms_attn: FarMemoryVec::from_vec(client.clone(), w_layer_iters[0].next().unwrap()),
                 wq: w_layer_iters[1].next().unwrap(),
                 wk: w_layer_iters[2].next().unwrap(),
                 wv: w_layer_iters[3].next().unwrap(),
@@ -333,7 +336,9 @@ where
     Rms: RMSNormWeight<Vec<Ty>>,
 {
     fn rms_and_qkv(&self, config: &Config, state: &mut ExecutionState<Vec<Ty>>) {
-        self.rms_attn.rms_norm(&state.x, &mut state.xb);
+        self.rms_attn.to_local_vec().rms_norm(&state.x, &mut state.xb);
+        self.rms_attn.swap_out();
+
         self.wq.mat_vec(&state.xb, &mut state.q);
         self.wk.mat_vec(&state.xb, &mut state.k);
         self.wv.mat_vec(&state.xb, &mut state.v);
