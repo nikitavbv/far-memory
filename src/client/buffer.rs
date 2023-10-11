@@ -74,7 +74,7 @@ impl FarMemoryBuffer {
 
     pub fn slice(&self, range: Range<usize>) -> Vec<u8> {
         let mut i = range.start;
-        let mut result = Vec::with_capacity(range.len());
+        let mut result = vec![0; range.len()];
 
         let span_size = self.client.span_size();
 
@@ -85,13 +85,10 @@ impl FarMemoryBuffer {
             let ptr = self.client.span_ptr(&self.spans[span_index]);
             let bytes_to_read = (span_size - span_offset).min(range.end - i);
 
-            let mut s = unsafe {
-                std::slice::from_raw_parts(ptr.offset(span_offset as isize), bytes_to_read)
-            }.to_vec();
-
-            i += bytes_to_read;
-
-            result.append(&mut s);
+            unsafe {
+                std::ptr::copy(ptr.offset(span_offset as isize), result.as_mut_ptr().offset((i - range.start) as isize), bytes_to_read);
+            }
+            i += bytes_to_read;            
         }
 
         result
