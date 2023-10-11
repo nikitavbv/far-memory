@@ -105,13 +105,13 @@ struct LlamaWeights<Layer, Rms, Emb, Buf> {
     wcls: Option<Emb>,
 }
 
-struct LayerWeights<Lin, Rms, Buf> {
+struct LayerWeights<Lin, Buf> {
     // rms_attn: Rms,
     rms_attn: FarMemoryVec<Ty>,
 
-    rms_ffn: Rms,
-    wq: Lin,
-    wk: Lin,
+    rms_ffn: FarMemoryVec<Ty>,
+    wq: FarMemoryVec<Ty>,
+    wk: FarMemoryVec<Ty>,
     wv: Lin,
     wo: Lin,
     w1: Lin,
@@ -124,7 +124,7 @@ struct LayerWeights<Lin, Rms, Buf> {
 }
 
 type Ty = f32;
-type CPULayerFloat = LayerWeights<Vec<Ty>, Vec<Ty>, Vec<Ty>>;
+type CPULayerFloat = LayerWeights<Vec<Ty>, Vec<Ty>>;
 type Llama2CPUFloat = LlamaWeights<CPULayerFloat, Vec<Ty>, Vec<Ty>, Vec<Ty>>;
 
 impl Llama2CPUFloat {
@@ -142,13 +142,13 @@ impl Llama2CPUFloat {
             .collect::<Vec<_>>();
 
         let layers = (0..cfg.n_layers)
-            .map(|l| LayerWeights::<Vec<Ty>, Vec<Ty>, Vec<Ty>> {
+            .map(|l| LayerWeights::<Vec<Ty>, Vec<Ty>> {
                 rms_attn: FarMemoryVec::from_vec(client.clone(), w_layer_iters[0].next().unwrap()),
-                wq: w_layer_iters[1].next().unwrap(),
-                wk: w_layer_iters[2].next().unwrap(),
+                wq: FarMemoryVec::from_vec(client.clone(), w_layer_iters[1].next().unwrap()),
+                wk: FarMemoryVec::from_vec(client.clone(), w_layer_iters[2].next().unwrap()),
                 wv: w_layer_iters[3].next().unwrap(),
                 wo: w_layer_iters[4].next().unwrap(),
-                rms_ffn: w_layer_iters[5].next().unwrap(),
+                rms_ffn: FarMemoryVec::from_vec(client.clone(), w_layer_iters[5].next().unwrap()),
                 w1: w_layer_iters[6].next().unwrap(),
                 w2: w_layer_iters[7].next().unwrap(),
                 w3: w_layer_iters[8].next().unwrap(),
@@ -328,17 +328,20 @@ where
 }
 
 // f32 Implementation of Llama2 layer
-impl<Lin, Rms> LlamaLayer<Vec<Ty>> for LayerWeights<Lin, Rms, Vec<Ty>>
+impl<Lin> LlamaLayer<Vec<Ty>> for LayerWeights<Lin, Vec<Ty>>
 where
     Lin: LinearWeight<Vec<Ty>>,
-    Rms: RMSNormWeight<Vec<Ty>>,
 {
     fn rms_and_qkv(&self, config: &Config, state: &mut ExecutionState<Vec<Ty>>) {
         self.rms_attn.to_local_vec().rms_norm(&state.x, &mut state.xb);
         self.rms_attn.ensure_local_memory_under_limit();
 
-        self.wq.mat_vec(&state.xb, &mut state.q);
-        self.wk.mat_vec(&state.xb, &mut state.k);
+        self.wq.to_local_vec().mat_vec(&state.xb, &mut state.q);
+        self.wq.ensure_local_memory_under_limit();
+
+        self.wk.to_local_vec().mat_vec(&state.xb, &mut state.k);
+        self.wk.ensure_local_memory_under_limit();
+
         self.wv.mat_vec(&state.xb, &mut state.v);
     }
 
@@ -429,7 +432,8 @@ where
 
     fn ffn(&self, state: &mut ExecutionState<Vec<Ty>>) {
         // normalize redisual stream before FFN
-        self.rms_ffn.rms_norm(&state.x, &mut state.xb);
+        self.rms_ffn.to_local_vec().rms_norm(&state.x, &mut state.xb);
+        self.rms_ffn.ensure_local_memory_under_limit();
 
         // FFN:
         // z = SiLU(W1 \dot x) * (W3 \dot x)
