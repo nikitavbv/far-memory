@@ -135,6 +135,10 @@ impl FarMemoryClient {
         self.spans.read().unwrap().len() - self.total_local_spans()
     }
 
+    pub fn total_local_memory(&self) -> usize {
+        self.spans.read().unwrap().iter().map(|v| v.1.local_memory_usage()).sum()
+    }
+
     pub fn ensure_local_memory_under_limit(&self) {
         let current_local_spans = self.total_local_spans() as u64;
         if current_local_spans < self.local_spans_max_threshold {
@@ -155,7 +159,7 @@ impl FarMemoryClient {
 impl FarMemorySpan {
     pub fn is_local(&self) -> bool {
         match self {
-            FarMemorySpan::Local { .. }=> true,
+            FarMemorySpan::Local { .. } => true,
             FarMemorySpan::Remote => false,
         }
     }
@@ -164,6 +168,13 @@ impl FarMemorySpan {
         match self {
             FarMemorySpan::Local { .. } => false,
             FarMemorySpan::Remote => true,
+        }
+    }
+
+    pub fn local_memory_usage(&self) -> usize {
+        match  self {
+            FarMemorySpan::Local { ptr: _, size } => *size,
+            FarMemorySpan::Remote => 0,
         }
     }
 }
