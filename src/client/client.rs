@@ -88,9 +88,9 @@ impl FarMemoryClient {
         ptr
     }
 
-    fn read_span_ptr_to_slice(&self, span_ptr: *mut u8) -> &[u8] {
+    fn read_span_ptr_to_slice(&self, span_ptr: *mut u8, span_size: usize) -> &[u8] {
         unsafe {
-            std::slice::from_raw_parts(span_ptr, self.span_size())
+            std::slice::from_raw_parts(span_ptr, span_size)
         }
     }
 
@@ -116,7 +116,7 @@ impl FarMemoryClient {
             FarMemorySpan::Remote => return,
         };
 
-        let data = self.read_span_ptr_to_slice(ptr);
+        let data = self.read_span_ptr_to_slice(ptr, size);
 
         self.backend.swap_out(span_id.clone(), data);
         
