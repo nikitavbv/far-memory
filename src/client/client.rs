@@ -21,7 +21,10 @@ pub struct FarMemoryClient {
 }
 
 enum FarMemorySpan {
-    Local(*mut u8),
+    Local {
+        ptr: *mut u8,
+        size: usize,   
+    },
     Remote,
 }
 
@@ -42,21 +45,24 @@ impl FarMemoryClient {
         }
     }
 
-    pub fn allocate_span(&self) -> SpanId {
+    pub fn allocate_span(&self, span_size: usize) -> SpanId {
         let id = SpanId(self.span_id_counter.fetch_add(1, Ordering::Relaxed));
-        self.spans.write().unwrap().insert(id.clone(), self.new_span());
+        self.spans.write().unwrap().insert(id.clone(), self.new_span(span_size));
         id
     }
 
-    fn new_span(&self) -> FarMemorySpan {
-        FarMemorySpan::Local(unsafe { GLOBAL.alloc(self.span_layout()) })
+    fn new_span(&self, span_size: usize) -> FarMemorySpan {
+        FarMemorySpan::Local {
+            ptr: unsafe { GLOBAL.alloc(self.span_layout(span_size)) },
+            size: span_size,
+        }
     }
 
     pub fn span_ptr(&self, id: &SpanId) -> *mut u8 {
         {
             let span = &self.spans.read().unwrap()[id];
             match span {
-                FarMemorySpan::Local(addr) => return addr.clone(),
+                FarMemorySpan::Local { ptr, size: _ } => return ptr.clone(),
                 FarMemorySpan::Remote => {
                     // will need to swap in
                 },
@@ -65,15 +71,19 @@ impl FarMemoryClient {
 
         // swap in
         let data = self.backend.swap_in(id);
+        let size = data.len();
 
         let ptr = unsafe {
-            GLOBAL.alloc(self.span_layout())
+            GLOBAL.alloc(self.span_layout(size))
         };
         unsafe {
-            std::ptr::copy(data.as_slice() as *const _ as *const u8, ptr, data.len());
+            std::ptr::copy(data.as_slice() as *const _ as *const u8, ptr, size);
         }
 
-        self.spans.write().unwrap().insert(id.clone(), FarMemorySpan::Local(ptr.clone()));
+        self.spans.write().unwrap().insert(id.clone(), FarMemorySpan::Local {
+            ptr: ptr.clone(),
+            size,
+        });
 
         ptr
     }
@@ -88,8 +98,8 @@ impl FarMemoryClient {
         2 * 1024 * 1024 // 2MB
     }
 
-    fn span_layout(&self) -> Layout {
-        Layout::array::<u8>(self.span_size()).unwrap()
+    fn span_layout(&self, span_size: usize) -> Layout {
+        Layout::array::<u8>(span_size).unwrap()
     }
 
     pub fn swap_out_spans(&self, spans: &[SpanId]) {
@@ -101,8 +111,8 @@ impl FarMemoryClient {
     fn swap_out_span(&self, span_id: &SpanId) {
         let span = self.spans.write().unwrap().insert(span_id.clone(), FarMemorySpan::Remote).unwrap();
 
-        let ptr = match span {
-            FarMemorySpan::Local(addr) => addr.clone(),
+        let (ptr, size) = match span {
+            FarMemorySpan::Local { ptr, size } => (ptr.clone(), size),
             FarMemorySpan::Remote => return,
         };
 
@@ -113,7 +123,7 @@ impl FarMemoryClient {
         self.spans.write().unwrap().insert(span_id.clone(), FarMemorySpan::Remote);
 
         unsafe {
-            GLOBAL.dealloc(ptr, self.span_layout());
+            GLOBAL.dealloc(ptr, self.span_layout(size));
         }
     }
 
@@ -145,14 +155,14 @@ impl FarMemoryClient {
 impl FarMemorySpan {
     pub fn is_local(&self) -> bool {
         match self {
-            FarMemorySpan::Local(_) => true,
+            FarMemorySpan::Local { .. }=> true,
             FarMemorySpan::Remote => false,
         }
     }
 
     pub fn is_remote(&self) -> bool {
         match self {
-            FarMemorySpan::Local(_) => false,
+            FarMemorySpan::Local { .. } => false,
             FarMemorySpan::Remote => true,
         }
     }

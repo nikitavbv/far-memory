@@ -7,6 +7,7 @@ pub struct FarMemoryBuffer {
     client: FarMemoryClient,
     spans: Vec<SpanId>,
     len: usize,
+    span_size: usize,
 }
 
 impl FarMemoryBuffer {
@@ -15,6 +16,7 @@ impl FarMemoryBuffer {
             client,
             spans: Vec::new(),
             len: 0,
+            span_size: 2 * 1024 * 1024, // 2 MB
         }
     }
 
@@ -44,7 +46,7 @@ impl FarMemoryBuffer {
     }
 
     fn grow(&mut self) {
-        self.spans.push(self.client.allocate_span())
+        self.spans.push(self.client.allocate_span(self.span_size))
     }
 
     fn append_to_last_span(&mut self, bytes: &[u8]) {
@@ -53,7 +55,7 @@ impl FarMemoryBuffer {
         }
 
         let ptr = self.client.span_ptr(&self.spans[self.spans.len() - 1]);
-        let offset = self.len % self.client.span_size();
+        let offset = self.len % self.span_size;
 
         unsafe {
             let src = bytes as *const _ as *const u8;
@@ -69,21 +71,19 @@ impl FarMemoryBuffer {
     }
 
     fn total_capacity(&self) -> usize {
-        self.spans.len() * self.client.span_size()
+        self.spans.len() * self.span_size
     }
 
     pub fn slice(&self, range: Range<usize>) -> Vec<u8> {
         let mut i = range.start;
         let mut result = vec![0; range.len()];
 
-        let span_size = self.client.span_size();
-
         while i < range.end {
-            let span_index = i / span_size;
-            let span_offset = i % span_size;
+            let span_index = i / self.span_size;
+            let span_offset = i % self.span_size;
 
             let ptr = self.client.span_ptr(&self.spans[span_index]);
-            let bytes_to_read = (span_size - span_offset).min(range.end - i);
+            let bytes_to_read = (self.span_size - span_offset).min(range.end - i);
 
             unsafe {
                 std::ptr::copy(ptr.offset(span_offset as isize), result.as_mut_ptr().offset((i - range.start) as isize), bytes_to_read);
@@ -104,9 +104,8 @@ impl Index<usize> for FarMemoryBuffer {
     type Output = u8;
 
     fn index(&self, index: usize) -> &Self::Output {
-        let span_size = self.client.span_size();
-        let span_index = index / span_size;
-        let span_offset = index % span_size;
+        let span_index = index / self.span_size;
+        let span_offset = index % self.span_size;
 
         let ptr = self.client.span_ptr(&self.spans[span_index]);
         
