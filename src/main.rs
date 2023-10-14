@@ -2,7 +2,7 @@ use {
     std::fs,
     clap::Parser,
     crate::{
-        utils::init_logging,
+        utils::{init_logging, performance::{run_performance_reporting_thread, write_performance_report}},
         thesis::build_thesis,
         storage::run_storage_server,
         demo::{
@@ -68,9 +68,13 @@ async fn main() -> std::io::Result<()> {
     } else if args.simple_demo {
         run_simple_demo();
     } else if args.llm_inference_demo {
+        run_performance_reporting_thread();
         run_llm_inference_demo(&read_token(), &args.storage_endpoint.unwrap());
+        write_performance_report();
     } else if args.benchmark {
+        run_performance_reporting_thread();
         run_benchmark(&read_token(), &args.storage_endpoint.unwrap());
+        write_performance_report();
     } else if args.thesis || args.card || args.docs {
         build_thesis(&args);
     }

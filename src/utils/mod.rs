@@ -1,6 +1,7 @@
 use tonic::{metadata::MetadataValue, service::Interceptor};
 
 pub mod allocator;
+pub mod performance;
 
 pub fn init_logging() {
     tracing_subscriber::FmtSubscriber::builder()
