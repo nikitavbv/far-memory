@@ -1,9 +1,13 @@
 use std::{sync::atomic::{AtomicU64, Ordering}, time::{Instant, Duration}, thread, fs, fmt::Display};
 
-pub static COUNTER_SWAP_IN: Counter = Counter::new();
-pub static COUNTER_SWAP_OUT: Counter = Counter::new();
+pub static COUNTER_SWAP_IN: Counter = Counter::new("swap in");
+pub static COUNTER_SWAP_IN_RECEIVE: Counter = Counter::new("swap in receive");
+pub static COUNTER_SWAP_IN_DESERIALIZE: Counter = Counter::new("swap in deserialize");
+
+pub static COUNTER_SWAP_OUT: Counter = Counter::new("swap out");
 
 pub struct Counter {
+    name: &'static str,
     value: AtomicU64,
 }
 
@@ -12,14 +16,19 @@ pub struct Measurement {
 }
 
 impl Counter {
-    pub const fn new() -> Self {
+    pub const fn new(name: &'static str) -> Self {
         Self {
+            name,
             value: AtomicU64::new(0),
         }
     }
 
     pub fn add(&self, measurement: Measurement) {
         self.value.fetch_add((Instant::now() - measurement.started_at).as_micros() as u64, Ordering::Relaxed);
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
     }
 
     pub fn measure() -> Measurement {
@@ -47,8 +56,14 @@ pub fn run_performance_reporting_thread() {
 
 pub fn write_performance_report() {
     let report = format!(
-        "swap in: {}\nswap out: {}",
+        "{}: {}\n\n{}: {}\n{}: {}\n{}: {}",
+        COUNTER_SWAP_IN.name(),
         COUNTER_SWAP_IN,
+        COUNTER_SWAP_IN_RECEIVE.name(),
+        COUNTER_SWAP_IN_RECEIVE,
+        COUNTER_SWAP_IN_DESERIALIZE.name(),
+        COUNTER_SWAP_IN_DESERIALIZE,
+        COUNTER_SWAP_OUT.name(),
         COUNTER_SWAP_OUT
     );
 
