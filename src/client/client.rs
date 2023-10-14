@@ -96,10 +96,6 @@ impl FarMemoryClient {
         }
     }
 
-    pub fn span_size(&self) -> usize {
-        2 * 1024 * 1024 // 2MB
-    }
-
     fn span_layout(&self, span_size: usize) -> Layout {
         Layout::array::<u8>(span_size).unwrap()
     }

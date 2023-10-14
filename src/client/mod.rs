@@ -6,6 +6,7 @@ use {
 pub use self::{
     buffer::FarMemoryBuffer,
     buffered_vec::FarMemoryBufferedVec,
+    vec::FarMemoryVec,
     client::FarMemoryClient,
     backend::{
         in_memory::InMemoryBackend,
@@ -18,6 +19,7 @@ pub mod backend;
 mod buffer;
 mod buffered_vec;
 mod client;
+mod vec;
 
 /**
  * - far memory object needs to have reference to client to read and write using it.
