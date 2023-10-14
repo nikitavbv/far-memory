@@ -38,6 +38,11 @@ impl <T> FarMemoryVec<T> {
             Vec::from_raw_parts(ptr as *mut T, self.len, self.len)
         }
     }
+
+    pub fn ensure_local_memory_under_limit(&self) {
+        // TODO: remove this. Memory limit should be enforced on swap in.
+        self.client.ensure_local_memory_under_limit();
+    }
 }
 
 #[cfg(test)]
