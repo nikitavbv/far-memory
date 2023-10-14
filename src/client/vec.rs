@@ -1,5 +1,5 @@
 use {
-    std::marker::PhantomData,
+    std::cell::UnsafeCell,
     super::{FarMemoryClient, client::SpanId},
 };
 
@@ -7,8 +7,7 @@ pub struct FarMemoryVec<T> {
     client: FarMemoryClient,
     span: SpanId,
     len: usize,
-
-    _phantom: PhantomData<T>,
+    vec: UnsafeCell<Vec<T>>,
 }
 
 impl <T> FarMemoryVec<T> {
@@ -26,16 +25,20 @@ impl <T> FarMemoryVec<T> {
             client,
             span,
             len: vec.len(),
-
-            _phantom: PhantomData,
+            vec: UnsafeCell::new(unsafe {
+                Vec::from_raw_parts(ptr as *mut T, vec.len(), vec.len())
+            }),
         }
     }
 
-    pub fn to_local_vec(&self) -> Vec<T> {
+    pub fn to_local_vec(&self) -> &Vec<T> {
         let ptr = self.client.span_ptr(&self.span);
-
         unsafe {
-            Vec::from_raw_parts(ptr as *mut T, self.len, self.len)
+            let mut t = Vec::from_raw_parts(ptr as *mut T, self.len, self.len);
+            std::mem::swap(&mut *self.vec.get(), &mut t);
+            std::mem::forget(t);
+        
+            & *self.vec.get()
         }
     }
 
@@ -60,7 +63,25 @@ mod tests {
         );
         
         assert_eq!(
-            vec![10.02, 9.02, 8.02, 7.02, 6.02, 5.02, 4.02, 3.02, 2.02, 1.02],
+            &vec![10.02, 9.02, 8.02, 7.02, 6.02, 5.02, 4.02, 3.02, 2.02, 1.02],
+            vec.to_local_vec()
+        );
+    }
+
+    #[test]
+    fn to_local_vec_no_double_free() {
+        let vec = FarMemoryVec::from_vec(
+            FarMemoryClient::new(Box::new(InMemoryBackend::new()), 1000), 
+            vec![10.02, 9.02, 8.02, 7.02, 6.02, 5.02, 4.02, 3.02, 2.02, 1.02]
+        );
+        
+        assert_eq!(
+            &vec![10.02, 9.02, 8.02, 7.02, 6.02, 5.02, 4.02, 3.02, 2.02, 1.02],
+            vec.to_local_vec()
+        );
+
+        assert_eq!(
+            &vec![10.02, 9.02, 8.02, 7.02, 6.02, 5.02, 4.02, 3.02, 2.02, 1.02],
             vec.to_local_vec()
         );
     }
