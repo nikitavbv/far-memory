@@ -5,7 +5,7 @@ use {
 
 pub use self::{
     buffer::FarMemoryBuffer,
-    vec::FarMemoryVec,
+    buffered_vec::FarMemoryBufferedVec,
     client::FarMemoryClient,
     backend::{
         in_memory::InMemoryBackend,
@@ -16,8 +16,8 @@ pub use self::{
 pub mod backend;
 
 mod buffer;
+mod buffered_vec;
 mod client;
-mod vec;
 
 /**
  * - far memory object needs to have reference to client to read and write using it.
@@ -55,5 +55,5 @@ impl<T> Deref for FarMemory<T> {
 
 // performance report
 pub fn print_performance_report() {
-    vec::print_far_vec_performance_report();
+    buffered_vec::print_far_vec_performance_report();
 }

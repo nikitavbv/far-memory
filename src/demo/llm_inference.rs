@@ -5,7 +5,7 @@ use {
     quantiles::ckms::CKMS,
     crate::{
         utils::allocator::current_memory_usage,
-        client::{FarMemoryBuffer, FarMemoryClient, LocalDiskBackend, FarMemoryVec, print_performance_report},
+        client::{FarMemoryBuffer, FarMemoryClient, LocalDiskBackend, FarMemoryBufferedVec, print_performance_report},
     },
 };
 
@@ -53,7 +53,7 @@ impl Config {
 
 struct Vocab {
     bytes: FarMemoryBuffer,
-    offsets: FarMemoryVec<usize>,
+    offsets: FarMemoryBufferedVec<usize>,
 }
 
 impl Vocab {
@@ -79,7 +79,7 @@ impl Vocab {
 
         Self {
             bytes,
-            offsets: FarMemoryVec::from_vec(client, offsets),
+            offsets: FarMemoryBufferedVec::from_vec(client, offsets),
         }
     }
 
@@ -93,7 +93,7 @@ impl Vocab {
 struct LlamaWeights<Layer, Rms, Emb, Buf> {
     /// (vocab_size, dim)
     // embeddings: Emb,
-    embeddings_far: FarMemoryVec<Ty>,
+    embeddings_far: FarMemoryBufferedVec<Ty>,
 
     layers: Vec<Layer>,
     /// (dim,)
@@ -107,11 +107,11 @@ struct LlamaWeights<Layer, Rms, Emb, Buf> {
 
 struct LayerWeights<Lin, Buf> {
     // rms_attn: Rms,
-    rms_attn: FarMemoryVec<Ty>,
+    rms_attn: FarMemoryBufferedVec<Ty>,
 
-    rms_ffn: FarMemoryVec<Ty>,
-    wq: FarMemoryVec<Ty>,
-    wk: FarMemoryVec<Ty>,
+    rms_ffn: FarMemoryBufferedVec<Ty>,
+    wq: FarMemoryBufferedVec<Ty>,
+    wk: FarMemoryBufferedVec<Ty>,
     wv: Lin,
     wo: Lin,
     w1: Lin,
@@ -143,12 +143,12 @@ impl Llama2CPUFloat {
 
         let layers = (0..cfg.n_layers)
             .map(|l| LayerWeights::<Vec<Ty>, Vec<Ty>> {
-                rms_attn: FarMemoryVec::from_vec(client.clone(), w_layer_iters[0].next().unwrap()),
-                wq: FarMemoryVec::from_vec(client.clone(), w_layer_iters[1].next().unwrap()),
-                wk: FarMemoryVec::from_vec(client.clone(), w_layer_iters[2].next().unwrap()),
+                rms_attn: FarMemoryBufferedVec::from_vec(client.clone(), w_layer_iters[0].next().unwrap()),
+                wq: FarMemoryBufferedVec::from_vec(client.clone(), w_layer_iters[1].next().unwrap()),
+                wk: FarMemoryBufferedVec::from_vec(client.clone(), w_layer_iters[2].next().unwrap()),
                 wv: w_layer_iters[3].next().unwrap(),
                 wo: w_layer_iters[4].next().unwrap(),
-                rms_ffn: FarMemoryVec::from_vec(client.clone(), w_layer_iters[5].next().unwrap()),
+                rms_ffn: FarMemoryBufferedVec::from_vec(client.clone(), w_layer_iters[5].next().unwrap()),
                 w1: w_layer_iters[6].next().unwrap(),
                 w2: w_layer_iters[7].next().unwrap(),
                 w3: w_layer_iters[8].next().unwrap(),
@@ -162,7 +162,7 @@ impl Llama2CPUFloat {
         let rope_imag = weights[12].clone();
 
         Self {
-            embeddings_far: FarMemoryVec::from_vec(client, embeddings.clone()),
+            embeddings_far: FarMemoryBufferedVec::from_vec(client, embeddings.clone()),
 
             layers,
             rms_final,

@@ -9,15 +9,14 @@ use {
 static TIMER_TO_LOCAL_VEC: AtomicU64 = AtomicU64::new(0);
 static TIMER_ENSURE_MEMORY_LIMIT: AtomicU64 = AtomicU64::new(0);
 
-// far memory vec
-pub struct FarMemoryVec<T> {
+pub struct FarMemoryBufferedVec<T> {
     buffer: FarMemoryBuffer,
     len: usize,
 
     _phantom: PhantomData<T>,
 }
 
-impl<T> FarMemoryVec<T> {
+impl<T> FarMemoryBufferedVec<T> {
     pub fn new(client: FarMemoryClient) -> Self {
         Self {
             buffer: FarMemoryBuffer::new(client),
@@ -99,7 +98,7 @@ mod tests {
 
     #[test]
     fn get() {
-        let vec = FarMemoryVec::from_vec(
+        let vec = FarMemoryBufferedVec::from_vec(
             FarMemoryClient::new(Box::new(InMemoryBackend::new()), 1000), 
             vec![10.02, 9.02, 8.02, 7.02, 6.02, 5.02, 4.02, 3.02, 2.02, 1.02]
         );
@@ -119,7 +118,7 @@ mod tests {
 
     #[test]
     fn to_local_vec() {
-        let vec = FarMemoryVec::from_vec(
+        let vec = FarMemoryBufferedVec::from_vec(
             FarMemoryClient::new(Box::new(InMemoryBackend::new()), 1000), 
             vec![10.02, 9.02, 8.02, 7.02, 6.02, 5.02, 4.02, 3.02, 2.02, 1.02]
         );
