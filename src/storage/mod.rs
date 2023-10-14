@@ -185,13 +185,15 @@ pub fn print_server_performance_report() {
 #[cfg(test)]
 mod tests {
     use {
-        std::thread,
+        std::{thread, time::Duration},
         super::*,
     };
 
     #[test]
     fn simple() {
         let server_thread = thread::spawn(|| run_server("localhost".to_owned(), "some-token".to_owned(), Some(1), Some(3)));
+        thread::sleep(Duration::from_secs(5));
+        
         let mut client = Client::new("localhost:14000");
         
         client.auth("some-token");
