@@ -6,7 +6,6 @@ use {
     crate::{
         utils::allocator::current_memory_usage,
         client::{FarMemoryBuffer, FarMemoryClient, NetworkNodeBackend, FarMemoryBufferedVec, FarMemoryVec, print_performance_report},
-        storage::print_client_performance_report,
     },
 };
 
@@ -661,5 +660,4 @@ pub fn run_llm_inference_demo(token: &str, endpoint: &str) {
     );
 
     print_performance_report();
-    print_client_performance_report();
 }

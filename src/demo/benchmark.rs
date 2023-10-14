@@ -6,7 +6,7 @@ use {
 pub fn run_benchmark(token: &str, endpoint: &str) {
     info!("running benchmark");
 
-    let mut client = NetworkNodeBackend::new(endpoint, token);
+    let client = NetworkNodeBackend::new(endpoint, token);
 
     let mut data = vec![0u8; 100 * 1024 * 1024];
     for i in 0..data.len() {
