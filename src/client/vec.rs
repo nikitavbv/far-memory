@@ -32,12 +32,14 @@ impl <T> FarMemoryVec<T> {
     }
 
     pub fn to_local_vec(&self) -> &Vec<T> {
-        let ptr = self.client.span_ptr(&self.span);
+        let ptr = self.client.span_ptr(&self.span) as *const T;
         unsafe {
-            let mut t = Vec::from_raw_parts(ptr as *mut T, self.len, self.len);
-            std::mem::swap(&mut *self.vec.get(), &mut t);
-            std::mem::forget(t);
-        
+            if ptr != (*self.vec.get()).as_ptr() {
+                let mut t = Vec::from_raw_parts(ptr as *mut T, self.len, self.len);
+                std::mem::swap(&mut *self.vec.get(), &mut t);
+                std::mem::forget(t);
+            }
+
             & *self.vec.get()
         }
     }
