@@ -18,7 +18,7 @@ pub fn run_storage_server(token: String) {
 }
 
 fn run_server(token: String, connections_limit: Option<usize>, requests_limit: Option<usize>) {
-    let listener = TcpListener::bind("0.0.0.0:14000").unwrap();
+    let listener = TcpListener::bind("127.0.0.1:14000").unwrap();
 
     let mut connections = 0;
     for stream in listener.incoming() {
