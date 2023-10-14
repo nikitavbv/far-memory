@@ -24,6 +24,9 @@ pub struct Args {
     #[arg(long)]
     storage: bool,
     
+    #[arg(long)]
+    storage_endpoint: Option<String>,
+
     // demo
     #[arg(long)]
     simple_demo: bool,
@@ -61,7 +64,7 @@ async fn main() -> std::io::Result<()> {
     } else if args.simple_demo {
         run_simple_demo();
     } else if args.llm_inference_demo {
-        run_llm_inference_demo();
+        run_llm_inference_demo(&read_token(), &args.storage_endpoint.unwrap());
     } else if args.thesis || args.card || args.docs {
         build_thesis(&args);
     }

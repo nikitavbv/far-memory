@@ -5,7 +5,7 @@ use {
     quantiles::ckms::CKMS,
     crate::{
         utils::allocator::current_memory_usage,
-        client::{FarMemoryBuffer, FarMemoryClient, LocalDiskBackend, FarMemoryBufferedVec, FarMemoryVec, print_performance_report},
+        client::{FarMemoryBuffer, FarMemoryClient, NetworkNodeBackend, FarMemoryBufferedVec, FarMemoryVec, print_performance_report},
     },
 };
 
@@ -558,10 +558,10 @@ unsafe fn _unchecked_slice<Q>(s: &[Q], offset: usize, size: usize) -> &[Q] {
     std::slice::from_raw_parts(st, size)
 }
 
-pub fn run_llm_inference_demo() {
+pub fn run_llm_inference_demo(token: &str, endpoint: &str) {
     info!("running llm inference demo");
 
-    let client = FarMemoryClient::new(Box::new(LocalDiskBackend::new()), 5 * 1024 * 1024 * 1024);
+    let client = FarMemoryClient::new(Box::new(NetworkNodeBackend::new(endpoint, token)), 5 * 1024 * 1024 * 1024);
 
     let llama = true;
 

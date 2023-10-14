@@ -11,6 +11,7 @@ pub use self::{
     backend::{
         in_memory::InMemoryBackend,
         disk::LocalDiskBackend,
+        network_node::NetworkNodeBackend,
     },
 };
 
