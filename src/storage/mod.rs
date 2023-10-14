@@ -43,7 +43,7 @@ fn run_server(token: String, connections_limit: Option<usize>, requests_limit: O
 
             let req_len = u64::from_be_bytes(req_len);
             let mut req = vec![0u8; req_len as usize];
-            stream.read(&mut req).unwrap();
+            stream.read_exact(&mut req).unwrap();
 
             let started_at = Instant::now();
             let req: StorageRequest = bincode::deserialize(&req).unwrap();     

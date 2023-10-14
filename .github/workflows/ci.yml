@@ -6,6 +6,7 @@ jobs:
   build:
     name: build
     runs-on: ubuntu-latest
+    container: ubuntu
     permissions:
       pages: write
       id-token: write
