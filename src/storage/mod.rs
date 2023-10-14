@@ -6,9 +6,9 @@ use {
 
 mod protocol;
 
-pub fn run_storage_server() {
+pub fn run_storage_server(token: String) {
     info!("running storage server");
-    run_server("some-token".to_owned(), None, None);
+    run_server(token, None, None);
 }
 
 fn run_server(token: String, connections_limit: Option<usize>, requests_limit: Option<usize>) {

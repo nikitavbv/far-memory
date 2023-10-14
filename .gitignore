@@ -5,3 +5,4 @@ config.toml
 /block_map
 .idea
 /output
+.token

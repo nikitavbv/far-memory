@@ -1,4 +1,5 @@
 use {
+    std::fs,
     clap::Parser,
     crate::{
         utils::init_logging,
@@ -56,7 +57,7 @@ async fn main() -> std::io::Result<()> {
     let args = Args::parse();
 
     if args.storage {
-        run_storage_server();
+        run_storage_server(read_token());
     } else if args.simple_demo {
         run_simple_demo();
     } else if args.llm_inference_demo {
@@ -66,4 +67,8 @@ async fn main() -> std::io::Result<()> {
     }
 
     Ok(())
+}
+
+fn read_token() -> String {
+    fs::read_to_string(".token").unwrap()
 }
