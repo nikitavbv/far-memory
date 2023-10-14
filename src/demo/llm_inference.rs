@@ -90,22 +90,22 @@ impl Vocab {
     }
 }
 
-struct LlamaWeights<Layer, Rms, Emb, Buf> {
+struct LlamaWeights<Layer> {
     /// (vocab_size, dim)
     // embeddings: Emb,
     embeddings_far: FarMemoryVec<Ty>,
 
     layers: Vec<Layer>,
     /// (dim,)
-    rms_final: Rms,
+    rms_final: FarMemoryVec<Ty>,
     /// (seq_len, head_size/2)
-    rope_real: Buf,
+    rope_real: FarMemoryVec<Ty>,
     /// (seq_len, head_size/2)
-    rope_imag: Buf,
-    wcls: Option<Emb>,
+    rope_imag: FarMemoryVec<Ty>,
+    wcls: Option<FarMemoryVec<Ty>>,
 }
 
-struct LayerWeights<Lin, Buf> {
+struct LayerWeights<Buf> {
     // rms_attn: Rms,
     rms_attn: FarMemoryVec<Ty>,
 
@@ -116,7 +116,7 @@ struct LayerWeights<Lin, Buf> {
     wo: FarMemoryVec<Ty>,
     w1: FarMemoryVec<Ty>,
     w2: FarMemoryVec<Ty>,
-    w3: Lin,
+    w3: FarMemoryVec<Ty>,
     /// (seq_len, dim)
     k_cache: Buf,
     /// (seq_len, dim)
@@ -124,8 +124,8 @@ struct LayerWeights<Lin, Buf> {
 }
 
 type Ty = f32;
-type CPULayerFloat = LayerWeights<Vec<Ty>, Vec<Ty>>;
-type Llama2CPUFloat = LlamaWeights<CPULayerFloat, Vec<Ty>, Vec<Ty>, Vec<Ty>>;
+type CPULayerFloat = LayerWeights<Vec<Ty>>;
+type Llama2CPUFloat = LlamaWeights<CPULayerFloat>;
 
 impl Llama2CPUFloat {
     fn load_weights(client: FarMemoryClient, cfg: &Config, path: &str) -> Self {
@@ -142,7 +142,7 @@ impl Llama2CPUFloat {
             .collect::<Vec<_>>();
 
         let layers = (0..cfg.n_layers)
-            .map(|l| LayerWeights::<Vec<Ty>, Vec<Ty>> {
+            .map(|l| LayerWeights::<Vec<Ty>> {
                 rms_attn: FarMemoryVec::from_vec(client.clone(), w_layer_iters[0].next().unwrap()),
                 wq: FarMemoryVec::from_vec(client.clone(), w_layer_iters[1].next().unwrap()),
                 wk: FarMemoryVec::from_vec(client.clone(), w_layer_iters[2].next().unwrap()),
@@ -151,24 +151,24 @@ impl Llama2CPUFloat {
                 rms_ffn: FarMemoryVec::from_vec(client.clone(), w_layer_iters[5].next().unwrap()),
                 w1: FarMemoryVec::from_vec(client.clone(), w_layer_iters[6].next().unwrap()),
                 w2: FarMemoryVec::from_vec(client.clone(), w_layer_iters[7].next().unwrap()),
-                w3: w_layer_iters[8].next().unwrap(),
+                w3: FarMemoryVec::from_vec(client.clone(), w_layer_iters[8].next().unwrap()),
                 k_cache: vec![0 as Ty; cfg.seq_len * cfg.dim],
                 v_cache: vec![0 as Ty; cfg.seq_len * cfg.dim],
             })
             .collect();
 
-        let rms_final = weights[10].clone();
-        let rope_real = weights[11].clone();
-        let rope_imag = weights[12].clone();
+        let rms_final = FarMemoryVec::from_vec(client.clone(), weights[10].clone());
+        let rope_real = FarMemoryVec::from_vec(client.clone(), weights[11].clone());
+        let rope_imag = FarMemoryVec::from_vec(client.clone(), weights[12].clone());
 
         Self {
-            embeddings_far: FarMemoryVec::from_vec(client, embeddings.clone()),
+            embeddings_far: FarMemoryVec::from_vec(client.clone(), embeddings.clone()),
 
             layers,
             rms_final,
             rope_real,
             rope_imag,
-            wcls,
+            wcls: wcls.map(|v| FarMemoryVec::from_vec(client.clone(), v)),
         }
     }
 }
@@ -296,11 +296,9 @@ pub trait EmbeddingTable<Buf>: LinearWeight<Buf> {
 }
 
 // f32 CPU implementation of Llama2
-impl<L, Rms, Emb> LlamaExecuter<Vec<Ty>> for LlamaWeights<L, Rms, Emb, Vec<Ty>>
+impl<L> LlamaExecuter<Vec<Ty>> for LlamaWeights<L>
 where
     L: LlamaLayer<Vec<Ty>>,
-    Rms: RMSNormWeight<Vec<Ty>>,
-    Emb: EmbeddingTable<Vec<Ty>>,
 {
     fn step(&mut self, token: usize, pos: usize, cfg: &Config, state: &mut ExecutionState<Vec<Ty>>) {
         // copy token embedding to residual stream
@@ -309,28 +307,26 @@ where
 
         for ld in self.layers.iter_mut() {
             ld.rms_and_qkv(cfg, state);
-            ld.rope(pos, cfg, state, &self.rope_imag, &self.rope_real);
+            ld.rope(pos, cfg, state, &self.rope_imag.to_local_vec(), &self.rope_real.to_local_vec());
             ld.cache_kv(pos, cfg, state);
             ld.attention(pos, cfg, state);
             ld.merge_heads_to_resid_stream(state);
             ld.ffn(state);
         }
 
-        self.rms_final.inplace_rms_norm(&mut state.x);
+        self.rms_final.to_local_vec().inplace_rms_norm(&mut state.x);
 
         if self.wcls.is_none() {
             self.embeddings_far.to_local_vec().mat_vec(&state.x, &mut state.logits);
         } else {
             let w = self.wcls.as_ref().unwrap();
-            w.mat_vec(&state.x, &mut state.logits);
+            w.to_local_vec().mat_vec(&state.x, &mut state.logits);
         }
     }
 }
 
 // f32 Implementation of Llama2 layer
-impl<Lin> LlamaLayer<Vec<Ty>> for LayerWeights<Lin, Vec<Ty>>
-where
-    Lin: LinearWeight<Vec<Ty>>,
+impl LlamaLayer<Vec<Ty>> for LayerWeights<Vec<Ty>>
 {
     fn rms_and_qkv(&self, config: &Config, state: &mut ExecutionState<Vec<Ty>>) {
         self.rms_attn.to_local_vec().rms_norm(&state.x, &mut state.xb);
@@ -439,7 +435,7 @@ where
         // z = SiLU(W1 \dot x) * (W3 \dot x)
         // out = (W2 \dot z)
         self.w1.to_local_vec().mat_vec(&state.xb, &mut state.h1);
-        self.w3.mat_vec(&state.xb, &mut state.h2);
+        self.w3.to_local_vec().mat_vec(&state.xb, &mut state.h2);
 
         // silu hidden
         for h1 in state.h1.iter_mut() {
@@ -561,7 +557,7 @@ unsafe fn _unchecked_slice<Q>(s: &[Q], offset: usize, size: usize) -> &[Q] {
 pub fn run_llm_inference_demo(token: &str, endpoint: &str) {
     info!("running llm inference demo");
 
-    let client = FarMemoryClient::new(Box::new(NetworkNodeBackend::new(endpoint, token)), 9000 * 1024 * 1024);
+    let client = FarMemoryClient::new(Box::new(NetworkNodeBackend::new(endpoint, token)), 19500 * 1024 * 1024);
 
     let llama = true;
 
