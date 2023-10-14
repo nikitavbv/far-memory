@@ -46,7 +46,10 @@ fn run_server(host: String, token: String, connections_limit: Option<usize>, req
             }
 
             let mut req_len = [0u8; 8];
-            stream.read(&mut req_len).unwrap();
+            if let Err(err) = stream.read(&mut req_len) {
+                error!("unexpected error when reading request header: {:?}", err);
+                break;
+            }
 
             let req_len = u64::from_be_bytes(req_len);
             let mut req = vec![0u8; req_len as usize];
@@ -56,7 +59,7 @@ fn run_server(host: String, token: String, connections_limit: Option<usize>, req
             let req: StorageRequest = match bincode::deserialize(&req) {
                 Ok(v) => v,
                 Err(err) => {
-                    error!("Unexpected error when reading request: {:?}", err);
+                    error!("unexpected error when reading request: {:?}", err);
                     break;
                 }
             };     
