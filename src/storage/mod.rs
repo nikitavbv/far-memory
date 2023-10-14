@@ -191,7 +191,7 @@ mod tests {
 
     #[test]
     fn simple() {
-        let server_thread = thread::spawn(|| run_server("127.0.0.1".to_owned(), "some-token".to_owned(), Some(1), Some(3)));
+        let server_thread = thread::spawn(|| run_server("localhost".to_owned(), "some-token".to_owned(), Some(1), Some(3)));
         let mut client = Client::new("localhost:14000");
         
         client.auth("some-token");
