@@ -7,8 +7,9 @@ pub use self::{
     buffer::FarMemoryBuffer,
     buffered_vec::FarMemoryBufferedVec,
     vec::FarMemoryVec,
-    client::FarMemoryClient,
+    client::{FarMemoryClient, SpanId},
     backend::{
+        FarMemoryBackend,
         in_memory::InMemoryBackend,
         disk::LocalDiskBackend,
         network_node::NetworkNodeBackend,

@@ -7,6 +7,7 @@ use {
         storage::run_storage_server,
         demo::{
             llm_inference::run_llm_inference_demo,
+            benchmark::run_benchmark,
             simple::run_simple_demo,
         },
     },
@@ -33,6 +34,9 @@ pub struct Args {
 
     #[arg(long)]
     llm_inference_demo: bool,
+
+    #[arg(long)]
+    benchmark: bool,
 
     // thesis
     #[arg(long)]
@@ -65,6 +69,8 @@ async fn main() -> std::io::Result<()> {
         run_simple_demo();
     } else if args.llm_inference_demo {
         run_llm_inference_demo(&read_token(), &args.storage_endpoint.unwrap());
+    } else if args.benchmark {
+        run_benchmark(&read_token(), &args.storage_endpoint.unwrap());
     } else if args.thesis || args.card || args.docs {
         build_thesis(&args);
     }
@@ -73,5 +79,5 @@ async fn main() -> std::io::Result<()> {
 }
 
 fn read_token() -> String {
-    fs::read_to_string(".token").unwrap()
+    fs::read_to_string(".token").unwrap().replace("\n", "")
 }

@@ -31,6 +31,10 @@ enum FarMemorySpan {
 }
 
 impl SpanId {
+    pub fn from_id(id: u64) -> Self {
+        Self(id)
+    }
+
     pub fn id(&self) -> u64 {
         self.0
     }
