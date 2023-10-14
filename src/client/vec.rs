@@ -50,6 +50,16 @@ impl <T> FarMemoryVec<T> {
     }
 }
 
+impl<T> Drop for FarMemoryVec<T> {
+    fn drop(&mut self) {
+        unsafe {
+            let mut t = Vec::new();
+            std::mem::swap(&mut *self.vec.get(), &mut t);
+            std::mem::forget(t);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use {
