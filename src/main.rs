@@ -3,6 +3,7 @@ use {
     crate::{
         utils::init_logging,
         thesis::build_thesis,
+        storage::run_storage_server,
         demo::{
             llm_inference::run_llm_inference_demo,
             simple::run_simple_demo,
@@ -12,12 +13,17 @@ use {
 
 mod client;
 mod demo;
+mod storage;
 mod thesis;
 
 mod utils;
 
 #[derive(Parser, Debug)]
 pub struct Args {
+    #[arg(long)]
+    storage: bool,
+    
+    // demo
     #[arg(long)]
     simple_demo: bool,
 
@@ -49,7 +55,9 @@ async fn main() -> std::io::Result<()> {
     init_logging();
     let args = Args::parse();
 
-    if args.simple_demo {
+    if args.storage {
+        run_storage_server();
+    } else if args.simple_demo {
         run_simple_demo();
     } else if args.llm_inference_demo {
         run_llm_inference_demo();
