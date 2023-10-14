@@ -6,6 +6,9 @@ use {
 
 mod protocol;
 
+static SERVER_TIMER_DESERIALIZE: AtomicU64 = AtomicU64::new(0);
+static SERVER_TIMER_HANDLE: AtomicU64 = AtomicU64::new(0);
+
 static CLIENT_TIMER_SWAP_OUT_SERIALIZE: AtomicU64 = AtomicU64::new(0);
 static CLIENT_TIMER_SWAP_OUT_SEND: AtomicU64 = AtomicU64::new(0);
 
@@ -42,10 +45,18 @@ fn run_server(token: String, connections_limit: Option<usize>, requests_limit: O
             let mut req = vec![0u8; req_len as usize];
             stream.read(&mut req).unwrap();
 
+            let started_at = Instant::now();
             let req: StorageRequest = bincode::deserialize(&req).unwrap();     
+            SERVER_TIMER_DESERIALIZE.fetch_add((Instant::now() - started_at).as_millis() as u64, Ordering::Relaxed);
+
+            let started_at = Instant::now();
             let res = server.handle(req);
+            SERVER_TIMER_HANDLE.fetch_add((Instant::now() - started_at).as_millis() as u64, Ordering::Relaxed);
+
             stream.write(&bincode::serialize(&res).unwrap()).unwrap();
         }
+
+        print_server_performance_report();
 
         if let Some(limit) = connections_limit {
             if connections >= limit {
@@ -165,6 +176,10 @@ impl Client {
 
 pub fn print_client_performance_report() {
     println!("swap out serialize: {:?}, swap out send: {:?}", CLIENT_TIMER_SWAP_OUT_SERIALIZE, CLIENT_TIMER_SWAP_OUT_SEND);
+}
+
+pub fn print_server_performance_report() {
+    println!("deserialize: {:?}, handle: {:?}", SERVER_TIMER_DESERIALIZE, SERVER_TIMER_HANDLE);
 }
 
 #[cfg(test)]
