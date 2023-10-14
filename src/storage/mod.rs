@@ -14,11 +14,11 @@ static CLIENT_TIMER_SWAP_OUT_SEND: AtomicU64 = AtomicU64::new(0);
 
 pub fn run_storage_server(token: String) {
     info!("running storage server");
-    run_server(token, None, None);
+    run_server("0.0.0.0".to_owned(), token, None, None);
 }
 
-fn run_server(token: String, connections_limit: Option<usize>, requests_limit: Option<usize>) {
-    let listener = TcpListener::bind("127.0.0.1:14000").unwrap();
+fn run_server(host: String, token: String, connections_limit: Option<usize>, requests_limit: Option<usize>) {
+    let listener = TcpListener::bind(format!("{}:14000", host)).unwrap();
 
     let mut connections = 0;
     for stream in listener.incoming() {
@@ -191,7 +191,7 @@ mod tests {
 
     #[test]
     fn simple() {
-        let server_thread = thread::spawn(|| run_server("some-token".to_owned(), Some(1), Some(3)));
+        let server_thread = thread::spawn(|| run_server("127.0.0.1".to_owned(), "some-token".to_owned(), Some(1), Some(3)));
         let mut client = Client::new("localhost:14000");
         
         client.auth("some-token");
