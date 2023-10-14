@@ -1,10 +1,13 @@
 use {
-    std::{net::{TcpListener, TcpStream, Shutdown}, io::Write, collections::HashMap},
+    std::{net::{TcpListener, TcpStream, Shutdown}, io::Write, collections::HashMap, sync::atomic::{AtomicU64, Ordering}, time::Instant},
     tracing::info,
     self::protocol::{StorageRequest, StorageResponse},
 };
 
 mod protocol;
+
+static CLIENT_TIMER_SWAP_OUT_SERIALIZE: AtomicU64 = AtomicU64::new(0);
+static CLIENT_TIMER_SWAP_OUT_SEND: AtomicU64 = AtomicU64::new(0);
 
 pub fn run_storage_server(token: String) {
     info!("running storage server");
@@ -123,7 +126,7 @@ impl Client {
 
     pub fn swap_in(&mut self, span_id: u64) -> Vec<u8> {
         match self.request(StorageRequest::SwapIn { span_id }) {
-            StorageResponse::SwapIn { span_id, data } => data,
+            StorageResponse::SwapIn { span_id: _, data } => data,
             other => panic!("unexpected swap in response: {:?}", other),
         }
     }
@@ -134,7 +137,13 @@ impl Client {
     }
 
     fn write_request(&mut self, request: StorageRequest) {
-        self.stream.write(&bincode::serialize(&request).unwrap()).unwrap();
+        let started_at = Instant::now();
+        let serialized = bincode::serialize(&request).unwrap();
+        CLIENT_TIMER_SWAP_OUT_SERIALIZE.fetch_add((Instant::now() - started_at).as_millis() as u64, Ordering::Relaxed);
+
+        let started_at = Instant::now();
+        self.stream.write(&serialized).unwrap();
+        CLIENT_TIMER_SWAP_OUT_SEND.fetch_add((Instant::now() - started_at).as_millis() as u64, Ordering::Relaxed);
     }
 
     fn read_response(&mut self) -> StorageResponse {
@@ -144,6 +153,10 @@ impl Client {
     pub fn close(&mut self) {
         self.stream.shutdown(Shutdown::Both).unwrap();
     }
+}
+
+pub fn print_client_performance_report() {
+    println!("swap out serialize: {:?}, swap out send: {:?}", CLIENT_TIMER_SWAP_OUT_SERIALIZE, CLIENT_TIMER_SWAP_OUT_SEND);
 }
 
 #[cfg(test)]
