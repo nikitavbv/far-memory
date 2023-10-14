@@ -1,5 +1,5 @@
 use {
-    std::{net::{TcpListener, TcpStream, Shutdown}, io::Write, collections::HashMap, sync::atomic::{AtomicU64, Ordering}, time::Instant},
+    std::{net::{TcpListener, TcpStream, Shutdown}, io::{Write, Read}, collections::HashMap, sync::atomic::{AtomicU64, Ordering}, time::Instant},
     tracing::info,
     self::protocol::{StorageRequest, StorageResponse},
 };
@@ -35,7 +35,14 @@ fn run_server(token: String, connections_limit: Option<usize>, requests_limit: O
                 }
             }
 
-            let req: StorageRequest = bincode::deserialize_from(&stream).unwrap();     
+            let mut req_len = [0u8; 8];
+            stream.read(&mut req_len).unwrap();
+
+            let req_len = u64::from_be_bytes(req_len);
+            let mut req = vec![0u8; req_len as usize];
+            stream.read(&mut req).unwrap();
+
+            let req: StorageRequest = bincode::deserialize(&req).unwrap();     
             let res = server.handle(req);
             stream.write(&bincode::serialize(&res).unwrap()).unwrap();
         }
@@ -142,6 +149,7 @@ impl Client {
         CLIENT_TIMER_SWAP_OUT_SERIALIZE.fetch_add((Instant::now() - started_at).as_millis() as u64, Ordering::Relaxed);
 
         let started_at = Instant::now();
+        self.stream.write(&(serialized.len() as u64).to_be_bytes()).unwrap();
         self.stream.write(&serialized).unwrap();
         CLIENT_TIMER_SWAP_OUT_SEND.fetch_add((Instant::now() - started_at).as_millis() as u64, Ordering::Relaxed);
     }
