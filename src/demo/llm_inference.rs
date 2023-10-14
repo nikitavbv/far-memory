@@ -561,7 +561,7 @@ unsafe fn _unchecked_slice<Q>(s: &[Q], offset: usize, size: usize) -> &[Q] {
 pub fn run_llm_inference_demo(token: &str, endpoint: &str) {
     info!("running llm inference demo");
 
-    let client = FarMemoryClient::new(Box::new(NetworkNodeBackend::new(endpoint, token)), 4 * 1024 * 1024 * 1024);
+    let client = FarMemoryClient::new(Box::new(NetworkNodeBackend::new(endpoint, token)), 4500 * 1024 * 1024);
 
     let llama = true;
 
