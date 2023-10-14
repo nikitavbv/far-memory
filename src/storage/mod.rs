@@ -7,7 +7,7 @@ use {
         time::{Instant, Duration}, 
         thread,
     },
-    tracing::info,
+    tracing::{info, error},
     self::protocol::{StorageRequest, StorageResponse},
 };
 
@@ -53,7 +53,13 @@ fn run_server(host: String, token: String, connections_limit: Option<usize>, req
             stream.read_exact(&mut req).unwrap();
 
             let started_at = Instant::now();
-            let req: StorageRequest = bincode::deserialize(&req).unwrap();     
+            let req: StorageRequest = match bincode::deserialize(&req) {
+                Ok(v) => v,
+                Err(err) => {
+                    error!("Unexpected error when reading request: {:?}", err);
+                    break;
+                }
+            };     
             SERVER_TIMER_DESERIALIZE.fetch_add((Instant::now() - started_at).as_millis() as u64, Ordering::Relaxed);
 
             let started_at = Instant::now();
