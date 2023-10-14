@@ -112,10 +112,10 @@ struct LayerWeights<Lin, Buf> {
     rms_ffn: FarMemoryVec<Ty>,
     wq: FarMemoryVec<Ty>,
     wk: FarMemoryVec<Ty>,
-    wv: Lin,
-    wo: Lin,
-    w1: Lin,
-    w2: Lin,
+    wv: FarMemoryVec<Ty>,
+    wo: FarMemoryVec<Ty>,
+    w1: FarMemoryVec<Ty>,
+    w2: FarMemoryVec<Ty>,
     w3: Lin,
     /// (seq_len, dim)
     k_cache: Buf,
@@ -146,11 +146,11 @@ impl Llama2CPUFloat {
                 rms_attn: FarMemoryVec::from_vec(client.clone(), w_layer_iters[0].next().unwrap()),
                 wq: FarMemoryVec::from_vec(client.clone(), w_layer_iters[1].next().unwrap()),
                 wk: FarMemoryVec::from_vec(client.clone(), w_layer_iters[2].next().unwrap()),
-                wv: w_layer_iters[3].next().unwrap(),
-                wo: w_layer_iters[4].next().unwrap(),
+                wv: FarMemoryVec::from_vec(client.clone(), w_layer_iters[3].next().unwrap()),
+                wo: FarMemoryVec::from_vec(client.clone(), w_layer_iters[4].next().unwrap()),
                 rms_ffn: FarMemoryVec::from_vec(client.clone(), w_layer_iters[5].next().unwrap()),
-                w1: w_layer_iters[6].next().unwrap(),
-                w2: w_layer_iters[7].next().unwrap(),
+                w1: FarMemoryVec::from_vec(client.clone(), w_layer_iters[6].next().unwrap()),
+                w2: FarMemoryVec::from_vec(client.clone(), w_layer_iters[7].next().unwrap()),
                 w3: w_layer_iters[8].next().unwrap(),
                 k_cache: vec![0 as Ty; cfg.seq_len * cfg.dim],
                 v_cache: vec![0 as Ty; cfg.seq_len * cfg.dim],
@@ -342,7 +342,7 @@ where
         self.wk.to_local_vec().mat_vec(&state.xb, &mut state.k);
         self.wk.ensure_local_memory_under_limit();
 
-        self.wv.mat_vec(&state.xb, &mut state.v);
+        self.wv.to_local_vec().mat_vec(&state.xb, &mut state.v);
     }
 
     fn rope(&self, pos: usize, cfg: &Config, state: &mut ExecutionState<Vec<Ty>>, rope_imag: &Vec<Ty>, rope_real: &Vec<Ty>) {
@@ -420,7 +420,7 @@ where
         // merge heads
         // at this point result of all heads is in x[1],
         // Linearly merge all heads into a new buffer x[2]
-        self.wo.mat_vec(&state.xb, &mut state.xb2);
+        self.wo.to_local_vec().mat_vec(&state.xb, &mut state.xb2);
 
         // add attention result to residual stream
         state
@@ -438,7 +438,7 @@ where
         // FFN:
         // z = SiLU(W1 \dot x) * (W3 \dot x)
         // out = (W2 \dot z)
-        self.w1.mat_vec(&state.xb, &mut state.h1);
+        self.w1.to_local_vec().mat_vec(&state.xb, &mut state.h1);
         self.w3.mat_vec(&state.xb, &mut state.h2);
 
         // silu hidden
@@ -452,7 +452,7 @@ where
         for (h1, &h2) in state.h1.iter_mut().zip(state.h2.iter()) {
             *h1 *= h2;
         }
-        self.w2.mat_vec(&state.h1, &mut state.xb);
+        self.w2.to_local_vec().mat_vec(&state.h1, &mut state.xb);
 
         // add FFN result to residual stream
         state
