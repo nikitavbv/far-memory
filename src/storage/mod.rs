@@ -3,15 +3,21 @@ use {
         net::{TcpListener, TcpStream, Shutdown}, 
         io::{Write, Read}, 
         collections::HashMap, 
+        sync::atomic::{AtomicU64, Ordering}, 
         time::{Instant, Duration}, 
         thread,
-        fmt::Debug,
     },
-    tracing::{info, error, span, Level},
+    tracing::{info, error},
     self::protocol::{StorageRequest, StorageResponse},
 };
 
 mod protocol;
+
+static SERVER_TIMER_DESERIALIZE: AtomicU64 = AtomicU64::new(0);
+static SERVER_TIMER_HANDLE: AtomicU64 = AtomicU64::new(0);
+
+static CLIENT_TIMER_SWAP_OUT_SERIALIZE: AtomicU64 = AtomicU64::new(0);
+static CLIENT_TIMER_SWAP_OUT_SEND: AtomicU64 = AtomicU64::new(0);
 
 pub fn run_storage_server(token: String) {
     info!("running storage server");
@@ -49,6 +55,7 @@ fn run_server(host: String, token: String, connections_limit: Option<usize>, req
             let mut req = vec![0u8; req_len as usize];
             stream.read_exact(&mut req).unwrap();
 
+            let started_at = Instant::now();
             let req: StorageRequest = match bincode::deserialize(&req) {
                 Ok(v) => v,
                 Err(err) => {
@@ -56,11 +63,16 @@ fn run_server(host: String, token: String, connections_limit: Option<usize>, req
                     break;
                 }
             };     
+            SERVER_TIMER_DESERIALIZE.fetch_add((Instant::now() - started_at).as_millis() as u64, Ordering::Relaxed);
 
+            let started_at = Instant::now();
             let res = server.handle(req);
+            SERVER_TIMER_HANDLE.fetch_add((Instant::now() - started_at).as_millis() as u64, Ordering::Relaxed);
 
             stream.write(&bincode::serialize(&res).unwrap()).unwrap();
         }
+
+        print_server_performance_report();
 
         if let Some(limit) = connections_limit {
             if connections >= limit {
@@ -146,7 +158,6 @@ impl Client {
         }
     }
 
-    #[tracing::instrument]
     pub fn swap_out(&mut self, span_id: u64, data: Vec<u8>) {
         match self.request(StorageRequest::SwapOut { span_id, data }) {
             StorageResponse::Ok => (),
@@ -154,7 +165,6 @@ impl Client {
         }
     }
 
-    #[tracing::instrument]
     pub fn swap_in(&mut self, span_id: u64) -> Vec<u8> {
         match self.request(StorageRequest::SwapIn { span_id }) {
             StorageResponse::SwapIn { span_id: _, data } => data,
@@ -162,25 +172,22 @@ impl Client {
         }
     }
 
-    #[tracing::instrument]
     fn request(&mut self, request: StorageRequest) -> StorageResponse {
         self.write_request(request);
         self.read_response()
     }
 
-    #[tracing::instrument]
     fn write_request(&mut self, request: StorageRequest) {
-        let serialized = span!(Level::DEBUG, "serialize").in_scope(|| {
-            bincode::serialize(&request).unwrap()
-        });
+        let started_at = Instant::now();
+        let serialized = bincode::serialize(&request).unwrap();
+        CLIENT_TIMER_SWAP_OUT_SERIALIZE.fetch_add((Instant::now() - started_at).as_millis() as u64, Ordering::Relaxed);
 
-        span!(Level::DEBUG, "write").in_scope(|| {
-            self.stream.write(&(serialized.len() as u64).to_be_bytes()).unwrap();
-            self.stream.write(&serialized).unwrap();
-        });
+        let started_at = Instant::now();
+        self.stream.write(&(serialized.len() as u64).to_be_bytes()).unwrap();
+        self.stream.write(&serialized).unwrap();
+        CLIENT_TIMER_SWAP_OUT_SEND.fetch_add((Instant::now() - started_at).as_millis() as u64, Ordering::Relaxed);
     }
 
-    #[tracing::instrument]
     fn read_response(&mut self) -> StorageResponse {
         bincode::deserialize_from(&self.stream).unwrap()
     }
@@ -190,10 +197,12 @@ impl Client {
     }
 }
 
-impl Debug for Client {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        "Client".fmt(f)
-    }
+pub fn print_client_performance_report() {
+    println!("swap out serialize: {:?}, swap out send: {:?}", CLIENT_TIMER_SWAP_OUT_SERIALIZE, CLIENT_TIMER_SWAP_OUT_SEND);
+}
+
+pub fn print_server_performance_report() {
+    println!("deserialize: {:?}, handle: {:?}", SERVER_TIMER_DESERIALIZE, SERVER_TIMER_HANDLE);
 }
 
 #[cfg(test)]

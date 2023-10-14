@@ -6,4 +6,3 @@ config.toml
 .idea
 /output
 .token
-trace.json

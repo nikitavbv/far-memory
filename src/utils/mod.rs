@@ -1,7 +1,4 @@
-use {
-    tracing_chrome::{ChromeLayerBuilder, FlushGuard},
-    tracing_subscriber::prelude::*,
-};
+use tonic::{metadata::MetadataValue, service::Interceptor};
 
 pub mod allocator;
 
@@ -11,8 +8,21 @@ pub fn init_logging() {
         .init();
 }
 
-pub fn init_tracing() -> FlushGuard {    
-    let (chrome_layer, _guard) = ChromeLayerBuilder::new().file("trace.json").build();
-    tracing_subscriber::registry().with(chrome_layer).init();
-    _guard
+pub struct AuthInterceptor {
+    token: String,
+}
+
+impl AuthInterceptor {
+    pub fn new(token: String) -> Self {
+        Self {
+            token,
+        }
+    }
+}
+
+impl Interceptor for AuthInterceptor {
+    fn call(&mut self, mut request: tonic::Request<()>) -> Result<tonic::Request<()>, tonic::Status> {
+        request.metadata_mut().append("x-access-token", MetadataValue::try_from(&self.token).unwrap());
+        Ok(request)
+    }
 }
