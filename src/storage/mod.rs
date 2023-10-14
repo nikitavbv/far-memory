@@ -1,5 +1,12 @@
 use {
-    std::{net::{TcpListener, TcpStream, Shutdown}, io::{Write, Read}, collections::HashMap, sync::atomic::{AtomicU64, Ordering}, time::Instant},
+    std::{
+        net::{TcpListener, TcpStream, Shutdown}, 
+        io::{Write, Read}, 
+        collections::HashMap, 
+        sync::atomic::{AtomicU64, Ordering}, 
+        time::{Instant, Duration}, 
+        thread,
+    },
     tracing::info,
     self::protocol::{StorageRequest, StorageResponse},
 };
@@ -121,8 +128,15 @@ pub struct Client {
 
 impl Client {
     pub fn new(addr: &str) -> Self {
+        let mut stream = TcpStream::connect(addr);
+        while !stream.is_ok() {
+            eprintln!("connection failed: {:?}", stream.err().unwrap());
+            thread::sleep(Duration::from_secs(1));
+            stream = TcpStream::connect(addr);
+        }
+
         Self {
-            stream: TcpStream::connect(addr).unwrap(),
+            stream: stream.unwrap(),
         }
     }
 
@@ -185,15 +199,13 @@ pub fn print_server_performance_report() {
 #[cfg(test)]
 mod tests {
     use {
-        std::{thread, time::Duration},
+        std::thread,
         super::*,
     };
 
     #[test]
     fn simple() {
         let server_thread = thread::spawn(|| run_server("localhost".to_owned(), "some-token".to_owned(), Some(1), Some(3)));
-        thread::sleep(Duration::from_secs(5));
-        
         let mut client = Client::new("localhost:14000");
         
         client.auth("some-token");
