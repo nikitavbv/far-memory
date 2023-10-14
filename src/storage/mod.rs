@@ -8,10 +8,10 @@ mod protocol;
 
 pub fn run_storage_server() {
     info!("running storage server");
-    run_server("some-token".to_owned(), None);
+    run_server("some-token".to_owned(), None, None);
 }
 
-fn run_server(token: String, connections_limit: Option<usize>) {
+fn run_server(token: String, connections_limit: Option<usize>, requests_limit: Option<usize>) {
     let listener = TcpListener::bind("0.0.0.0:14000").unwrap();
 
     let mut connections = 0;
@@ -23,9 +23,19 @@ fn run_server(token: String, connections_limit: Option<usize>) {
         let mut server = Server::new(token.clone());
 
         info!("handling incoming connection");
-        let req: StorageRequest = bincode::deserialize_from(&stream).unwrap();     
-        let res = server.handle(req);
-        stream.write(&bincode::serialize(&res).unwrap()).unwrap();
+        let mut requests = 0;
+        loop {
+            requests += 1;
+            if let Some(limit) = requests_limit {
+                if requests > limit {
+                    break;
+                }
+            }
+
+            let req: StorageRequest = bincode::deserialize_from(&stream).unwrap();     
+            let res = server.handle(req);
+            stream.write(&bincode::serialize(&res).unwrap()).unwrap();
+        }
 
         if let Some(limit) = connections_limit {
             if connections >= limit {
@@ -76,7 +86,9 @@ impl Server {
                     return StorageResponse::Forbidden;
                 }
 
-                unimplemented!()
+                let data = self.spans.remove(&span_id).unwrap();
+
+                StorageResponse::SwapIn { span_id, data }
             },
         }
     }
@@ -94,23 +106,31 @@ impl Client {
     }
 
     pub fn auth(&mut self, token: &str) {
-        self.write_request(StorageRequest::Auth {
+        match self.request(StorageRequest::Auth {
             token: token.to_owned(),
-        });
-
-        match self.read_response() {
+        }) {
             StorageResponse::Ok => (),
             other => panic!("unexpected auth response: {:?}", other),
         }
     }
 
     pub fn swap_out(&mut self, span_id: u64, data: Vec<u8>) {
-        self.write_request(StorageRequest::SwapOut { span_id, data });
-        
-        match self.read_response() {
+        match self.request(StorageRequest::SwapOut { span_id, data }) {
             StorageResponse::Ok => (),
             other => panic!("unexpected swap out response: {:?}", other),
         }
+    }
+
+    pub fn swap_in(&mut self, span_id: u64) -> Vec<u8> {
+        match self.request(StorageRequest::SwapIn { span_id }) {
+            StorageResponse::SwapIn { span_id, data } => data,
+            other => panic!("unexpected swap in response: {:?}", other),
+        }
+    }
+
+    fn request(&mut self, request: StorageRequest) -> StorageResponse {
+        self.write_request(request);
+        self.read_response()
     }
 
     fn write_request(&mut self, request: StorageRequest) {
@@ -135,11 +155,14 @@ mod tests {
 
     #[test]
     fn simple() {
-        let server_thread = thread::spawn(|| run_server("some-token".to_owned(), Some(1)));
+        let server_thread = thread::spawn(|| run_server("some-token".to_owned(), Some(1), Some(3)));
         let mut client = Client::new("localhost:14000");
         
         client.auth("some-token");
-        // client.swap_out(42, vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
+        client.swap_out(42, vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
+        let res = client.swap_in(42);
+
+        assert_eq!(vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1], res);
 
         server_thread.join().unwrap();
     }
