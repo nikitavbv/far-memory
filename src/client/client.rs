@@ -25,7 +25,9 @@ enum FarMemorySpan {
         ptr: *mut u8,
         size: usize,   
     },
-    Remote,
+    Remote {
+        size: usize,
+    },
 }
 
 impl SpanId {
@@ -63,7 +65,7 @@ impl FarMemoryClient {
             let span = &self.spans.read().unwrap()[id];
             match span {
                 FarMemorySpan::Local { ptr, size: _ } => return ptr.clone(),
-                FarMemorySpan::Remote => {
+                FarMemorySpan::Remote { .. } => {
                     // will need to swap in
                 },
             };
@@ -109,18 +111,18 @@ impl FarMemoryClient {
     }
 
     fn swap_out_span(&self, span_id: &SpanId) {
-        let span = self.spans.write().unwrap().insert(span_id.clone(), FarMemorySpan::Remote).unwrap();
+        let span = self.spans.write().unwrap().remove(&span_id.clone()).unwrap();
 
         let (ptr, size) = match span {
             FarMemorySpan::Local { ptr, size } => (ptr.clone(), size),
-            FarMemorySpan::Remote => return,
+            FarMemorySpan::Remote { .. } => return,
         };
 
         let data = self.read_span_ptr_to_slice(ptr, size);
 
         self.backend.swap_out(span_id.clone(), data);
         
-        self.spans.write().unwrap().insert(span_id.clone(), FarMemorySpan::Remote);
+        self.spans.write().unwrap().insert(span_id.clone(), FarMemorySpan::Remote { size });
 
         unsafe {
             GLOBAL.dealloc(ptr, self.span_layout(size));
@@ -137,6 +139,10 @@ impl FarMemoryClient {
 
     pub fn total_local_memory(&self) -> usize {
         self.spans.read().unwrap().iter().map(|v| v.1.local_memory_usage()).sum()
+    }
+
+    pub fn total_remote_memory(&self) -> usize {
+        self.spans.read().unwrap().iter().map(|v| v.1.remote_memory_usage()).sum()
     }
 
     pub fn ensure_local_memory_under_limit(&self) {
@@ -160,21 +166,28 @@ impl FarMemorySpan {
     pub fn is_local(&self) -> bool {
         match self {
             FarMemorySpan::Local { .. } => true,
-            FarMemorySpan::Remote => false,
+            FarMemorySpan::Remote { .. } => false,
         }
     }
 
     pub fn is_remote(&self) -> bool {
         match self {
             FarMemorySpan::Local { .. } => false,
-            FarMemorySpan::Remote => true,
+            FarMemorySpan::Remote { .. } => true,
         }
     }
 
     pub fn local_memory_usage(&self) -> usize {
-        match  self {
+        match self {
             FarMemorySpan::Local { ptr: _, size } => *size,
-            FarMemorySpan::Remote => 0,
+            FarMemorySpan::Remote { .. } => 0,
         }
+    }
+
+    pub fn remote_memory_usage(&self) -> usize {
+        match self {
+            FarMemorySpan::Local { .. } => 0,
+            FarMemorySpan::Remote { size } => *size,
+        } 
     }
 }
