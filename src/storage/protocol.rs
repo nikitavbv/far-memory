@@ -14,9 +14,10 @@ pub enum StorageRequest {
     },
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub enum StorageResponse {
     Ok,
+    Forbidden,
     SwapIn {
         span_id: u64,
         data: Vec<u8>,
