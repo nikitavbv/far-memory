@@ -3,7 +3,7 @@ use {
     clap::Parser,
     tracing::{span, Level},
     crate::{
-        utils::{init_logging, init_tracing, performance::{run_performance_reporting_thread, write_performance_report}},
+        utils::{init_logging, init_tracing},
         thesis::build_thesis,
         storage::run_storage_server,
         demo::{
@@ -95,14 +95,10 @@ async fn main() -> std::io::Result<()> {
     } else if args.simple_demo {
         run_simple_demo();
     } else if args.llm_inference_demo {
-        run_performance_reporting_thread();
         span!(Level::DEBUG, "llm_inference_demo")
             .in_scope(|| run_llm_inference_demo(&read_token(), &args.storage_endpoint.unwrap(), args.time_limit.unwrap_or(10 * 60), args.optimize));
-        write_performance_report();
     } else if args.benchmark {
-        run_performance_reporting_thread();
         run_benchmark(&read_token(), &args.storage_endpoint.unwrap());
-        write_performance_report();
     } else if args.thesis || args.card || args.docs {
         build_thesis(&args);
     }

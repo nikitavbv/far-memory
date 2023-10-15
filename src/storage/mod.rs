@@ -7,7 +7,6 @@ use {
         thread,
     },
     tracing::{info, error, span, Level},
-    crate::utils::performance::{COUNTER_SWAP_IN_RECEIVE, COUNTER_SWAP_IN_DESERIALIZE, Counter},
     self::protocol::{StorageRequest, StorageResponse},
 };
 
@@ -183,20 +182,14 @@ impl Client {
     }
 
     fn read_response(&mut self) -> StorageResponse {
-        let m = Counter::measure();
         let mut res_len: [u8; 8] = [0u8; 8];
         self.stream.read_exact(&mut res_len).unwrap();
         let res_len = u64::from_be_bytes(res_len);
 
         let mut res = vec![0u8; res_len as usize];
         self.stream.read_exact(&mut res).unwrap();
-        COUNTER_SWAP_IN_RECEIVE.add(m);
 
-        let m = Counter::measure();
-        let res = bincode::deserialize(&res).unwrap();
-        COUNTER_SWAP_IN_DESERIALIZE.add(m);
-
-        res
+        bincode::deserialize(&res).unwrap()
     }
 
     pub fn close(&mut self) {

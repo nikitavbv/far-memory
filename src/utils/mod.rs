@@ -4,7 +4,6 @@ use {
 };
 
 pub mod allocator;
-pub mod performance;
 
 pub fn init_logging() {
     tracing_subscriber::FmtSubscriber::builder()
