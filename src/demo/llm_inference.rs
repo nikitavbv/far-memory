@@ -554,7 +554,7 @@ unsafe fn _unchecked_slice<Q>(s: &[Q], offset: usize, size: usize) -> &[Q] {
     std::slice::from_raw_parts(st, size)
 }
 
-pub fn run_llm_inference_demo(token: &str, endpoint: &str) {
+pub fn run_llm_inference_demo(token: &str, endpoint: &str, time_limit: u64) {
     info!("running llm inference demo");
 
     let client = FarMemoryClient::new(Box::new(NetworkNodeBackend::new(endpoint, token)), 25700 * 1024 * 1024);
@@ -602,7 +602,7 @@ pub fn run_llm_inference_demo(token: &str, endpoint: &str) {
     let mut memory_usage_far_local_memory: CKMS<f64> = CKMS::<f64>::new(0.001);
     let mut memory_usage_far_remote_memory: CKMS<f64> = CKMS::<f64>::new(0.001);
 
-    while pos < seq_len && (Instant::now() - started_at).as_secs() < 10 * 60 {
+    while pos < seq_len && (Instant::now() - started_at).as_secs() < time_limit {
         let token_started_at = Instant::now();
 
         weights.step(token, pos, &config, &mut state);

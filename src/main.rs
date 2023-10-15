@@ -26,6 +26,9 @@ pub struct Args {
     #[arg(long)]
     trace: bool,
 
+    #[arg(long)]
+    time_limit: Option<u64>,
+
     // components
     #[arg(long)]
     storage: bool,
@@ -81,7 +84,7 @@ async fn main() -> std::io::Result<()> {
     } else if args.llm_inference_demo {
         run_performance_reporting_thread();
         span!(Level::DEBUG, "llm_inference_demo")
-            .in_scope(|| run_llm_inference_demo(&read_token(), &args.storage_endpoint.unwrap()));
+            .in_scope(|| run_llm_inference_demo(&read_token(), &args.storage_endpoint.unwrap(), args.time_limit.unwrap_or(10 * 60)));
         write_performance_report();
     } else if args.benchmark {
         run_performance_reporting_thread();
