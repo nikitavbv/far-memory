@@ -115,7 +115,9 @@ impl FarMemoryClient {
 
     pub fn swap_out_spans(&self, spans: &[SpanId]) {
         for span in spans {
-            self.swap_out_span(span)
+            span!(Level::DEBUG, "swap out span", span_id = span.id()).in_scope(|| {
+                self.swap_out_span(span)
+            });
         }
     }
 
@@ -129,7 +131,9 @@ impl FarMemoryClient {
 
         let data = self.read_span_ptr_to_slice(ptr, size);
 
-        self.backend.swap_out(span_id.clone(), data);
+        span!(Level::DEBUG, "backend swap out", size = data.len()).in_scope(|| {
+            self.backend.swap_out(span_id.clone(), data);
+        });
         
         self.spans.write().unwrap().insert(span_id.clone(), FarMemorySpan::Remote { size });
 
@@ -177,7 +181,9 @@ impl FarMemoryClient {
             total_memory += span.local_memory_usage() as u64;
         }
 
-        self.swap_out_spans(&spans_to_swap_out);
+        span!(Level::DEBUG, "swap_out_spans").in_scope(|| {
+            self.swap_out_spans(&spans_to_swap_out);
+        });
     }
 }
 
