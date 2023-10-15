@@ -47,7 +47,10 @@ fn run_server(host: String, token: String, connections_limit: Option<usize>, req
 
             let req_len = u64::from_be_bytes(req_len);
             let mut req = vec![0u8; req_len as usize];
-            stream.read_exact(&mut req).unwrap();
+            if let Err(err) = stream.read_exact(&mut req) {
+                error!("unexpected error when reading request body: {:?}", err);
+                break;
+            };
 
             let req: StorageRequest = match bincode::deserialize(&req) {
                 Ok(v) => v,
