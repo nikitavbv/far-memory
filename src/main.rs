@@ -46,6 +46,9 @@ pub struct Args {
     #[arg(long)]
     benchmark: bool,
 
+    #[arg(long)]
+    optimize: bool,
+
     // thesis
     #[arg(long)]
     thesis: bool,
@@ -84,7 +87,7 @@ async fn main() -> std::io::Result<()> {
     } else if args.llm_inference_demo {
         run_performance_reporting_thread();
         span!(Level::DEBUG, "llm_inference_demo")
-            .in_scope(|| run_llm_inference_demo(&read_token(), &args.storage_endpoint.unwrap(), args.time_limit.unwrap_or(10 * 60)));
+            .in_scope(|| run_llm_inference_demo(&read_token(), &args.storage_endpoint.unwrap(), args.time_limit.unwrap_or(10 * 60), args.optimize));
         write_performance_report();
     } else if args.benchmark {
         run_performance_reporting_thread();

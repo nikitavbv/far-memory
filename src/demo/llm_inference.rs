@@ -546,10 +546,34 @@ unsafe fn _unchecked_slice<Q>(s: &[Q], offset: usize, size: usize) -> &[Q] {
     std::slice::from_raw_parts(st, size)
 }
 
-pub fn run_llm_inference_demo(token: &str, endpoint: &str, time_limit: u64) {
+pub fn run_llm_inference_demo(token: &str, endpoint: &str, time_limit: u64, optimize: bool) {
     info!("running llm inference demo");
 
-    let client = FarMemoryClient::new(Box::new(NetworkNodeBackend::new(endpoint, token)), 25700 * 1024 * 1024);
+    let slo = 5.45;
+
+    if optimize {
+        info!("running in optimization mode");
+
+        let mut memory_threshold = 26000 * 1024 * 1024;
+        loop {
+            info!("trying {}MB as local memory treshold", memory_threshold / (1024 * 1024));
+
+            let time_per_token = run_inference(token, endpoint, time_limit, memory_threshold);
+            if time_per_token > slo {
+                break;
+            }
+
+            memory_threshold -= 100 * 1024 * 1024;
+        }
+
+        info!("lowest local memory threshold which maintains SLO is {}MB", memory_threshold / (1024 * 1024));
+    } else {
+        run_inference(token, endpoint, time_limit, 25700 * 1024 * 1024);
+    }
+}
+
+fn run_inference(token: &str, endpoint: &str, time_limit: u64, local_max_memory: u64) -> f32 {
+    let client = FarMemoryClient::new(Box::new(NetworkNodeBackend::new(endpoint, token)), local_max_memory);
 
     let llama = true;
 
@@ -646,4 +670,6 @@ pub fn run_llm_inference_demo(token: &str, endpoint: &str, time_limit: u64) {
         memory_usage_far_local_memory.query(0.5).unwrap().1,
         memory_usage_far_remote_memory.query(0.5).unwrap().1
     );
+
+    time_per_token.query(0.5).unwrap().1
 }
