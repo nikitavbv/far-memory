@@ -656,7 +656,7 @@ fn run_inference(token: &str, endpoint: &str, time_limit: u64, local_max_memory:
 
     println!("");
 
-    info!(
+    println!(
         "done, total tokens generated: {}, total time: {} seconds, time per token avg: {} seconds, p95: {} seconds", 
         total_tokens_generated, 
         (Instant::now() - started_at).as_secs_f32(),
@@ -664,7 +664,7 @@ fn run_inference(token: &str, endpoint: &str, time_limit: u64, local_max_memory:
         time_per_token.query(0.9).unwrap().1
     );
 
-    info!(
+    println!(
         "average memory usage: {} MB (local), {} MB (far local), {} MB (far remote)",
         memory_usage_megabytes.query(0.5).unwrap().1,
         memory_usage_far_local_memory.query(0.5).unwrap().1,
