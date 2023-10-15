@@ -160,7 +160,7 @@ impl FarMemoryClient {
             return;
         }
 
-        let memory_to_swap_out = current_local_memory - self.local_memory_max_threshold;
+        let memory_to_swap_out = current_local_memory - limit;
         let mut spans_to_swap_out = Vec::new();
         
         let mut total_memory = 0;
