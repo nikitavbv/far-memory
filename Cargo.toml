@@ -24,6 +24,7 @@ thiserror = "1.0.48"
 rand = "0.8.5"
 quantiles = "0.7.1"
 tracing-chrome = "0.7.1"
+ctrlc = "3.4.1"
 
 [build-dependencies]
 tonic-build = "0.9.2"

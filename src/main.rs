@@ -1,5 +1,5 @@
 use {
-    std::fs,
+    std::{fs, process::exit},
     clap::Parser,
     tracing::{span, Level},
     crate::{
@@ -73,12 +73,22 @@ pub struct Args {
 async fn main() -> std::io::Result<()> {
     let args = Args::parse();
 
-    let _trace_guard = if args.trace {
+    let trace_guard = if args.trace {
         Some(init_tracing())
     } else {
         init_logging();
         None
     };
+
+    ctrlc::set_handler(move || {
+        if let Some(guard) = &trace_guard {
+            guard.flush();
+        }
+
+        println!("stop.");
+
+        exit(0);
+    }).unwrap();
 
     if args.storage {
         run_storage_server(read_token());
