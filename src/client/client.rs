@@ -79,7 +79,7 @@ impl FarMemoryClient {
 
         // swap in
         span!(Level::DEBUG, "FarMemoryClient::span_ptr - swap_in", span_id = id.id(), span_size).in_scope(|| {
-            let data = self.backend.swap_in(id);
+            let data = span!(Level::DEBUG, "backend swap in").in_scope(|| self.backend.swap_in(id));
             let size = data.len();
     
             let ptr = unsafe {
