@@ -7,3 +7,4 @@ config.toml
 /output
 .token
 performance.txt
+/trace.json

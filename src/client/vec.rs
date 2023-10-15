@@ -33,7 +33,7 @@ impl <T> FarMemoryVec<T> {
     }
 
     pub fn to_local_vec(&self) -> &Vec<T> {
-        span!(Level::DEBUG, "FarMemoryVec::to_local_vec").in_scope(|| {
+        span!(Level::DEBUG, "FarMemoryVec::to_local_vec", span_id=self.span.id()).in_scope(|| {
             let ptr = self.client.span_ptr(&self.span) as *const T;
             unsafe {
                 if ptr != (*self.vec.get()).as_ptr() {

@@ -1,5 +1,6 @@
 use {
     std::{sync::{Arc, atomic::{AtomicU64, Ordering}, RwLock}, collections::HashMap, alloc::{GlobalAlloc, Layout}},
+    tracing::{Level, span},
     crate::utils::allocator::GLOBAL,
     super::backend::{
         FarMemoryBackend,
@@ -65,33 +66,36 @@ impl FarMemoryClient {
     }
 
     pub fn span_ptr(&self, id: &SpanId) -> *mut u8 {
-        {
+        let span_size = {
             let span = &self.spans.read().unwrap()[id];
             match span {
                 FarMemorySpan::Local { ptr, size: _ } => return ptr.clone(),
-                FarMemorySpan::Remote { .. } => {
+                FarMemorySpan::Remote { size } => {
                     // will need to swap in
+                    *size
                 },
-            };
-        }
+            }
+        };
 
         // swap in
-        let data = self.backend.swap_in(id);
-        let size = data.len();
-
-        let ptr = unsafe {
-            GLOBAL.alloc(self.span_layout(size))
-        };
-        unsafe {
-            std::ptr::copy(data.as_slice() as *const _ as *const u8, ptr, size);
-        }
-
-        self.spans.write().unwrap().insert(id.clone(), FarMemorySpan::Local {
-            ptr: ptr.clone(),
-            size,
-        });
-
-        ptr
+        span!(Level::DEBUG, "FarMemoryClient::span_ptr - swap_in", span_id = id.id(), span_size).in_scope(|| {
+            let data = self.backend.swap_in(id);
+            let size = data.len();
+    
+            let ptr = unsafe {
+                GLOBAL.alloc(self.span_layout(size))
+            };
+            unsafe {
+                std::ptr::copy(data.as_slice() as *const _ as *const u8, ptr, size);
+            }
+    
+            self.spans.write().unwrap().insert(id.clone(), FarMemorySpan::Local {
+                ptr: ptr.clone(),
+                size,
+            });
+    
+            ptr
+        })
     }
 
     fn read_span_ptr_to_slice(&self, span_ptr: *mut u8, span_size: usize) -> &[u8] {
