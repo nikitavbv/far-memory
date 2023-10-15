@@ -175,10 +175,10 @@ impl Client {
     }
 
     fn write_request(&mut self, request: StorageRequest) {
-        let serialized = bincode::serialize(&request).unwrap();
+        let serialized = span!(Level::DEBUG, "serialize").in_scope(|| bincode::serialize(&request).unwrap());
 
-        self.stream.write(&(serialized.len() as u64).to_be_bytes()).unwrap();
-        self.stream.write(&serialized).unwrap();
+        span!(Level::DEBUG, "write header").in_scope(|| self.stream.write(&(serialized.len() as u64).to_be_bytes()).unwrap());
+        span!(Level::DEBUG, "write data").in_scope(|| self.stream.write(&serialized).unwrap());
     }
 
     fn read_response(&mut self) -> StorageResponse {
