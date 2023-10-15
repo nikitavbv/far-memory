@@ -2,10 +2,7 @@ use {
     std::{sync::{Arc, atomic::{AtomicU64, Ordering}, RwLock}, collections::HashMap, alloc::{GlobalAlloc, Layout}},
     tracing::{Level, span},
     crate::utils::allocator::GLOBAL,
-    super::backend::{
-        FarMemoryBackend,
-        in_memory::InMemoryBackend,
-    },
+    super::backend::FarMemoryBackend,
 };
 
 #[derive(Clone, Eq, PartialEq, Hash)]
@@ -53,6 +50,10 @@ impl FarMemoryClient {
     }
 
     pub fn allocate_span(&self, span_size: usize) -> SpanId {
+        span!(Level::DEBUG, "allocate_span - ensure local memory limit").in_scope(|| {
+            self.ensure_local_memory_under_limit(self.local_memory_max_threshold - span_size as u64);
+        });
+
         let id = SpanId(self.span_id_counter.fetch_add(1, Ordering::Relaxed));
         self.spans.write().unwrap().insert(id.clone(), self.new_span(span_size));
         id
@@ -77,8 +78,12 @@ impl FarMemoryClient {
             }
         };
 
+        span!(Level::DEBUG, "span_ptr - ensure local memory limit").in_scope(|| {
+            self.ensure_local_memory_under_limit(self.local_memory_max_threshold - span_size as u64);
+        });
+
         // swap in
-        span!(Level::DEBUG, "FarMemoryClient::span_ptr - swap_in", span_id = id.id(), span_size).in_scope(|| {
+        span!(Level::DEBUG, "span_ptr - swap_in", span_id = id.id(), span_size).in_scope(|| {
             let data = span!(Level::DEBUG, "backend swap in").in_scope(|| self.backend.swap_in(id));
             let size = data.len();
     
@@ -149,9 +154,9 @@ impl FarMemoryClient {
         self.spans.read().unwrap().iter().map(|v| v.1.remote_memory_usage()).sum()
     }
 
-    pub fn ensure_local_memory_under_limit(&self) {
+    fn ensure_local_memory_under_limit(&self, limit: u64) {
         let current_local_memory = self.total_local_memory() as u64;
-        if current_local_memory < self.local_memory_max_threshold {
+        if current_local_memory < limit {
             return;
         }
 

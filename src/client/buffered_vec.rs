@@ -1,13 +1,10 @@
 use {
-    std::{marker::PhantomData, time::Instant, sync::atomic::{AtomicU64, Ordering}},
+    std::{marker::PhantomData, time::Instant},
     super::{
         FarMemoryClient,
         buffer::FarMemoryBuffer,
     },
 };
-
-static TIMER_TO_LOCAL_VEC: AtomicU64 = AtomicU64::new(0);
-static TIMER_ENSURE_MEMORY_LIMIT: AtomicU64 = AtomicU64::new(0);
 
 pub struct FarMemoryBufferedVec<T> {
     buffer: FarMemoryBuffer,
@@ -37,8 +34,6 @@ impl<T> FarMemoryBufferedVec<T> {
     }
 
     pub fn to_local_vec(&self) -> Vec<T> {
-        let started_at = Instant::now();
-
         let size = std::mem::size_of::<T>();
 
         let data = self.buffer.slice(0..(self.len() * size));
@@ -46,7 +41,6 @@ impl<T> FarMemoryBufferedVec<T> {
         unsafe {
             let res = Vec::from_raw_parts(data.as_ptr() as *mut T, self.len(), self.len());
             std::mem::forget(data); // to prevent double free
-            TIMER_TO_LOCAL_VEC.fetch_add((Instant::now() - started_at).as_millis() as u64, Ordering::Relaxed);
             res
         }
     }
@@ -76,17 +70,6 @@ impl<T> FarMemoryBufferedVec<T> {
     pub fn len(&self) -> usize {
         self.len
     }
-
-    pub fn ensure_local_memory_under_limit(&self) {
-        let started_at = Instant::now();
-        // TODO: remove this. Memory limit should be enforced on swap in.
-        self.buffer.ensure_local_memory_under_limit();
-        TIMER_ENSURE_MEMORY_LIMIT.fetch_add((Instant::now() - started_at).as_millis() as u64, Ordering::Relaxed);
-    }
-}
-
-pub fn print_far_vec_performance_report() {
-    println!("far vec performance: to_local_vec {}, ensure_memory_limit {}", TIMER_TO_LOCAL_VEC.load(Ordering::Relaxed), TIMER_ENSURE_MEMORY_LIMIT.load(Ordering::Relaxed));
 }
 
 #[cfg(test)]
@@ -99,7 +82,7 @@ mod tests {
     #[test]
     fn get() {
         let vec = FarMemoryBufferedVec::from_vec(
-            FarMemoryClient::new(Box::new(InMemoryBackend::new()), 1000), 
+            FarMemoryClient::new(Box::new(InMemoryBackend::new()), 1000 * 1024 * 1024), 
             vec![10.02, 9.02, 8.02, 7.02, 6.02, 5.02, 4.02, 3.02, 2.02, 1.02]
         );
         
@@ -119,7 +102,7 @@ mod tests {
     #[test]
     fn to_local_vec() {
         let vec = FarMemoryBufferedVec::from_vec(
-            FarMemoryClient::new(Box::new(InMemoryBackend::new()), 1000), 
+            FarMemoryClient::new(Box::new(InMemoryBackend::new()), 1000 * 1024 * 1024), 
             vec![10.02, 9.02, 8.02, 7.02, 6.02, 5.02, 4.02, 3.02, 2.02, 1.02]
         );
         

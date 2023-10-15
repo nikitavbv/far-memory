@@ -5,7 +5,7 @@ use {
     quantiles::ckms::CKMS,
     crate::{
         utils::allocator::current_memory_usage,
-        client::{FarMemoryBuffer, FarMemoryClient, NetworkNodeBackend, FarMemoryBufferedVec, FarMemoryVec, print_performance_report},
+        client::{FarMemoryBuffer, FarMemoryClient, NetworkNodeBackend, FarMemoryBufferedVec, FarMemoryVec},
     },
 };
 
@@ -303,7 +303,6 @@ where
     fn step(&mut self, token: usize, pos: usize, cfg: &Config, state: &mut ExecutionState<Vec<Ty>>) {
         // copy token embedding to residual stream
         self.embeddings_far.to_local_vec().token_to_resid_stream(token, &mut state.x, cfg);
-        self.embeddings_far.ensure_local_memory_under_limit();
 
         for ld in self.layers.iter_mut() {
             ld.rms_and_qkv(cfg, state);
@@ -330,14 +329,8 @@ impl LlamaLayer<Vec<Ty>> for LayerWeights<Vec<Ty>>
 {
     fn rms_and_qkv(&self, config: &Config, state: &mut ExecutionState<Vec<Ty>>) {
         self.rms_attn.to_local_vec().rms_norm(&state.x, &mut state.xb);
-        self.rms_attn.ensure_local_memory_under_limit();
-
         self.wq.to_local_vec().mat_vec(&state.xb, &mut state.q);
-        self.wq.ensure_local_memory_under_limit();
-
         self.wk.to_local_vec().mat_vec(&state.xb, &mut state.k);
-        self.wk.ensure_local_memory_under_limit();
-
         self.wv.to_local_vec().mat_vec(&state.xb, &mut state.v);
     }
 
@@ -429,7 +422,6 @@ impl LlamaLayer<Vec<Ty>> for LayerWeights<Vec<Ty>>
     fn ffn(&self, state: &mut ExecutionState<Vec<Ty>>) {
         // normalize redisual stream before FFN
         self.rms_ffn.to_local_vec().rms_norm(&state.x, &mut state.xb);
-        self.rms_ffn.ensure_local_memory_under_limit();
 
         // FFN:
         // z = SiLU(W1 \dot x) * (W3 \dot x)
@@ -654,6 +646,4 @@ pub fn run_llm_inference_demo(token: &str, endpoint: &str, time_limit: u64) {
         memory_usage_far_local_memory.query(0.5).unwrap().1,
         memory_usage_far_remote_memory.query(0.5).unwrap().1
     );
-
-    print_performance_report();
 }

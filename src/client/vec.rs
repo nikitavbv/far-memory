@@ -46,13 +46,6 @@ impl <T> FarMemoryVec<T> {
             }
         })        
     }
-
-    pub fn ensure_local_memory_under_limit(&self) {
-        span!(Level::DEBUG, "FarMemoryVec::ensure_local_memory_under_limit").in_scope(|| {
-            // TODO: remove this. Memory limit should be enforced on swap in.
-            self.client.ensure_local_memory_under_limit();
-        });
-    }
 }
 
 impl<T> Drop for FarMemoryVec<T> {

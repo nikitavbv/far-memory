@@ -56,8 +56,3 @@ impl<T> Deref for FarMemory<T> {
         }
     }
 }
-
-// performance report
-pub fn print_performance_report() {
-    buffered_vec::print_far_vec_performance_report();
-}
