@@ -1,5 +1,6 @@
 use {
     std::cell::UnsafeCell,
+    tracing::{span, Level},
     super::{FarMemoryClient, client::SpanId},
 };
 
@@ -32,21 +33,25 @@ impl <T> FarMemoryVec<T> {
     }
 
     pub fn to_local_vec(&self) -> &Vec<T> {
-        let ptr = self.client.span_ptr(&self.span) as *const T;
-        unsafe {
-            if ptr != (*self.vec.get()).as_ptr() {
-                let mut t = Vec::from_raw_parts(ptr as *mut T, self.len, self.len);
-                std::mem::swap(&mut *self.vec.get(), &mut t);
-                std::mem::forget(t);
+        span!(Level::DEBUG, "FarMemoryVec::to_local_vec").in_scope(|| {
+            let ptr = self.client.span_ptr(&self.span) as *const T;
+            unsafe {
+                if ptr != (*self.vec.get()).as_ptr() {
+                    let mut t = Vec::from_raw_parts(ptr as *mut T, self.len, self.len);
+                    std::mem::swap(&mut *self.vec.get(), &mut t);
+                    std::mem::forget(t);
+                }
+    
+                & *self.vec.get()
             }
-
-            & *self.vec.get()
-        }
+        })        
     }
 
     pub fn ensure_local_memory_under_limit(&self) {
-        // TODO: remove this. Memory limit should be enforced on swap in.
-        self.client.ensure_local_memory_under_limit();
+        span!(Level::DEBUG, "FarMemoryVec::ensure_local_memory_under_limit").in_scope(|| {
+            // TODO: remove this. Memory limit should be enforced on swap in.
+            self.client.ensure_local_memory_under_limit();
+        });
     }
 }
 

@@ -1,8 +1,9 @@
 use {
     std::fs,
     clap::Parser,
+    tracing::{span, Level},
     crate::{
-        utils::{init_logging, performance::{run_performance_reporting_thread, write_performance_report}},
+        utils::{init_logging, init_tracing, performance::{run_performance_reporting_thread, write_performance_report}},
         thesis::build_thesis,
         storage::run_storage_server,
         demo::{
@@ -22,6 +23,10 @@ mod utils;
 
 #[derive(Parser, Debug)]
 pub struct Args {
+    #[arg(long)]
+    trace: bool,
+
+    // components
     #[arg(long)]
     storage: bool,
     
@@ -60,8 +65,14 @@ pub struct Args {
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
-    init_logging();
     let args = Args::parse();
+
+    let _trace_guard = if args.trace {
+        Some(init_tracing())
+    } else {
+        init_logging();
+        None
+    };
 
     if args.storage {
         run_storage_server(read_token());
@@ -69,7 +80,8 @@ async fn main() -> std::io::Result<()> {
         run_simple_demo();
     } else if args.llm_inference_demo {
         run_performance_reporting_thread();
-        run_llm_inference_demo(&read_token(), &args.storage_endpoint.unwrap());
+        span!(Level::DEBUG, "llm_inference_demo")
+            .in_scope(|| run_llm_inference_demo(&read_token(), &args.storage_endpoint.unwrap()));
         write_performance_report();
     } else if args.benchmark {
         run_performance_reporting_thread();
