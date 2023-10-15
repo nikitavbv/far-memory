@@ -6,7 +6,7 @@ use {
         time::Duration, 
         thread,
     },
-    tracing::{info, error},
+    tracing::{info, error, span, Level},
     crate::utils::performance::{COUNTER_SWAP_IN_RECEIVE, COUNTER_SWAP_IN_DESERIALIZE, Counter},
     self::protocol::{StorageRequest, StorageResponse},
 };
@@ -167,8 +167,12 @@ impl Client {
     }
 
     fn request(&mut self, request: StorageRequest) -> StorageResponse {
-        self.write_request(request);
-        self.read_response()
+        span!(Level::DEBUG, "writing request").in_scope(|| {
+            self.write_request(request);
+        });
+        span!(Level::DEBUG, "reading response").in_scope(|| {
+            self.read_response()
+        })
     }
 
     fn write_request(&mut self, request: StorageRequest) {

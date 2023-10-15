@@ -181,7 +181,7 @@ impl FarMemoryClient {
             total_memory += span.local_memory_usage() as u64;
         }
 
-        span!(Level::DEBUG, "swap_out_spans").in_scope(|| {
+        span!(Level::DEBUG, "swap_out_spans", needed = memory_to_swap_out, swap_out_req_size = total_memory).in_scope(|| {
             self.swap_out_spans(&spans_to_swap_out);
         });
     }
