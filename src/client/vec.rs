@@ -81,10 +81,7 @@ impl<T> Drop for FarMemoryLocalVec<T> {
     fn drop(&mut self) {
         let mut v = Vec::new();
         std::mem::swap(&mut self.vec, &mut v);
-        unsafe {
-            std::mem::forget(v);
-        }
-
+        std::mem::forget(v);
         self.client.mark_span_in_use(&self.span, false);
     }
 }

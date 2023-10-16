@@ -1,5 +1,6 @@
 use {
     std::{alloc::{GlobalAlloc, Layout}, ops::Range},
+    tracing::{span, Level},
     crate::utils::allocator::GLOBAL,
 };
 
@@ -68,10 +69,12 @@ impl LocalSpanData {
 
     fn free_memory(&mut self) {
         if self.ptr != std::ptr::null_mut() {
-            unsafe {
-                GLOBAL.dealloc(self.ptr, span_layout(self.size));
-            }
-            self.ptr = std::ptr::null_mut();
+            span!(Level::DEBUG, "free span memory").in_scope(|| {
+                unsafe {
+                    GLOBAL.dealloc(self.ptr, span_layout(self.size));
+                }
+                self.ptr = std::ptr::null_mut();
+            })
         }
     }
 
@@ -211,7 +214,7 @@ impl FarMemorySpan {
 
 impl Drop for LocalSpanData {
     fn drop(&mut self) {
-        self.free_memory()
+        span!(Level::DEBUG, "LocalSpanData drop").in_scope(|| self.free_memory())
     }
 }
 
