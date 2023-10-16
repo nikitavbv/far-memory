@@ -35,35 +35,28 @@ impl FarMemoryClient {
         });
 
         let id = SpanId::from_id(self.span_id_counter.fetch_add(1, Ordering::Relaxed));
-        self.spans.write().unwrap().insert(id.clone(), self.new_span(span_size));
+        self.spans.write().unwrap().insert(id.clone(), FarMemorySpan::new_local(span_size));
         id
     }
 
-    fn new_span(&self, span_size: usize) -> FarMemorySpan {
-        FarMemorySpan::Local {
-            ptr: unsafe { GLOBAL.alloc(self.span_layout(span_size)) },
-            size: span_size,
-        }
-    }
-
     pub fn span_ptr(&self, id: &SpanId) -> *mut u8 {
-        let span_size = {
+        let span_remote_size = {
             let span = &self.spans.read().unwrap()[id];
-            match span {
-                FarMemorySpan::Local { ptr, size: _ } => return ptr.clone(),
-                FarMemorySpan::Remote { size } => {
-                    // will need to swap in
-                    *size
-                },
+            if span.is_local() {
+                return span.ptr();
             }
+            
+            // will need to swap in
+            span.remote_memory_usage()
         };
 
         span!(Level::DEBUG, "span_ptr - ensure local memory limit").in_scope(|| {
-            self.ensure_local_memory_under_limit(self.local_memory_max_threshold - span_size as u64);
+            // only need to free as much memory as remote part will take. There is already memory for local part of span
+            self.ensure_local_memory_under_limit(self.local_memory_max_threshold - span_remote_size as u64);
         });
 
         // swap in
-        span!(Level::DEBUG, "span_ptr - swap_in", span_id = id.id(), span_size).in_scope(|| {
+        span!(Level::DEBUG, "span_ptr - swap_in", span_id = id.id(), span_remote_size).in_scope(|| {
             let data = span!(Level::DEBUG, "backend swap in").in_scope(|| self.backend.swap_in(id));
             let size = data.len();
     
@@ -74,19 +67,10 @@ impl FarMemoryClient {
                 std::ptr::copy(data.as_slice() as *const _ as *const u8, ptr, size);
             }
     
-            self.spans.write().unwrap().insert(id.clone(), FarMemorySpan::Local {
-                ptr: ptr.clone(),
-                size,
-            });
+            self.spans.write().unwrap().insert(id.clone(), FarMemorySpan::for_local_ptr_and_size(ptr.clone(), size));
     
             ptr
         })
-    }
-
-    fn read_span_ptr_to_slice(&self, span_ptr: *mut u8, span_size: usize) -> &[u8] {
-        unsafe {
-            std::slice::from_raw_parts(span_ptr, span_size)
-        }
     }
 
     fn span_layout(&self, span_size: usize) -> Layout {
@@ -104,22 +88,20 @@ impl FarMemoryClient {
     fn swap_out_span(&self, span_id: &SpanId) {
         let span = self.spans.write().unwrap().remove(&span_id.clone()).unwrap();
 
-        let (ptr, size) = match span {
-            FarMemorySpan::Local { ptr, size } => (ptr.clone(), size),
+        let local_span_data = match span {
+            FarMemorySpan::Local(local) => local,
             FarMemorySpan::Remote { .. } => return,
         };
 
-        let data = self.read_span_ptr_to_slice(ptr, size);
+        let data = local_span_data.read_to_slice();
 
         span!(Level::DEBUG, "backend swap out", size = data.len()).in_scope(|| {
             self.backend.swap_out(span_id.clone(), data);
         });
         
-        self.spans.write().unwrap().insert(span_id.clone(), FarMemorySpan::Remote { size });
+        self.spans.write().unwrap().insert(span_id.clone(), FarMemorySpan::Remote { local_part: None, total_size: local_span_data.size() });
 
-        unsafe {
-            GLOBAL.dealloc(ptr, self.span_layout(size));
-        }
+        local_span_data.free();
     }
 
     pub fn total_local_spans(&self) -> usize {
