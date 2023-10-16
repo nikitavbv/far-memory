@@ -1,5 +1,5 @@
 use {
-    std::alloc::{GlobalAlloc, Layout},
+    std::{alloc::{GlobalAlloc, Layout}, ops::Range},
     crate::utils::allocator::GLOBAL,
 };
 
@@ -44,9 +44,54 @@ impl LocalSpanData {
         Self::for_local_ptr_and_size(unsafe { GLOBAL.alloc(span_layout(size)) }, size)
     }
 
+    pub fn from_vec(data: Vec<u8>) -> Self {
+        // TODO: just use vec pointer?
+        let size = data.len();
+        let ptr = unsafe {
+            GLOBAL.alloc(span_layout(size))
+        };
+
+        unsafe {
+            std::ptr::copy(data.as_slice() as *const _ as *const u8, ptr, size);
+        };
+
+        Self::for_local_ptr_and_size(ptr, size)
+    }
+
     pub fn free(self) {
         unsafe {
             GLOBAL.dealloc(self.ptr, span_layout(self.size));
+        }
+    }
+
+    pub fn shrink(self, shrink_by: usize) -> Self {
+        if shrink_by > self.size {
+            panic!("cannot shrink by more than the current size of span");
+        }
+
+        let new_size = self.size - shrink_by;
+
+        Self {
+            ptr: unsafe {
+                GLOBAL.realloc(self.ptr, span_layout(self.size), new_size)
+            },
+            size: new_size,
+        }
+    }
+
+    pub fn extend_with_vec(self, data: Vec<u8>) -> Self {
+        let new_size = self.size + data.len();
+        let ptr = unsafe {
+            GLOBAL.realloc(self.ptr, span_layout(self.size), new_size)
+        };
+
+        unsafe {
+            std::ptr::copy_nonoverlapping(data.as_ptr() as *mut u8, ptr.add(self.size), data.len());
+        }
+        
+        Self {
+            ptr,
+            size: new_size,
         }
     }
 
@@ -54,6 +99,16 @@ impl LocalSpanData {
         unsafe {
             std::slice::from_raw_parts(self.ptr, self.size)
         }
+    }
+
+    pub fn read_to_slice_with_range(&self, range: Range<usize>) -> &[u8] {
+        unsafe {
+            std::slice::from_raw_parts(self.ptr.add(range.start), range.len())
+        }
+    }
+
+    pub fn ptr(&self) -> *mut u8 {
+        self.ptr.clone()
     }
 
     pub fn size(&self) -> usize {
@@ -89,6 +144,10 @@ impl FarMemorySpan {
             FarMemorySpan::Local { .. } => false,
             FarMemorySpan::Remote { .. } => true,
         }
+    }
+
+    pub fn total_size(&self) -> usize {
+        self.local_memory_usage() + self.remote_memory_usage()
     }
 
     pub fn local_memory_usage(&self) -> usize {
