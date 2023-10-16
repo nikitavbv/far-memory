@@ -62,7 +62,11 @@ impl LocalSpanData {
         Self::for_local_ptr_and_size(ptr, size)
     }
 
-    pub fn free(self) {
+    pub fn free(mut self) {
+        self.free_memory()
+    }
+
+    fn free_memory(&mut self) {
         unsafe {
             GLOBAL.dealloc(self.ptr, span_layout(self.size));
         }
@@ -196,6 +200,12 @@ impl FarMemorySpan {
             FarMemorySpan::Local { data } => data.is_in_use(),
             FarMemorySpan::Remote { local_part, total_size: _ } => local_part.as_ref().map(|v| v.is_in_use()).unwrap_or(false),
         }
+    }
+}
+
+impl Drop for LocalSpanData {
+    fn drop(&mut self) {
+        self.free_memory()
     }
 }
 
