@@ -1,7 +1,6 @@
 use {
-    std::{sync::{Arc, atomic::{AtomicU64, Ordering}, RwLock}, collections::HashMap, alloc::{GlobalAlloc, Layout}},
+    std::{sync::{Arc, atomic::{AtomicU64, Ordering}, RwLock}, collections::HashMap},
     tracing::{Level, span},
-    crate::utils::allocator::GLOBAL,
     super::{
         backend::FarMemoryBackend,
         span::{SpanId, FarMemorySpan, LocalSpanData},
@@ -173,5 +172,30 @@ impl FarMemoryClient {
         span!(Level::DEBUG, "swap_out_spans", needed = memory_to_swap_out, swap_out_req_size = total_memory).in_scope(|| {
             self.swap_out_spans(&spans_to_swap_out);
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use {
+        crate::client::InMemoryBackend,
+        super::*,
+    };
+
+    #[test]
+    fn partial_swap_out() {
+        let client = FarMemoryClient::new(Box::new(InMemoryBackend::new()), 30);
+        let span = client.allocate_span(20);
+
+        assert_eq!(20, client.total_local_memory());
+        assert_eq!(0, client.total_remote_memory());
+
+        client.ensure_local_memory_under_limit(15);
+        assert_eq!(15, client.total_local_memory());
+        assert_eq!(5, client.total_remote_memory());
+
+        let _ptr = client.span_ptr(&span);
+        assert_eq!(20, client.total_local_memory());
+        assert_eq!(0, client.total_remote_memory());
     }
 }
