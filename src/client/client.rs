@@ -162,11 +162,9 @@ impl FarMemoryClient {
                 continue;
             }
 
-            spans_to_swap_out.push((
-                span_id.clone(), 
-                span_local_memory_size.min((memory_to_swap_out - total_memory) as usize)
-            ));
-            total_memory += span.local_memory_usage() as u64;
+            let span_swap_out_len = span_local_memory_size.min((memory_to_swap_out - total_memory) as usize);
+            spans_to_swap_out.push((span_id.clone(), span_swap_out_len));
+            total_memory += span_swap_out_len as u64;
         }
 
         span!(Level::DEBUG, "swap_out_spans", needed = memory_to_swap_out, swap_out_req_size = total_memory).in_scope(|| {
