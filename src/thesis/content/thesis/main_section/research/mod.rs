@@ -57,9 +57,9 @@ pub fn research() -> Block {
         // if I will need more, I can take a look at Infiniswap
         rdma(),
         hydra(),
-        far_memory_in_warehouse_scale(),
-        carbink(),
         aifm(),
+        carbink(),
+        far_memory_in_warehouse_scale(),
 
         Block::Placeholder(
             Box::new(Block::Multiple(vec![
