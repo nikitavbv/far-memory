@@ -54,6 +54,7 @@ pub fn research() -> Block {
             "За рахунок чого забезпечується відмовостійкість?".to_owned(),
         ]),
 
+        // if I will need more, I can take a look at Infiniswap
         rdma(),
         hydra(),
         far_memory_in_warehouse_scale(),
