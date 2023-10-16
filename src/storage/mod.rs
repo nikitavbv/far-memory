@@ -182,14 +182,19 @@ impl Client {
     }
 
     fn read_response(&mut self) -> StorageResponse {
-        let mut res_len: [u8; 8] = [0u8; 8];
-        self.stream.read_exact(&mut res_len).unwrap();
-        let res_len = u64::from_be_bytes(res_len);
+        let res_len = span!(Level::DEBUG, "reading response header").in_scope(|| {
+            let mut res_len: [u8; 8] = [0u8; 8];
+            self.stream.read_exact(&mut res_len).unwrap();
+            u64::from_be_bytes(res_len)
+        });
 
-        let mut res = vec![0u8; res_len as usize];
-        self.stream.read_exact(&mut res).unwrap();
+        let res = span!(Level::DEBUG, "reading response body").in_scope(|| {
+            let mut res = vec![0u8; res_len as usize];
+            self.stream.read_exact(&mut res).unwrap();
+            res
+        });
 
-        bincode::deserialize(&res).unwrap()
+        span!(Level::DEBUG, "deserialize").in_scope(|| bincode::deserialize(&res).unwrap())
     }
 
     pub fn close(&mut self) {
