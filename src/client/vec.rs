@@ -1,7 +1,7 @@
 use {
     std::cell::UnsafeCell,
     tracing::{span, Level},
-    super::{FarMemoryClient, client::SpanId},
+    super::{FarMemoryClient, span::SpanId},
 };
 
 pub struct FarMemoryVec<T> {

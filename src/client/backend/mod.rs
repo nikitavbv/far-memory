@@ -1,4 +1,4 @@
-use crate::client::client::SpanId;
+use crate::client::span::SpanId;
 
 pub mod disk;
 pub mod in_memory;

@@ -1,6 +1,6 @@
 use {
     std::{sync::RwLock, collections::HashMap},
-    crate::client::client::SpanId,
+    crate::client::span::SpanId,
     super::FarMemoryBackend,
 };
 

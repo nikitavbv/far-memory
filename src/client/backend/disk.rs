@@ -1,6 +1,6 @@
 use {
     std::fs,
-    crate::client::client::SpanId,
+    crate::client::span::SpanId,
     super::FarMemoryBackend,
 };
 

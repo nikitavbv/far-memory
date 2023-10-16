@@ -1,6 +1,9 @@
 use {
     std::ops::{Index, Range},
-    super::client::{FarMemoryClient, SpanId},
+    super::{
+        client::FarMemoryClient,
+        span::SpanId,
+    },
 };
 
 pub struct FarMemoryBuffer {

@@ -7,7 +7,8 @@ pub use self::{
     buffer::FarMemoryBuffer,
     buffered_vec::FarMemoryBufferedVec,
     vec::FarMemoryVec,
-    client::{FarMemoryClient, SpanId},
+    client::FarMemoryClient,
+    span::SpanId,
     backend::{
         FarMemoryBackend,
         in_memory::InMemoryBackend,
@@ -21,6 +22,7 @@ pub mod backend;
 mod buffer;
 mod buffered_vec;
 mod client;
+mod span;
 mod vec;
 
 /**

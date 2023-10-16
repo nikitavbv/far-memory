@@ -2,11 +2,11 @@ use {
     std::{sync::{Arc, atomic::{AtomicU64, Ordering}, RwLock}, collections::HashMap, alloc::{GlobalAlloc, Layout}},
     tracing::{Level, span},
     crate::utils::allocator::GLOBAL,
-    super::backend::FarMemoryBackend,
+    super::{
+        backend::FarMemoryBackend,
+        span::{SpanId, FarMemorySpan},
+    },
 };
-
-#[derive(Clone, Eq, PartialEq, Hash)]
-pub struct SpanId(u64);
 
 #[derive(Clone)]
 pub struct FarMemoryClient {
@@ -16,26 +16,6 @@ pub struct FarMemoryClient {
     backend: Arc<Box<dyn FarMemoryBackend>>,
 
     local_memory_max_threshold: u64,
-}
-
-enum FarMemorySpan {
-    Local {
-        ptr: *mut u8,
-        size: usize,   
-    },
-    Remote {
-        size: usize,
-    },
-}
-
-impl SpanId {
-    pub fn from_id(id: u64) -> Self {
-        Self(id)
-    }
-
-    pub fn id(&self) -> u64 {
-        self.0
-    }
 }
 
 impl FarMemoryClient {
@@ -54,7 +34,7 @@ impl FarMemoryClient {
             self.ensure_local_memory_under_limit(self.local_memory_max_threshold - span_size as u64);
         });
 
-        let id = SpanId(self.span_id_counter.fetch_add(1, Ordering::Relaxed));
+        let id = SpanId::from_id(self.span_id_counter.fetch_add(1, Ordering::Relaxed));
         self.spans.write().unwrap().insert(id.clone(), self.new_span(span_size));
         id
     }
@@ -184,35 +164,5 @@ impl FarMemoryClient {
         span!(Level::DEBUG, "swap_out_spans", needed = memory_to_swap_out, swap_out_req_size = total_memory).in_scope(|| {
             self.swap_out_spans(&spans_to_swap_out);
         });
-    }
-}
-
-impl FarMemorySpan {
-    pub fn is_local(&self) -> bool {
-        match self {
-            FarMemorySpan::Local { .. } => true,
-            FarMemorySpan::Remote { .. } => false,
-        }
-    }
-
-    pub fn is_remote(&self) -> bool {
-        match self {
-            FarMemorySpan::Local { .. } => false,
-            FarMemorySpan::Remote { .. } => true,
-        }
-    }
-
-    pub fn local_memory_usage(&self) -> usize {
-        match self {
-            FarMemorySpan::Local { ptr: _, size } => *size,
-            FarMemorySpan::Remote { .. } => 0,
-        }
-    }
-
-    pub fn remote_memory_usage(&self) -> usize {
-        match self {
-            FarMemorySpan::Local { .. } => 0,
-            FarMemorySpan::Remote { size } => *size,
-        } 
     }
 }

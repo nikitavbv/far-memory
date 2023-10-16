@@ -2,7 +2,7 @@ use {
     std::sync::Mutex,
     crate::{
         storage::Client,
-        client::client::SpanId,
+        client::span::SpanId,
     },
     super::FarMemoryBackend,
 };
