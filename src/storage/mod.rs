@@ -31,6 +31,8 @@ fn run_server(host: String, token: String, connections_limit: Option<usize>, req
         info!("handling incoming connection");
         let mut requests = 0;
         loop {
+            let _req_loop_span = span!(Level::DEBUG, "request loop iteration").entered();
+
             requests += 1;
             if let Some(limit) = requests_limit {
                 if requests > limit {
@@ -38,33 +40,49 @@ fn run_server(host: String, token: String, connections_limit: Option<usize>, req
                 }
             }
 
-            let mut req_len: [u8; 8] = [0u8; 8];
-            if let Err(err) = stream.read(&mut req_len) {
-                error!("unexpected error when reading request header: {:?}", err);
-                break;
-            }
+            let req_len = {
+                let _req_len_span = span!(Level::DEBUG, "read request header").entered();
 
-            let req_len = u64::from_be_bytes(req_len);
-            let mut req = vec![0u8; req_len as usize];
-            if let Err(err) = stream.read_exact(&mut req) {
-                error!("unexpected error when reading request body: {:?}", err);
-                break;
-            };
-
-            let req: StorageRequest = match bincode::deserialize(&req) {
-                Ok(v) => v,
-                Err(err) => {
-                    error!("unexpected error when reading request: {:?}", err);
+                let mut req_len: [u8; 8] = [0u8; 8];
+                if let Err(err) = stream.read(&mut req_len) {
+                    error!("unexpected error when reading request header: {:?}", err);
                     break;
                 }
-            };     
+                u64::from_be_bytes(req_len)
+            };
 
-            let res = server.handle(req);
+            let req = {
+                let _req_body_span = span!(Level::DEBUG, "read request body").entered();
 
-            let res = bincode::serialize(&res).unwrap();
+                let mut req = vec![0u8; req_len as usize];
+                if let Err(err) = stream.read_exact(&mut req) {
+                    error!("unexpected error when reading request body: {:?}", err);
+                    break;
+                };
 
-            stream.write(&(res.len() as u64).to_be_bytes()).unwrap();
-            stream.write(&res).unwrap();
+                req
+            };
+
+            let req = {
+                let _req_deserialize_body = span!(Level::DEBUG, "deserialize request body").entered();
+
+                match bincode::deserialize(&req) {
+                    Ok(v) => v,
+                    Err(err) => {
+                        error!("unexpected error when reading request: {:?}", err);
+                        break;
+                    }
+                }
+            };
+
+            let res = span!(Level::DEBUG, "handle request").in_scope(|| server.handle(req));
+
+            let res = span!(Level::DEBUG, "serialize response").in_scope(|| bincode::serialize(&res).unwrap());
+
+            span!(Level::DEBUG, "write response").in_scope(|| {
+                stream.write(&(res.len() as u64).to_be_bytes()).unwrap();
+                stream.write(&res).unwrap();
+            });
         }
 
         if let Some(limit) = connections_limit {
