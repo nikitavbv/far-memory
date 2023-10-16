@@ -76,7 +76,7 @@ impl FarMemoryClient {
             let ptr = local_data.ptr();        
             self.spans.write().unwrap().insert(id.clone(), FarMemorySpan::Local {
                 data: local_data,
-            });    
+            });
             ptr
         })
     }
@@ -125,7 +125,7 @@ impl FarMemoryClient {
         span!(Level::DEBUG, "backend swap out", size = data.len()).in_scope(|| {
             self.backend.swap_out(span_id.clone(), data);
         });
-        
+
         if full_swap_out {
             self.spans.write().unwrap().insert(span_id.clone(), FarMemorySpan::Remote { local_part: None, total_size });
             local_part.free();

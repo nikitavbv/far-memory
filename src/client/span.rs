@@ -67,32 +67,38 @@ impl LocalSpanData {
     }
 
     fn free_memory(&mut self) {
-        unsafe {
-            GLOBAL.dealloc(self.ptr, span_layout(self.size));
+        if self.ptr != std::ptr::null_mut() {
+            unsafe {
+                GLOBAL.dealloc(self.ptr, span_layout(self.size));
+            }
+            self.ptr = std::ptr::null_mut();
         }
     }
 
-    pub fn shrink(self, shrink_by: usize) -> Self {
+    pub fn shrink(mut self, shrink_by: usize) -> Self {
         if shrink_by > self.size {
             panic!("cannot shrink by more than the current size of span");
         }
 
         let new_size = self.size - shrink_by;
+        let prev_ptr = self.ptr;
+        self.ptr = std::ptr::null_mut();
 
         Self {
             ptr: unsafe {
-                GLOBAL.realloc(self.ptr, span_layout(self.size), new_size)
+                GLOBAL.realloc(prev_ptr, span_layout(self.size), new_size)
             },
             size: new_size,
             in_use: self.in_use,
         }
     }
 
-    pub fn extend_with_vec(self, data: Vec<u8>) -> Self {
+    pub fn extend_with_vec(mut self, data: Vec<u8>) -> Self {
         let new_size = self.size + data.len();
         let ptr = unsafe {
             GLOBAL.realloc(self.ptr, span_layout(self.size), new_size)
         };
+        self.ptr = std::ptr::null_mut();
 
         unsafe {
             std::ptr::copy_nonoverlapping(data.as_ptr() as *mut u8, ptr.add(self.size), data.len());
