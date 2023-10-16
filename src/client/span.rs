@@ -9,10 +9,13 @@ pub struct SpanId(u64);
 pub struct LocalSpanData {
     ptr: *mut u8,
     size: usize,
+    in_use: bool, // currently used by application and should not be swapped out
 }
 
 pub enum FarMemorySpan {
-    Local(LocalSpanData),
+    Local {
+        data: LocalSpanData,
+    },
     Remote {
         // spans can be large, so it is possible that span is only partially swapped out (to optimize latency). For example, it does not
         // make sense to swap out the full 180MB span if the system requires just 10MB more free memory.
@@ -37,6 +40,7 @@ impl LocalSpanData {
         Self {
             ptr,
             size,
+            in_use: false,
         }
     }
 
@@ -76,6 +80,7 @@ impl LocalSpanData {
                 GLOBAL.realloc(self.ptr, span_layout(self.size), new_size)
             },
             size: new_size,
+            in_use: self.in_use,
         }
     }
 
@@ -92,6 +97,7 @@ impl LocalSpanData {
         Self {
             ptr,
             size: new_size,
+            in_use: self.in_use,
         }
     }
 
@@ -114,20 +120,32 @@ impl LocalSpanData {
     pub fn size(&self) -> usize {
         self.size
     }
+
+    pub fn mark_in_use(&mut self, in_use: bool) {
+        self.in_use = in_use;
+    }
+
+    pub fn is_in_use(&self) -> bool {
+        self.in_use
+    }
 }
 
 impl FarMemorySpan {
     pub fn for_local_ptr_and_size(ptr: *mut u8, size: usize) -> Self {
-        Self::Local(LocalSpanData::for_local_ptr_and_size(ptr, size))
+        Self::Local {
+            data: LocalSpanData::for_local_ptr_and_size(ptr, size),
+        }
     }
 
     pub fn new_local(size: usize) -> Self {
-        Self::Local(LocalSpanData::new(size))
+        Self::Local { 
+            data: LocalSpanData::new(size),
+        }
     }
 
     pub fn ptr(&self) -> *mut u8 {
         match self {
-            FarMemorySpan::Local(local_data) => local_data.ptr.clone(),
+            FarMemorySpan::Local { data  } => data.ptr.clone(),
             FarMemorySpan::Remote { .. } => panic!("cannot provide a ptr for remote span"),
         }
     }
@@ -152,7 +170,7 @@ impl FarMemorySpan {
 
     pub fn local_memory_usage(&self) -> usize {
         match self {
-            FarMemorySpan::Local(local_data) => local_data.size(),
+            FarMemorySpan::Local { data  } => data.size(),
             FarMemorySpan::Remote { local_part, total_size: _ } => local_part.as_ref().map(|v| v.size()).unwrap_or(0),
         }
     }
@@ -162,6 +180,22 @@ impl FarMemorySpan {
             FarMemorySpan::Local { .. } => 0,
             FarMemorySpan::Remote { local_part, total_size } => total_size - local_part.as_ref().map(|v| v.size()).unwrap_or(0),
         } 
+    }
+
+    pub fn mark_in_use(&mut self, set_in_use: bool) {
+        match self {
+            FarMemorySpan::Local { data } => data.mark_in_use(set_in_use),
+            FarMemorySpan::Remote { local_part, total_size: _ } => if let Some(local_part) = local_part {
+                local_part.mark_in_use(set_in_use);
+            }
+        }
+    }
+
+    pub fn is_in_use(&self) -> bool {
+        match self {
+            FarMemorySpan::Local { data } => data.is_in_use(),
+            FarMemorySpan::Remote { local_part, total_size: _ } => local_part.as_ref().map(|v| v.is_in_use()).unwrap_or(false),
+        }
     }
 }
 

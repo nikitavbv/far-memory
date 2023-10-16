@@ -1,5 +1,5 @@
 use {
-    std::cell::UnsafeCell,
+    std::{ops::Deref, fmt::Debug, marker::PhantomData},
     tracing::{span, Level},
     super::{FarMemoryClient, span::SpanId},
 };
@@ -8,7 +8,14 @@ pub struct FarMemoryVec<T> {
     client: FarMemoryClient,
     span: SpanId,
     len: usize,
-    vec: UnsafeCell<Vec<T>>,
+
+    _phantom: PhantomData<T>,
+}
+
+pub struct FarMemoryLocalVec<T> {
+    client: FarMemoryClient,
+    span: SpanId,
+    vec: Vec<T>,
 }
 
 impl <T> FarMemoryVec<T> {
@@ -26,35 +33,59 @@ impl <T> FarMemoryVec<T> {
             client,
             span,
             len: vec.len(),
-            vec: UnsafeCell::new(unsafe {
-                Vec::from_raw_parts(ptr as *mut T, vec.len(), vec.len())
-            }),
+
+            _phantom: PhantomData,
         }
     }
 
-    pub fn to_local_vec(&self) -> &Vec<T> {
+    pub fn to_local_vec(&self) -> FarMemoryLocalVec<T> {
         span!(Level::DEBUG, "FarMemoryVec::to_local_vec", span_id=self.span.id()).in_scope(|| {
             let ptr = self.client.span_ptr(&self.span) as *const T;
-            unsafe {
-                if ptr != (*self.vec.get()).as_ptr() {
-                    let mut t = Vec::from_raw_parts(ptr as *mut T, self.len, self.len);
-                    std::mem::swap(&mut *self.vec.get(), &mut t);
-                    std::mem::forget(t);
-                }
-    
-                & *self.vec.get()
+            self.client.mark_span_in_use(&self.span, true);
+            FarMemoryLocalVec {
+                client: self.client.clone(),
+                span: self.span.clone(),
+                vec: unsafe { Vec::from_raw_parts(ptr as *mut T, self.len, self.len) },
             }
         })        
     }
 }
 
-impl<T> Drop for FarMemoryVec<T> {
+impl<T> Deref for FarMemoryLocalVec<T> {
+    type Target = Vec<T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.vec
+    }
+}
+
+impl<T: Debug> Debug for FarMemoryLocalVec<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.deref().fmt(f)
+    }
+}
+
+impl<T: std::cmp::PartialEq> PartialEq<Vec<T>> for FarMemoryLocalVec<T> {
+    fn eq(&self, other: &Vec<T>) -> bool {
+        self.deref() == other
+    }
+}
+
+impl<T: std::cmp::PartialEq> PartialEq<FarMemoryLocalVec<T>> for Vec<T> {
+    fn eq(&self, other: &FarMemoryLocalVec<T>) -> bool {
+        self == other.deref()
+    }
+}
+
+impl<T> Drop for FarMemoryLocalVec<T> {
     fn drop(&mut self) {
+        let mut v = Vec::new();
+        std::mem::swap(&mut self.vec, &mut v);
         unsafe {
-            let mut t = Vec::new();
-            std::mem::swap(&mut *self.vec.get(), &mut t);
-            std::mem::forget(t);
+            std::mem::forget(v);
         }
+
+        self.client.mark_span_in_use(&self.span, false);
     }
 }
 
@@ -73,7 +104,7 @@ mod tests {
         );
         
         assert_eq!(
-            &vec![10.02, 9.02, 8.02, 7.02, 6.02, 5.02, 4.02, 3.02, 2.02, 1.02],
+            vec![10.02, 9.02, 8.02, 7.02, 6.02, 5.02, 4.02, 3.02, 2.02, 1.02],
             vec.to_local_vec()
         );
     }
@@ -86,12 +117,12 @@ mod tests {
         );
         
         assert_eq!(
-            &vec![10.02, 9.02, 8.02, 7.02, 6.02, 5.02, 4.02, 3.02, 2.02, 1.02],
+            vec![10.02, 9.02, 8.02, 7.02, 6.02, 5.02, 4.02, 3.02, 2.02, 1.02],
             vec.to_local_vec()
         );
 
         assert_eq!(
-            &vec![10.02, 9.02, 8.02, 7.02, 6.02, 5.02, 4.02, 3.02, 2.02, 1.02],
+            vec![10.02, 9.02, 8.02, 7.02, 6.02, 5.02, 4.02, 3.02, 2.02, 1.02],
             vec.to_local_vec()
         );
     }

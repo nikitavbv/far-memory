@@ -49,6 +49,7 @@ impl FarMemoryClient {
             span.remote_memory_usage()
         };
 
+        self.mark_span_in_use(id, true);
         span!(Level::DEBUG, "span_ptr - ensure local memory limit").in_scope(|| {
             // only need to free as much memory as remote part will take. There is already memory for local part of span
             self.ensure_local_memory_under_limit(self.local_memory_max_threshold - span_remote_size as u64);
@@ -62,7 +63,7 @@ impl FarMemoryClient {
     
             // new swap in with support for partial
             let local_data = match span {
-                FarMemorySpan::Local(local_data) => panic!("didn't expect span that is being swapped in to be marked as local"),
+                FarMemorySpan::Local { .. } => panic!("didn't expect span that is being swapped in to be marked as local"),
                 FarMemorySpan::Remote { local_part, total_size: _ } => local_part,
             };
 
@@ -73,7 +74,9 @@ impl FarMemoryClient {
             };
 
             let ptr = local_data.ptr();        
-            self.spans.write().unwrap().insert(id.clone(), FarMemorySpan::Local(local_data));    
+            self.spans.write().unwrap().insert(id.clone(), FarMemorySpan::Local {
+                data: local_data,
+            });    
             ptr
         })
     }
@@ -98,7 +101,12 @@ impl FarMemoryClient {
 
         let total_size = span.total_size();
         let local_part = match span {
-            FarMemorySpan::Local(local) => local,
+            FarMemorySpan::Local { data } => {
+                if data.is_in_use() {
+                    panic!("attempting to swap out span that is in use!");
+                }
+                data
+            },
             FarMemorySpan::Remote { local_part, total_size: _ } => local_part.expect("expected span to contain local part when swapping out"),
         };
         if swap_out_size > local_part.size() {
@@ -157,6 +165,10 @@ impl FarMemoryClient {
                 break;
             }
 
+            if span.is_in_use() {
+                continue;
+            }
+
             let span_local_memory_size = span.local_memory_usage();
             if span_local_memory_size == 0 {
                 continue;
@@ -170,6 +182,10 @@ impl FarMemoryClient {
         span!(Level::DEBUG, "swap_out_spans", needed = memory_to_swap_out, swap_out_req_size = total_memory).in_scope(|| {
             self.swap_out_spans(&spans_to_swap_out);
         });
+    }
+
+    pub fn mark_span_in_use(&self, id: &SpanId, in_use: bool) {
+        self.spans.write().unwrap().get_mut(id).unwrap().mark_in_use(in_use);
     }
 }
 
