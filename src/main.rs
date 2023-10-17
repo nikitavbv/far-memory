@@ -29,6 +29,9 @@ pub struct Args {
     #[arg(long)]
     time_limit: Option<u64>,
 
+    #[arg(long)]
+    memory_limit_mb: Option<u64>,
+
     // components
     #[arg(long)]
     storage: bool,
@@ -96,7 +99,13 @@ async fn main() -> std::io::Result<()> {
         run_simple_demo();
     } else if args.llm_inference_demo {
         span!(Level::DEBUG, "llm_inference_demo")
-            .in_scope(|| run_llm_inference_demo(&read_token(), &args.storage_endpoint.unwrap(), args.time_limit.unwrap_or(10 * 60), args.optimize));
+            .in_scope(|| run_llm_inference_demo(
+                &read_token(), 
+                &args.storage_endpoint.unwrap(), 
+                args.time_limit.unwrap_or(10 * 60), 
+                args.optimize, 
+                args.memory_limit_mb.map(|v| v * 1024 * 1024)
+            ));
     } else if args.benchmark {
         run_benchmark(&read_token(), &args.storage_endpoint.unwrap());
     } else if args.thesis || args.card || args.docs {

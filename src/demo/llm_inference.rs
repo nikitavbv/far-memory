@@ -546,7 +546,7 @@ unsafe fn _unchecked_slice<Q>(s: &[Q], offset: usize, size: usize) -> &[Q] {
     std::slice::from_raw_parts(st, size)
 }
 
-pub fn run_llm_inference_demo(token: &str, endpoint: &str, time_limit: u64, optimize: bool) {
+pub fn run_llm_inference_demo(token: &str, endpoint: &str, time_limit: u64, optimize: bool, memory_limit: Option<u64>) {
     info!("running llm inference demo");
 
     let slo = 5.45;
@@ -568,7 +568,7 @@ pub fn run_llm_inference_demo(token: &str, endpoint: &str, time_limit: u64, opti
 
         info!("lowest local memory threshold which maintains SLO is {}MB", memory_threshold / (1024 * 1024));
     } else {
-        run_inference(token, endpoint, time_limit, 25700 * 1024 * 1024);
+        run_inference(token, endpoint, time_limit, memory_limit.unwrap_or(25700 * 1024 * 1024));
     }
 }
 
