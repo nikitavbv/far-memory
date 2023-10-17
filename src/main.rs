@@ -1,7 +1,7 @@
 use {
     std::{fs, process::exit},
     clap::Parser,
-    tracing::{span, Level},
+    tracing::{span, Level, info},
     crate::{
         utils::{init_logging, init_tracing},
         thesis::build_thesis,
@@ -52,6 +52,9 @@ pub struct Args {
     #[arg(long)]
     optimize: bool,
 
+    #[arg(long)]
+    run_loop: bool, // run demo in a loop until it crashes, lol.
+
     // thesis
     #[arg(long)]
     thesis: bool,
@@ -98,14 +101,26 @@ async fn main() -> std::io::Result<()> {
     } else if args.simple_demo {
         run_simple_demo();
     } else if args.llm_inference_demo {
-        span!(Level::DEBUG, "llm_inference_demo")
-            .in_scope(|| run_llm_inference_demo(
-                &read_token(), 
-                &args.storage_endpoint.unwrap(), 
-                args.time_limit.unwrap_or(10 * 60), 
-                args.optimize, 
-                args.memory_limit_mb.map(|v| v * 1024 * 1024)
-            ));
+        let run = || {
+            span!(Level::DEBUG, "llm_inference_demo")
+                .in_scope(|| run_llm_inference_demo(
+                    &read_token(), 
+                    &args.storage_endpoint.clone().unwrap(), 
+                    args.time_limit.unwrap_or(10 * 60), 
+                    args.optimize, 
+                    args.memory_limit_mb.map(|v| v * 1024 * 1024)
+                ));
+        };
+
+        if args.run_loop {
+            info!("running in a loop");
+
+            loop {
+                run();
+            }
+        } else {
+            run();
+        }
     } else if args.benchmark {
         run_benchmark(&read_token(), &args.storage_endpoint.unwrap());
     } else if args.thesis || args.card || args.docs {
