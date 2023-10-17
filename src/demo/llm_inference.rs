@@ -1,11 +1,11 @@
 use {
     std::{io::{self, Read, Seek, SeekFrom, Write}, fs::File, mem, time::Instant},
-    tracing::info,
+    tracing::{info, warn},
     rand::{rngs::SmallRng, SeedableRng, Rng},
     quantiles::ckms::CKMS,
     crate::{
         utils::allocator::current_memory_usage,
-        client::{FarMemoryBuffer, FarMemoryClient, NetworkNodeBackend, FarMemoryBufferedVec, FarMemoryVec},
+        client::{FarMemoryBuffer, FarMemoryClient, NetworkNodeBackend, LocalDiskBackend, FarMemoryBackend, FarMemoryBufferedVec, FarMemoryVec},
     },
 };
 
@@ -546,7 +546,7 @@ unsafe fn _unchecked_slice<Q>(s: &[Q], offset: usize, size: usize) -> &[Q] {
     std::slice::from_raw_parts(st, size)
 }
 
-pub fn run_llm_inference_demo(token: &str, endpoint: &str, time_limit: u64, optimize: bool, memory_limit: Option<u64>) {
+pub fn run_llm_inference_demo(token: &str, endpoint: Option<String>, time_limit: u64, optimize: bool, memory_limit: Option<u64>) {
     info!("running llm inference demo");
 
     let slo = 5.45;
@@ -558,7 +558,7 @@ pub fn run_llm_inference_demo(token: &str, endpoint: &str, time_limit: u64, opti
         loop {
             info!("trying {}MB as local memory treshold", memory_threshold / (1024 * 1024));
 
-            let time_per_token = run_inference(token, endpoint, time_limit, memory_threshold);
+            let time_per_token = run_inference(token, endpoint.clone(), time_limit, memory_threshold);
             if time_per_token > slo {
                 break;
             }
@@ -572,8 +572,16 @@ pub fn run_llm_inference_demo(token: &str, endpoint: &str, time_limit: u64, opti
     }
 }
 
-fn run_inference(token: &str, endpoint: &str, time_limit: u64, local_max_memory: u64) -> f32 {
-    let client = FarMemoryClient::new(Box::new(NetworkNodeBackend::new(endpoint, token)), local_max_memory);
+fn run_inference(token: &str, endpoint: Option<String>, time_limit: u64, local_max_memory: u64) -> f32 {
+    let backend: Box<dyn FarMemoryBackend> = match endpoint.as_ref() {
+        Some(endpoint) => Box::new(NetworkNodeBackend::new(endpoint, token)),
+        None => {
+            warn!("no storage endpoint provided, falling back to disk backend");
+            Box::new(LocalDiskBackend::new())
+        }
+    };
+
+    let client = FarMemoryClient::new(backend, local_max_memory);
 
     let llama = true;
 

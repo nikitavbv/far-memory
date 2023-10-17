@@ -105,7 +105,7 @@ async fn main() -> std::io::Result<()> {
             span!(Level::DEBUG, "llm_inference_demo")
                 .in_scope(|| run_llm_inference_demo(
                     &read_token(), 
-                    &args.storage_endpoint.clone().unwrap(), 
+                    args.storage_endpoint.clone(), 
                     args.time_limit.unwrap_or(10 * 60), 
                     args.optimize, 
                     args.memory_limit_mb.map(|v| v * 1024 * 1024)
