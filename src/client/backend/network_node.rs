@@ -23,8 +23,8 @@ impl NetworkNodeBackend {
 }
 
 impl FarMemoryBackend for NetworkNodeBackend {
-    fn swap_out(&self, id: SpanId, span: &[u8]) {
-        self.client.lock().unwrap().swap_out(id.id(), span.to_vec());
+    fn swap_out(&self, id: SpanId, span: &[u8], prepend: bool) {
+        self.client.lock().unwrap().swap_out(id.id(), span.to_vec(), prepend);
     }
     
     fn swap_in(&self, id: &SpanId) -> Vec<u8> {

@@ -100,14 +100,17 @@ impl FarMemoryClient {
         let span = self.spans.write().unwrap().remove(&span_id.clone()).unwrap();
 
         let total_size = span.total_size();
-        let local_part = match span {
+        let (local_part, prepend_to_backend) = match span {
             FarMemorySpan::Local { data } => {
                 if data.is_in_use() {
                     panic!("attempting to swap out span that is in use!");
                 }
-                data
+                (data, false) // not prepending to remote, because span is local
             },
-            FarMemorySpan::Remote { local_part, total_size: _ } => local_part.expect("expected span to contain local part when swapping out"),
+            FarMemorySpan::Remote { local_part, total_size: _ } => (
+                local_part.expect("expected span to contain local part when swapping out"), 
+                true, // prepending, because this span already contains a remote part
+            ),
         };
         if swap_out_size > local_part.size() {
             panic!("swap out size cannot be larger than local part size");
@@ -123,7 +126,7 @@ impl FarMemoryClient {
         };
 
         span!(Level::DEBUG, "backend swap out", size = data.len()).in_scope(|| {
-            self.backend.swap_out(span_id.clone(), data);
+            self.backend.swap_out(span_id.clone(), data, prepend_to_backend);
         });
 
         if full_swap_out {

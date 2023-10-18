@@ -23,11 +23,22 @@ impl LocalDiskBackend {
 }
 
 impl FarMemoryBackend for LocalDiskBackend {
-    fn swap_out(&self, id: SpanId, span: &[u8]) {
-        fs::write(self.path_for_span(&id), span).unwrap();
+    fn swap_out(&self, id: SpanId, span: &[u8], prepend: bool) {
+        let path: String = self.path_for_span(&id);
+        if prepend {
+            let mut data = fs::read(&path).unwrap();
+            let mut new_data = span.to_vec();
+            new_data.append(&mut data);
+            fs::write(path, new_data).unwrap();
+        } else {
+            fs::write(path, span.to_vec()).unwrap();
+        }
     }
 
     fn swap_in(&self, id: &SpanId) -> Vec<u8> {
-        fs::read(self.path_for_span(id)).unwrap()
+        let path: String = self.path_for_span(&id);
+        let res = fs::read(&path).unwrap();
+        fs::remove_file(path).unwrap();
+        res
     }
 }

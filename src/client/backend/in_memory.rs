@@ -17,8 +17,14 @@ impl InMemoryBackend {
 }
 
 impl FarMemoryBackend for InMemoryBackend {
-    fn swap_out(&self, id: SpanId, span: &[u8]) {
-        self.spans.write().unwrap().insert(id, span.to_vec());
+    fn swap_out(&self, id: SpanId, span: &[u8], prepend: bool) {
+        if prepend {
+            let mut spans = self.spans.write().unwrap();
+            let mut existing_data = spans.insert(id.clone(), span.to_vec()).unwrap();
+            spans.get_mut(&id).unwrap().append(&mut existing_data);
+        } else {
+            self.spans.write().unwrap().insert(id, span.to_vec());
+        }
     }
 
     fn swap_in(&self, id: &SpanId) -> Vec<u8> {

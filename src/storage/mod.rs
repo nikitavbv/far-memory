@@ -120,12 +120,15 @@ impl Server {
                     StorageResponse::Forbidden
                 }
             },
-            StorageRequest::SwapOut { span_id, data } => {
+            StorageRequest::SwapOut { span_id, data, prepend } => {
                 if !self.auth {
                     return StorageResponse::Forbidden;
                 }
 
-                self.spans.insert(span_id, data);
+                let mut existing = self.spans.insert(span_id, data).unwrap();
+                if prepend {
+                    self.spans.get_mut(&span_id).unwrap().append(&mut existing);
+                }
 
                 StorageResponse::Ok
             },
@@ -169,8 +172,8 @@ impl Client {
         }
     }
 
-    pub fn swap_out(&mut self, span_id: u64, data: Vec<u8>) {
-        match self.request(StorageRequest::SwapOut { span_id, data }) {
+    pub fn swap_out(&mut self, span_id: u64, data: Vec<u8>, prepend: bool) {
+        match self.request(StorageRequest::SwapOut { span_id, prepend, data }) {
             StorageResponse::Ok => (),
             other => panic!("unexpected swap out response: {:?}", other),
         }
@@ -233,7 +236,7 @@ mod tests {
         let mut client = Client::new("localhost:14000");
         
         client.auth("some-token");
-        client.swap_out(42, vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
+        client.swap_out(42, vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1], false);
         let res = client.swap_in(42);
 
         assert_eq!(vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1], res);

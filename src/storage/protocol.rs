@@ -7,6 +7,7 @@ pub enum StorageRequest {
     },
     SwapOut {
         span_id: u64,
+        prepend: bool,
         data: Vec<u8>,
     },
     SwapIn {

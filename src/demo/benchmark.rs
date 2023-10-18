@@ -14,7 +14,7 @@ pub fn run_benchmark(token: &str, endpoint: &str) {
     }
 
     info!("let's swap out");
-    client.swap_out(SpanId::from_id(42), &data);
+    client.swap_out(SpanId::from_id(42), &data, false);
     info!("done swapping out");
 
     info!("let's swap in");
