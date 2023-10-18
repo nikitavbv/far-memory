@@ -125,9 +125,9 @@ impl Server {
                     return StorageResponse::Forbidden;
                 }
 
-                let mut existing = self.spans.insert(span_id, data).unwrap();
+                let existing = self.spans.insert(span_id, data);
                 if prepend {
-                    self.spans.get_mut(&span_id).unwrap().append(&mut existing);
+                    self.spans.get_mut(&span_id).unwrap().append(&mut existing.unwrap());
                 }
 
                 StorageResponse::Ok
