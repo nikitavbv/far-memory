@@ -45,7 +45,6 @@ impl <T> FarMemoryVec<T> {
                 panic!("memory needed for mem does not match size of memory allocated");
             }
 
-            self.client.mark_span_in_use(&self.span, true);
             FarMemoryLocalVec {
                 client: self.client.clone(),
                 span: self.span.clone(),
@@ -86,7 +85,7 @@ impl<T> Drop for FarMemoryLocalVec<T> {
         let mut v = Vec::new();
         std::mem::swap(&mut self.vec, &mut v);
         std::mem::forget(v);
-        self.client.mark_span_in_use(&self.span, false);
+        self.client.decrease_refs_for_span(&self.span);
     }
 }
 

@@ -1,6 +1,7 @@
 use {
     std::{sync::{Arc, atomic::{AtomicU64, Ordering, AtomicBool}, RwLock, Mutex}, collections::HashMap, thread, time::Duration},
     tracing::{Level, span, info},
+    crossbeam::utils::Backoff,
     super::{
         backend::FarMemoryBackend,
         span::{SpanId, FarMemorySpan, LocalSpanData},
@@ -18,6 +19,14 @@ pub struct FarMemoryClient {
     local_memory_max_threshold: u64,
 
     swap_in_out_lock: Arc<Mutex<()>>,
+    span_states: Arc<RwLock<HashMap<SpanId, Mutex<SpanState>>>>,
+}
+
+#[derive(Eq, PartialEq)]
+enum SpanState {
+    Free,
+    InUse(usize),
+    SwappingOut,
 }
 
 impl FarMemoryClient {
@@ -31,6 +40,7 @@ impl FarMemoryClient {
             local_memory_max_threshold,
 
             swap_in_out_lock: Arc::new(Mutex::new(())),
+            span_states: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 
@@ -59,11 +69,32 @@ impl FarMemoryClient {
 
         let id = SpanId::from_id(self.span_id_counter.fetch_add(1, Ordering::Relaxed));
         self.spans.write().unwrap().insert(id.clone(), FarMemorySpan::new_local(span_size));
+        self.span_states.write().unwrap().insert(id.clone(), Mutex::new(SpanState::Free));
         id
     }
 
     pub fn span_ptr(&self, id: &SpanId) -> *mut u8 {
         let span_remote_size = {
+            let backoff = Backoff::new();
+            loop {
+                let span_states = self.span_states.read().unwrap();
+                let mut span_state = span_states[id].lock().unwrap();
+                match &*span_state {
+                    SpanState::Free => {
+                        *span_state = SpanState::InUse(1);
+                        break;
+                    },
+                    SpanState::InUse(refs) => {
+                        *span_state = SpanState::InUse(refs + 1);
+                        break;
+                    },
+                    SpanState::SwappingOut => {
+                        // waiting for swap out to finish to swap back in again
+                        backoff.spin();
+                    },
+                };
+            }
+
             let span = &self.spans.read().unwrap()[id];
             if span.is_local() {
                 return span.ptr();
@@ -75,7 +106,6 @@ impl FarMemoryClient {
 
         let _guard = span!(Level::DEBUG, "waiting for lock").in_scope(|| self.swap_in_out_lock.lock().unwrap());
 
-        self.mark_span_in_use(id, true);
         span!(Level::DEBUG, "span_ptr - ensure local memory limit").in_scope(|| {
             // only need to free as much memory as remote part will take. There is already memory for local part of span
             self.ensure_local_memory_under_limit(self.local_memory_max_threshold - span_remote_size as u64);
@@ -132,9 +162,6 @@ impl FarMemoryClient {
         let total_size = span.total_size();
         let (local_part, prepend_to_backend) = match span {
             FarMemorySpan::Local { data } => {
-                if data.is_in_use() {
-                    panic!("attempting to swap out span that is in use!");
-                }
                 (data, false) // not prepending to remote, because span is local
             },
             FarMemorySpan::Remote { local_part, total_size: _ } => (
@@ -165,6 +192,13 @@ impl FarMemoryClient {
         } else {
             self.spans.write().unwrap().insert(span_id.clone(), FarMemorySpan::Remote { local_part: Some(local_part.shrink(swap_out_size)), total_size });
         }
+        
+        let span_states = self.span_states.read().unwrap();
+        let mut span_state = span_states[&span_id].lock().unwrap();
+        if *span_state != SpanState::SwappingOut {
+            panic!("expected span to be in swapping out state when actually swapping out");
+        }
+        *span_state = SpanState::Free;
     }
 
     pub fn total_local_spans(&self) -> usize {
@@ -198,18 +232,26 @@ impl FarMemoryClient {
                 break;
             }
 
-            if span.is_in_use() {
-                continue;
-            }
+            {
+                let span_states = self.span_states.read().unwrap();
+                let mut span_state = span_states[span_id].lock().unwrap();
+                match &*span_state {
+                    SpanState::Free => {
+                        let span_local_memory_size = span.local_memory_usage();
+                        if span_local_memory_size == 0 {
+                            continue;
+                        }
 
-            let span_local_memory_size = span.local_memory_usage();
-            if span_local_memory_size == 0 {
-                continue;
+                        *span_state = SpanState::SwappingOut;
+             
+                        let span_swap_out_len = span_local_memory_size.min((memory_to_swap_out - total_memory) as usize);
+                        spans_to_swap_out.push((span_id.clone(), span_swap_out_len));
+                        total_memory += span_swap_out_len as u64;
+                    },
+                    SpanState::InUse(_) => continue, // cannot swap out span that is in use
+                    SpanState::SwappingOut => continue, // cannot swap out span that is already being swapped out
+                }
             }
-
-            let span_swap_out_len = span_local_memory_size.min((memory_to_swap_out - total_memory) as usize);
-            spans_to_swap_out.push((span_id.clone(), span_swap_out_len));
-            total_memory += span_swap_out_len as u64;
         }
 
         span!(Level::DEBUG, "swap_out_spans", needed = memory_to_swap_out, swap_out_req_size = total_memory).in_scope(|| {
@@ -217,8 +259,18 @@ impl FarMemoryClient {
         });
     }
 
-    pub fn mark_span_in_use(&self, id: &SpanId, in_use: bool) {
-        self.spans.write().unwrap().get_mut(id).unwrap().mark_in_use(in_use);
+    pub fn decrease_refs_for_span(&self, span_id: &SpanId) {
+        let span_states = self.span_states.read().unwrap();
+        let mut span_state = span_states[span_id].lock().unwrap();
+        match &*span_state {
+            SpanState::Free => panic!("span is already free!"),
+            SpanState::InUse(refs) => *span_state = if *refs == 1 {
+                SpanState::Free
+            } else {
+                SpanState::InUse(refs - 1)
+            },
+            SpanState::SwappingOut => panic!("cannot decrease refs for span that is being swapped out")
+        }
     }
 }
 

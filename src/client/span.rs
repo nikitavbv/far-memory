@@ -14,7 +14,6 @@ unsafe impl Sync for LocalSpanData {}
 pub struct LocalSpanData {
     ptr: *mut u8,
     size: usize,
-    in_use: bool, // currently used by application and should not be swapped out
 }
 
 pub enum FarMemorySpan {
@@ -45,7 +44,6 @@ impl LocalSpanData {
         Self {
             ptr,
             size,
-            in_use: false,
         }
     }
 
@@ -96,7 +94,6 @@ impl LocalSpanData {
                 GLOBAL.realloc(prev_ptr, span_layout(self.size), new_size)
             },
             size: new_size,
-            in_use: self.in_use,
         }
     }
 
@@ -114,7 +111,6 @@ impl LocalSpanData {
         Self {
             ptr,
             size: new_size,
-            in_use: self.in_use,
         }
     }
 
@@ -136,14 +132,6 @@ impl LocalSpanData {
 
     pub fn size(&self) -> usize {
         self.size
-    }
-
-    pub fn mark_in_use(&mut self, in_use: bool) {
-        self.in_use = in_use;
-    }
-
-    pub fn is_in_use(&self) -> bool {
-        self.in_use
     }
 }
 
@@ -197,22 +185,6 @@ impl FarMemorySpan {
             FarMemorySpan::Local { .. } => 0,
             FarMemorySpan::Remote { local_part, total_size } => total_size - local_part.as_ref().map(|v| v.size()).unwrap_or(0),
         } 
-    }
-
-    pub fn mark_in_use(&mut self, set_in_use: bool) {
-        match self {
-            FarMemorySpan::Local { data } => data.mark_in_use(set_in_use),
-            FarMemorySpan::Remote { local_part, total_size: _ } => if let Some(local_part) = local_part {
-                local_part.mark_in_use(set_in_use);
-            }
-        }
-    }
-
-    pub fn is_in_use(&self) -> bool {
-        match self {
-            FarMemorySpan::Local { data } => data.is_in_use(),
-            FarMemorySpan::Remote { local_part, total_size: _ } => local_part.as_ref().map(|v| v.is_in_use()).unwrap_or(false),
-        }
     }
 }
 
