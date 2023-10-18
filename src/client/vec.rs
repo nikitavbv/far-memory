@@ -28,6 +28,7 @@ impl <T> FarMemoryVec<T> {
         unsafe {
             std::ptr::copy_nonoverlapping(vec.as_ptr() as *const _, ptr, size);
         }
+        client.decrease_refs_for_span(&span);
 
         Self {
             client,
