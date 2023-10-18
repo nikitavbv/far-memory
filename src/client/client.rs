@@ -81,6 +81,10 @@ impl FarMemoryClient {
         })
     }
 
+    pub fn span_local_memory_usage(&self, span_id: &SpanId) -> usize {
+        self.spans.read().unwrap().get(&span_id).unwrap().local_memory_usage()
+    }
+
     pub fn swap_out_spans_fully(&self, spans: &[SpanId]) {
         for span in spans {
             self.swap_out_span(span, self.spans.read().unwrap().get(span).unwrap().local_memory_usage());
@@ -213,6 +217,24 @@ mod tests {
 
         let _ptr = client.span_ptr(&span);
         assert_eq!(20, client.total_local_memory());
+        assert_eq!(0, client.total_remote_memory());
+    }
+
+    #[test]
+    fn partial_swap_out_multiple_parts() {
+        let client = FarMemoryClient::new(Box::new(InMemoryBackend::new()), 30);
+        let span = client.allocate_span(20);
+
+        client.ensure_local_memory_under_limit(15);
+        assert_eq!(15, client.total_local_memory());
+        assert_eq!(5, client.total_remote_memory());
+
+        client.ensure_local_memory_under_limit(10);
+        assert_eq!(10, client.total_local_memory());
+        assert_eq!(10, client.total_remote_memory());
+
+        let _ptr = client.span_ptr(&span);
+        assert_eq!(20, client.total_local_memory()); // first part (5) and second (5) were both swapped, so +10.
         assert_eq!(0, client.total_remote_memory());
     }
 }

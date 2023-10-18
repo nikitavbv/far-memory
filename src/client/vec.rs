@@ -41,6 +41,10 @@ impl <T> FarMemoryVec<T> {
     pub fn to_local_vec(&self) -> FarMemoryLocalVec<T> {
         span!(Level::DEBUG, "FarMemoryVec::to_local_vec", span_id=self.span.id()).in_scope(|| {
             let ptr = self.client.span_ptr(&self.span) as *const T;
+            if self.len * std::mem::size_of::<T>() != self.client.span_local_memory_usage(&self.span) {
+                panic!("memory needed for mem does not match size of memory allocated");
+            }
+
             self.client.mark_span_in_use(&self.span, true);
             FarMemoryLocalVec {
                 client: self.client.clone(),
