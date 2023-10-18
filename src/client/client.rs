@@ -220,12 +220,6 @@ impl FarMemoryClient {
     }
 }
 
-impl Drop for FarMemoryClient {
-    fn drop(&mut self) {
-        self.stop();
-    }
-}
-
 fn swap_out_thread(client: FarMemoryClient, target_memory_usage: u64) -> impl FnOnce() -> () {
     move || {
         info!("starting swap out thread");
