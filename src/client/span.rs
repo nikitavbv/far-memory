@@ -7,6 +7,10 @@ use {
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct SpanId(u64);
 
+// not sure if there is a cheap way to avoid this
+unsafe impl Send for LocalSpanData {}
+unsafe impl Sync for LocalSpanData {}
+
 pub struct LocalSpanData {
     ptr: *mut u8,
     size: usize,

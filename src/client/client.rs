@@ -1,5 +1,5 @@
 use {
-    std::{sync::{Arc, atomic::{AtomicU64, Ordering, AtomicBool}, RwLock}, collections::HashMap, thread, time::Duration},
+    std::{sync::{Arc, atomic::{AtomicU64, Ordering, AtomicBool}, RwLock, Mutex}, collections::HashMap, thread, time::Duration},
     tracing::{Level, span, info},
     super::{
         backend::FarMemoryBackend,
@@ -16,6 +16,8 @@ pub struct FarMemoryClient {
     backend: Arc<Box<dyn FarMemoryBackend>>,
 
     local_memory_max_threshold: u64,
+
+    swap_in_out_lock: Arc<Mutex<()>>,
 }
 
 impl FarMemoryClient {
@@ -27,15 +29,25 @@ impl FarMemoryClient {
 
             backend: Arc::new(backend),
             local_memory_max_threshold,
+
+            swap_in_out_lock: Arc::new(Mutex::new(())),
         }
     }
 
     pub fn start_swap_out_thread(&self) {
-        thread::Builder::new().name("swap-out".to_owned()).spawn(swap_out_thread(self.is_running.clone())).unwrap();
+        thread::Builder::new().name("swap-out".to_owned())
+            .spawn(swap_out_thread(
+                self.clone(),
+                self.local_memory_max_threshold - 10 * 1024 * 1024
+            )).unwrap();
     }
 
     pub fn stop(&self) {
         self.is_running.store(false, Ordering::Relaxed);
+    }
+
+    pub fn is_running(&self) -> bool {
+        self.is_running.load(Ordering::Relaxed)
     }
 
     pub fn allocate_span(&self, span_size: usize) -> SpanId {
@@ -58,6 +70,8 @@ impl FarMemoryClient {
             // will need to swap in
             span.remote_memory_usage()
         };
+
+        let _guard = span!(Level::DEBUG, "waiting for lock").in_scope(|| self.swap_in_out_lock.lock().unwrap());
 
         self.mark_span_in_use(id, true);
         span!(Level::DEBUG, "span_ptr - ensure local memory limit").in_scope(|| {
@@ -212,15 +226,16 @@ impl Drop for FarMemoryClient {
     }
 }
 
-fn swap_out_thread(is_running: Arc<AtomicBool>) -> impl FnOnce() -> () {
+fn swap_out_thread(client: FarMemoryClient, target_memory_usage: u64) -> impl FnOnce() -> () {
     move || {
         info!("starting swap out thread");
         span!(Level::DEBUG, "swap out thread").in_scope(|| {
-            while is_running.load(Ordering::Relaxed) {
+            while client.is_running() {
                 thread::sleep(Duration::from_secs(10));
 
-                span!(Level::DEBUG, "simulate swap out").in_scope(|| {
-                    thread::sleep(Duration::from_secs(1));
+                span!(Level::DEBUG, "swap out iteration").in_scope(|| {
+                    let _guard = span!(Level::DEBUG, "waiting for lock").in_scope(|| client.swap_in_out_lock.lock().unwrap());
+                    client.ensure_local_memory_under_limit(target_memory_usage);
                 });
             }
         });
