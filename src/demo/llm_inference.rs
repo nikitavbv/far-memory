@@ -582,6 +582,7 @@ fn run_inference(token: &str, endpoint: Option<String>, time_limit: u64, local_m
     };
 
     let client = FarMemoryClient::new(backend, local_max_memory);
+    client.start_swap_out_thread();
 
     let llama = true;
 

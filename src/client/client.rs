@@ -1,6 +1,6 @@
 use {
-    std::{sync::{Arc, atomic::{AtomicU64, Ordering}, RwLock}, collections::HashMap},
-    tracing::{Level, span},
+    std::{sync::{Arc, atomic::{AtomicU64, Ordering, AtomicBool}, RwLock}, collections::HashMap, thread, time::Duration},
+    tracing::{Level, span, info},
     super::{
         backend::FarMemoryBackend,
         span::{SpanId, FarMemorySpan, LocalSpanData},
@@ -11,6 +11,7 @@ use {
 pub struct FarMemoryClient {
     span_id_counter: Arc<AtomicU64>,
     spans: Arc<RwLock<HashMap<SpanId, FarMemorySpan>>>,
+    is_running: Arc<AtomicBool>,
 
     backend: Arc<Box<dyn FarMemoryBackend>>,
 
@@ -22,10 +23,19 @@ impl FarMemoryClient {
         Self {
             span_id_counter: Arc::new(AtomicU64::new(0)),
             spans: Arc::new(RwLock::new(HashMap::new())),
+            is_running: Arc::new(AtomicBool::new(true)),
 
             backend: Arc::new(backend),
             local_memory_max_threshold,
         }
+    }
+
+    pub fn start_swap_out_thread(&self) {
+        thread::Builder::new().name("swap-out".to_owned()).spawn(swap_out_thread(self.is_running.clone())).unwrap();
+    }
+
+    pub fn stop(&self) {
+        self.is_running.store(false, Ordering::Relaxed);
     }
 
     pub fn allocate_span(&self, span_size: usize) -> SpanId {
@@ -193,6 +203,27 @@ impl FarMemoryClient {
 
     pub fn mark_span_in_use(&self, id: &SpanId, in_use: bool) {
         self.spans.write().unwrap().get_mut(id).unwrap().mark_in_use(in_use);
+    }
+}
+
+impl Drop for FarMemoryClient {
+    fn drop(&mut self) {
+        self.stop();
+    }
+}
+
+fn swap_out_thread(is_running: Arc<AtomicBool>) -> impl FnOnce() -> () {
+    move || {
+        info!("starting swap out thread");
+        span!(Level::DEBUG, "swap out thread").in_scope(|| {
+            while is_running.load(Ordering::Relaxed) {
+                thread::sleep(Duration::from_secs(10));
+
+                span!(Level::DEBUG, "simulate swap out").in_scope(|| {
+                    thread::sleep(Duration::from_secs(1));
+                });
+            }
+        });
     }
 }
 
