@@ -665,6 +665,8 @@ fn run_inference(token: &str, endpoint: Option<String>, time_limit: u64, local_m
 
     println!("");
 
+    client.stop();
+
     println!(
         "done, total tokens generated: {}, total time: {} seconds, time per token avg: {} seconds, p95: {} seconds", 
         total_tokens_generated, 
