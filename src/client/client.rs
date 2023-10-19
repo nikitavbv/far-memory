@@ -4,6 +4,7 @@ use {
     crossbeam::utils::Backoff,
     super::{
         backend::FarMemoryBackend,
+        prefetching::{EvictionPolicy, RandomEvictionPolicy},
         span::{SpanId, FarMemorySpan, LocalSpanData},
     },
 };
@@ -15,6 +16,7 @@ pub struct FarMemoryClient {
     is_running: Arc<AtomicBool>,
 
     backend: Arc<Box<dyn FarMemoryBackend>>,
+    eviction_policy: Arc<Box<dyn EvictionPolicy>>,
 
     local_memory_max_threshold: u64,
 
@@ -37,6 +39,7 @@ impl FarMemoryClient {
             is_running: Arc::new(AtomicBool::new(true)),
 
             backend: Arc::new(backend),
+            eviction_policy: Arc::new(Box::new(RandomEvictionPolicy::new())),
             local_memory_max_threshold,
 
             swap_in_out_lock: Arc::new(Mutex::new(())),
@@ -227,14 +230,22 @@ impl FarMemoryClient {
         let mut spans_to_swap_out = Vec::new(); // (span, how much memory to swap out - can be partial or full swap out)
         
         let mut total_memory = 0;
-        for (span_id, span) in self.spans.read().unwrap().iter() {
+        let spans = self.spans.read().unwrap();
+        let mut possible_swap_out_spans: Vec<SpanId> = spans.keys().cloned().collect();
+
+        while !possible_swap_out_spans.is_empty() {
             if total_memory >= memory_to_swap_out {
                 break;
             }
 
+            let span_id = self.eviction_policy.pick_for_eviction(&possible_swap_out_spans).clone();
+            let index = possible_swap_out_spans.iter().position(|x| *x == span_id).unwrap();
+            possible_swap_out_spans.remove(index);
+
+            let span = spans.get(&span_id).unwrap();
             {
                 let span_states = self.span_states.read().unwrap();
-                let mut span_state = span_states[span_id].lock().unwrap();
+                let mut span_state = span_states[&span_id].lock().unwrap();
                 match &*span_state {
                     SpanState::Free => {
                         let span_local_memory_size = span.local_memory_usage();

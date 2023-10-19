@@ -18,6 +18,7 @@ pub use self::{
 };
 
 pub mod backend;
+pub mod prefetching;
 
 mod buffer;
 mod buffered_vec;
