@@ -10,6 +10,8 @@ use {
     self::protocol::{StorageRequest, StorageResponse},
 };
 
+const REQ_SIZE_LIMIT: u64 = 10 * 1024 * 1024 * 1024;
+
 mod protocol;
 
 pub fn run_storage_server(token: String) {
@@ -53,6 +55,10 @@ fn run_server(host: String, token: String, connections_limit: Option<usize>, req
 
             let req = {
                 let _req_body_span = span!(Level::DEBUG, "read request body").entered();
+
+                if req_len > REQ_SIZE_LIMIT {
+                    panic!("request is too large!");
+                }
 
                 let mut req = vec![0u8; req_len as usize];
                 if let Err(err) = stream.read_exact(&mut req) {
