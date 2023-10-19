@@ -230,8 +230,7 @@ impl FarMemoryClient {
         let mut spans_to_swap_out = Vec::new(); // (span, how much memory to swap out - can be partial or full swap out)
         
         let mut total_memory = 0;
-        let spans = self.spans.read().unwrap();
-        let mut possible_swap_out_spans: Vec<SpanId> = spans.keys().cloned().collect();
+        let mut possible_swap_out_spans: Vec<SpanId> = self.spans.read().unwrap().keys().cloned().collect();
 
         while !possible_swap_out_spans.is_empty() {
             if total_memory >= memory_to_swap_out {
@@ -242,6 +241,7 @@ impl FarMemoryClient {
             let index = possible_swap_out_spans.iter().position(|x| *x == span_id).unwrap();
             possible_swap_out_spans.remove(index);
 
+            let spans = self.spans.read().unwrap();
             let span = spans.get(&span_id).unwrap();
             {
                 let span_states = self.span_states.read().unwrap();
