@@ -10,7 +10,7 @@ pub trait EvictionPolicy: Send + Sync {
     fn on_span_access(&self, span_id: &SpanId) {}
 }
 
-// 6.01 per token
+// 6.01 per token (for 25700)
 pub struct RandomEvictionPolicy {
 }
 
@@ -27,7 +27,7 @@ impl EvictionPolicy for RandomEvictionPolicy {
     }
 }
 
-// 108.3 per token
+// 108.3 per token (for 25700)
 pub struct LeastRecentlyUsedEvictionPolicy {
     counter: AtomicU64,
     history: RwLock<HashMap<SpanId, u64>>,
@@ -53,7 +53,7 @@ impl EvictionPolicy for LeastRecentlyUsedEvictionPolicy {
     }
 }
 
-// 5.42 per token
+// 5.42 per token (for 25700)
 pub struct MostRecentlyUsedEvictionPolicy {
     counter: AtomicU64,
     history: RwLock<HashMap<SpanId, u64>>,

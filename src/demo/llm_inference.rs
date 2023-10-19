@@ -568,7 +568,7 @@ pub fn run_llm_inference_demo(token: &str, endpoint: Option<String>, time_limit:
 
         info!("lowest local memory threshold which maintains SLO is {}MB", memory_threshold / (1024 * 1024));
     } else {
-        run_inference(token, endpoint, time_limit, memory_limit.unwrap_or(25700 * 1024 * 1024));
+        run_inference(token, endpoint, time_limit, memory_limit.unwrap_or(25600 * 1024 * 1024));
     }
 }
 

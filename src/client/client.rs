@@ -4,7 +4,7 @@ use {
     crossbeam::utils::Backoff,
     super::{
         backend::FarMemoryBackend,
-        prefetching::{EvictionPolicy, RandomEvictionPolicy},
+        prefetching::{EvictionPolicy, MostRecentlyUsedEvictionPolicy},
         span::{SpanId, FarMemorySpan, LocalSpanData},
     },
 };
@@ -39,7 +39,7 @@ impl FarMemoryClient {
             is_running: Arc::new(AtomicBool::new(true)),
 
             backend: Arc::new(backend),
-            eviction_policy: Arc::new(Box::new(RandomEvictionPolicy::new())),
+            eviction_policy: Arc::new(Box::new(MostRecentlyUsedEvictionPolicy::new())),
             local_memory_max_threshold,
 
             swap_in_out_lock: Arc::new(Mutex::new(())),
