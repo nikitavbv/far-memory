@@ -43,6 +43,31 @@ impl LeastRecentlyUsedEvictionPolicy {
 impl EvictionPolicy for LeastRecentlyUsedEvictionPolicy {
     fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId {
         let history = self.history.read().unwrap();
+        spans.iter().map(|v| (v, history.get(v).unwrap_or(&0))).reduce(|a, b| if a.1 < b.1 { a } else { b }).map(|a| a.0).unwrap()
+    }
+
+    fn on_span_access(&self, span_id: &SpanId) {
+        self.history.write().unwrap().insert(span_id.clone(), self.counter.fetch_add(1, Ordering::Relaxed));;
+    }
+}
+
+pub struct MostRecentlyUsedEvictionPolicy {
+    counter: AtomicU64,
+    history: RwLock<HashMap<SpanId, u64>>,
+}
+
+impl MostRecentlyUsedEvictionPolicy {
+    pub fn new() -> Self {
+        Self {
+            counter: AtomicU64::new(0),
+            history: RwLock::new(HashMap::new()),
+        }
+    }
+}
+
+impl EvictionPolicy for MostRecentlyUsedEvictionPolicy {
+    fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId {
+        let history = self.history.read().unwrap();
         spans.iter().map(|v| (v, history.get(v).unwrap_or(&0))).reduce(|a, b| if a.1 > b.1 { a } else { b }).map(|a| a.0).unwrap()
     }
 
