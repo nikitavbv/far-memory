@@ -77,6 +77,8 @@ impl FarMemoryClient {
     }
 
     pub fn span_ptr(&self, id: &SpanId) -> *mut u8 {
+        self.eviction_policy.on_span_access(id);
+
         let span_remote_size = {
             let backoff = Backoff::new();
             loop {
