@@ -138,6 +138,9 @@ impl FarMemoryClient {
             self.spans.write().unwrap().insert(id.clone(), FarMemorySpan::Local {
                 data: local_data,
             });
+
+            self.eviction_policy.on_span_swap_in(id);
+
             ptr
         })
     }
@@ -204,6 +207,7 @@ impl FarMemoryClient {
             panic!("expected span to be in swapping out state when actually swapping out");
         }
         *span_state = SpanState::Free;
+        self.eviction_policy.on_span_swap_out(span_id);
     }
 
     pub fn total_local_spans(&self) -> usize {
