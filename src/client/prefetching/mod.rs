@@ -55,7 +55,6 @@ impl EvictionPolicy for LeastRecentlyUsedEvictionPolicy {
     }
 }
 
-// current best
 // 5.42 per token (for 25700)
 // 12.31 per token (for 25600)
 pub struct MostRecentlyUsedEvictionPolicy {
@@ -87,6 +86,8 @@ impl EvictionPolicy for MostRecentlyUsedEvictionPolicy {
     }
 }
 
+// current best when combined with MostRecentlyUsedEvictionPolicy
+// 12.31 per token (for 25600)
 pub struct PreferRemoteSpansEvictionPolicy {
     remote_spans: RwLock<HashSet<SpanId>>,
     inner: Box<dyn EvictionPolicy>,
