@@ -75,7 +75,11 @@ impl MostRecentlyUsedEvictionPolicy {
 impl EvictionPolicy for MostRecentlyUsedEvictionPolicy {
     fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId {
         let history = self.history.read().unwrap();
-        spans.iter().map(|v| (v, history.get(v).unwrap_or(&0))).reduce(|a, b| if a.1 > b.1 { a } else { b }).map(|a| a.0).unwrap()
+        spans.iter()
+            .map(|v| (v, history.get(v).unwrap_or(&0)))
+            .reduce(|a, b| if a.1 > b.1 { a } else { b })
+            .map(|a| a.0)
+            .unwrap()
     }
 
     fn on_span_access(&self, span_id: &SpanId) {
@@ -99,7 +103,17 @@ impl PreferRemoteSpansEvictionPolicy {
 
 impl EvictionPolicy for PreferRemoteSpansEvictionPolicy {
     fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId {
-        unimplemented!()
+        let remote_spans: Vec<_> = {
+            let remote_spans = self.remote_spans.try_read().unwrap();
+            spans.iter().filter(|s| remote_spans.contains(s)).cloned().collect()
+        };
+
+        if !remote_spans.is_empty() {
+            let span = self.inner.pick_for_eviction(&remote_spans);
+            spans.iter().find(|v| *v == span).unwrap()
+        } else {
+            self.inner.pick_for_eviction(spans)
+        }
     }
 
     fn on_span_swap_in(&self, span_id: &SpanId) {
