@@ -6,6 +6,7 @@ jobs:
   build:
     name: build
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       pages: write
       id-token: write
@@ -57,4 +58,3 @@ jobs:
     - uses: actions/configure-pages@v3
     - id: deployment
       uses: actions/deploy-pages@v2
-    
