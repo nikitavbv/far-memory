@@ -141,7 +141,10 @@ impl FarMemoryClient {
 
         span!(Level::DEBUG, "span_ptr - ensure local memory limit").in_scope(|| {
             // only need to free as much memory as remote part will take. There is already memory for local part of span
-            self.ensure_local_memory_under_limit(self.local_memory_max_threshold - span_remote_size as u64);
+            let result = self.ensure_local_memory_under_limit(self.local_memory_max_threshold - span_remote_size as u64);
+            if let Some(metrics) = &self.metrics {
+                metrics.span_swap_out_on_access_ops.inc_by(result.spans as u64);
+            }
         });
 
         // swap in
@@ -346,6 +349,7 @@ struct ClientMetrics {
     span_access_ops: IntCounter,
     span_swap_in_ops: IntCounter,
     span_swap_out_ops: IntCounter,
+    span_swap_out_on_access_ops: IntCounter,
 
     background_swap_out_spans: IntCounter,
     background_swap_out_bytes: IntCounter,
@@ -392,6 +396,11 @@ impl ClientMetrics {
                 "total span swap out operations",
                 registry
             ).unwrap(),
+            span_swap_out_on_access_ops: register_int_counter_with_registry!(
+                "client_swap_out_on_access_ops",
+                "total swap out ops to free memory when accessing span",
+                registry
+            ).unwrap(),
 
             background_swap_out_spans: register_int_counter_with_registry!(
                 "client_background_swap_out_spans",
@@ -415,6 +424,7 @@ impl ClientMetrics {
         self.registry.unregister(Box::new(self.span_access_ops.clone())).unwrap();
         self.registry.unregister(Box::new(self.span_swap_in_ops.clone())).unwrap();
         self.registry.unregister(Box::new(self.span_swap_out_ops.clone())).unwrap();
+        self.registry.unregister(Box::new(self.span_swap_out_on_access_ops.clone())).unwrap();
 
         self.registry.unregister(Box::new(self.background_swap_out_spans.clone())).unwrap();
         self.registry.unregister(Box::new(self.background_swap_out_bytes.clone())).unwrap();
