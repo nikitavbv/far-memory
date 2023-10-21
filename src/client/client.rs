@@ -2,7 +2,7 @@ use {
     std::{sync::{Arc, atomic::{AtomicU64, Ordering, AtomicBool}, RwLock, Mutex}, collections::HashMap, thread, time::Duration},
     tracing::{Level, span, info},
     crossbeam::utils::Backoff,
-    prometheus::Registry,
+    prometheus::{Registry, register_int_gauge_with_registry, IntGauge},
     super::{
         backend::FarMemoryBackend,
         prefetching::{EvictionPolicy, MostRecentlyUsedEvictionPolicy, PreferRemoteSpansEvictionPolicy, ReplayEvictionPolicy},
@@ -54,6 +54,7 @@ impl FarMemoryClient {
 
     pub fn track_metrics(&mut self, registry: Registry) {
         self.metrics = Some(ClientMetrics::new(registry));
+        self.start_metrics_thread();
     }
 
     pub fn start_swap_out_thread(&self) {
@@ -62,6 +63,12 @@ impl FarMemoryClient {
                 self.clone(),
                 self.local_memory_max_threshold - 10 * 1024 * 1024
             )).unwrap();
+    }
+
+    pub fn start_metrics_thread(&self) {
+        thread::Builder::new().name("metrics".to_owned())
+            .spawn(report_metrics_thread(self.clone()))
+            .unwrap();
     }
 
     pub fn stop(&self) {
@@ -306,15 +313,33 @@ impl FarMemoryClient {
 
 #[derive(Clone)]
 struct ClientMetrics {
+    registry: Registry,
+
+    local_memory: IntGauge,
+    remote_memory: IntGauge,
 }
 
 impl ClientMetrics {
     pub fn new(registry: Registry) -> Self {
         Self {
+            registry: registry.clone(),
+
+            local_memory: register_int_gauge_with_registry!(
+                "client_local_memory",
+                "local memory in bytes",
+                registry
+            ).unwrap(),
+            remote_memory: register_int_gauge_with_registry!(
+                "client_remote_memory",
+                "remote memory in bytes",
+                registry
+            ).unwrap(),
         }
     }
 
     pub fn unregister(&self) {
+        self.registry.unregister(Box::new(self.local_memory.clone())).unwrap();
+        self.registry.unregister(Box::new(self.remote_memory.clone())).unwrap();
     }
 }
 
@@ -331,6 +356,18 @@ fn swap_out_thread(client: FarMemoryClient, target_memory_usage: u64) -> impl Fn
                 });
             }
         });
+    }
+}
+
+fn report_metrics_thread(client: FarMemoryClient) -> impl FnOnce() -> () {
+    move || {
+        while client.is_running() {
+            let metrics = client.metrics.as_ref().unwrap();
+            metrics.local_memory.set(client.total_local_memory() as i64);
+            metrics.remote_memory.set(client.total_remote_memory() as i64);
+
+            thread::sleep(Duration::from_secs(10));
+        }
     }
 }
 
