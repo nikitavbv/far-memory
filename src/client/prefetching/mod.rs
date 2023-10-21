@@ -137,6 +137,7 @@ pub struct ReplayEvictionPolicy {
     history_file_path: String,
     record_mode: bool,
     history: RwLock<Vec<SpanId>>,
+    access_counter: AtomicU64,
     fallback: Box<dyn EvictionPolicy>,
 }
 
@@ -147,10 +148,17 @@ impl ReplayEvictionPolicy {
         let path = Path::new(&history_file_path);
         let record_mode = !path.exists();
 
+        let history = if record_mode {
+            Vec::new()
+        } else {
+            serde_json::from_slice(&fs::read(path).unwrap()).unwrap()
+        };
+
         Self {
             history_file_path,
             record_mode,
-            history: RwLock::new(Vec::new()),
+            history: RwLock::new(history),
+            access_counter: AtomicU64::new(0),
             fallback,
         }
     }
@@ -162,7 +170,30 @@ impl EvictionPolicy for ReplayEvictionPolicy {
             return self.fallback.pick_for_eviction(spans);
         }
 
-        unimplemented!()
+        let position = self.access_counter.fetch_add(1, Ordering::Relaxed);
+        let history = self.history.read().unwrap();
+        if position >= history.len() as u64 {
+            return self.fallback.pick_for_eviction(spans);
+        }
+
+        // pick based on history
+        let mut span_pos = vec![usize::MAX; spans.len()];
+        for i in 0..spans.len() {
+            for k in (position as usize)..history.len() {
+                if history[k] == spans[i] {
+                    span_pos[i] = k;
+                    break;
+                }
+            }
+        }
+
+        let max_pos = span_pos.iter()
+            .enumerate()
+            .max_by(|(_, a), (_, b)| a.cmp(b))
+            .map(|(index, _)| index)
+            .unwrap();
+
+        &spans[max_pos]
     }
 
     fn on_span_access(&self, span_id: &SpanId) {
@@ -182,6 +213,8 @@ impl EvictionPolicy for ReplayEvictionPolicy {
     }
 
     fn on_stop(&self) {
-        fs::write(&self.history_file_path,& serde_json::to_vec(&*self.history.read().unwrap()).unwrap()).unwrap();
+        if self.record_mode {
+            fs::write(&self.history_file_path, &serde_json::to_vec(&*self.history.read().unwrap()).unwrap()).unwrap();
+        }
     }
 }
