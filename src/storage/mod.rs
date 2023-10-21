@@ -7,7 +7,7 @@ use {
         thread,
     },
     tracing::{info, error, span, Level},
-    prometheus::{Registry, register_int_counter_vec_with_registry, IntCounterVec},
+    prometheus::{Registry, register_int_counter_vec_with_registry, IntCounterVec, IntGaugeVec, register_int_gauge_vec_with_registry},
     self::protocol::{StorageRequest, StorageResponse},
 };
 
@@ -123,31 +123,69 @@ pub struct Server {
 
 #[derive(Clone)]
 pub struct ServerMetrics {
-    metrics_swap_out_operations: IntCounterVec,
-    metrics_swap_out_bytes: IntCounterVec,
+    total_spans: IntGaugeVec,
+    total_bytes: IntGaugeVec,
+
+    swap_out_operations: IntCounterVec,
+    swap_out_bytes: IntCounterVec,
+
+    swap_in_operations: IntCounterVec,
+    swap_in_bytes: IntCounterVec,
 }
 
 impl ServerMetrics {
     pub fn new(registry: Registry) -> Self {
         Self {
-            metrics_swap_out_operations: register_int_counter_vec_with_registry!(
+            total_spans: register_int_gauge_vec_with_registry!(
+                "storage_spans",
+                "total spans in memory of this node",
+                &["server_addr", "run_id"],
+                registry
+            ).unwrap(),
+            total_bytes: register_int_gauge_vec_with_registry!(
+                "storage_bytes",
+                "total bytes in memory of this node",
+                &["server_addr", "run_id"],
+                registry
+            ).unwrap(),
+
+            swap_out_operations: register_int_counter_vec_with_registry!(
                 "storage_swap_out_ops",
                 "total swap out requests",
                 &["server_addr", "run_id"],
                 registry
             ).unwrap(),
-            metrics_swap_out_bytes: register_int_counter_vec_with_registry!(
+            swap_out_bytes: register_int_counter_vec_with_registry!(
                 "storage_swap_out_bytes",
                 "total bytes swapped out",
                 &["server_addr", "run_id"],
                 registry
             ).unwrap(),
+
+            swap_in_operations: register_int_counter_vec_with_registry!(
+                "storage_swap_in_ops",
+                "total swap in operations",
+                &["server_addr", "run_id"],
+                registry
+            ).unwrap(),
+            swap_in_bytes: register_int_counter_vec_with_registry!(
+              "storage_swap_in_bytes",
+              "total swap in bytes",
+              &["server_addr", "run_id"],
+              registry
+            ).unwrap(),
         }
     }
 
     pub fn reset(&self) {
-        self.metrics_swap_out_operations.reset();
-        self.metrics_swap_out_bytes.reset();
+        self.total_spans.reset();
+        self.total_bytes.reset();
+
+        self.swap_out_operations.reset();
+        self.swap_out_bytes.reset();
+
+        self.swap_in_operations.reset();
+        self.swap_in_bytes.reset();
     }
 }
 
@@ -192,8 +230,11 @@ impl Server {
                 }
 
                 if let Some(metrics) = self.metrics.as_ref() {
-                    metrics.metrics_swap_out_operations.with_label_values(&[&self.addr, &self.run_id]).inc();
-                    metrics.metrics_swap_out_bytes.with_label_values(&[&self.addr, &self.run_id]).inc_by(bytes_swapped_out as u64);
+                    metrics.total_spans.with_label_values(&[&self.addr, &self.run_id]).set(self.spans.len() as i64);
+                    metrics.total_bytes.with_label_values(&[&self.addr, &self.run_id]).set(self.total_span_bytes() as i64);
+
+                    metrics.swap_out_operations.with_label_values(&[&self.addr, &self.run_id]).inc();
+                    metrics.swap_out_bytes.with_label_values(&[&self.addr, &self.run_id]).inc_by(bytes_swapped_out as u64);
                 }
 
                 StorageResponse::Ok
@@ -205,9 +246,21 @@ impl Server {
 
                 let data = self.spans.remove(&span_id).unwrap();
 
+                if let Some(metrics) = self.metrics.as_ref() {
+                    metrics.total_spans.with_label_values(&[&self.addr, &self.run_id]).set(self.spans.len() as i64);
+                    metrics.total_bytes.with_label_values(&[&self.addr, &self.run_id]).set(self.total_span_bytes() as i64);
+
+                    metrics.swap_in_operations.with_label_values(&[&self.addr, &self.run_id]).inc();
+                    metrics.swap_in_bytes.with_label_values(&[&self.addr, &self.run_id]).inc_by(data.len() as u64);
+                }
+
                 StorageResponse::SwapIn { span_id, data }
             },
         }
+    }
+
+    fn total_span_bytes(&self) -> usize {
+        self.spans.iter().map(|v| v.1.len()).sum()
     }
 }
 
