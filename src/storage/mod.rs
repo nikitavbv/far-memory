@@ -7,7 +7,7 @@ use {
         thread,
     },
     tracing::{info, error, span, Level},
-    prometheus::{Registry, register_int_counter_with_registry, IntCounter},
+    prometheus::{Registry, register_int_counter_vec_with_registry, IntCounter},
     self::protocol::{StorageRequest, StorageResponse},
 };
 
@@ -31,7 +31,7 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
         let mut stream = stream.unwrap();
         connections += 1;
 
-        let mut server = Server::new(metrics.clone(), token.clone());
+        let mut server = Server::new(metrics.clone(), addr.clone(), token.clone());
 
         info!("handling incoming connection");
         let mut requests = 0;
@@ -112,8 +112,8 @@ pub struct Server {
 }
 
 impl Server {
-    pub fn new(metrics: Option<Registry>, token: String) -> Self {
-        let metrics_swap_out_operations = metrics.map(|registry| register_int_counter_with_registry!("storage_swap_out_ops", "total swap out requests", registry).unwrap());
+    pub fn new(metrics: Option<Registry>, addr: String, token: String) -> Self {
+        let metrics_swap_out_operations = metrics.map(|registry| register_int_counter_vec_with_registry!("storage_swap_out_ops", "total swap out requests", &["server_addr"], registry).unwrap().with_label_values(&[&addr]));
 
         Self {
             auth: false,
