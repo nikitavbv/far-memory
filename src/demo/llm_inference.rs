@@ -5,7 +5,7 @@ use {
     quantiles::ckms::CKMS,
     crate::{
         utils::allocator::current_memory_usage,
-        client::{FarMemoryBuffer, FarMemoryClient, NetworkNodeBackend, LocalDiskBackend, FarMemoryBackend, FarMemoryBufferedVec, FarMemoryVec, ReplicationBackend},
+        client::{FarMemoryBuffer, FarMemoryClient, NetworkNodeBackend, LocalDiskBackend, FarMemoryBackend, FarMemoryBufferedVec, FarMemoryVec, ReplicationBackend, ErasureCodingBackend},
     },
 };
 
@@ -574,13 +574,26 @@ pub fn run_llm_inference_demo(token: &str, endpoints: Vec<String>, time_limit: u
 
 fn run_inference(token: &str, endpoints: Vec<String>, time_limit: u64, local_max_memory: u64) -> f32 {
     let backend: Box<dyn FarMemoryBackend> = if !endpoints.is_empty() {
-        let nodes: Vec<_> = endpoints.iter()
-            .map(|v| Box::new(NetworkNodeBackend::new(&v, token)) as Box<dyn FarMemoryBackend>)
-            .collect();
+        if endpoints.len() == 1 {
+            info!("running in single backend node mode");
+            Box::new(NetworkNodeBackend::new(&endpoints[0], token))
+        } else if endpoints.len() == 5 {
+            info!("running in erasure coded mode");
 
-        info!("running in replication mode with {} nodes", nodes.len());
+            let nodes: Vec<_> = endpoints.iter()
+                .map(|v| Box::new(NetworkNodeBackend::new(&v, token)) as Box<dyn FarMemoryBackend>)
+                .collect();
 
-        Box::new(ReplicationBackend::new(nodes))
+            Box::new(ErasureCodingBackend::new(nodes))
+        } else {
+            let nodes: Vec<_> = endpoints.iter()
+                .map(|v| Box::new(NetworkNodeBackend::new(&v, token)) as Box<dyn FarMemoryBackend>)
+                .collect();
+
+            info!("running in replication mode with {} nodes", nodes.len());
+
+            Box::new(ReplicationBackend::new(nodes))
+        }
     } else {
         warn!("no storage endpoint provided, falling back to disk backend");
         Box::new(LocalDiskBackend::new())

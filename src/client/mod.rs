@@ -15,6 +15,7 @@ pub use self::{
         disk::LocalDiskBackend,
         network_node::NetworkNodeBackend,
         replication::ReplicationBackend,
+        erasure_coding::ErasureCodingBackend,
     },
 };
 
