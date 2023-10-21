@@ -35,7 +35,7 @@ pub struct Args {
     // components
     #[arg(long)]
     storage: bool,
-    
+
     #[arg(long)]
     storage_endpoint: Option<String>,
 
@@ -104,10 +104,10 @@ async fn main() -> std::io::Result<()> {
         let run = || {
             span!(Level::DEBUG, "llm_inference_demo")
                 .in_scope(|| run_llm_inference_demo(
-                    &read_token(), 
-                    args.storage_endpoint.clone(), 
-                    args.time_limit.unwrap_or(10 * 60), 
-                    args.optimize, 
+                    &read_token(),
+                    args.storage_endpoint.clone().map(|v| v.split(",").map(|v| v.to_owned()).collect::<Vec<String>>()).unwrap_or(Vec::new()),
+                    args.time_limit.unwrap_or(10 * 60),
+                    args.optimize,
                     args.memory_limit_mb.map(|v| v * 1024 * 1024)
                 ));
         };

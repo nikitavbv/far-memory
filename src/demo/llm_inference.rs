@@ -5,7 +5,7 @@ use {
     quantiles::ckms::CKMS,
     crate::{
         utils::allocator::current_memory_usage,
-        client::{FarMemoryBuffer, FarMemoryClient, NetworkNodeBackend, LocalDiskBackend, FarMemoryBackend, FarMemoryBufferedVec, FarMemoryVec},
+        client::{FarMemoryBuffer, FarMemoryClient, NetworkNodeBackend, LocalDiskBackend, FarMemoryBackend, FarMemoryBufferedVec, FarMemoryVec, ReplicationBackend},
     },
 };
 
@@ -435,7 +435,7 @@ impl LlamaLayer<Vec<Ty>> for LayerWeights<Vec<Ty>>
             let _scaler = (1 as Ty) / ((1 as Ty) + (-*h1).exp());
             *h1 = *h1 * _scaler;
         }
-        
+
         // combine hidden state with multiplication
         for (h1, &h2) in state.h1.iter_mut().zip(state.h2.iter()) {
             *h1 *= h2;
@@ -454,7 +454,7 @@ impl LlamaLayer<Vec<Ty>> for LayerWeights<Vec<Ty>>
 /// Load raw weights from Karpathy's models
 fn load_raw_karpathy(cfg: &Config, path: &str) -> ([Vec<Ty>; 13], Option<Vec<Ty>>) {
     let mut model_bin = File::open(path).unwrap();
-    
+
     model_bin.seek(SeekFrom::Start(CONF_SIZE as u64)).unwrap();
 
     let mut f = |s: usize| _alloc_and_read(&mut model_bin, s);
@@ -546,7 +546,7 @@ unsafe fn _unchecked_slice<Q>(s: &[Q], offset: usize, size: usize) -> &[Q] {
     std::slice::from_raw_parts(st, size)
 }
 
-pub fn run_llm_inference_demo(token: &str, endpoint: Option<String>, time_limit: u64, optimize: bool, memory_limit: Option<u64>) {
+pub fn run_llm_inference_demo(token: &str, endpoints: Vec<String>, time_limit: u64, optimize: bool, memory_limit: Option<u64>) {
     info!("running llm inference demo");
 
     let slo = 5.45;
@@ -558,7 +558,7 @@ pub fn run_llm_inference_demo(token: &str, endpoint: Option<String>, time_limit:
         loop {
             info!("trying {}MB as local memory treshold", memory_threshold / (1024 * 1024));
 
-            let time_per_token = run_inference(token, endpoint.clone(), time_limit, memory_threshold);
+            let time_per_token = run_inference(token, endpoints.clone(), time_limit, memory_threshold);
             if time_per_token > slo {
                 break;
             }
@@ -568,17 +568,20 @@ pub fn run_llm_inference_demo(token: &str, endpoint: Option<String>, time_limit:
 
         info!("lowest local memory threshold which maintains SLO is {}MB", memory_threshold / (1024 * 1024));
     } else {
-        run_inference(token, endpoint, time_limit, memory_limit.unwrap_or(25600 * 1024 * 1024));
+        run_inference(token, endpoints, time_limit, memory_limit.unwrap_or(25600 * 1024 * 1024));
     }
 }
 
-fn run_inference(token: &str, endpoint: Option<String>, time_limit: u64, local_max_memory: u64) -> f32 {
-    let backend: Box<dyn FarMemoryBackend> = match endpoint.as_ref() {
-        Some(endpoint) => Box::new(NetworkNodeBackend::new(endpoint, token)),
-        None => {
-            warn!("no storage endpoint provided, falling back to disk backend");
-            Box::new(LocalDiskBackend::new())
-        }
+fn run_inference(token: &str, endpoints: Vec<String>, time_limit: u64, local_max_memory: u64) -> f32 {
+    let backend: Box<dyn FarMemoryBackend> = if !endpoints.is_empty() {
+        let nodes = endpoints.iter()
+            .map(|v| Box::new(NetworkNodeBackend::new(&v, token)) as Box<dyn FarMemoryBackend>)
+            .collect();
+
+        Box::new(ReplicationBackend::new(nodes))
+    } else {
+        warn!("no storage endpoint provided, falling back to disk backend");
+        Box::new(LocalDiskBackend::new())
     };
 
     let client = FarMemoryClient::new(backend, local_max_memory);
@@ -631,7 +634,7 @@ fn run_inference(token: &str, endpoint: Option<String>, time_limit: u64, local_m
         let token_started_at = Instant::now();
 
         weights.step(token, pos, &config, &mut state);
-        
+
         let next = if temperature == 0 as Ty {
             state
                 .logits
@@ -668,10 +671,10 @@ fn run_inference(token: &str, endpoint: Option<String>, time_limit: u64, local_m
     client.stop();
 
     println!(
-        "done, total tokens generated: {}, total time: {} seconds, time per token avg: {} seconds, p95: {} seconds", 
-        total_tokens_generated, 
+        "done, total tokens generated: {}, total time: {} seconds, time per token avg: {} seconds, p95: {} seconds",
+        total_tokens_generated,
         (Instant::now() - started_at).as_secs_f32(),
-        time_per_token.query(0.5).unwrap().1, 
+        time_per_token.query(0.5).unwrap().1,
         time_per_token.query(0.9).unwrap().1
     );
 

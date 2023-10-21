@@ -14,6 +14,7 @@ pub use self::{
         in_memory::InMemoryBackend,
         disk::LocalDiskBackend,
         network_node::NetworkNodeBackend,
+        replication::ReplicationBackend,
     },
 };
 
