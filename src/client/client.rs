@@ -2,7 +2,7 @@ use {
     std::{sync::{Arc, atomic::{AtomicU64, Ordering, AtomicBool}, RwLock, Mutex}, collections::HashMap, thread, time::Duration},
     tracing::{Level, span, info},
     crossbeam::utils::Backoff,
-    prometheus::{Registry, register_int_gauge_with_registry, IntGauge},
+    prometheus::{Registry, register_int_gauge_with_registry, IntGauge, IntCounter, register_int_counter_with_registry},
     super::{
         backend::FarMemoryBackend,
         prefetching::{EvictionPolicy, MostRecentlyUsedEvictionPolicy, PreferRemoteSpansEvictionPolicy, ReplayEvictionPolicy},
@@ -32,6 +32,11 @@ enum SpanState {
     Free,
     InUse(usize),
     SwappingOut,
+}
+
+struct SwapOutResult {
+    spans: usize,
+    bytes: usize,
 }
 
 impl FarMemoryClient {
@@ -246,10 +251,13 @@ impl FarMemoryClient {
         self.spans.read().unwrap().iter().map(|v| v.1.remote_memory_usage()).sum()
     }
 
-    fn ensure_local_memory_under_limit(&self, limit: u64) {
+    fn ensure_local_memory_under_limit(&self, limit: u64) -> SwapOutResult {
         let current_local_memory = self.total_local_memory() as u64;
         if current_local_memory < limit {
-            return;
+            return SwapOutResult {
+                spans: 0,
+                bytes: 0,
+            };
         }
 
         let memory_to_swap_out = current_local_memory - limit;
@@ -294,6 +302,11 @@ impl FarMemoryClient {
         span!(Level::DEBUG, "swap_out_spans", needed = memory_to_swap_out, swap_out_req_size = total_memory).in_scope(|| {
             self.swap_out_spans(&spans_to_swap_out);
         });
+
+        SwapOutResult {
+            spans: spans_to_swap_out.len(),
+            bytes: total_memory as usize,
+        }
     }
 
     pub fn decrease_refs_for_span(&self, span_id: &SpanId) {
@@ -317,6 +330,9 @@ struct ClientMetrics {
 
     local_memory: IntGauge,
     remote_memory: IntGauge,
+
+    background_swap_out_spans: IntCounter,
+    background_swap_out_bytes: IntCounter,
 }
 
 impl ClientMetrics {
@@ -334,12 +350,26 @@ impl ClientMetrics {
                 "remote memory in bytes",
                 registry
             ).unwrap(),
+
+            background_swap_out_spans: register_int_counter_with_registry!(
+                "client_background_swap_out_spans",
+                "swapped out spans by background thread",
+                registry
+            ).unwrap(),
+            background_swap_out_bytes: register_int_counter_with_registry!(
+                "client_background_swap_out_bytes",
+                "swapped out bytes by background thread",
+                registry
+            ).unwrap(),
         }
     }
 
     pub fn unregister(&self) {
         self.registry.unregister(Box::new(self.local_memory.clone())).unwrap();
         self.registry.unregister(Box::new(self.remote_memory.clone())).unwrap();
+
+        self.registry.unregister(Box::new(self.background_swap_out_spans.clone())).unwrap();
+        self.registry.unregister(Box::new(self.background_swap_out_bytes.clone())).unwrap();
     }
 }
 
@@ -350,10 +380,15 @@ fn swap_out_thread(client: FarMemoryClient, target_memory_usage: u64) -> impl Fn
             while client.is_running() {
                 thread::sleep(Duration::from_secs(10));
 
-                span!(Level::DEBUG, "swap out iteration").in_scope(|| {
+                let swap_out_result = span!(Level::DEBUG, "swap out iteration").in_scope(|| {
                     let _guard = span!(Level::DEBUG, "waiting for lock").in_scope(|| client.swap_in_out_lock.lock().unwrap());
-                    client.ensure_local_memory_under_limit(target_memory_usage);
+                    client.ensure_local_memory_under_limit(target_memory_usage)
                 });
+
+                if let Some(metrics) = client.metrics.as_ref() {
+                    metrics.background_swap_out_spans.inc_by(swap_out_result.spans as u64);
+                    metrics.background_swap_out_bytes.inc_by(swap_out_result.bytes as u64);
+                }
             }
         });
     }
