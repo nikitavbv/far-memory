@@ -1,5 +1,5 @@
 use {
-    std::{sync::{atomic::{AtomicU64, Ordering}, RwLock}, collections::{HashMap, HashSet}},
+    std::{sync::{atomic::{AtomicU64, Ordering}, RwLock, Mutex}, collections::{HashMap, HashSet}},
     rand::seq::SliceRandom,
     super::SpanId,
 };
@@ -117,11 +117,46 @@ impl EvictionPolicy for PreferRemoteSpansEvictionPolicy {
         }
     }
 
+    fn on_span_access(&self, span_id: &SpanId) {
+        self.inner.on_span_access(span_id)
+    }
+
     fn on_span_swap_in(&self, span_id: &SpanId) {
+        self.inner.on_span_swap_in(span_id);
         self.remote_spans.write().unwrap().remove(span_id);
     }
 
     fn on_span_swap_out(&self, span_id: &SpanId) {
+        self.inner.on_span_swap_out(span_id);
         self.remote_spans.write().unwrap().insert(span_id.clone());
+    }
+}
+
+pub struct ReplayEvictionPolicy {
+    history: Mutex<Vec<SpanId>>,
+    fallback: Box<dyn EvictionPolicy>,
+}
+
+impl ReplayEvictionPolicy {
+    pub fn new(fallback: Box<dyn EvictionPolicy>) -> Self {
+        Self {
+            history: Mutex::new(Vec::new()),
+            fallback,
+        }
+    }
+}
+
+
+impl EvictionPolicy for ReplayEvictionPolicy {
+    fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId {
+        unimplemented!()
+    }
+
+    fn on_span_access(&self, span_id: &SpanId) {
+        unimplemented!()
+    }
+
+    fn on_span_swap_out(&self, span_id: &SpanId) {
+        unimplemented!()
     }
 }
