@@ -3,7 +3,7 @@ use {
     clap::Parser,
     tracing::{span, Level, info},
     crate::{
-        utils::{init_logging, init_tracing, metrics::{metrics_registry, init_metrics}},
+        utils::{init_logging, init_tracing, metrics::init_metrics, generate_run_id},
         thesis::build_thesis,
         storage::run_storage_server,
         demo::{
@@ -31,6 +31,9 @@ pub struct Args {
 
     #[arg(long)]
     memory_limit_mb: Option<u64>,
+
+    #[arg(long)]
+    run_id: Option<String>,
 
     // components
     #[arg(long)]
@@ -100,17 +103,20 @@ async fn main() -> std::io::Result<()> {
     }).unwrap();
 
     if args.storage {
-        let metrics = init_metrics();
+        let metrics = init_metrics(None);
         run_storage_server(metrics, read_token(), args.port);
     } else if args.simple_demo {
         run_simple_demo();
     } else if args.llm_inference_demo {
-        let metrics = init_metrics();
+        let run_id = generate_run_id();
+        println!("run id: {:?}", run_id);
+        let metrics = init_metrics(Some(run_id.clone()));
 
         let run = || {
             span!(Level::DEBUG, "llm_inference_demo")
                 .in_scope(|| run_llm_inference_demo(
                     metrics.clone(),
+                    run_id.clone(),
                     &read_token(),
                     args.storage_endpoint.clone().map(|v| v.split(",").map(|v| v.to_owned()).collect::<Vec<String>>()).unwrap_or(Vec::new()),
                     args.time_limit.unwrap_or(10 * 60),

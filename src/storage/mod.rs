@@ -35,7 +35,7 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
         let mut stream = stream.unwrap();
         connections += 1;
 
-        let mut server = Server::new(metrics.clone(), format!("{}:{}", hostname, port), connections.to_string(), token.clone());
+        let mut server = Server::new(metrics.clone(), format!("{}:{}", hostname, port), token.clone());
 
         info!("handling incoming connection");
         let mut requests = 0;
@@ -98,6 +98,10 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
             });
         }
 
+        if let Some(metrics) = metrics.as_ref() {
+            metrics.reset();
+        }
+
         if let Some(limit) = connections_limit {
             if connections >= limit {
                 break;
@@ -114,7 +118,7 @@ pub struct Server {
 
     metrics: Option<ServerMetrics>,
     addr: String,
-    connection_id: String,
+    run_id: String,
 }
 
 #[derive(Clone)]
@@ -128,15 +132,19 @@ impl ServerMetrics {
             metrics_swap_out_operations: register_int_counter_vec_with_registry!(
                 "storage_swap_out_ops",
                 "total swap out requests",
-                &["server_addr", "connection_id"],
+                &["server_addr", "run_id"],
                 registry
             ).unwrap(),
         }
     }
+
+    pub fn reset(&self) {
+        self.metrics_swap_out_operations.reset();
+    }
 }
 
 impl Server {
-    pub fn new(metrics: Option<ServerMetrics>, addr: String, connection_id: String, token: String) -> Self {
+    pub fn new(metrics: Option<ServerMetrics>, addr: String, token: String) -> Self {
         Self {
             auth: false,
             token,
@@ -145,7 +153,7 @@ impl Server {
 
             metrics,
             addr,
-            connection_id,
+            run_id: "unknown".to_owned(),
         }
     }
 
@@ -159,6 +167,10 @@ impl Server {
                     StorageResponse::Forbidden
                 }
             },
+            StorageRequest::SetRunId { run_id } => {
+                self.run_id = run_id;
+                StorageResponse::Ok
+            }
             StorageRequest::SwapOut { span_id, data, prepend } => {
                 if !self.auth {
                     return StorageResponse::Forbidden;
@@ -170,7 +182,7 @@ impl Server {
                 }
 
                 if let Some(counter) = self.metrics.as_ref().map(|v| &v.metrics_swap_out_operations) {
-                    counter.with_label_values(&[&self.addr, &self.connection_id]).inc();
+                    counter.with_label_values(&[&self.addr, &self.run_id]).inc();
                 }
 
                 StorageResponse::Ok
@@ -212,6 +224,15 @@ impl Client {
         }) {
             StorageResponse::Ok => (),
             other => panic!("unexpected auth response: {:?}", other),
+        }
+    }
+
+    pub fn set_run_id(&mut self, run_id: String) {
+        match self.request(StorageRequest::SetRunId {
+            run_id,
+        }) {
+            StorageResponse::Ok => (),
+            other => panic!("unexpected set run id response: {:?}", other),
         }
     }
 

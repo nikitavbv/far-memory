@@ -547,7 +547,7 @@ unsafe fn _unchecked_slice<Q>(s: &[Q], offset: usize, size: usize) -> &[Q] {
     std::slice::from_raw_parts(st, size)
 }
 
-pub fn run_llm_inference_demo(metrics: Registry, token: &str, endpoints: Vec<String>, time_limit: u64, optimize: bool, memory_limit: Option<u64>) {
+pub fn run_llm_inference_demo(metrics: Registry, run_id: String, token: &str, endpoints: Vec<String>, time_limit: u64, optimize: bool, memory_limit: Option<u64>) {
     info!("running llm inference demo");
 
     let slo = 5.45;
@@ -559,7 +559,7 @@ pub fn run_llm_inference_demo(metrics: Registry, token: &str, endpoints: Vec<Str
         loop {
             info!("trying {}MB as local memory treshold", memory_threshold / (1024 * 1024));
 
-            let time_per_token = run_inference(metrics.clone(), token, endpoints.clone(), time_limit, memory_threshold);
+            let time_per_token = run_inference(metrics.clone(), run_id.clone(), token, endpoints.clone(), time_limit, memory_threshold);
             if time_per_token > slo {
                 break;
             }
@@ -569,26 +569,26 @@ pub fn run_llm_inference_demo(metrics: Registry, token: &str, endpoints: Vec<Str
 
         info!("lowest local memory threshold which maintains SLO is {}MB", memory_threshold / (1024 * 1024));
     } else {
-        run_inference(metrics, token, endpoints, time_limit, memory_limit.unwrap_or(25600 * 1024 * 1024));
+        run_inference(metrics, run_id.clone(), token, endpoints, time_limit, memory_limit.unwrap_or(25600 * 1024 * 1024));
     }
 }
 
-fn run_inference(metrics: Registry, token: &str, endpoints: Vec<String>, time_limit: u64, local_max_memory: u64) -> f32 {
+fn run_inference(metrics: Registry, run_id: String, token: &str, endpoints: Vec<String>, time_limit: u64, local_max_memory: u64) -> f32 {
     let backend: Box<dyn FarMemoryBackend> = if !endpoints.is_empty() {
         if endpoints.len() == 1 {
             info!("running in single backend node mode");
-            Box::new(NetworkNodeBackend::new(&endpoints[0], token))
+            Box::new(NetworkNodeBackend::new(&endpoints[0], token, run_id))
         } else if endpoints.len() == 5 {
             info!("running in erasure coded mode");
 
             let nodes: Vec<_> = endpoints.iter()
-                .map(|v| Box::new(NetworkNodeBackend::new(&v, token)) as Box<dyn FarMemoryBackend>)
+                .map(|v| Box::new(NetworkNodeBackend::new(&v, token, run_id.clone())) as Box<dyn FarMemoryBackend>)
                 .collect();
 
             Box::new(ErasureCodingBackend::new(nodes))
         } else {
             let nodes: Vec<_> = endpoints.iter()
-                .map(|v| Box::new(NetworkNodeBackend::new(&v, token)) as Box<dyn FarMemoryBackend>)
+                .map(|v| Box::new(NetworkNodeBackend::new(&v, token, run_id.clone())) as Box<dyn FarMemoryBackend>)
                 .collect();
 
             info!("running in replication mode with {} nodes", nodes.len());

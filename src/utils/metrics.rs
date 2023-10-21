@@ -34,17 +34,20 @@ impl Default for MetricsConfig {
     }
 }
 
-pub fn init_metrics() -> Registry {
-    let registry = metrics_registry();
+pub fn init_metrics(run_id: Option<String>) -> Registry {
+    let registry = metrics_registry(run_id);
 
     start_metrics_push_thread(registry.clone(), MetricsConfig::load_from_config());
 
     registry
 }
 
-pub fn metrics_registry() -> Registry {
+pub fn metrics_registry(run_id: Option<String>) -> Registry {
     let mut labels = HashMap::new();
     labels.insert("node".to_owned(), hostname::get().unwrap().to_string_lossy().to_string());
+    if let Some(run_id) = run_id {
+        labels.insert("run_id".to_owned(), run_id);
+    }
 
     Registry::new_custom(Some("far_memory".to_owned()), Some(labels)).unwrap()
 }

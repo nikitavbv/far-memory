@@ -5,6 +5,9 @@ pub enum StorageRequest {
     Auth {
         token: String,
     },
+    SetRunId {
+        run_id: String,
+    },
     SwapOut {
         span_id: u64,
         prepend: bool,
