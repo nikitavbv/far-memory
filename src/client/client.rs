@@ -23,6 +23,8 @@ pub struct FarMemoryClient {
 
     swap_in_out_lock: Arc<Mutex<()>>,
     span_states: Arc<RwLock<HashMap<SpanId, Mutex<SpanState>>>>,
+
+    metrics: Option<ClientMetrics>,
 }
 
 #[derive(Eq, PartialEq)]
@@ -45,10 +47,13 @@ impl FarMemoryClient {
 
             swap_in_out_lock: Arc::new(Mutex::new(())),
             span_states: Arc::new(RwLock::new(HashMap::new())),
+
+            metrics: None,
         }
     }
 
-    pub fn track_metrics(&self, registry: Registry) {
+    pub fn track_metrics(&mut self, registry: Registry) {
+        self.metrics = Some(ClientMetrics::new(registry));
     }
 
     pub fn start_swap_out_thread(&self) {
@@ -62,6 +67,9 @@ impl FarMemoryClient {
     pub fn stop(&self) {
         self.is_running.store(false, Ordering::Relaxed);
         self.eviction_policy.on_stop();
+        if let Some(metrics) = self.metrics.as_ref() {
+            metrics.unregister();
+        }
     }
 
     pub fn is_running(&self) -> bool {
@@ -293,6 +301,20 @@ impl FarMemoryClient {
             },
             SpanState::SwappingOut => panic!("cannot decrease refs for span that is being swapped out")
         }
+    }
+}
+
+#[derive(Clone)]
+struct ClientMetrics {
+}
+
+impl ClientMetrics {
+    pub fn new(registry: Registry) -> Self {
+        Self {
+        }
+    }
+
+    pub fn unregister(&self) {
     }
 }
 

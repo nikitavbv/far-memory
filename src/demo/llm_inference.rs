@@ -600,7 +600,7 @@ fn run_inference(metrics: Registry, run_id: String, token: &str, endpoints: Vec<
         Box::new(LocalDiskBackend::new())
     };
 
-    let client = FarMemoryClient::new(backend, local_max_memory);
+    let mut client = FarMemoryClient::new(backend, local_max_memory);
     client.track_metrics(metrics);
     client.start_swap_out_thread();
 
