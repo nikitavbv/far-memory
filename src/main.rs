@@ -37,6 +37,9 @@ pub struct Args {
     storage: bool,
 
     #[arg(long)]
+    port: Option<u16>,
+
+    #[arg(long)]
     storage_endpoint: Option<String>,
 
     // demo
@@ -97,7 +100,7 @@ async fn main() -> std::io::Result<()> {
     }).unwrap();
 
     if args.storage {
-        run_storage_server(read_token());
+        run_storage_server(read_token(), args.port);
     } else if args.simple_demo {
         run_simple_demo();
     } else if args.llm_inference_demo {

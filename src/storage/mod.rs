@@ -1,9 +1,9 @@
 use {
     std::{
-        net::{TcpListener, TcpStream, Shutdown}, 
-        io::{Write, Read}, 
-        collections::HashMap, 
-        time::Duration, 
+        net::{TcpListener, TcpStream, Shutdown},
+        io::{Write, Read},
+        collections::HashMap,
+        time::Duration,
         thread,
     },
     tracing::{info, error, span, Level},
@@ -14,13 +14,15 @@ const REQ_SIZE_LIMIT: u64 = 10 * 1024 * 1024 * 1024;
 
 mod protocol;
 
-pub fn run_storage_server(token: String) {
-    info!("running storage server");
-    run_server("0.0.0.0".to_owned(), token, None, None);
+pub fn run_storage_server(token: String, port: Option<u16>) {
+    run_server("0.0.0.0".to_owned(), port, token, None, None);
 }
 
-fn run_server(host: String, token: String, connections_limit: Option<usize>, requests_limit: Option<usize>) {
-    let listener = TcpListener::bind(format!("{}:14000", host)).unwrap();
+fn run_server(host: String, port: Option<u16>, token: String, connections_limit: Option<usize>, requests_limit: Option<usize>) {
+    let addr = format!("{}:{}", host, port.unwrap_or(14000));
+    let listener = TcpListener::bind(&addr).unwrap();
+
+    info!("running storage server on {}", addr);
 
     let mut connections = 0;
     for stream in listener.incoming() {
@@ -240,7 +242,7 @@ mod tests {
     fn simple() {
         let server_thread = thread::spawn(|| run_server("localhost".to_owned(), "some-token".to_owned(), Some(1), Some(3)));
         let mut client = Client::new("localhost:14000");
-        
+
         client.auth("some-token");
         client.swap_out(42, vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1], false);
         let res = client.swap_in(42);
