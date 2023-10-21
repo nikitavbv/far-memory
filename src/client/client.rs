@@ -330,6 +330,8 @@ struct ClientMetrics {
 
     local_memory: IntGauge,
     remote_memory: IntGauge,
+    local_spans: IntGauge,
+    remote_spans: IntGauge,
 
     background_swap_out_spans: IntCounter,
     background_swap_out_bytes: IntCounter,
@@ -350,6 +352,16 @@ impl ClientMetrics {
                 "remote memory in bytes",
                 registry
             ).unwrap(),
+            local_spans: register_int_gauge_with_registry!(
+                "client_local_spans",
+                "number of local spans",
+                registry
+            ).unwrap(),
+            remote_spans: register_int_gauge_with_registry!(
+                "client_remote_spans",
+                "number of remote spans",
+                registry
+            ).unwrap(),
 
             background_swap_out_spans: register_int_counter_with_registry!(
                 "client_background_swap_out_spans",
@@ -367,6 +379,8 @@ impl ClientMetrics {
     pub fn unregister(&self) {
         self.registry.unregister(Box::new(self.local_memory.clone())).unwrap();
         self.registry.unregister(Box::new(self.remote_memory.clone())).unwrap();
+        self.registry.unregister(Box::new(self.local_spans.clone())).unwrap();
+        self.registry.unregister(Box::new(self.remote_spans.clone())).unwrap();
 
         self.registry.unregister(Box::new(self.background_swap_out_spans.clone())).unwrap();
         self.registry.unregister(Box::new(self.background_swap_out_bytes.clone())).unwrap();
@@ -400,6 +414,8 @@ fn report_metrics_thread(client: FarMemoryClient) -> impl FnOnce() -> () {
             let metrics = client.metrics.as_ref().unwrap();
             metrics.local_memory.set(client.total_local_memory() as i64);
             metrics.remote_memory.set(client.total_remote_memory() as i64);
+            metrics.local_spans.set(client.total_local_spans() as i64);
+            metrics.remote_spans.set(client.total_remote_spans() as i64);
 
             thread::sleep(Duration::from_secs(10));
         }
