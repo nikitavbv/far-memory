@@ -574,9 +574,11 @@ pub fn run_llm_inference_demo(token: &str, endpoints: Vec<String>, time_limit: u
 
 fn run_inference(token: &str, endpoints: Vec<String>, time_limit: u64, local_max_memory: u64) -> f32 {
     let backend: Box<dyn FarMemoryBackend> = if !endpoints.is_empty() {
-        let nodes = endpoints.iter()
+        let nodes: Vec<_> = endpoints.iter()
             .map(|v| Box::new(NetworkNodeBackend::new(&v, token)) as Box<dyn FarMemoryBackend>)
             .collect();
+
+        info!("running in replication mode with {} nodes", nodes.len());
 
         Box::new(ReplicationBackend::new(nodes))
     } else {
