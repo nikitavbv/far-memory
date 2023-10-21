@@ -20,7 +20,9 @@ pub fn run_storage_server(metrics: Registry, token: String, port: Option<u16>) {
 }
 
 fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token: String, connections_limit: Option<usize>, requests_limit: Option<usize>) {
-    let addr = format!("{}:{}", host, port.unwrap_or(14000));
+    let port = port.unwrap_or(14000);
+    let hostname = hostname::get().unwrap().to_str().unwrap().to_owned();
+    let addr = format!("{}:{}", host, port);
     let listener = TcpListener::bind(&addr).unwrap();
 
     info!("running storage server on {}", addr);
@@ -31,7 +33,7 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
         let mut stream = stream.unwrap();
         connections += 1;
 
-        let mut server = Server::new(metrics.clone(), addr.clone(), token.clone());
+        let mut server = Server::new(metrics.clone(), format!("{}:{}", hostname, port), token.clone());
 
         info!("handling incoming connection");
         let mut requests = 0;
