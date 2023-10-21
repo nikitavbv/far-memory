@@ -109,6 +109,8 @@ async fn main() -> std::io::Result<()> {
         run_simple_demo();
     } else if args.llm_inference_demo {
         let run_id = generate_run_id();
+        let run_id = args.run_id.map(|prefix| format!("{}_{}", prefix, run_id)).unwrap_or(run_id);
+
         println!("run id: {:?}", run_id);
         let metrics = init_metrics(Some(run_id.clone()));
 
