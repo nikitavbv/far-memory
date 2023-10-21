@@ -7,7 +7,7 @@ use {
         thread,
     },
     tracing::{info, error, span, Level},
-    prometheus::{Registry, register_int_counter_vec_with_registry, IntCounter},
+    prometheus::{Registry, register_int_counter_vec_with_registry, IntCounterVec},
     self::protocol::{StorageRequest, StorageResponse},
 };
 
@@ -26,6 +26,8 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
     let listener = TcpListener::bind(&addr).unwrap();
 
     info!("running storage server on {}", addr);
+
+    let metrics = metrics.map(|v| ServerMetrics::new(v));
 
     let mut connections = 0;
     for stream in listener.incoming() {
@@ -110,25 +112,40 @@ pub struct Server {
 
     spans: HashMap<u64, Vec<u8>>,
 
-    metrics_swap_out_operations: Option<IntCounter>,
+    metrics: Option<ServerMetrics>,
+    addr: String,
+    connection_id: String,
+}
+
+#[derive(Clone)]
+pub struct ServerMetrics {
+    metrics_swap_out_operations: IntCounterVec,
+}
+
+impl ServerMetrics {
+    pub fn new(registry: Registry) -> Self {
+        Self {
+            metrics_swap_out_operations: register_int_counter_vec_with_registry!(
+                "storage_swap_out_ops",
+                "total swap out requests",
+                &["server_addr", "connection_id"],
+                registry
+            ).unwrap(),
+        }
+    }
 }
 
 impl Server {
-    pub fn new(metrics: Option<Registry>, addr: String, connection_id: String, token: String) -> Self {
-        let metrics_swap_out_operations = metrics.map(|registry| register_int_counter_vec_with_registry!(
-            "storage_swap_out_ops",
-            "total swap out requests",
-            &["server_addr", "connection_id"],
-            registry
-        ).unwrap().with_label_values(&[&addr, &connection_id]));
-
+    pub fn new(metrics: Option<ServerMetrics>, addr: String, connection_id: String, token: String) -> Self {
         Self {
             auth: false,
             token,
 
             spans: HashMap::new(),
 
-            metrics_swap_out_operations,
+            metrics,
+            addr,
+            connection_id,
         }
     }
 
@@ -152,8 +169,8 @@ impl Server {
                     self.spans.get_mut(&span_id).unwrap().append(&mut existing.unwrap());
                 }
 
-                if let Some(counter) = &self.metrics_swap_out_operations {
-                    counter.inc();
+                if let Some(counter) = self.metrics.as_ref().map(|v| &v.metrics_swap_out_operations) {
+                    counter.with_label_values(&[&self.addr, &self.connection_id]).inc();
                 }
 
                 StorageResponse::Ok
