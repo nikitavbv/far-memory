@@ -170,7 +170,7 @@ impl EvictionPolicy for ReplayEvictionPolicy {
             return self.fallback.pick_for_eviction(spans);
         }
 
-        let position = self.access_counter.fetch_add(1, Ordering::Relaxed);
+        let position = self.access_counter.load(Ordering::Relaxed);
         let history = self.history.read().unwrap();
         if position >= history.len() as u64 {
             return self.fallback.pick_for_eviction(spans);
@@ -199,6 +199,8 @@ impl EvictionPolicy for ReplayEvictionPolicy {
     fn on_span_access(&self, span_id: &SpanId) {
         if self.record_mode {
             self.history.write().unwrap().push(span_id.clone());
+        } else {
+            self.access_counter.fetch_add(1, Ordering::Relaxed);
         }
 
         self.fallback.on_span_access(span_id)
