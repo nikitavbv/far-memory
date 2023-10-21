@@ -33,7 +33,7 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
         let mut stream = stream.unwrap();
         connections += 1;
 
-        let mut server = Server::new(metrics.clone(), format!("{}:{}", hostname, port), token.clone());
+        let mut server = Server::new(metrics.clone(), format!("{}:{}", hostname, port), connections.to_string(), token.clone());
 
         info!("handling incoming connection");
         let mut requests = 0;
@@ -114,8 +114,13 @@ pub struct Server {
 }
 
 impl Server {
-    pub fn new(metrics: Option<Registry>, addr: String, token: String) -> Self {
-        let metrics_swap_out_operations = metrics.map(|registry| register_int_counter_vec_with_registry!("storage_swap_out_ops", "total swap out requests", &["server_addr"], registry).unwrap().with_label_values(&[&addr]));
+    pub fn new(metrics: Option<Registry>, addr: String, connection_id: String, token: String) -> Self {
+        let metrics_swap_out_operations = metrics.map(|registry| register_int_counter_vec_with_registry!(
+            "storage_swap_out_ops",
+            "total swap out requests",
+            &["server_addr", "connection_id"],
+            registry
+        ).unwrap().with_label_values(&[&addr, &connection_id]));
 
         Self {
             auth: false,
