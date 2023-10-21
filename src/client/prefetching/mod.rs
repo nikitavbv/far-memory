@@ -1,5 +1,5 @@
 use {
-    std::{sync::{atomic::{AtomicU64, Ordering}, RwLock, Mutex}, collections::{HashMap, HashSet}},
+    std::{sync::{atomic::{AtomicU64, Ordering}, RwLock}, collections::{HashMap, HashSet}, path::Path, fs},
     rand::seq::SliceRandom,
     super::SpanId,
 };
@@ -10,6 +10,7 @@ pub trait EvictionPolicy: Send + Sync {
     fn on_span_access(&self, span_id: &SpanId) {}
     fn on_span_swap_out(&self, span_id: &SpanId) {}
     fn on_span_swap_in(&self, span_id: &SpanId) {}
+    fn on_stop(&self) {}
 }
 
 // 6.01 per token (for 25700)
@@ -87,7 +88,7 @@ impl EvictionPolicy for MostRecentlyUsedEvictionPolicy {
 }
 
 // current best when combined with MostRecentlyUsedEvictionPolicy
-// 12.31 per token (for 25600)
+// 8.34 per token (for 25600)
 pub struct PreferRemoteSpansEvictionPolicy {
     remote_spans: RwLock<HashSet<SpanId>>,
     inner: Box<dyn EvictionPolicy>,
@@ -133,30 +134,54 @@ impl EvictionPolicy for PreferRemoteSpansEvictionPolicy {
 }
 
 pub struct ReplayEvictionPolicy {
-    history: Mutex<Vec<SpanId>>,
+    history_file_path: String,
+    record_mode: bool,
+    history: RwLock<Vec<SpanId>>,
     fallback: Box<dyn EvictionPolicy>,
 }
 
 impl ReplayEvictionPolicy {
     pub fn new(fallback: Box<dyn EvictionPolicy>) -> Self {
+        let history_file_path = "./data/eviction_history.json".to_owned();
+
+        let path = Path::new(&history_file_path);
+        let record_mode = !path.exists();
+
         Self {
-            history: Mutex::new(Vec::new()),
+            history_file_path,
+            record_mode,
+            history: RwLock::new(Vec::new()),
             fallback,
         }
     }
 }
 
-
 impl EvictionPolicy for ReplayEvictionPolicy {
     fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId {
+        if self.record_mode {
+            return self.fallback.pick_for_eviction(spans);
+        }
+
         unimplemented!()
     }
 
     fn on_span_access(&self, span_id: &SpanId) {
-        unimplemented!()
+        if self.record_mode {
+            self.history.write().unwrap().push(span_id.clone());
+        }
+
+        self.fallback.on_span_access(span_id)
     }
 
     fn on_span_swap_out(&self, span_id: &SpanId) {
-        unimplemented!()
+        self.fallback.on_span_swap_out(span_id)
+    }
+
+    fn on_span_swap_in(&self, span_id: &SpanId) {
+        self.fallback.on_span_swap_in(span_id)
+    }
+
+    fn on_stop(&self) {
+        fs::write(&self.history_file_path,& serde_json::to_vec(&*self.history.read().unwrap()).unwrap()).unwrap();
     }
 }

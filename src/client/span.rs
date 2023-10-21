@@ -1,10 +1,11 @@
 use {
     std::{alloc::{GlobalAlloc, Layout}, ops::Range},
     tracing::{span, Level},
+    serde::{Serialize, Deserialize},
     crate::utils::allocator::GLOBAL,
 };
 
-#[derive(Clone, Eq, PartialEq, Hash)]
+#[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct SpanId(u64);
 
 // not sure if there is a cheap way to avoid this
@@ -23,7 +24,7 @@ pub enum FarMemorySpan {
     Remote {
         // spans can be large, so it is possible that span is only partially swapped out (to optimize latency). For example, it does not
         // make sense to swap out the full 180MB span if the system requires just 10MB more free memory.
-        local_part: Option<LocalSpanData>, 
+        local_part: Option<LocalSpanData>,
         // remote + local
         total_size: usize,
     },
@@ -107,7 +108,7 @@ impl LocalSpanData {
         unsafe {
             std::ptr::copy_nonoverlapping(data.as_ptr() as *mut u8, ptr.add(self.size), data.len());
         }
-        
+
         Self {
             ptr,
             size: new_size,
@@ -143,7 +144,7 @@ impl FarMemorySpan {
     }
 
     pub fn new_local(size: usize) -> Self {
-        Self::Local { 
+        Self::Local {
             data: LocalSpanData::new(size),
         }
     }
@@ -184,7 +185,7 @@ impl FarMemorySpan {
         match self {
             FarMemorySpan::Local { .. } => 0,
             FarMemorySpan::Remote { local_part, total_size } => total_size - local_part.as_ref().map(|v| v.size()).unwrap_or(0),
-        } 
+        }
     }
 }
 
