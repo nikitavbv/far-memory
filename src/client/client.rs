@@ -244,7 +244,7 @@ impl FarMemoryClient {
                 break;
             }
 
-            let span_id = self.eviction_policy.pick_for_eviction(&possible_swap_out_spans).clone();
+            let span_id = span!(Level::DEBUG, "picking span for eviction").in_scope(|| self.eviction_policy.pick_for_eviction(&possible_swap_out_spans).clone());
             let index = possible_swap_out_spans.iter().position(|x| *x == span_id).unwrap();
             possible_swap_out_spans.remove(index);
 
