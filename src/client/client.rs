@@ -103,6 +103,9 @@ impl FarMemoryClient {
 
     pub fn span_ptr(&self, id: &SpanId) -> *mut u8 {
         self.eviction_policy.on_span_access(id);
+        if let Some(metrics) = self.metrics.as_ref() {
+            metrics.span_access_ops.inc();
+        }
 
         let span_remote_size = {
             let backoff = Backoff::new();
@@ -165,6 +168,9 @@ impl FarMemoryClient {
             });
 
             self.eviction_policy.on_span_swap_in(id);
+            if let Some(metrics) = self.metrics.as_ref() {
+                metrics.span_swap_in_ops.inc();
+            }
 
             ptr
         })
@@ -233,6 +239,10 @@ impl FarMemoryClient {
         }
         *span_state = SpanState::Free;
         self.eviction_policy.on_span_swap_out(span_id);
+
+        if let Some(metrics) = self.metrics.as_ref() {
+            metrics.span_swap_out_ops.inc();
+        }
     }
 
     pub fn total_local_spans(&self) -> usize {
@@ -333,6 +343,10 @@ struct ClientMetrics {
     local_spans: IntGauge,
     remote_spans: IntGauge,
 
+    span_access_ops: IntCounter,
+    span_swap_in_ops: IntCounter,
+    span_swap_out_ops: IntCounter,
+
     background_swap_out_spans: IntCounter,
     background_swap_out_bytes: IntCounter,
 }
@@ -363,6 +377,22 @@ impl ClientMetrics {
                 registry
             ).unwrap(),
 
+            span_access_ops: register_int_counter_with_registry!(
+                "client_span_access_ops",
+                "total span access operations",
+                registry
+            ).unwrap(),
+            span_swap_in_ops: register_int_counter_with_registry!(
+                "client_swap_in_ops",
+                "total span swap in operations",
+                registry
+            ).unwrap(),
+            span_swap_out_ops: register_int_counter_with_registry!(
+                "client_swap_out_ops",
+                "total span swap out operations",
+                registry
+            ).unwrap(),
+
             background_swap_out_spans: register_int_counter_with_registry!(
                 "client_background_swap_out_spans",
                 "swapped out spans by background thread",
@@ -381,6 +411,10 @@ impl ClientMetrics {
         self.registry.unregister(Box::new(self.remote_memory.clone())).unwrap();
         self.registry.unregister(Box::new(self.local_spans.clone())).unwrap();
         self.registry.unregister(Box::new(self.remote_spans.clone())).unwrap();
+
+        self.registry.unregister(Box::new(self.span_access_ops.clone())).unwrap();
+        self.registry.unregister(Box::new(self.span_swap_in_ops.clone())).unwrap();
+        self.registry.unregister(Box::new(self.span_swap_out_ops.clone())).unwrap();
 
         self.registry.unregister(Box::new(self.background_swap_out_spans.clone())).unwrap();
         self.registry.unregister(Box::new(self.background_swap_out_bytes.clone())).unwrap();
