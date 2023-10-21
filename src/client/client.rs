@@ -2,6 +2,7 @@ use {
     std::{sync::{Arc, atomic::{AtomicU64, Ordering, AtomicBool}, RwLock, Mutex}, collections::HashMap, thread, time::Duration},
     tracing::{Level, span, info},
     crossbeam::utils::Backoff,
+    prometheus::Registry,
     super::{
         backend::FarMemoryBackend,
         prefetching::{EvictionPolicy, MostRecentlyUsedEvictionPolicy, PreferRemoteSpansEvictionPolicy, ReplayEvictionPolicy},
@@ -45,6 +46,9 @@ impl FarMemoryClient {
             swap_in_out_lock: Arc::new(Mutex::new(())),
             span_states: Arc::new(RwLock::new(HashMap::new())),
         }
+    }
+
+    pub fn track_metrics(&self, registry: Registry) {
     }
 
     pub fn start_swap_out_thread(&self) {

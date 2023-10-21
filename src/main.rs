@@ -3,7 +3,7 @@ use {
     clap::Parser,
     tracing::{span, Level, info},
     crate::{
-        utils::{init_logging, init_tracing},
+        utils::{init_logging, init_tracing, metrics::{metrics_registry, init_metrics}},
         thesis::build_thesis,
         storage::run_storage_server,
         demo::{
@@ -99,6 +99,8 @@ async fn main() -> std::io::Result<()> {
         exit(0);
     }).unwrap();
 
+    let metrics = init_metrics();
+
     if args.storage {
         run_storage_server(read_token(), args.port);
     } else if args.simple_demo {
@@ -107,6 +109,7 @@ async fn main() -> std::io::Result<()> {
         let run = || {
             span!(Level::DEBUG, "llm_inference_demo")
                 .in_scope(|| run_llm_inference_demo(
+                    metrics.clone(),
                     &read_token(),
                     args.storage_endpoint.clone().map(|v| v.split(",").map(|v| v.to_owned()).collect::<Vec<String>>()).unwrap_or(Vec::new()),
                     args.time_limit.unwrap_or(10 * 60),
@@ -134,5 +137,5 @@ async fn main() -> std::io::Result<()> {
 }
 
 fn read_token() -> String {
-    fs::read_to_string(".token").unwrap().replace("\n", "")
+    fs::read_to_string("config/.token").unwrap().replace("\n", "")
 }
