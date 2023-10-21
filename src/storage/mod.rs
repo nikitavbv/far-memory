@@ -124,6 +124,7 @@ pub struct Server {
 #[derive(Clone)]
 pub struct ServerMetrics {
     metrics_swap_out_operations: IntCounterVec,
+    metrics_swap_out_bytes: IntCounterVec,
 }
 
 impl ServerMetrics {
@@ -135,11 +136,18 @@ impl ServerMetrics {
                 &["server_addr", "run_id"],
                 registry
             ).unwrap(),
+            metrics_swap_out_bytes: register_int_counter_vec_with_registry!(
+                "storage_swap_out_bytes",
+                "total bytes swapped out",
+                &["server_addr", "run_id"],
+                registry
+            ).unwrap(),
         }
     }
 
     pub fn reset(&self) {
         self.metrics_swap_out_operations.reset();
+        self.metrics_swap_out_bytes.reset();
     }
 }
 
@@ -176,13 +184,16 @@ impl Server {
                     return StorageResponse::Forbidden;
                 }
 
+                let bytes_swapped_out = data.len();
+
                 let existing = self.spans.insert(span_id, data);
                 if prepend {
                     self.spans.get_mut(&span_id).unwrap().append(&mut existing.unwrap());
                 }
 
-                if let Some(counter) = self.metrics.as_ref().map(|v| &v.metrics_swap_out_operations) {
-                    counter.with_label_values(&[&self.addr, &self.run_id]).inc();
+                if let Some(metrics) = self.metrics.as_ref() {
+                    metrics.metrics_swap_out_operations.with_label_values(&[&self.addr, &self.run_id]).inc();
+                    metrics.metrics_swap_out_bytes.with_label_values(&[&self.addr, &self.run_id]).inc_by(bytes_swapped_out as u64);
                 }
 
                 StorageResponse::Ok
