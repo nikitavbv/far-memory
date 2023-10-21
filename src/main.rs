@@ -99,13 +99,14 @@ async fn main() -> std::io::Result<()> {
         exit(0);
     }).unwrap();
 
-    let metrics = init_metrics();
-
     if args.storage {
-        run_storage_server(read_token(), args.port);
+        let metrics = init_metrics();
+        run_storage_server(metrics, read_token(), args.port);
     } else if args.simple_demo {
         run_simple_demo();
     } else if args.llm_inference_demo {
+        let metrics = init_metrics();
+
         let run = || {
             span!(Level::DEBUG, "llm_inference_demo")
                 .in_scope(|| run_llm_inference_demo(

@@ -7,6 +7,7 @@ use {
         thread,
     },
     tracing::{info, error, span, Level},
+    prometheus::{Registry, register_int_counter_with_registry, IntCounter},
     self::protocol::{StorageRequest, StorageResponse},
 };
 
@@ -14,11 +15,11 @@ const REQ_SIZE_LIMIT: u64 = 10 * 1024 * 1024 * 1024;
 
 mod protocol;
 
-pub fn run_storage_server(token: String, port: Option<u16>) {
-    run_server("0.0.0.0".to_owned(), port, token, None, None);
+pub fn run_storage_server(metrics: Registry, token: String, port: Option<u16>) {
+    run_server(Some(metrics), "0.0.0.0".to_owned(), port, token, None, None);
 }
 
-fn run_server(host: String, port: Option<u16>, token: String, connections_limit: Option<usize>, requests_limit: Option<usize>) {
+fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token: String, connections_limit: Option<usize>, requests_limit: Option<usize>) {
     let addr = format!("{}:{}", host, port.unwrap_or(14000));
     let listener = TcpListener::bind(&addr).unwrap();
 
@@ -30,7 +31,7 @@ fn run_server(host: String, port: Option<u16>, token: String, connections_limit:
         let mut stream = stream.unwrap();
         connections += 1;
 
-        let mut server = Server::new(token.clone());
+        let mut server = Server::new(metrics.clone(), token.clone());
 
         info!("handling incoming connection");
         let mut requests = 0;
@@ -106,15 +107,21 @@ pub struct Server {
     token: String,
 
     spans: HashMap<u64, Vec<u8>>,
+
+    metrics_swap_out_operations: Option<IntCounter>,
 }
 
 impl Server {
-    pub fn new(token: String) -> Self {
+    pub fn new(metrics: Option<Registry>, token: String) -> Self {
+        let metrics_swap_out_operations = metrics.map(|registry| register_int_counter_with_registry!("storage_swap_out_ops", "total swap out requests", registry).unwrap());
+
         Self {
             auth: false,
             token,
 
             spans: HashMap::new(),
+
+            metrics_swap_out_operations,
         }
     }
 
@@ -136,6 +143,10 @@ impl Server {
                 let existing = self.spans.insert(span_id, data);
                 if prepend {
                     self.spans.get_mut(&span_id).unwrap().append(&mut existing.unwrap());
+                }
+
+                if let Some(counter) = &self.metrics_swap_out_operations {
+                    counter.inc();
                 }
 
                 StorageResponse::Ok
@@ -240,7 +251,14 @@ mod tests {
 
     #[test]
     fn simple() {
-        let server_thread = thread::spawn(|| run_server("localhost".to_owned(), None, "some-token".to_owned(), Some(1), Some(3)));
+        let server_thread = thread::spawn(|| run_server(
+            None,
+            "localhost".to_owned(),
+            None,
+            "some-token".to_owned(),
+            Some(1),
+            Some(3)
+        ));
         let mut client = Client::new("localhost:14000");
 
         client.auth("some-token");
