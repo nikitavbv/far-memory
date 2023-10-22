@@ -3,7 +3,7 @@ use {
     tracing::{info, warn},
     rand::{rngs::SmallRng, SeedableRng, Rng},
     quantiles::ckms::CKMS,
-    prometheus::Registry,
+    prometheus::{Registry, register_gauge_with_registry, register_int_counter_with_registry},
     crate::{
         utils::allocator::current_memory_usage,
         client::{
@@ -614,7 +614,7 @@ fn run_inference(metrics: Registry, run_id: String, token: &str, endpoints: Vec<
     let backend = Box::new(InstrumentedBackend::new(metrics.clone(), backend));
 
     let mut client = FarMemoryClient::new(backend, local_max_memory);
-    client.track_metrics(metrics);
+    client.track_metrics(metrics.clone());
     client.start_swap_out_thread();
 
     let llama = true;
@@ -660,6 +660,17 @@ fn run_inference(metrics: Registry, run_id: String, token: &str, endpoints: Vec<
     let mut memory_usage_far_local_memory: CKMS<f64> = CKMS::<f64>::new(0.001);
     let mut memory_usage_far_remote_memory: CKMS<f64> = CKMS::<f64>::new(0.001);
 
+    let metric_total_generation_time = register_gauge_with_registry!(
+        "demo_generation_time",
+        "total time in seconds spent generating tokens",
+        metrics
+    ).unwrap();
+    let metric_total_tokens_generated = register_int_counter_with_registry!(
+        "demo_tokens_generated",
+        "total tokens generated",
+        metrics
+    ).unwrap();
+
     while pos < seq_len && (Instant::now() - started_at).as_secs() < time_limit {
         let token_started_at = Instant::now();
 
@@ -694,11 +705,17 @@ fn run_inference(metrics: Registry, run_id: String, token: &str, endpoints: Vec<
         pos += 1;
         token = next;
         total_tokens_generated += 1;
+
+        metric_total_tokens_generated.inc();
+        metric_total_generation_time.set((Instant::now() - started_at).as_secs_f64());
     }
 
     println!("");
 
     client.stop();
+
+    metrics.unregister(Box::new(metric_total_generation_time.clone())).unwrap();
+    metrics.unregister(Box::new(metric_total_tokens_generated.clone())).unwrap();
 
     println!(
         "done, total tokens generated: {}, total time: {} seconds, time per token avg: {} seconds, p95: {} seconds",
