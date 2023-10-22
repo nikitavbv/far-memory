@@ -1,5 +1,5 @@
 use {
-    std::{sync::{Arc, atomic::{AtomicU64, Ordering, AtomicBool}, RwLock, Mutex}, collections::HashMap, thread, time::Duration},
+    std::{sync::{Arc, atomic::{AtomicU64, Ordering, AtomicBool}, RwLock, Mutex}, collections::HashMap, thread, time::{Instant, Duration}},
     tracing::{Level, span, info},
     crossbeam::utils::Backoff,
     prometheus::{Registry, register_int_gauge_with_registry, IntGauge, IntCounter, register_int_counter_with_registry},
@@ -103,6 +103,8 @@ impl FarMemoryClient {
     }
 
     pub fn span_ptr(&self, id: &SpanId) -> *mut u8 {
+        let started_at = Instant::now();
+
         self.eviction_policy.on_span_access(id);
         if let Some(metrics) = self.metrics.as_ref() {
             metrics.span_access_ops.inc();
@@ -131,6 +133,9 @@ impl FarMemoryClient {
 
             let span = &self.spans.read().unwrap()[id];
             if span.is_local() {
+                if let Some(metrics) = &self.metrics {
+                    metrics.access_latency_micros_local.inc_by((Instant::now() - started_at).as_micros() as u64);
+                }
                 return span.ptr();
             }
 
@@ -174,6 +179,7 @@ impl FarMemoryClient {
             self.eviction_policy.on_span_swap_in(id);
             if let Some(metrics) = self.metrics.as_ref() {
                 metrics.span_swap_in_ops.inc();
+                metrics.access_latency_micros_swap_in.inc_by((Instant::now() - started_at).as_micros() as u64);
             }
 
             ptr
@@ -354,6 +360,9 @@ struct ClientMetrics {
 
     background_swap_out_spans: IntCounter,
     background_swap_out_bytes: IntCounter,
+
+    access_latency_micros_local: IntCounter,
+    access_latency_micros_swap_in: IntCounter,
 }
 
 impl ClientMetrics {
@@ -413,6 +422,17 @@ impl ClientMetrics {
                 "swapped out bytes by background thread",
                 registry
             ).unwrap(),
+
+            access_latency_micros_local: register_int_counter_with_registry!(
+                "client_access_latency_local",
+                "local span access latency in microseconds",
+                registry
+            ).unwrap(),
+            access_latency_micros_swap_in: register_int_counter_with_registry!(
+                "client_access_latency_swap_in",
+                "remote span access latency in microseconds",
+                registry
+            ).unwrap(),
         }
     }
 
@@ -429,6 +449,9 @@ impl ClientMetrics {
 
         self.registry.unregister(Box::new(self.background_swap_out_spans.clone())).unwrap();
         self.registry.unregister(Box::new(self.background_swap_out_bytes.clone())).unwrap();
+
+        self.registry.unregister(Box::new(self.access_latency_micros_local.clone())).unwrap();
+        self.registry.unregister(Box::new(self.access_latency_micros_swap_in.clone())).unwrap();
     }
 }
 
