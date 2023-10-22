@@ -79,6 +79,7 @@ impl FarMemoryClient {
     pub fn stop(&self) {
         self.is_running.store(false, Ordering::Relaxed);
         self.eviction_policy.on_stop();
+        self.backend.on_stop();
         if let Some(metrics) = self.metrics.as_ref() {
             metrics.unregister();
         }

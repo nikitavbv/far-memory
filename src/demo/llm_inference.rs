@@ -6,7 +6,18 @@ use {
     prometheus::Registry,
     crate::{
         utils::allocator::current_memory_usage,
-        client::{FarMemoryBuffer, FarMemoryClient, NetworkNodeBackend, LocalDiskBackend, FarMemoryBackend, FarMemoryBufferedVec, FarMemoryVec, ReplicationBackend, ErasureCodingBackend},
+        client::{
+            FarMemoryBuffer,
+            FarMemoryClient,
+            NetworkNodeBackend,
+            LocalDiskBackend,
+            FarMemoryBackend,
+            FarMemoryBufferedVec,
+            FarMemoryVec,
+            ReplicationBackend,
+            ErasureCodingBackend,
+            InstrumentedBackend,
+        },
     },
 };
 
@@ -599,6 +610,8 @@ fn run_inference(metrics: Registry, run_id: String, token: &str, endpoints: Vec<
         warn!("no storage endpoint provided, falling back to disk backend");
         Box::new(LocalDiskBackend::new())
     };
+
+    let backend = Box::new(InstrumentedBackend::new(metrics.clone(), backend));
 
     let mut client = FarMemoryClient::new(backend, local_max_memory);
     client.track_metrics(metrics);

@@ -16,6 +16,7 @@ pub use self::{
         network_node::NetworkNodeBackend,
         replication::ReplicationBackend,
         erasure_coding::ErasureCodingBackend,
+        metrics::InstrumentedBackend,
     },
 };
 
