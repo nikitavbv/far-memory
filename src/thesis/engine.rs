@@ -2,21 +2,21 @@ use {
     std::{process::Command, fs::File, io::ErrorKind},
     tracing::warn,
     docx_rs::{
-        Docx, 
-        Paragraph, 
-        Tab, 
-        LineSpacing, 
-        Run, 
-        AbstractNumbering, 
-        Level, 
-        Start, 
-        NumberFormat, 
-        LevelText, 
-        LevelJc, 
-        SpecialIndentType, 
-        NumberingId, 
-        AlignmentType, 
-        Numbering, 
+        Docx,
+        Paragraph,
+        Tab,
+        LineSpacing,
+        Run,
+        AbstractNumbering,
+        Level,
+        Start,
+        NumberFormat,
+        LevelText,
+        LevelJc,
+        SpecialIndentType,
+        NumberingId,
+        AlignmentType,
+        Numbering,
         IndentLevel,
         TableOfContents,
         TabLeaderType,
@@ -27,12 +27,12 @@ use {
         content::{Content, Language, AbstractContent},
         components::{
             SectionHeaderComponent,
-            ParagraphComponent, 
-            UnorderedListComponent, 
-            ImageComponent, 
-            AbstractSection, 
+            ParagraphComponent,
+            UnorderedListComponent,
+            ImageComponent,
+            AbstractSection,
             TaskSection,
-            FrontPageSection, 
+            FrontPageSection,
             TopicCardDocument,
         },
     },
@@ -46,7 +46,7 @@ pub enum PageCountingError {
 
 #[derive(Debug, Clone)]
 pub enum Block {
-    SectionHeader(String),
+    SectionHeader(SectionHeaderBlock),
     SubsectionHeader(String),
     Paragraph(TextSpan),
     UnorderedList(Vec<String>),
@@ -65,6 +65,12 @@ pub enum Block {
         rows: Vec<Vec<String>>,
     },
     Application,
+}
+
+#[derive(Debug, Clone)]
+pub struct SectionHeaderBlock {
+    title: String,
+    has_numbering: bool, // will be added to document as "{section_number} {title}""
 }
 
 #[derive(Debug, Clone)]
@@ -107,8 +113,12 @@ pub fn render_block_to_docx(document: Docx, context: &mut Context, content: &Con
 
 fn render_block_to_docx_with_params(document: Docx, context: &mut Context, content: &Content, placeholder: Option<String>, block: Block) -> Docx {
     match block {
-        Block::SectionHeader(text) => {
-            let text = format!("{}   {}", context.next_section_index(), text);
+        Block::SectionHeader(header) => {
+            let text = if header.has_numbering {
+                format!("{}   {}", context.next_section_index(), header.title)
+            } else {
+                header.title.clone()
+            };
 
             match placeholder {
                 Some(v) => document.add_section_header_placeholder_component(text, v),
@@ -249,21 +259,21 @@ pub fn render_block_to_html(block: Block) -> String {
 
 fn render_block_to_html_inner(block: Block) -> String {
     match block {
-        Block::SectionHeader(text) => {
-            let without_whitespaces = text.replace(" ", "_");
+        Block::SectionHeader(header) => {
+            let without_whitespaces = header.title.replace(" ", "_");
             let id = html_escape::encode_text(&without_whitespaces);
-          
+
             format!(
-                "<h1 id=\"{}\"><a href=\"#{}\">{}</a></h1>", 
+                "<h1 id=\"{}\"><a href=\"#{}\">{}</a></h1>",
                 id,
                 id,
-                html_escape::encode_text(&text),
+                html_escape::encode_text(&header.title),
             )
         },
         Block::SubsectionHeader(text) => {
             let without_whitespaces = text.replace(" ", "_");
             let id = html_escape::encode_text(&without_whitespaces);
-          
+
             format!(
                 "<h2 id=\"{}\"><a href=\"#{}\">{}</a></h2>",
                 id,
@@ -278,7 +288,7 @@ fn render_block_to_html_inner(block: Block) -> String {
         Block::Multiple(blocks) => blocks.into_iter().map(render_block_to_html_inner).collect::<String>(),
         Block::Note(text) => format!("<div class=\"note\">{}</div>", html_escape::encode_text(&text)),
         Block::Table { columns, rows } => format!(
-            "<table class=\"pure-table\"><thead><tr>{}</tr></thead><tbody>{}</tbody></table>", 
+            "<table class=\"pure-table\"><thead><tr>{}</tr></thead><tbody>{}</tbody></table>",
             render_table_header_to_html(&columns),
             render_table_rows_to_html(&rows),
         ),
@@ -316,7 +326,7 @@ fn render_text_span_to_html(span: TextSpan) -> String {
     }
 }
 
-pub fn section_header(text: impl Into<String>) -> Block {
+pub fn section_header(text: impl Into<SectionHeaderBlock>) -> Block {
     Block::SectionHeader(text.into())
 }
 
@@ -363,7 +373,7 @@ impl Document {
         Self {
             docx_template,
             ..self
-        }    
+        }
     }
 
     pub fn name(&self) -> &str {
@@ -506,6 +516,24 @@ pub fn count_references(block: &Block) -> u32 {
         Block::Note(_) => 0,
         Block::Table { columns: _, rows: _ } => 0,
         Block::Application => 0,
+    }
+}
+
+impl Into<SectionHeaderBlock> for &str {
+    fn into(self) -> SectionHeaderBlock {
+        SectionHeaderBlock {
+            title: self.to_owned(),
+            has_numbering: true,
+        }
+    }
+}
+
+impl Into<SectionHeaderBlock> for String {
+    fn into(self) -> SectionHeaderBlock {
+        SectionHeaderBlock {
+            title: self,
+            has_numbering: true,
+        }
     }
 }
 
