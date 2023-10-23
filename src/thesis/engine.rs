@@ -47,7 +47,7 @@ pub enum PageCountingError {
 #[derive(Debug, Clone)]
 pub enum Block {
     SectionHeader(SectionHeaderBlock),
-    SubsectionHeader(String),
+    SubsectionHeader(SubsectionHeaderBlock),
     Paragraph(TextSpan),
     UnorderedList(Vec<String>),
     Image(ImageBlock),
@@ -87,6 +87,21 @@ impl SectionHeaderBlock {
         Self {
             include_in_table_of_contents: false,
             ..self
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct SubsectionHeaderBlock {
+    title: String,
+    has_numbering: bool, // will be adde to document as "{subsection_number} {title}"
+}
+
+impl SubsectionHeaderBlock {
+    pub fn without_numbering(title: String) -> Self {
+        Self {
+            title,
+            has_numbering: false,
         }
     }
 }
@@ -143,15 +158,20 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
                 None => document.add_section_header_component(text, header.include_in_table_of_contents),
             }
         },
-        Block::SubsectionHeader(text) => {
-            let subsection_index = context.next_subsection_index(context.last_section_index());
+        Block::SubsectionHeader(header) => {
+            let text = if header.has_numbering {
+                let subsection_index = context.next_subsection_index(context.last_section_index());
+                format!("{}.{}   {}", context.last_section_index(), subsection_index, header.title)
+            } else {
+                header.title.clone()
+            };
 
             document.add_paragraph(
                 Paragraph::new()
                     .add_tab(Tab::new().pos(710))
                     .line_spacing(LineSpacing::new().before(300).line(24 * 15))
                     .style("Heading2")
-                    .add_run(Run::new().add_tab().add_text(format!("{}.{}   {}", context.last_section_index(), subsection_index, text)))
+                    .add_run(Run::new().add_tab().add_text(text))
             )
         },
         Block::Paragraph(text) => match placeholder {
@@ -288,15 +308,15 @@ fn render_block_to_html_inner(block: Block) -> String {
                 html_escape::encode_text(&header.title),
             )
         },
-        Block::SubsectionHeader(text) => {
-            let without_whitespaces = text.replace(" ", "_");
+        Block::SubsectionHeader(header) => {
+            let without_whitespaces = header.title.replace(" ", "_");
             let id = html_escape::encode_text(&without_whitespaces);
 
             format!(
                 "<h2 id=\"{}\"><a href=\"#{}\">{}</a></h2>",
                 id,
                 id,
-                html_escape::encode_text(&text),
+                html_escape::encode_text(&header.title),
             )
         },
         Block::Paragraph(text) => format!("<p>{}</p>", render_text_span_to_html(text)),
@@ -348,7 +368,7 @@ pub fn section_header(text: impl Into<SectionHeaderBlock>) -> Block {
     Block::SectionHeader(text.into())
 }
 
-pub fn subsection_header(text: impl Into<String>) -> Block {
+pub fn subsection_header(text: impl Into<SubsectionHeaderBlock>) -> Block {
     Block::SubsectionHeader(text.into())
 }
 
@@ -553,6 +573,24 @@ impl Into<SectionHeaderBlock> for String {
             title: self,
             has_numbering: true,
             include_in_table_of_contents: true,
+        }
+    }
+}
+
+impl Into<SubsectionHeaderBlock> for &str {
+    fn into(self) -> SubsectionHeaderBlock {
+        SubsectionHeaderBlock {
+            title: self.to_owned(),
+            has_numbering: true,
+        }
+    }
+}
+
+impl Into<SubsectionHeaderBlock> for String {
+    fn into(self) -> SubsectionHeaderBlock {
+        SubsectionHeaderBlock {
+            title: self,
+            has_numbering: true,
         }
     }
 }

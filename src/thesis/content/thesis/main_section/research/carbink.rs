@@ -1,4 +1,4 @@
-use crate::thesis::engine::{Block, paragraph};
+use crate::thesis::engine::{Block, paragraph, subsection_header};
 
 /**
  * "Carbink: Fault-tolerant Far Memory"
@@ -58,7 +58,7 @@ use crate::thesis::engine::{Block, paragraph};
  */
 pub fn carbink() -> Block {
     Block::Multiple(vec![
-        Block::SubsectionHeader("Carbink: Fault-Tolerant Far Memory".to_owned()),
+        subsection_header("Carbink: Fault-Tolerant Far Memory"),
         Block::Placeholder(
             Box::new(paragraph("Carbink це також система віддаленої памʼяті розроблена та протестована компанією Google в своїх центрах обробки даних. Ця реалізація фокусується на покращені відмовостійкості та зниженні рівня затримок при роботі з віддаленою памʼяттю.".to_owned())),
             "improve this text".to_owned(),

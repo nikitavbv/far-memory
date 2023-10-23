@@ -1,4 +1,4 @@
-use crate::thesis::engine::{Block, paragraph};
+use crate::thesis::engine::{Block, paragraph, subsection_header};
 
 /**
  * "Software-Defined Far Memory in Warehouse-Scale Computers"
@@ -64,7 +64,7 @@ use crate::thesis::engine::{Block, paragraph};
  */
 pub fn far_memory_in_warehouse_scale() -> Block {
     Block::Multiple(vec![
-        Block::SubsectionHeader("Software-Defined Far Memory in Warehouse-Scale Computers".to_owned()),
+        subsection_header("Software-Defined Far Memory in Warehouse-Scale Computers"),
         Block::Placeholder(
             Box::new(paragraph("Компанія Google розробила та в тестовому режимі інтегрувала систему віддаленої памʼяті в своїх центрах обробки даних. Наскільки відомо на момент проведення дослідження існуючих реалізацій для цього курсового проекту, це єдиний великий оператор центрів обробки даних, який спроектував та застосував систему віддаленої памʼяті на великих масштабах та обладнанні яке виконує програмне забезпечення, що обробляє запити від користувачів (іншими словами, на справжньому навантаженні, а не у тестовому середовищі).".to_owned())),
             "improve this text".to_owned(),

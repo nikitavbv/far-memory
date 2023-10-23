@@ -1,4 +1,4 @@
-use crate::thesis::engine::{Block, paragraph};
+use crate::thesis::engine::{Block, paragraph, subsection_header};
 
 /**
  * "Hydra : Resilient and Highly Available Remote Memory"
@@ -41,7 +41,7 @@ use crate::thesis::engine::{Block, paragraph};
  */
 pub fn hydra() -> Block {
     Block::Multiple(vec![
-        Block::SubsectionHeader("Hydra: Resilient and Highly Available Remote Memory".to_owned()),
+        subsection_header("Hydra: Resilient and Highly Available Remote Memory"),
         paragraph("Hydra це реалізація віддаленої памʼяті, яка використовує RDMA для передачі даних між вузлами, забезпечує відмовостійкість та 
 вирішує інтеграцію у програмне забезпечення."),
         paragraph("Hydra інтегрується у програмне забезпечення через використання механізму підкачки у операційній системі Linux. Компонент 

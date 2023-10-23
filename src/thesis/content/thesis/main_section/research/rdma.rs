@@ -1,4 +1,4 @@
-use crate::thesis::engine::{Block, paragraph};
+use crate::thesis::engine::{Block, paragraph, subsection_header};
 
 /*
 latency numbers:
@@ -6,7 +6,7 @@ https://www.naddod.com/blog/differences-between-infiniband-and-ethernet-networks
 */
 pub fn rdma() -> Block {
     Block::Multiple(vec![
-        Block::SubsectionHeader("Remote Direct Memory Access та її реалізації".to_owned()),
+        subsection_header("Remote Direct Memory Access та її реалізації"),
         paragraph("Технологія віддаленого прямого доступу до памʼяті (Remote Direct Memory Access) полягає в використанні спеціальних апаратних засобів, 
 що дозволяють вузлам в системі отримувати дані з невеликою затримкою з інших вузлів без витрачання ресурсів процесору цих вузлів для обробки 
 запитів."),
