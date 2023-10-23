@@ -42,13 +42,20 @@ impl UnorderedListComponent for Docx {
             .add_numbering(Numbering::new(numbering_id, numbering_id));
         
         for i in 0..list.len() {
+            let text = list.get(i).unwrap().clone();
+            let text = if !text.ends_with("?") {
+                format!("{}{}", text, if i == list.len() - 1 { "." } else { ";" })
+            } else {
+                text
+            };
+            
             document = document.add_paragraph(
                 Paragraph::new()
                     .add_tab(Tab::new().pos(710))
                     .line_spacing(LineSpacing::new().line(24 * 15))
                     .align(AlignmentType::Both)
                     .numbering(NumberingId::new(numbering_id), IndentLevel::new(0))
-                    .add_run(Run::new().add_text(list.get(i).unwrap()).add_text(if i == list.len() - 1 { "." } else { ";" }))
+                    .add_run(Run::new().add_text(text))
             ); 
         }
 
