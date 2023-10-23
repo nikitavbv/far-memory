@@ -1,12 +1,12 @@
 use {
     docx_rs::{
-        Docx, 
-        Paragraph, 
-        Run, 
-        AlignmentType, 
-        Tab, 
-        LineSpacing, 
-        NumberingId, 
+        Docx,
+        Paragraph,
+        Run,
+        AlignmentType,
+        Tab,
+        LineSpacing,
+        NumberingId,
         IndentLevel,
         Numbering,
         AbstractNumbering,
@@ -68,22 +68,22 @@ impl AbstractSection for Docx {
                 "посилань на джерела".to_owned(),
             ),
         );
-        
+
         let text_topicality = match language {
             &Language::English => "Topicality",
             &Language::Ukrainian => "Актуальність теми",
         };
 
         let text_topicality_description = match language {
-            &Language::English => "Increasing resource utilization efficiency (random access memory in particular) is an important problem which arises in modern data 
-centers. Memory utilization is uneven between nodes in a computing cluster even with modern schedulers and virtualization. Far memory allows using random-access memory 
-more efficiently and evenly, while also allowing to access more memory than available on a compute node. At the same time, existing implementations and methods of 
-providing far memory have a limited application scope end efficiency, which are defined by their implementation details. Further improvement of far memory methods is 
+            &Language::English => "Increasing resource utilization efficiency (random access memory in particular) is an important problem which arises in modern data
+centers. Memory utilization is uneven between nodes in a computing cluster even with modern schedulers and virtualization. Far memory allows using random-access memory
+more efficiently and evenly, while also allowing to access more memory than available on a compute node. At the same time, existing implementations and methods of
+providing far memory have a limited application scope end efficiency, which are defined by their implementation details. Further improvement of far memory methods is
 an important problem because of that.",
-            &Language::Ukrainian => "У сучасних центрах обробки даних актуальним є збільшення ефективності використання ресурсів, зокрема оперативної памʼяті серверів. 
-Навіть при наяві сучасних планувальників задач та віртуалізації, використання памʼяті є неріномірним між вузлами у обчислювальному кластері. Застосування 
-віддаленої памʼяті дозволяє використовувати оперативну памʼять більш оптимально, знижуючи нерівномірність використання цього ресурсу, а також мати доступ до більшого 
-обʼєму памʼяті ніж є доступним на одному вузлі. При цьому, існуючі реалізації та методи надання віддаленої памʼяті мають обмежену область застосування та ефективність, 
+            &Language::Ukrainian => "У сучасних центрах обробки даних актуальним є збільшення ефективності використання ресурсів, зокрема оперативної памʼяті серверів.
+Навіть при наяві сучасних планувальників задач та віртуалізації, використання памʼяті є неріномірним між вузлами у обчислювальному кластері. Застосування
+віддаленої памʼяті дозволяє використовувати оперативну памʼять більш оптимально, знижуючи нерівномірність використання цього ресурсу, а також мати доступ до більшого
+обʼєму памʼяті ніж є доступним на одному вузлі. При цьому, існуючі реалізації та методи надання віддаленої памʼяті мають обмежену область застосування та ефективність,
 зумовлену їх особливостями. Через це, удосконалення методів надання віддаленої памʼяті є актуальним.",
         };
 
@@ -165,13 +165,13 @@ an important problem because of that.",
                 .add_run(Run::new().add_tab().bold().add_text(MultiLanguageString::new("The practical value", "Практичне значення").for_language(language)))
                 .add_text_component(" ")
                 .add_text_component(MultiLanguageString::new(
-                    "of the obtained results is that far memory methods and software are simple to deploy and do not require any significant changes to the 
-software where far memory is integrated to. Far memory reduces the usage of RAM on a computing node without affecting performance and fault tolerance of the software 
+                    "of the obtained results is that far memory methods and software are simple to deploy and do not require any significant changes to the
+software where far memory is integrated to. Far memory reduces the usage of RAM on a computing node without affecting performance and fault tolerance of the software
 above the acceptable level. This system can be used to optimize the utilization of the data center resources by being integrated into the software that has data access
 patterns that allow the usage of such a class of memory as far memory.",
-                    "отриманих результатів полягає в тому, що методи та програмне забезпечення для надання віддаленої памʼяті є простими для розгортання, не 
-вимагає значних змін у програмне забезпечення при інтеграції. Віддалена памʼять знижує використання оперативної памʼяті на обчислювальному вузлі при цьому не перевищуючи 
-допустимий рівень впливу на швидкодію та відмовостійкість програмного забезпечення. Дана система може бути використана для оптимізації використання ресурсів центру 
+                    "отриманих результатів полягає в тому, що методи та програмне забезпечення для надання віддаленої памʼяті є простими для розгортання, не
+вимагає значних змін у програмне забезпечення при інтеграції. Віддалена памʼять знижує використання оперативної памʼяті на обчислювальному вузлі при цьому не перевищуючи
+допустимий рівень впливу на швидкодію та відмовостійкість програмного забезпечення. Дана система може бути використана для оптимізації використання ресурсів центру
 обробки даних у програмному забезпченні параметри роботи якого дозволяють використання такого класу памʼяті як віддалена памʼять."
                 ).for_language(language))
             )
@@ -211,10 +211,6 @@ patterns that allow the usage of such a class of memory as far memory.",
                 MultiLanguageString::new(
                     "Yasenova A.V. The application of clustering methods on the foreign exchange market / A.V. Yasenova, O.A. Khalus // Proceedings of the Fifth All-Ukrainian Scientific and Practical Conference of Young Scientists and Students \"Information Systems and Management Technologies\" (ISTU- 2020) - Kyiv: NTUU “KPI them. Igor Sikorsky”, November 26-27, 2020.",
                     "Ясенова А.В. Застосування алгоритмів кластеризації на ринку іноземних валют/ А.В.Ясенова, О.А. Халус // Матеріали V всеукраїнської науковопрактичної конференції молодих вчених та студентів «Інформаційні системи та технології управління» (ІСТУ-2020) – м. Київ: НТУУ «КПІ ім. Ігоря Сікорського», 26-27 листопада 2020 р."
-                ),
-                MultiLanguageString::new(
-                    "Yasenova A.V. Review of clustering algorithms // Proceedings of the scientificpractical conference of young scientists and students \"Information Technology\" - Kyiv: NAU, September 6-7, 2020",
-                    "Ясенова А.В. Огляд алгоритмів кластеризації // Матеріали науковопрактичної конференції молодих вчених та студентів «Інформаційні технології – м. Київ: НАУ, 6-7 вересня 2020 р."
                 )
             ], language)
             .add_keywords_component(&content.keywords, language)
@@ -290,7 +286,7 @@ impl PublicationsComponent for Docx {
             .add_numbering(Numbering::new(numbering, numbering));
 
         publications.into_iter()
-            .fold(document, |document, publication| 
+            .fold(document, |document, publication|
                 document.add_paragraph_with_abstract_style_component(Paragraph::new()
                     .numbering(NumberingId::new(numbering), IndentLevel::new(0))
                     .add_placeholder_component(publication.for_language(language), "replace with correct publication list")
@@ -322,13 +318,13 @@ impl KeywordsComponent for Docx {
         for i in 0..keywords.len() {
             let keyword = keywords.get(i).unwrap();
 
-            paragraph = paragraph.add_placeholder_component(keyword.for_language(language).to_uppercase(), "replace with correct keyword");
+            paragraph = paragraph.add_text_component(keyword.for_language(language).to_uppercase());
 
             if i < keywords.len() - 1 {
                 paragraph = paragraph.add_text_component(", ");
             }
         }
-    
+
 
         self.add_paragraph_with_abstract_style_component(paragraph.add_text_component("."))
     }

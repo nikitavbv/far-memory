@@ -26,8 +26,8 @@ impl Content {
         let aim_of_study = MultiLanguageString::new(
             "The main target is to develop a software architecture and its open implementation that provides far memory in a multi-node distributed system, is easy to deploy and integrate into new and existing software. The architecture of the implementation of remote memory should provide fault tolerance (no data is lost when nodes fail) and a sufficient level of performance (higher than the performance of swap file on the local disk).",
             format!(
-                "Основною метою є {}{}", 
-                aim_of_study_short_ua.chars().nth(0).unwrap().to_lowercase(), 
+                "Основною метою є {}{}",
+                aim_of_study_short_ua.chars().nth(0).unwrap().to_lowercase(),
                 aim_of_study_short_ua.chars().skip(1).collect::<String>()
             ),
         );
@@ -40,16 +40,16 @@ impl Content {
             aim_of_study,
             research_object: MultiLanguageString::new("far memory in distributed systems", "віддалена памʼять у розподілених системах"),
             research_subject: MultiLanguageString::new(
-                "methods of ensuring fast access to data blocks in far memory, their replication, far memory deployment and integration into software", 
+                "methods of ensuring fast access to data blocks in far memory, their replication, far memory deployment and integration into software",
                 "методи забезпечення швидкого доступу до блоків даних у віддаленій памʼяті, їх реплікація, розгортання та інтеграція віддаленої памʼяті у програмне забезпечення"
             ),
             scientific_novelty: MultiLanguageString::new(
-                "a software architecture for far memory that is proposed. Unlike other implementations, each of which has features that limit its use, this 
-solution uses only openly-available software and hardware components, integrates into new and existing software, provides fault tolreance and low latency of data access. 
+                "a software architecture for far memory that is proposed. Unlike other implementations, each of which has features that limit its use, this
+solution uses only openly-available software and hardware components, integrates into new and existing software, provides fault tolreance and low latency of data access.
 The result was achieved by developing a method of an online optimization of far memory parameters.".to_owned(),
-                "запропоновано архітектурне рішення для побудови програмного забезпечення для надання віддаленої памʼяті. На відміну від інших реалізацій, 
-кожне з яких має особливості що обмежують використання, це рішення використовує тільки загальнодоступні програмні та апаратні компоненти, інтегрується у нове та існуюче 
-програмне забезпечення, забезпечує відмовостійкість та низький рівень затримки доступу до даних. Результат досягнутий шляхом розробки методу онлайн-оптимізації параметрів 
+                "запропоновано архітектурне рішення для побудови програмного забезпечення для надання віддаленої памʼяті. На відміну від інших реалізацій,
+кожне з яких має особливості що обмежують використання, це рішення використовує тільки загальнодоступні програмні та апаратні компоненти, інтегрується у нове та існуюче
+програмне забезпечення, забезпечує відмовостійкість та низький рівень затримки доступу до даних. Результат досягнутий шляхом розробки методу онлайн-оптимізації параметрів
 роботи віддаленої памʼяті.".to_owned(),
             ),
             keywords: vec![
@@ -77,30 +77,34 @@ The result was achieved by developing a method of an online optimization of far 
                     "Linux",
                     "Linux"
                 ),
+                MultiLanguageString::new(
+                    "Rust",
+                    "Rust"
+                )
             ],
             tasks: vec![
                 MultiLanguageString::new(
-                    "perform analysis of existing far memory implementations and methods".to_owned(), 
+                    "perform analysis of existing far memory implementations and methods".to_owned(),
                     "провести аналіз існуючих реалізацій та методів надання віддаленої памʼяті".to_owned(),
                 ),
                 MultiLanguageString::new(
-                    "develop far memory integration methods into new and existing software".to_owned(), 
+                    "develop far memory integration methods into new and existing software".to_owned(),
                     "розробити методи інтеграції віддаленої памʼяті у нове та існуюче програмне забезпечення".to_owned(),
                 ),
                 MultiLanguageString::new(
-                    "develop architecture, structure and interaction between far memory components".to_owned(), 
+                    "develop architecture, structure and interaction between far memory components".to_owned(),
                     "розробити архітектуру, структуру та взаємодію компонентів віддаленої памʼяті".to_owned(),
                 ),
                 MultiLanguageString::new(
-                    "optimize far memory spans access latency".to_owned(), 
+                    "optimize far memory spans access latency".to_owned(),
                     "оптимізувати затримку доступу до блоків у віддаленій памʼяті".to_owned(),
                 ),
                 MultiLanguageString::new(
-                    "develop methods to ensure far memory resiliency".to_owned(), 
+                    "develop methods to ensure far memory resiliency".to_owned(),
                     "розробити методи забезпечення відмовостійкості віддаленої памʼяті".to_owned(),
                 ),
                 MultiLanguageString::new(
-                    "assess solution efficiency".to_owned(), 
+                    "assess solution efficiency".to_owned(),
                     "провести оцінку ефективності запропонованого рішення".to_owned(),
                 ),
             ],
