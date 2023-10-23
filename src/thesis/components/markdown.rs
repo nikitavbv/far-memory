@@ -16,7 +16,7 @@ impl MarkdownComponent for Docx {
         let mut document = self;
 
         let mut header_size_1_index = None;
-        
+
         for block in markdown::tokenize(md.into().as_str()) {
             document = match block {
                 Block::Header(spans, size) => {
@@ -30,7 +30,7 @@ impl MarkdownComponent for Docx {
                     match size {
                         1 => {
                             header_size_1_index = Some(context.next_section_index());
-                            document.add_section_header_component(format!("{}   {}", header_size_1_index.unwrap(), header_text))
+                            document.add_section_header_component(format!("{}   {}", header_size_1_index.unwrap(), header_text), true)
                         },
                         2 => {
                             let section_index = match header_size_1_index {

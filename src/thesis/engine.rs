@@ -70,7 +70,25 @@ pub enum Block {
 #[derive(Debug, Clone)]
 pub struct SectionHeaderBlock {
     title: String,
-    has_numbering: bool, // will be added to document as "{section_number} {title}""
+    has_numbering: bool, // will be added to document as "{section_number} {title}"
+    include_in_table_of_contents: bool,
+}
+
+impl SectionHeaderBlock {
+    pub fn without_numbering(title: String) -> Self {
+        Self {
+            title,
+            has_numbering: false,
+            include_in_table_of_contents: true,
+        }
+    }
+
+    pub fn do_not_include_in_table_of_contents(self) -> Self {
+        Self {
+            include_in_table_of_contents: false,
+            ..self
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -121,8 +139,8 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
             };
 
             match placeholder {
-                Some(v) => document.add_section_header_placeholder_component(text, v),
-                None => document.add_section_header_component(text),
+                Some(v) => document.add_section_header_placeholder_component(text, v, header.include_in_table_of_contents),
+                None => document.add_section_header_component(text, header.include_in_table_of_contents),
             }
         },
         Block::SubsectionHeader(text) => {
@@ -524,6 +542,7 @@ impl Into<SectionHeaderBlock> for &str {
         SectionHeaderBlock {
             title: self.to_owned(),
             has_numbering: true,
+            include_in_table_of_contents: true,
         }
     }
 }
@@ -533,6 +552,7 @@ impl Into<SectionHeaderBlock> for String {
         SectionHeaderBlock {
             title: self,
             has_numbering: true,
+            include_in_table_of_contents: true,
         }
     }
 }
