@@ -63,13 +63,16 @@ fn thesis_content_inner(abstract_content: AbstractContent) -> Block {
 
         // abbreviations
         Block::SectionHeader(SectionHeaderBlock::without_numbering("Перелік умовних позначень".to_uppercase()).do_not_include_in_table_of_contents()),
-        Block::Placeholder(
-            Box::new(Block::Multiple(vec![
-                paragraph("JDBC – прикладний програмний інтерфейс Java, який визначає методи, з допомогою яких програмне забезпечення на Java здійснює доступ до бази даних;"),
-                paragraph("Cache – проміжний буфер з швидким доступом, що містить інформацію, яка може бути запрошена з найбільшою ймовірністю.")
-            ])),
-            "replace with real abbreviations".to_owned(),
-        ),
+        Block::Multiple(vec![
+            paragraph("TCP – Transmission Control Protocol, мережевий протокол транспортного рівня;"),
+            paragraph("RDMA – Remote Direct Memory Access, технологія яка дозволяє вузам в системі працювати з даними у памʼяті інших вузлів, не використовуючи ресурси їх процесору;"),
+            paragraph("HPC – High Performance Computing, підхід у вирішенні задач, які потребують багато обчислень за допомогою суперкомпʼютерів або обчислювальних кластерів;"),
+            paragraph("MPI – Message Passing Interface, стандарт обміну інформацією в програмному забезпеченні, яке працює на обчислювальних кластерах;"),
+            paragraph("zswap – функціонал ядра операційної системи Linux, що дозволяє стискати памʼять у файлах підкачки;"),
+            paragraph("RAM - random-access memory, оперативна памʼять, у якій зберігаються код та дані програм;"),
+            paragraph("latency - затримка часу між запитом до даних та повернення системою даних у відповідь;"),
+            paragraph("span - сторінка або блок памʼяті, що є одиницею, з якою працює віддалена памʼять."),
+        ]),
 
         // intro
         Block::SectionHeader(SectionHeaderBlock::without_numbering("Вступ".to_uppercase())),
