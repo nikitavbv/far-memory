@@ -1,5 +1,5 @@
 use {
-    crate::thesis::engine::{Block, ImageBlock, subsection_header, paragraph, unordered_list, section_header},
+    crate::thesis::engine::{Block, ImageBlock, subsection_header, paragraph, unordered_list, section_header, SubsectionHeaderBlock},
     self::research::research,
 };
 
@@ -103,7 +103,7 @@ pub fn main_section() -> Block {
             "improve description of far memory method".to_owned(),
         ),
 
-        Block::Placeholder(Box::new(subsection_header("Висновки до розділу")), "remove numbering".to_owned()),
+        Block::SubsectionHeader(SubsectionHeaderBlock::without_numbering("Висновки до розділу".to_owned())),
         Block::Placeholder(
             Box::new(paragraph("В цьому розділі було формалізовано вимоги до програмного рішення, що розглядається в межах цього курсового проекту. Грунтуючись на цих вимогах, було розроблено архітектуру програмно визначеної віддаленої памʼяті призначеної для розгортання у сучасних розподілених системах. Ця архітектура та описані деталі її реалізації будуть в подальшому використовуватись при реалізації, тестуванні та впровадженні цього програмного рішення.")),
             "improve conclusions".to_owned(),

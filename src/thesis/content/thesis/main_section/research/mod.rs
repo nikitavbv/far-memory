@@ -1,5 +1,5 @@
 use {
-    crate::thesis::engine::{Block, ImageBlock, subsection_header, paragraph, unordered_list, section_header},
+    crate::thesis::engine::{Block, ImageBlock, subsection_header, paragraph, unordered_list, section_header, SubsectionHeaderBlock},
     self::{
         aifm::aifm,
         carbink::carbink,
@@ -87,7 +87,7 @@ pub fn research() -> Block {
             "improve task definition".to_owned(),
         ),
 
-        Block::Placeholder(Box::new(subsection_header("Висновки до розділу")), "remove numbering".to_owned()),
+        Block::SubsectionHeader(SubsectionHeaderBlock::without_numbering("Висновки до розділу".to_owned())),
         Block::Placeholder(
             Box::new(paragraph("У цьому розділі виконано аналіз проблеми та тематичних джерел за темою дослідження, що розглядається в цьому курсовому проекті. Було вивчено з яких складових частин складаються існуючі реалізації та як вони співпрацюють. З існуючих досліджень було інформацію про ефективність та недоліки підходів у архітектурі та керуванні віддаленої памʼяті. Інформація отримана в даному розділі буде використовуватись для розробки архітектури та реалізації програмного рішення, що розглядається у межах цього курсового проекту. В результаті проведеного аналізу сформульована постановка задачі, наведене призначення цілі та задачі розробки.")),
             "improve conclusions".to_owned(),
