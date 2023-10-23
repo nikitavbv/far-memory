@@ -4,7 +4,7 @@ use {
     crossbeam::utils::Backoff,
     prometheus::{Registry, register_int_gauge_with_registry, IntGauge, IntCounter, register_int_counter_with_registry},
     super::{
-        backend::FarMemoryBackend,
+        backend::{FarMemoryBackend, SwapOutOperation},
         prefetching::{EvictionPolicy, MostRecentlyUsedEvictionPolicy, PreferRemoteSpansEvictionPolicy, ReplayEvictionPolicy},
         span::{SpanId, FarMemorySpan, LocalSpanData},
     },
@@ -197,16 +197,75 @@ impl FarMemoryClient {
     }
 
     pub fn swap_out_spans(&self, spans: &[(SpanId, usize)]) {
+        struct SwapOutFinalizeOperation {
+            span_id: SpanId,
+            local_part: LocalSpanData,
+            full_swap_out: bool,
+            total_size: usize,
+            swap_out_size: usize,
+        }
+
+        let mut swap_out_ops = Vec::new();
+        let mut finalize_ops: Vec<SwapOutFinalizeOperation> = Vec::new();
+
         // (span, how much memory to swap out - can be partial or full swap out)
-        for (span, swap_out_size) in spans {
-            span!(Level::DEBUG, "swap out span", span_id = span.id()).in_scope(|| {
-                self.swap_out_span(span, *swap_out_size)
-            });
+        for (span_id, swap_out_size) in spans {
+            let span = self.spans.write().unwrap().remove(&span_id).unwrap();
+            let total_size = span.total_size();
+            let (local_part, prepend_to_backend) = match span {
+                FarMemorySpan::Local { data } => {
+                    (data, false) // not prepending to remote, because span is local
+                },
+                FarMemorySpan::Remote { local_part, total_size: _ } => (
+                    local_part.expect("expected span to contain local part when swapping out"),
+                    true, // prepending, because this span already contains a remote part
+                ),
+            };
+            if *swap_out_size > local_part.size() {
+                panic!("swap out size cannot be larger than local part size");
+            }
+            let remaining_local_part = local_part.size() - swap_out_size;
+            let full_swap_out = remaining_local_part == 0;
+
+            let data = if full_swap_out {
+                local_part.read_to_slice()
+            } else {
+                // read from end
+                local_part.read_to_slice_with_range(remaining_local_part..local_part.size())
+            };
+
+            swap_out_ops.push(SwapOutOperation::new(span_id.clone(), data.to_vec(), prepend_to_backend));
+            finalize_ops.push(SwapOutFinalizeOperation { span_id: span_id.clone(), local_part, full_swap_out, total_size, swap_out_size: *swap_out_size })
+        }
+
+        span!(Level::DEBUG, "backend batch swap out").in_scope(|| {
+            self.backend.batch_swap_out(swap_out_ops);
+        });
+
+        for op in finalize_ops {
+            if op.full_swap_out {
+                self.spans.write().unwrap().insert(op.span_id.clone(), FarMemorySpan::Remote { local_part: None, total_size: op.total_size });
+                op.local_part.free();
+            } else {
+                self.spans.write().unwrap().insert(op.span_id.clone(), FarMemorySpan::Remote { local_part: Some(op.local_part.shrink(op.swap_out_size)), total_size: op.total_size });
+            }
+
+            let span_states = self.span_states.read().unwrap();
+            let mut span_state = span_states[&op.span_id].lock().unwrap();
+            if *span_state != SpanState::SwappingOut {
+                panic!("expected span to be in swapping out state when actually swapping out");
+            }
+            *span_state = SpanState::Free;
+            self.eviction_policy.on_span_swap_out(&op.span_id);
+
+            if let Some(metrics) = self.metrics.as_ref() {
+                metrics.span_swap_out_ops.inc();
+            }
         }
     }
 
     fn swap_out_span(&self, span_id: &SpanId, swap_out_size: usize) {
-        let span = self.spans.write().unwrap().remove(&span_id.clone()).unwrap();
+        let span = self.spans.write().unwrap().remove(&span_id).unwrap();
 
         let total_size = span.total_size();
         let (local_part, prepend_to_backend) = match span {

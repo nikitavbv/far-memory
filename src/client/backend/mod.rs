@@ -13,5 +13,25 @@ pub trait FarMemoryBackend: Send + Sync {
     fn swap_out(&self, id: SpanId, span: &[u8], prepend: bool);
     fn swap_in(&self, id: &SpanId) -> Vec<u8>;
 
+    fn batch_swap_out(&self, swap_out_operations: Vec<SwapOutOperation>) {
+        swap_out_operations.iter().for_each(|op| self.swap_out(op.id.clone(), &op.data, op.prepend))
+    }
+
     fn on_stop(&self) {}
+}
+
+pub struct SwapOutOperation {
+    id: SpanId,
+    data: Vec<u8>,
+    prepend: bool,
+}
+
+impl SwapOutOperation {
+    pub fn new(id: SpanId, data: Vec<u8>, prepend: bool) -> Self {
+        Self {
+            id,
+            data,
+            prepend,
+        }
+    }
 }
