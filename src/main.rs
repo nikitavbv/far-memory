@@ -10,6 +10,7 @@ use {
             llm_inference::run_llm_inference_demo,
             benchmark::run_benchmark,
             simple::run_simple_demo,
+            block_device::run_block_device_demo,
         },
     },
 };
@@ -61,6 +62,9 @@ pub struct Args {
     #[arg(long)]
     run_loop: bool, // run demo in a loop until it crashes, lol.
 
+    #[arg(long)]
+    block_device_demo: bool,
+    
     // thesis
     #[arg(long)]
     thesis: bool,
@@ -138,6 +142,20 @@ async fn main() -> std::io::Result<()> {
         }
     } else if args.benchmark {
         run_benchmark(&read_token(), &args.storage_endpoint.unwrap());
+    } else if args.block_device_demo {
+        let run_id = generate_run_id();
+        let run_id = args.run_id.map(|prefix| format!("{}_{}", prefix, run_id)).unwrap_or(run_id);
+
+        println!("run id: {:?}", run_id);
+        let metrics = init_metrics(Some(run_id.clone()));
+        
+        run_block_device_demo(
+            metrics,
+            run_id,
+            &read_token(),
+            args.storage_endpoint.clone().map(|v| v.split(",").map(|v| v.to_owned()).collect::<Vec<String>>()).unwrap_or(Vec::new()),
+            args.memory_limit_mb.map(|v| v * 1024 * 1024)
+        );
     } else if args.thesis || args.card || args.docs {
         build_thesis(&args);
     }
