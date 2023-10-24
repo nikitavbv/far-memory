@@ -76,7 +76,8 @@ impl BlockDevice for FarMemoryDevice {
     }
     
     fn write(&mut self, offset: u64, bytes: &[u8]) -> std::io::Result<()> {
-        unimplemented!()
+        self.buffer.write_range(offset as usize, bytes);
+        Ok(())
     }
     
     fn block_size(&self) -> u32 {

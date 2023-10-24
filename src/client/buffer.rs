@@ -111,6 +111,26 @@ impl FarMemoryBuffer {
 
         result
     }
+    
+    pub fn write_range(&self, start_at: usize, range: &[u8]) {
+        let mut i = start_at;
+        let range_end = start_at + range.len();
+        
+        while i < range_end {
+            let span_index = i / self.span_size;
+            let span_offset = i % self.span_size;
+
+            let span_id = &self.spans[span_index];
+            let ptr = self.client.span_ptr(span_id);
+            let bytes_to_write = (self.span_size - span_offset).min(range_end - i);
+            unsafe {
+                std::ptr::copy(range.as_ptr().offset((i - start_at) as isize), ptr.offset(span_offset as isize), bytes_to_write);
+            }
+            self.client.decrease_refs_for_span(span_id);
+            
+            i += bytes_to_write;
+        }
+    }
 }
 
 impl Index<usize> for FarMemoryBuffer {
@@ -162,6 +182,18 @@ mod tests {
         let buffer = FarMemoryBuffer::from_bytes(client, vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
 
         assert_eq!(vec![7, 6, 5], buffer.slice(3..6));
+    }
+    
+    #[test]
+    fn write_range() {
+        let client = FarMemoryClient::new(Box::new(InMemoryBackend::new()), 1000 * 1024 * 1024);
+        let buffer = FarMemoryBuffer::from_bytes(client, vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
+
+        assert_eq!(vec![7, 6, 5], buffer.slice(3..6));
+        
+        buffer.write_range(3, &[1, 2, 3]);
+        
+        assert_eq!(vec![1, 2, 3], buffer.slice(3..6));
     }
 
     #[test]
