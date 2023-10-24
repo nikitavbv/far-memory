@@ -10,6 +10,7 @@ use {
         LocalDiskBackend,
         InstrumentedBackend,
         FarMemoryClient,
+        FarMemoryBuffer,
     },
 };
 
@@ -54,15 +55,14 @@ pub fn run_block_device_demo(metrics: Registry, run_id: String, token: &str, end
 }
 
 struct FarMemoryDevice {
-    client: FarMemoryClient,
+    buffer: FarMemoryBuffer,
     size: u64,
 }
 
 impl FarMemoryDevice {
     pub fn new(client: FarMemoryClient, size: u64) -> Self {
-        // TODO: add far memory buffer here
         Self {
-            client,
+            buffer: FarMemoryBuffer::zeros(client, size),
             size,
         }
     }
@@ -70,7 +70,9 @@ impl FarMemoryDevice {
 
 impl BlockDevice for FarMemoryDevice {
     fn read(&mut self, offset: u64, bytes: &mut [u8]) -> std::io::Result<()> {
-        unimplemented!()
+        let data = self.buffer.slice(offset as usize..bytes.len());
+        bytes.copy_from_slice(&data);
+        Ok(())
     }
     
     fn write(&mut self, offset: u64, bytes: &[u8]) -> std::io::Result<()> {

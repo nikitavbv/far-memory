@@ -28,6 +28,15 @@ impl FarMemoryBuffer {
         buffer.append(bytes);
         buffer
     }
+    
+    pub fn zeros(client: FarMemoryClient, len: u64) -> Self {
+        let mut buffer = Self::new(client);
+        while (buffer.len() as u64) < len {
+            buffer.len += buffer.span_size;
+            buffer.grow();
+        }
+        buffer
+    }
 
     pub fn swap_out(&self) {
         self.client.swap_out_spans_fully(&self.spans);
