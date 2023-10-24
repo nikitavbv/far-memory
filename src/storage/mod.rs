@@ -37,6 +37,7 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
         let mut stream = stream.unwrap();
         connections += 1;
 
+        stream.set_nodelay(true).unwrap();
         let mut server = Server::new(metrics.clone(), format!("{}:{}", hostname, port), token.clone());
 
         info!("handling incoming connection");
@@ -282,9 +283,11 @@ impl Client {
             thread::sleep(Duration::from_secs(1));
             stream = TcpStream::connect(addr);
         }
-
+        let mut stream = stream.unwrap();
+        stream.set_nodelay(true).unwrap();
+        
         Self {
-            stream: stream.unwrap(),
+            stream,
         }
     }
 
