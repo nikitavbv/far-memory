@@ -62,7 +62,7 @@ struct FarMemoryDevice {
 impl FarMemoryDevice {
     pub fn new(client: FarMemoryClient, size: u64) -> Self {
         Self {
-            buffer: FarMemoryBuffer::zeros(client, size),
+            buffer: FarMemoryBuffer::zeros_with_span_size(client, size, 100 * 1024 * 1024),
             size,
         }
     }

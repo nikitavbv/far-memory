@@ -6,6 +6,8 @@ use {
     },
 };
 
+const DEFAULT_SPAN_SIZE: usize = 2 * 1024 * 1024; // 2 MB
+
 pub struct FarMemoryBuffer {
     client: FarMemoryClient,
     spans: Vec<SpanId>,
@@ -19,7 +21,7 @@ impl FarMemoryBuffer {
             client,
             spans: Vec::new(),
             len: 0,
-            span_size: 2 * 1024 * 1024, // 2 MB
+            span_size: DEFAULT_SPAN_SIZE,
         }
     }
 
@@ -30,14 +32,19 @@ impl FarMemoryBuffer {
     }
     
     pub fn zeros(client: FarMemoryClient, len: u64) -> Self {
+        Self::zeros_with_span_size(client, len, DEFAULT_SPAN_SIZE)
+    }
+
+    pub fn zeros_with_span_size(client: FarMemoryClient, len: u64, span_size: usize) -> Self {
         let mut buffer = Self::new(client);
+        buffer.span_size = span_size;
         while (buffer.len() as u64) < len {
             buffer.len += buffer.span_size;
             buffer.grow();
         }
         buffer
     }
-
+    
     pub fn swap_out(&self) {
         self.client.swap_out_spans_fully(&self.spans);
     }
