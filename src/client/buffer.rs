@@ -57,7 +57,8 @@ impl FarMemoryBuffer {
             return;
         }
 
-        let ptr = self.client.span_ptr(&self.spans[self.spans.len() - 1]);
+        let span_id = &self.spans[self.spans.len() - 1];
+        let ptr = self.client.span_ptr(span_id);
         let offset = self.len % self.span_size;
 
         unsafe {
@@ -65,6 +66,8 @@ impl FarMemoryBuffer {
             let dst = ptr.offset(offset as isize);
             std::ptr::copy(src, dst, bytes.len());
         }
+        
+        self.client.decrease_refs_for_span(span_id);
 
         self.len += bytes.len();
     }
@@ -85,12 +88,15 @@ impl FarMemoryBuffer {
             let span_index = i / self.span_size;
             let span_offset = i % self.span_size;
 
-            let ptr = self.client.span_ptr(&self.spans[span_index]);
+            let span_id = &self.spans[span_index];
+            let ptr = self.client.span_ptr(span_id);
             let bytes_to_read = (self.span_size - span_offset).min(range.end - i);
 
             unsafe {
                 std::ptr::copy(ptr.offset(span_offset as isize), result.as_mut_ptr().offset((i - range.start) as isize), bytes_to_read);
             }
+            self.client.decrease_refs_for_span(span_id);
+            
             i += bytes_to_read;            
         }
 

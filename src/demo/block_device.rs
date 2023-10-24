@@ -60,7 +60,7 @@ struct FarMemoryDevice {
 
 impl FarMemoryDevice {
     pub fn new(client: FarMemoryClient, size: u64) -> Self {
-        // TODO: add buffered vec here
+        // TODO: add far memory buffer here
         Self {
             client,
             size,
