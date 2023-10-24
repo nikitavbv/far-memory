@@ -70,7 +70,8 @@ impl FarMemoryDevice {
 
 impl BlockDevice for FarMemoryDevice {
     fn read(&mut self, offset: u64, bytes: &mut [u8]) -> std::io::Result<()> {
-        let data = self.buffer.slice(offset as usize..bytes.len());
+        let offset = offset as usize;
+        let data = self.buffer.slice(offset..offset + bytes.len());
         bytes.copy_from_slice(&data);
         Ok(())
     }
