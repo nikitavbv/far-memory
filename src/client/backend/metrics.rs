@@ -62,6 +62,14 @@ impl FarMemoryBackend for InstrumentedBackend {
         self.swap_out_time_ms.inc_by((Instant::now() - started_at).as_micros() as f64 / 1000.0);
         self.swap_out_bytes.inc_by(span.len() as u64);
     }
+    
+    fn batch_swap_out(&self, swap_out_operations: Vec<super::SwapOutOperation>) {
+        let started_at = Instant::now();
+        let len = swap_out_operations.iter().map(|op| op.data.len() as u64).sum();
+        self.inner.batch_swap_out(swap_out_operations);
+        self.swap_out_time_ms.inc_by((Instant::now() - started_at).as_micros() as f64 / 1000.0);
+        self.swap_out_bytes.inc_by(len);
+    }
 
     fn swap_in(&self, id: &SpanId) -> Vec<u8> {
         let started_at = Instant::now();
