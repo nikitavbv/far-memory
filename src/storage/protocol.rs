@@ -8,14 +8,11 @@ pub enum StorageRequest {
     SetRunId {
         run_id: String,
     },
-    SwapOut {
-        span_id: u64,
-        prepend: bool,
-        data: Vec<u8>,
-    },
+    SwapOut(SwapOutRequest),
     SwapIn {
         span_id: u64,
     },
+    Batch(Vec<StorageRequest>),
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
@@ -26,4 +23,12 @@ pub enum StorageResponse {
         span_id: u64,
         data: Vec<u8>,
     },
+    Batch(Vec<StorageResponse>),
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SwapOutRequest {
+    pub span_id: u64,
+    pub prepend: bool,
+    pub data: Vec<u8>,
 }

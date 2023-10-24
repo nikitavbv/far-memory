@@ -1,10 +1,10 @@
 use {
     std::sync::Mutex,
     crate::{
-        storage::Client,
+        storage::{Client, SwapOutRequest},
         client::span::SpanId,
     },
-    super::FarMemoryBackend,
+    super::{FarMemoryBackend, SwapOutOperation},
 };
 
 pub struct NetworkNodeBackend {
@@ -30,5 +30,13 @@ impl FarMemoryBackend for NetworkNodeBackend {
 
     fn swap_in(&self, id: &SpanId) -> Vec<u8> {
         self.client.lock().unwrap().swap_in(id.id())
+    }
+    
+    fn batch_swap_out(&self, swap_out_operations: Vec<SwapOutOperation>) {
+        self.client.lock().unwrap().batch_swap_out(swap_out_operations.into_iter().map(|v| SwapOutRequest {
+            span_id: v.id.id(),
+            data: v.data,
+            prepend: v.prepend,
+        }).collect())
     }
 }

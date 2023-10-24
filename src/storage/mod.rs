@@ -11,6 +11,8 @@ use {
     self::protocol::{StorageRequest, StorageResponse},
 };
 
+pub use self::protocol::SwapOutRequest;
+
 const REQ_SIZE_LIMIT: u64 = 10 * 1024 * 1024 * 1024;
 
 mod protocol;
@@ -217,16 +219,16 @@ impl Server {
                 self.run_id = run_id;
                 StorageResponse::Ok
             }
-            StorageRequest::SwapOut { span_id, data, prepend } => {
+            StorageRequest::SwapOut(swap_out_req) => {
                 if !self.auth {
                     return StorageResponse::Forbidden;
                 }
 
-                let bytes_swapped_out = data.len();
+                let bytes_swapped_out = swap_out_req.data.len();
 
-                let existing = self.spans.insert(span_id, data);
-                if prepend {
-                    self.spans.get_mut(&span_id).unwrap().append(&mut existing.unwrap());
+                let existing = self.spans.insert(swap_out_req.span_id, swap_out_req.data);
+                if swap_out_req.prepend {
+                    self.spans.get_mut(&swap_out_req.span_id).unwrap().append(&mut existing.unwrap());
                 }
 
                 if let Some(metrics) = self.metrics.as_ref() {
@@ -255,6 +257,10 @@ impl Server {
                 }
 
                 StorageResponse::SwapIn { span_id, data }
+            },
+            StorageRequest::Batch(reqs) => {
+                let res = reqs.into_iter().map(|req| self.handle(req)).collect();
+                StorageResponse::Batch(res)
             },
         }
     }
@@ -301,9 +307,23 @@ impl Client {
     }
 
     pub fn swap_out(&mut self, span_id: u64, data: Vec<u8>, prepend: bool) {
-        match self.request(StorageRequest::SwapOut { span_id, prepend, data }) {
+        match self.request(StorageRequest::SwapOut(SwapOutRequest { span_id, prepend, data })) {
             StorageResponse::Ok => (),
             other => panic!("unexpected swap out response: {:?}", other),
+        }
+    }
+    
+    pub fn batch_swap_out(&mut self, req: Vec<SwapOutRequest>) {
+        let reqs = req.into_iter().map(|v| StorageRequest::SwapOut(SwapOutRequest { span_id: v.span_id, prepend: v.prepend, data: v.data })).collect();
+        let req = StorageRequest::Batch(reqs);
+        match self.request(req) {
+            StorageResponse::Batch(responses) => for res in responses {
+                match res {
+                    StorageResponse::Ok => (),
+                    other => panic!("unexpected one of batch swap out responses: {:?}", other),
+                }
+            },
+            other => panic!("unexpected batch swap out response: {:?}", other),
         }
     }
 
