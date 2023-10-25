@@ -31,3 +31,4 @@ reed-solomon-erasure = "6.0.0"
 prometheus = "0.13.3"
 reqwest = { version = "0.11.22", features = ["blocking"] }
 hostname = "0.3.1"
+serde_bytes = "0.11.12"
