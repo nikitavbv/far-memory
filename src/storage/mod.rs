@@ -78,6 +78,11 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
 
                 req
             };
+            
+            let res = StorageResponse::Ack;
+            let res = bincode::serialize(&res).unwrap();
+            stream.write(&(res.len() as u64).to_be_bytes()).unwrap();
+            stream.write(&res).unwrap();
 
             let req = {
                 let _req_deserialize_body = span!(Level::DEBUG, "deserialize request body").entered();
@@ -93,12 +98,14 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
 
             let res = span!(Level::DEBUG, "handle request").in_scope(|| server.handle(req));
 
-            let res = span!(Level::DEBUG, "serialize response").in_scope(|| bincode::serialize(&res).unwrap());
-
-            span!(Level::DEBUG, "write response").in_scope(|| {
-                stream.write(&(res.len() as u64).to_be_bytes()).unwrap();
-                stream.write(&res).unwrap();
-            });
+            if StorageResponse::Nop != res {
+                let res = span!(Level::DEBUG, "serialize response").in_scope(|| bincode::serialize(&res).unwrap());
+    
+                span!(Level::DEBUG, "write response").in_scope(|| {
+                    stream.write(&(res.len() as u64).to_be_bytes()).unwrap();
+                    stream.write(&res).unwrap();
+                });   
+            }
         }
 
         if let Some(metrics) = metrics.as_ref() {
@@ -263,6 +270,10 @@ impl Server {
                 let res = reqs.into_iter().map(|req| self.handle(req)).collect();
                 StorageResponse::Batch(res)
             },
+            StorageRequest::IgnoreResponse(req) => {
+                self.handle(*req);
+                StorageResponse::Nop
+            }
         }
     }
 
@@ -318,8 +329,9 @@ impl Client {
     
     pub fn batch_swap_out(&mut self, req: Vec<SwapOutRequest>) {
         let reqs = req.into_iter().map(|v| StorageRequest::SwapOut(SwapOutRequest { span_id: v.span_id, prepend: v.prepend, data: v.data })).collect();
-        let req = StorageRequest::Batch(reqs);
+        let req = StorageRequest::IgnoreResponse(Box::new(StorageRequest::Batch(reqs)));
         match self.request(req) {
+            StorageResponse::Ack => (),
             StorageResponse::Batch(responses) => for res in responses {
                 match res {
                     StorageResponse::Ok => (),
@@ -338,11 +350,16 @@ impl Client {
     }
 
     fn request(&mut self, request: StorageRequest) -> StorageResponse {
+        let ignore_response = request.is_ignore_response();
         span!(Level::DEBUG, "writing request").in_scope(|| {
             self.write_request(request);
         });
         span!(Level::DEBUG, "reading response").in_scope(|| {
-            self.read_response()
+            let mut res = self.read_response();
+            while !ignore_response && StorageResponse::Ack == res {
+                res = self.read_response();
+            }
+            res
         })
     }
 
