@@ -1,5 +1,5 @@
 pub use self::{
-    thesis::{thesis_content, thesis_docx_template},
+    thesis::{thesis_content, thesis_docx_template, practice_report_content},
     topic_card::topic_card_docx_template,
 };
 
@@ -44,12 +44,12 @@ impl Content {
                 "методи забезпечення швидкого доступу до блоків даних у віддаленій памʼяті, їх реплікація, розгортання та інтеграція віддаленої памʼяті у програмне забезпечення"
             ),
             scientific_novelty: MultiLanguageString::new(
-                "a software architecture for far memory that is proposed. Unlike other implementations, each of which has features that limit its use, this 
-solution uses only openly-available software and hardware components, integrates into new and existing software, provides fault tolreance and low latency of data access. 
+                "a software architecture for far memory that is proposed. Unlike other implementations, each of which has features that limit its use, this \
+solution uses only openly-available software and hardware components, integrates into new and existing software, provides fault tolreance and low latency of data access. \
 The result was achieved by developing a method of an online optimization of far memory parameters.".to_owned(),
-                "запропоновано архітектурне рішення для побудови програмного забезпечення для надання віддаленої памʼяті. На відміну від інших реалізацій, 
-кожне з яких має особливості що обмежують використання, це рішення використовує тільки загальнодоступні програмні та апаратні компоненти, інтегрується у нове та існуюче 
-програмне забезпечення, забезпечує відмовостійкість та низький рівень затримки доступу до даних. Результат досягнутий шляхом розробки методу онлайн-оптимізації параметрів 
+                "запропоновано архітектурне рішення для побудови програмного забезпечення для надання віддаленої памʼяті. На відміну від інших реалізацій, \
+кожне з яких має особливості що обмежують використання, це рішення використовує тільки загальнодоступні програмні та апаратні компоненти, інтегрується у нове та існуюче \
+програмне забезпечення, забезпечує відмовостійкість та низький рівень затримки доступу до даних. Результат досягнутий шляхом розробки методу онлайн-оптимізації параметрів \
 роботи віддаленої памʼяті.".to_owned(),
             ),
             keywords: vec![

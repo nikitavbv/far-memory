@@ -3,11 +3,12 @@ use {
     tracing::info,
     crate::thesis::{
         content::{
-            Content, 
-            thesis_content, 
+            Content,
+            thesis_content,
             thesis_docx_template,
             topic_card_docx_template,
             documentation::documentation,
+            practice_report_content,
         },
         context::Context,
         engine::{Document, Block, TextBlockComponent, render_block_to_html, print_placeholders},
@@ -38,6 +39,12 @@ pub fn build_thesis(args: &Args) {
     if args.card {
         documents.push(
             Document::new("іп22мп_волобуєв_КАРТКА", Block::TopicCard).with_docx_template(topic_card_docx_template())
+        );
+    }
+
+    if args.practice_report {
+        documents.push(
+            Document::new("іп22мп_волобуєв_звіт", practice_report_content(&content)).with_docx_template(thesis_docx_template()),
         );
     }
 

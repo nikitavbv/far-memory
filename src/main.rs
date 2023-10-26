@@ -64,13 +64,16 @@ pub struct Args {
 
     #[arg(long)]
     block_device_demo: bool,
-    
+
     // thesis
     #[arg(long)]
     thesis: bool,
 
     #[arg(long)]
     card: bool,
+
+    #[arg(long)]
+    practice_report: bool,
 
     #[arg(long)]
     docs: bool,
@@ -148,7 +151,7 @@ async fn main() -> std::io::Result<()> {
 
         println!("run id: {:?}", run_id);
         let metrics = init_metrics(Some(run_id.clone()));
-        
+
         run_block_device_demo(
             metrics,
             run_id,
@@ -156,7 +159,7 @@ async fn main() -> std::io::Result<()> {
             args.storage_endpoint.clone().map(|v| v.split(",").map(|v| v.to_owned()).collect::<Vec<String>>()).unwrap_or(Vec::new()),
             args.memory_limit_mb.map(|v| v * 1024 * 1024)
         );
-    } else if args.thesis || args.card || args.docs {
+    } else if args.thesis || args.card || args.docs || args.practice_report {
         build_thesis(&args);
     }
 

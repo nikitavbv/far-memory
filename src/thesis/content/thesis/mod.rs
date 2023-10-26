@@ -21,7 +21,7 @@ pub fn thesis_content(content: &Content) -> Block {
         total_applications: 42,
         total_references: 42,
     };
-    let content_with_placeholders = thesis_content_inner(abstract_placeholder_content.clone());
+    let content_with_placeholders = thesis_content_inner(abstract_placeholder_content.clone(), true);
 
     let true_total_pages = match count_pages(thesis_docx_template(), content, &content_with_placeholders) {
         Ok(v) => v - 1, // front page does not count
@@ -38,17 +38,17 @@ pub fn thesis_content(content: &Content) -> Block {
         total_applications: count_applications(&content_with_placeholders),
         total_references: count_references(&content_with_placeholders),
         ..abstract_placeholder_content
-    })
+    }, true)
 }
 
-fn thesis_content_inner(abstract_content: AbstractContent) -> Block {
+fn thesis_content_inner(abstract_content: AbstractContent, front_page: bool) -> Block {
     /*
     requirements: https://ela.kpi.ua/bitstream/123456789/49978/1/Mahisterska_dysertatsiia.pdf
     examples: https://ela.kpi.ua/handle/123456789/21930
     */
     Block::Multiple(vec![
         // front page
-        Block::FrontPage,
+        if front_page { Block::FrontPage } else { Block::Multiple(vec![]) },
 
         // task
         Block::TaskSection,
@@ -129,4 +129,34 @@ pub fn thesis_docx_template() -> Docx {
         .default_tab_stop(0)
         .add_style(Style::new("Heading1", StyleType::Paragraph).name("Heading 1").bold())
         .add_style(Style::new("Heading2", StyleType::Paragraph).name("Heading 2").bold())
+}
+
+pub fn practice_report_content(content: &Content) -> Block {
+    let main = main_section();
+
+    let abstract_placeholder_content = AbstractContent {
+        total_pages: 42,
+        total_images: count_images(&main),
+        total_tables: count_tables(&main),
+        total_applications: 42,
+        total_references: 42,
+    };
+    let content_with_placeholders = thesis_content_inner(abstract_placeholder_content.clone(), true);
+
+    let true_total_pages = match count_pages(thesis_docx_template(), content, &content_with_placeholders) {
+        Ok(v) => v - 1, // front page does not count
+        Err(err) => match err {
+            PageCountingError::NoPdfConverterInstalled => {
+                warn!("Cannot count pages, because pdf converter tool is not installed. Using \"0\" as the number of pages.");
+                0
+            }
+        }
+    };
+
+    thesis_content_inner(AbstractContent {
+        total_pages: true_total_pages,
+        total_applications: count_applications(&content_with_placeholders),
+        total_references: count_references(&content_with_placeholders),
+        ..abstract_placeholder_content
+    }, false)
 }
