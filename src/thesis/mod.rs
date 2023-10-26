@@ -44,7 +44,7 @@ pub fn build_thesis(args: &Args) {
 
     if args.practice_report {
         documents.push(
-            Document::new("іп22мп_волобуєв_звіт", practice_report_content(&content)).with_docx_template(thesis_docx_template()),
+            Document::new("іп22мп_волобуєв_звіт", practice_report_content(&content)).with_docx_template(thesis_docx_template()).with_prepend_pdf("./config/docs/практика_титулка звіту.pdf".to_owned()),
         );
     }
 
@@ -89,7 +89,12 @@ pub fn build_thesis(args: &Args) {
             info!("converting {} to pdf", document.name());
             let pdf_path = format!("./output/{}.pdf", document.name());
 
-            Command::new("docx2pdf").args([docx_path, pdf_path]).output().unwrap();
+            Command::new("docx2pdf").args([&docx_path, &pdf_path]).output().unwrap();
+
+            for pdf_to_prepend in document.prepend_pdf() {
+                fs::rename(&pdf_path, "./output/tmp.pdf").unwrap();
+                Command::new("pdftk").args([&pdf_to_prepend, "./output/tmp.pdf", "cat", "output", &pdf_path]).output().unwrap();
+            }
         }
     }
 }

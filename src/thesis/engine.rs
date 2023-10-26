@@ -395,6 +395,7 @@ pub struct Document {
     content: Block,
 
     docx_template: Docx,
+    prepend_pdf: Vec<String>, // path
 }
 
 impl Document {
@@ -404,6 +405,7 @@ impl Document {
             content,
 
             docx_template: Docx::new(),
+            prepend_pdf: Vec::new(),
         }
     }
 
@@ -424,6 +426,21 @@ impl Document {
 
     pub fn content(&self) -> Block {
         self.content.clone()
+    }
+
+    pub fn with_prepend_pdf(self, path: String) -> Self {
+        Self {
+            prepend_pdf: {
+                let mut pdfs = self.prepend_pdf;
+                pdfs.push(path);
+                pdfs
+            },
+            ..self
+        }
+    }
+
+    pub fn prepend_pdf(&self) -> Vec<String> {
+        self.prepend_pdf.clone()
     }
 }
 
