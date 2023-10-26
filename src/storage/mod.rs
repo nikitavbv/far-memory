@@ -285,7 +285,7 @@ impl Client {
         }
         let mut stream = stream.unwrap();
         stream.set_nodelay(true).unwrap();
-        
+
         Self {
             stream,
         }
@@ -315,7 +315,7 @@ impl Client {
             other => panic!("unexpected swap out response: {:?}", other),
         }
     }
-    
+
     pub fn batch_swap_out(&mut self, req: Vec<SwapOutRequest>) {
         let reqs = req.into_iter().map(|v| StorageRequest::SwapOut(SwapOutRequest { span_id: v.span_id, prepend: v.prepend, data: v.data })).collect();
         let req = StorageRequest::Batch(reqs);
