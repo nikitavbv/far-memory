@@ -8,7 +8,7 @@ use {
     },
     tracing::{info, error, span, Level},
     prometheus::{Registry, register_int_counter_vec_with_registry, IntCounterVec, IntGaugeVec, register_int_gauge_vec_with_registry},
-    self::protocol::{StorageRequest, StorageResponse},
+    self::protocol::{StorageRequest, StorageResponse, SpanData},
 };
 
 pub use self::protocol::SwapOutRequest;
@@ -91,11 +91,18 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
                 }
             };
 
-            let mut res = span!(Level::DEBUG, "handle request").in_scope(|| server.handle(req));
-            let mut additional_data = Vec::new();
-            if let StorageResponse::SwapIn { span_id, data, data_len } = &mut res {
-                std::mem::swap(&mut additional_data, data);
-            }
+            let res = span!(Level::DEBUG, "handle request").in_scope(|| server.handle(req));
+            let (res, span_data) = match res {
+                StorageResponse::SwapIn { span_id, data } => {
+                    let span_data = match data {
+                        SpanData::Inline(data) => data,
+                        _ => panic!("didn't expect data to be external at this point"),
+                    };
+
+                    (StorageResponse::SwapIn { span_id, data: SpanData::External { len: span_data.len() as u64 } }, Some(span_data))
+                },
+                other => (other, None),
+            };
 
             let res = span!(Level::DEBUG, "serialize response").in_scope(|| bincode::serialize(&res).unwrap());
 
@@ -103,8 +110,8 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
                 stream.write(&(res.len() as u64).to_be_bytes()).unwrap();
                 stream.write(&res).unwrap();
 
-                if additional_data.len() > 0 {
-                    stream.write(&additional_data).unwrap();
+                if let Some(span_data) = span_data {
+                    stream.write(&span_data).unwrap();
                 }
             });
         }
@@ -265,7 +272,7 @@ impl Server {
                     metrics.swap_in_bytes.with_label_values(&[&self.addr, &self.run_id]).inc_by(data.len() as u64);
                 }
 
-                StorageResponse::SwapIn { span_id, data_len: data.len() as u64, data }
+                StorageResponse::SwapIn { span_id, data: SpanData::Inline(data) }
             },
             StorageRequest::Batch(reqs) => {
                 let res = reqs.into_iter().map(|req| self.handle(req)).collect();
@@ -339,15 +346,19 @@ impl Client {
     }
 
     pub fn swap_in(&mut self, span_id: u64) -> Vec<u8> {
-        let data_len = match self.request(StorageRequest::SwapIn { span_id }) {
-            StorageResponse::SwapIn { span_id: _, data, data_len } => data_len,
+        let data = match self.request(StorageRequest::SwapIn { span_id }) {
+            StorageResponse::SwapIn { span_id: _, data } => data,
             other => panic!("unexpected swap in response: {:?}", other),
         };
-        span!(Level::DEBUG, "reading swap in body").in_scope(|| {
-            let mut data = vec![0u8; data_len as usize];
-            self.stream.read_exact(&mut data).unwrap();
-            data
-        })
+
+        match data {
+            SpanData::Inline(data) => data,
+            SpanData::External { len } => span!(Level::DEBUG, "reading span body").in_scope(|| {
+                let mut data = vec![0u8; len as usize];
+                self.stream.read_exact(&mut data).unwrap();
+                data
+            }),
+        }
     }
 
     fn request(&mut self, request: StorageRequest) -> StorageResponse {

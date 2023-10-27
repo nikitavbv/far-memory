@@ -21,9 +21,7 @@ pub enum StorageResponse {
     Forbidden,
     SwapIn {
         span_id: u64,
-        #[serde(with = "serde_bytes")]
-        data: Vec<u8>,
-        data_len: u64,
+        data: SpanData,
     },
     Batch(Vec<StorageResponse>),
 }
@@ -34,4 +32,12 @@ pub struct SwapOutRequest {
     pub prepend: bool,
     #[serde(with = "serde_bytes")]
     pub data: Vec<u8>,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub enum SpanData {
+    Inline(#[serde(with = "serde_bytes")] Vec<u8>),
+    External {
+        len: u64,
+    }
 }
