@@ -30,8 +30,7 @@ pub enum StorageResponse {
 pub struct SwapOutRequest {
     pub span_id: u64,
     pub prepend: bool,
-    #[serde(with = "serde_bytes")]
-    pub data: Vec<u8>,
+    pub data: SpanData,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]

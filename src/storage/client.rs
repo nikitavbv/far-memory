@@ -43,7 +43,7 @@ impl Client {
     }
 
     pub fn swap_out(&mut self, span_id: u64, data: Vec<u8>, prepend: bool) {
-        match self.request(StorageRequest::SwapOut(SwapOutRequest { span_id, prepend, data })) {
+        match self.request(StorageRequest::SwapOut(SwapOutRequest { span_id, prepend, data: SpanData::Inline(data) })) {
             StorageResponse::Ok => (),
             other => panic!("unexpected swap out response: {:?}", other),
         }

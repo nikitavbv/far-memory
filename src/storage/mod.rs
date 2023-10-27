@@ -8,11 +8,11 @@ use {
     },
     tracing::{info, error, span, Level},
     prometheus::{Registry, register_int_counter_vec_with_registry, IntCounterVec, IntGaugeVec, register_int_gauge_vec_with_registry},
-    self::protocol::{StorageRequest, StorageResponse, SpanData},
+    self::protocol::{StorageRequest, StorageResponse},
 };
 
 pub use self::{
-    protocol::SwapOutRequest,
+    protocol::{SwapOutRequest, SpanData},
     client::Client,
 };
 
@@ -244,9 +244,13 @@ impl Server {
                     return StorageResponse::Forbidden;
                 }
 
-                let bytes_swapped_out = swap_out_req.data.len();
+                let data = match swap_out_req.data {
+                    SpanData::Inline(data) => data,
+                    _ => panic!("expected span data to be inline"),
+                };
+                let bytes_swapped_out = data.len();
 
-                let existing = self.spans.insert(swap_out_req.span_id, swap_out_req.data);
+                let existing = self.spans.insert(swap_out_req.span_id, data);
                 if swap_out_req.prepend {
                     self.spans.get_mut(&swap_out_req.span_id).unwrap().append(&mut existing.unwrap());
                 }
