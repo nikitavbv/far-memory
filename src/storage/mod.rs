@@ -91,13 +91,21 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
                 }
             };
 
-            let res = span!(Level::DEBUG, "handle request").in_scope(|| server.handle(req));
+            let mut res = span!(Level::DEBUG, "handle request").in_scope(|| server.handle(req));
+            let mut additional_data = Vec::new();
+            if let StorageResponse::SwapIn { span_id, data, data_len } = &mut res {
+                std::mem::swap(&mut additional_data, data);
+            }
 
             let res = span!(Level::DEBUG, "serialize response").in_scope(|| bincode::serialize(&res).unwrap());
 
             span!(Level::DEBUG, "write response").in_scope(|| {
                 stream.write(&(res.len() as u64).to_be_bytes()).unwrap();
                 stream.write(&res).unwrap();
+
+                if additional_data.len() > 0 {
+                    stream.write(&additional_data).unwrap();
+                }
             });
         }
 
@@ -257,7 +265,7 @@ impl Server {
                     metrics.swap_in_bytes.with_label_values(&[&self.addr, &self.run_id]).inc_by(data.len() as u64);
                 }
 
-                StorageResponse::SwapIn { span_id, data }
+                StorageResponse::SwapIn { span_id, data_len: data.len() as u64, data }
             },
             StorageRequest::Batch(reqs) => {
                 let res = reqs.into_iter().map(|req| self.handle(req)).collect();
@@ -331,10 +339,15 @@ impl Client {
     }
 
     pub fn swap_in(&mut self, span_id: u64) -> Vec<u8> {
-        match self.request(StorageRequest::SwapIn { span_id }) {
-            StorageResponse::SwapIn { span_id: _, data } => data,
+        let data_len = match self.request(StorageRequest::SwapIn { span_id }) {
+            StorageResponse::SwapIn { span_id: _, data, data_len } => data_len,
             other => panic!("unexpected swap in response: {:?}", other),
-        }
+        };
+        span!(Level::DEBUG, "reading swap in body").in_scope(|| {
+            let mut data = vec![0u8; data_len as usize];
+            self.stream.read_exact(&mut data).unwrap();
+            data
+        })
     }
 
     fn request(&mut self, request: StorageRequest) -> StorageResponse {

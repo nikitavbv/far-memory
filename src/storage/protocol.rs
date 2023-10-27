@@ -23,6 +23,7 @@ pub enum StorageResponse {
         span_id: u64,
         #[serde(with = "serde_bytes")]
         data: Vec<u8>,
+        data_len: u64,
     },
     Batch(Vec<StorageResponse>),
 }
