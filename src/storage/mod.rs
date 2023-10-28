@@ -105,6 +105,27 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
 
                     (StorageResponse::SwapIn { span_id, data: SpanData::External { len: span_data.len() as u64 } }, Some(span_data))
                 },
+                StorageResponse::Batch(responses) => {
+                    let mut span_data = None;
+
+                    let mut new_responses = Vec::new();
+                    for response in responses {
+                        let new_response = match response {
+                            StorageResponse::SwapIn { span_id, data } => {
+                                span_data = Some(match data {
+                                    SpanData::Inline(data) => data,
+                                    _ => panic!("didn't expect data to be external at this point"),
+                                });
+
+                                StorageResponse::SwapIn { span_id, data: SpanData::External { len: span_data.as_ref().unwrap().len() as u64 } }
+                            },
+                            other => other
+                        };
+                        new_responses.push(new_response);
+                    }
+
+                    (StorageResponse::Batch(new_responses), span_data)
+                },
                 other => (other, None),
             };
 

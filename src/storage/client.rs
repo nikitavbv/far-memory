@@ -65,7 +65,11 @@ impl Client {
                     StorageResponse::Ok => (),
                     StorageResponse::SwapIn { span_id: _, data } => swap_in_result = Some(match data {
                        SpanData::Inline(data) => data,
-                       SpanData::External { len: _ } => panic!("didn't expect span data to be external"),
+                       SpanData::External { len } => span!(Level::DEBUG, "reading span body").in_scope(|| {
+                           let mut data = vec![0u8; len as usize];
+                           self.stream.read_exact(&mut data).unwrap();
+                           data
+                       }),
                     }),
                     other => panic!("unexpected one of batch swap out responses: {:?}", other),
                 }
