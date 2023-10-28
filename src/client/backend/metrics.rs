@@ -62,13 +62,27 @@ impl FarMemoryBackend for InstrumentedBackend {
         self.swap_out_time_ms.inc_by((Instant::now() - started_at).as_micros() as f64 / 1000.0);
         self.swap_out_bytes.inc_by(span.len() as u64);
     }
-    
+
     fn batch_swap_out(&self, swap_out_operations: Vec<super::SwapOutOperation>) {
         let started_at = Instant::now();
         let len = swap_out_operations.iter().map(|op| op.data.len() as u64).sum();
         self.inner.batch_swap_out(swap_out_operations);
         self.swap_out_time_ms.inc_by((Instant::now() - started_at).as_micros() as f64 / 1000.0);
         self.swap_out_bytes.inc_by(len);
+    }
+
+    fn batch(&self, swap_out_operations: Vec<super::SwapOutOperation>, swap_in: Option<SpanId>) -> Option<Vec<u8>> {
+        let started_at = Instant::now();
+        let len = swap_out_operations.iter().map(|op| op.data.len() as u64).sum();
+        let res = self.inner.batch(swap_out_operations, swap_in);
+        self.swap_out_time_ms.inc_by((Instant::now() - started_at).as_micros() as f64 / 1000.0);
+        self.swap_out_bytes.inc_by(len);
+        if let Some(res) = res.as_ref() {
+            self.swap_in_time_ms.inc_by((Instant::now() - started_at).as_micros() as f64 / 1000.0);
+            self.swap_in_bytes.inc_by(res.len() as u64);
+        }
+
+        res
     }
 
     fn swap_in(&self, id: &SpanId) -> Vec<u8> {

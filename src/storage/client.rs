@@ -49,18 +49,31 @@ impl Client {
         }
     }
 
-    pub fn batch_swap_out(&mut self, req: Vec<SwapOutRequest>) {
-        let reqs = req.into_iter().map(|v| StorageRequest::SwapOut(SwapOutRequest { span_id: v.span_id, prepend: v.prepend, data: v.data })).collect();
+    pub fn batch(&mut self, swap_out: Vec<SwapOutRequest>, swap_in: Option<u64>) -> Option<Vec<u8>> {
+        let mut reqs: Vec<_> = swap_out.into_iter().map(|v| StorageRequest::SwapOut(SwapOutRequest { span_id: v.span_id, prepend: v.prepend, data: v.data })).collect();
+        if let Some(span_id) = swap_in {
+            reqs.push(StorageRequest::SwapIn { span_id });
+        }
+
         let req = StorageRequest::Batch(reqs);
+
+        let mut swap_in_result = None;
+
         match self.request(req) {
             StorageResponse::Batch(responses) => for res in responses {
                 match res {
                     StorageResponse::Ok => (),
+                    StorageResponse::SwapIn { span_id: _, data } => swap_in_result = Some(match data {
+                       SpanData::Inline(data) => data,
+                       SpanData::External { len: _ } => panic!("didn't expect span data to be external"),
+                    }),
                     other => panic!("unexpected one of batch swap out responses: {:?}", other),
                 }
             },
             other => panic!("unexpected batch swap out response: {:?}", other),
-        }
+        };
+
+        swap_in_result
     }
 
     pub fn swap_in(&mut self, span_id: u64) -> Vec<u8> {
