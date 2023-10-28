@@ -1,10 +1,8 @@
 use {
     std::{
-        net::{TcpListener, TcpStream, Shutdown},
+        net::{TcpListener, TcpStream},
         io::{Write, Read},
         collections::HashMap,
-        time::Duration,
-        thread,
     },
     tracing::{info, error, span, Level},
     prometheus::{Registry, register_int_counter_vec_with_registry, IntCounterVec, IntGaugeVec, register_int_gauge_vec_with_registry},
@@ -94,6 +92,8 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
                     }
                 }
             };
+
+            let req = inline_span_data_into_request(req, &mut stream);
 
             let res = span!(Level::DEBUG, "handle request").in_scope(|| server.handle(req));
             let (res, span_data) = match res {
@@ -291,6 +291,28 @@ impl Server {
 
     fn total_span_bytes(&self) -> usize {
         self.spans.iter().map(|v| v.1.len()).sum()
+    }
+}
+
+fn inline_span_data_into_request(request: StorageRequest, stream: &mut TcpStream) -> StorageRequest {
+    match request {
+        StorageRequest::SwapOut(swap_out_request) => {
+            let data = match swap_out_request.data {
+                SpanData::Inline(data) => SpanData::Inline(data),
+                SpanData::External { len } => SpanData::Inline({
+                    let mut data = vec![0; len as usize];
+                    stream.read_exact(&mut data).unwrap();
+                    data
+                })
+            };
+
+            StorageRequest::SwapOut(SwapOutRequest {
+                data,
+                ..swap_out_request
+            })
+        },
+        StorageRequest::Batch(reqs) => StorageRequest::Batch(reqs.into_iter().map(|v| inline_span_data_into_request(v, stream)).collect()),
+        other => other,
     }
 }
 

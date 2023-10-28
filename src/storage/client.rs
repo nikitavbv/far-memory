@@ -16,7 +16,7 @@ impl Client {
             thread::sleep(Duration::from_secs(1));
             stream = TcpStream::connect(addr);
         }
-        let mut stream = stream.unwrap();
+        let stream = stream.unwrap();
         stream.set_nodelay(true).unwrap();
 
         Self {
@@ -89,10 +89,14 @@ impl Client {
     }
 
     fn write_request(&mut self, request: StorageRequest) {
+        let mut span_data = Vec::new();
+        let request = extract_span_data_from_request(request, &mut span_data);
+
         let serialized = span!(Level::DEBUG, "serialize").in_scope(|| bincode::serialize(&request).unwrap());
 
         span!(Level::DEBUG, "write header").in_scope(|| self.stream.write(&(serialized.len() as u64).to_be_bytes()).unwrap());
         span!(Level::DEBUG, "write data").in_scope(|| self.stream.write(&serialized).unwrap());
+        span!(Level::DEBUG, "writing span data").in_scope(|| span_data.into_iter().for_each(|v| { self.stream.write(&v).unwrap(); }));
     }
 
     fn read_response(&mut self) -> StorageResponse {
@@ -113,5 +117,27 @@ impl Client {
 
     pub fn close(&mut self) {
         self.stream.shutdown(Shutdown::Both).unwrap();
+    }
+}
+
+fn extract_span_data_from_request(request: StorageRequest, span_data: &mut Vec<Vec<u8>>) -> StorageRequest {
+    match request {
+        StorageRequest::SwapOut(swap_out_request) => {
+            let len = match swap_out_request.data {
+                SpanData::Inline(data) => {
+                    let len = data.len();
+                    span_data.push(data);
+                    len as u64
+                },
+                _ => panic!("expected span data to be inline"),
+            };
+
+            StorageRequest::SwapOut(SwapOutRequest {
+                data: SpanData::External { len },
+                ..swap_out_request
+            })
+        },
+        StorageRequest::Batch(reqs) => StorageRequest::Batch(reqs.into_iter().map(|v| extract_span_data_from_request(v, span_data)).collect()),
+        other => other,
     }
 }
