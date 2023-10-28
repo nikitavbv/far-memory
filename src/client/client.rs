@@ -37,6 +37,8 @@ enum SpanState {
 struct SwapOutResult {
     spans: usize,
     bytes: usize,
+
+    swap_in_span_data: Option<Vec<u8>>, // data of a span that was swapped in during the same request
 }
 
 impl FarMemoryClient {
@@ -145,19 +147,18 @@ impl FarMemoryClient {
 
         let _guard = span!(Level::DEBUG, "waiting for lock").in_scope(|| self.swap_in_out_lock.lock().unwrap());
 
-        span!(Level::DEBUG, "span_ptr - ensure local memory limit").in_scope(|| {
+        let data = span!(Level::DEBUG, "swap out and swap in").in_scope(|| {
             // only need to free as much memory as remote part will take. There is already memory for local part of span
-            let result = self.ensure_local_memory_under_limit(self.local_memory_max_threshold - span_remote_size as u64);
+            let result = self.ensure_local_memory_under_limit_and_swap_in(self.local_memory_max_threshold - span_remote_size as u64, Some(id));
             if let Some(metrics) = &self.metrics {
                 metrics.span_swap_out_on_access_ops.inc_by(result.spans as u64);
             }
+            result.swap_in_span_data.unwrap()
         });
 
         // swap in
         span!(Level::DEBUG, "span_ptr - swap_in", span_id = id.id(), span_remote_size).in_scope(|| {
             let span = self.spans.write().unwrap().remove(id).unwrap();
-
-            let data = span!(Level::DEBUG, "backend swap in").in_scope(|| self.backend.swap_in(id));
 
             // new swap in with support for partial
             let local_data = match span {
@@ -197,6 +198,10 @@ impl FarMemoryClient {
     }
 
     pub fn swap_out_spans(&self, spans: &[(SpanId, usize)]) {
+        self.swap_out_spans_and_swap_in(spans, None);
+    }
+
+    fn swap_out_spans_and_swap_in(&self, spans: &[(SpanId, usize)], swap_in: Option<&SpanId>) -> Option<Vec<u8>> {
         struct SwapOutFinalizeOperation {
             span_id: SpanId,
             local_part: LocalSpanData,
@@ -238,8 +243,8 @@ impl FarMemoryClient {
             finalize_ops.push(SwapOutFinalizeOperation { span_id: span_id.clone(), local_part, full_swap_out, total_size, swap_out_size: *swap_out_size })
         }
 
-        span!(Level::DEBUG, "backend batch swap out").in_scope(|| {
-            self.backend.batch_swap_out(swap_out_ops);
+        let swap_in_data = span!(Level::DEBUG, "backend batch swap").in_scope(|| {
+            self.backend.batch(swap_out_ops, swap_in)
         });
 
         for op in finalize_ops {
@@ -262,6 +267,8 @@ impl FarMemoryClient {
                 metrics.span_swap_out_ops.inc();
             }
         }
+
+        swap_in_data
     }
 
     fn swap_out_span(&self, span_id: &SpanId, swap_out_size: usize) {
@@ -331,11 +338,16 @@ impl FarMemoryClient {
     }
 
     fn ensure_local_memory_under_limit(&self, limit: u64) -> SwapOutResult {
+        self.ensure_local_memory_under_limit_and_swap_in(limit, None)
+    }
+
+    fn ensure_local_memory_under_limit_and_swap_in(&self, limit: u64, swap_in: Option<&SpanId>) -> SwapOutResult {
         let current_local_memory = self.total_local_memory() as u64;
         if current_local_memory < limit {
             return SwapOutResult {
                 spans: 0,
                 bytes: 0,
+                swap_in_span_data: swap_in.map(|v| self.backend.swap_in(v)),
             };
         }
 
@@ -378,13 +390,14 @@ impl FarMemoryClient {
             }
         }
 
-        span!(Level::DEBUG, "swap_out_spans", needed = memory_to_swap_out, swap_out_req_size = total_memory).in_scope(|| {
-            self.swap_out_spans(&spans_to_swap_out);
+        let swap_in_span_data = span!(Level::DEBUG, "perform swapping", needed = memory_to_swap_out, swap_out_req_size = total_memory).in_scope(|| {
+            self.swap_out_spans_and_swap_in(&spans_to_swap_out, swap_in)
         });
 
         SwapOutResult {
             spans: spans_to_swap_out.len(),
             bytes: total_memory as usize,
+            swap_in_span_data,
         }
     }
 

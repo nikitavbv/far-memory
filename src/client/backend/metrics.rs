@@ -71,7 +71,7 @@ impl FarMemoryBackend for InstrumentedBackend {
         self.swap_out_bytes.inc_by(len);
     }
 
-    fn batch(&self, swap_out_operations: Vec<super::SwapOutOperation>, swap_in: Option<SpanId>) -> Option<Vec<u8>> {
+    fn batch(&self, swap_out_operations: Vec<super::SwapOutOperation>, swap_in: Option<&SpanId>) -> Option<Vec<u8>> {
         let started_at = Instant::now();
         let len = swap_out_operations.iter().map(|op| op.data.len() as u64).sum();
         let res = self.inner.batch(swap_out_operations, swap_in);

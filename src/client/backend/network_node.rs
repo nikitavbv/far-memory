@@ -36,7 +36,7 @@ impl FarMemoryBackend for NetworkNodeBackend {
         self.batch(swap_out_operations, None);
     }
 
-    fn batch(&self, swap_out_operations: Vec<SwapOutOperation>, swap_in: Option<SpanId>) -> Option<Vec<u8>> {
+    fn batch(&self, swap_out_operations: Vec<SwapOutOperation>, swap_in: Option<&SpanId>) -> Option<Vec<u8>> {
         self.client.lock().unwrap().batch(swap_out_operations.into_iter().map(|v| SwapOutRequest {
             span_id: v.id.id(),
             data: SpanData::Inline(v.data),

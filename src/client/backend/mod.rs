@@ -17,7 +17,7 @@ pub trait FarMemoryBackend: Send + Sync {
         self.batch(swap_out_operations, None);
     }
 
-    fn batch(&self, swap_out_operations: Vec<SwapOutOperation>, swap_in: Option<SpanId>) -> Option<Vec<u8>> {
+    fn batch(&self, swap_out_operations: Vec<SwapOutOperation>, swap_in: Option<&SpanId>) -> Option<Vec<u8>> {
         swap_out_operations.iter().for_each(|op| self.swap_out(op.id.clone(), &op.data, op.prepend));
         swap_in.map(|v| self.swap_in(&v))
     }
