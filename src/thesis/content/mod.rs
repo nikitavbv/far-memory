@@ -82,32 +82,7 @@ The result was achieved by developing a method of an online optimization of far 
                     "Rust"
                 )
             ],
-            tasks: vec![
-                MultiLanguageString::new(
-                    "perform analysis of existing far memory implementations and methods".to_owned(),
-                    "провести аналіз існуючих реалізацій та методів надання віддаленої памʼяті".to_owned(),
-                ),
-                MultiLanguageString::new(
-                    "develop far memory integration methods into new and existing software".to_owned(),
-                    "розробити методи інтеграції віддаленої памʼяті у нове та існуюче програмне забезпечення".to_owned(),
-                ),
-                MultiLanguageString::new(
-                    "develop architecture, structure and interaction between far memory components".to_owned(),
-                    "розробити архітектуру, структуру та взаємодію компонентів віддаленої памʼяті".to_owned(),
-                ),
-                MultiLanguageString::new(
-                    "optimize far memory spans access latency".to_owned(),
-                    "оптимізувати затримку доступу до блоків у віддаленій памʼяті".to_owned(),
-                ),
-                MultiLanguageString::new(
-                    "develop methods to ensure far memory resiliency".to_owned(),
-                    "розробити методи забезпечення відмовостійкості віддаленої памʼяті".to_owned(),
-                ),
-                MultiLanguageString::new(
-                    "assess solution efficiency".to_owned(),
-                    "провести оцінку ефективності запропонованого рішення".to_owned(),
-                ),
-            ],
+            tasks: thesis_tasks(),
         }
     }
 }
@@ -233,6 +208,35 @@ impl MultiLanguageNumeralString {
             Language::Ukrainian => self.ukrainian.for_value(value),
         }
     }
+}
+
+pub fn thesis_tasks() -> Vec<MultiLanguageString> {
+    vec![
+        MultiLanguageString::new(
+            "perform analysis of existing far memory implementations and methods".to_owned(),
+            "провести аналіз існуючих реалізацій та методів надання віддаленої памʼяті".to_owned(),
+        ),
+        MultiLanguageString::new(
+            "develop far memory integration methods into new and existing software".to_owned(),
+            "розробити методи інтеграції віддаленої памʼяті у нове та існуюче програмне забезпечення".to_owned(),
+        ),
+        MultiLanguageString::new(
+            "develop architecture, structure and interaction between far memory components".to_owned(),
+            "розробити архітектуру, структуру та взаємодію компонентів віддаленої памʼяті".to_owned(),
+        ),
+        MultiLanguageString::new(
+            "optimize far memory spans access latency".to_owned(),
+            "оптимізувати затримку доступу до блоків у віддаленій памʼяті".to_owned(),
+        ),
+        MultiLanguageString::new(
+            "develop methods to ensure far memory resiliency".to_owned(),
+            "розробити методи забезпечення відмовостійкості віддаленої памʼяті".to_owned(),
+        ),
+        MultiLanguageString::new(
+            "assess solution efficiency".to_owned(),
+            "провести оцінку ефективності запропонованого рішення".to_owned(),
+        ),
+    ]
 }
 
 #[cfg(test)]
