@@ -88,8 +88,7 @@ pub struct Args {
     pdf: bool,
 }
 
-#[tokio::main]
-async fn main() -> std::io::Result<()> {
+pub fn main() {
     let args = Args::parse();
 
     let trace_guard = if args.trace {
@@ -162,8 +161,6 @@ async fn main() -> std::io::Result<()> {
     } else if args.thesis || args.card || args.docs || args.practice_report {
         build_thesis(&args);
     }
-
-    Ok(())
 }
 
 fn read_token() -> String {
