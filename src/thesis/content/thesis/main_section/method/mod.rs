@@ -21,9 +21,12 @@ pub fn far_memory_method() -> Block {
         // finally, tell about async pipeline to collect events.
         // tell that manager node allows to control things a bit (for example, schedule maintenance).
         // explain how components communicate, why bincode should be used.
+        // explain which methods and required to and which are optional to implement in backends.
 
         subsection_header("Інтеграція у програмне забезпечення"),
         // tell how library and service running on the end node would be working more specifically. Tell how spans are swapped in and out here. Tell about remotable pointers, buffers, optimized data structures and streaming.
+        // tell about ref-counting and identification which spans are not in use. explain how memory limits work. explain how user is supposed to use the swap file and what is done to prevent recursive swap (idk if that is
+        // right name for that).
 
         subsection_header("Забезпечення відмовостійкості"),
         // tell about replication to remote nodes and local SSDs and erasure coding. Tell how exactly data will be restored.
@@ -32,8 +35,14 @@ pub fn far_memory_method() -> Block {
         // tell about optimizing network requests (why TCP (also, why nodelay is used and duplex) is used and not UDP, or http or some kind of existing RPC implementation).
         // tell about reasoning behind partial swap in/swap out. tell why compression is not used. tell why copies should be avoided. tell a bit about size classes.
         // tell about background swap in and swap out threads and how synchronization should be performed.
+        // explain what is the key in minimizing latency (keeping all the needed memory locally and moving it quickly) - like explained in the docs.
+        // tell that only 3 out of 5 data shards are needed to minimize latency when restoring data.
+        // tell about policies to evict and pre-fetch spans (and how those use stats collected, heuristics, FSM, ML models, including RNN). explain why grouping objects in spans is effective. explain why it is important to reduce fragmentation and how it can be
+        // achieved. tell about compaction.
 
         Block::SubsectionHeader(SubsectionHeaderBlock::without_numbering("Висновки до розділу".to_owned())),
         // general conclusions
+
+        // in third section explain that a demo app was implemented to measure how well everything works and the hardware of the test environment.
     ])
 }
