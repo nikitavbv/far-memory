@@ -23,6 +23,7 @@ pub fn far_memory_method() -> Block {
         // explain how components communicate, why bincode should be used.
         // explain which methods and required to and which are optional to implement in backends.
         // explain how multiple clients work with the same storage.
+        // explain how prepend works.
 
         subsection_header("Інтеграція у програмне забезпечення"),
         // tell how library and service running on the end node would be working more specifically. Tell how spans are swapped in and out here. Tell about remotable pointers, buffers, optimized data structures and streaming.
