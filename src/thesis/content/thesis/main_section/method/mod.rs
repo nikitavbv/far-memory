@@ -3,9 +3,14 @@ use crate::thesis::engine::{Block, section_header, subsection_header, paragraph,
 pub fn far_memory_method() -> Block {
     Block::Multiple(vec![
         section_header("Методи та засоби надання віддаленої памʼяті"),
-        // write some kind of an intro here
+        paragraph("Загалом, принцип роботи віддаленої памʼяті полягає в тому, що програмне забезпечення передає у віддалену памʼять дані для зберігання, а коли до цих даних потрібен доступ, то \
+реалізація віддаленої памʼяті за запитом від застосунку переміщує дані з інших більш повільних пристроїв зберігання даних у локальну оперативну памʼять. Після переміщення, програмне \
+забезпечення працює з даними так само, як і з будь-якими іншими даними у оперативній памʼяті. Після того, як робота з даними закінчена, вони знов переміщуються на зберігання у інший клас памʼяті. \
+Саме це надає можливість зменшити використання оперативної памʼяті вузла та обробляти більше даних ніж обʼєм памʼяті прозоро для програмного забезпечення (тобто без значних змін у код, та те, як \
+застосунок працює з даними)."),
 
         subsection_header("Компоненти системи"),
+        paragraph("Перший компонент, з якого варто почати розглядати систему це ..."),
         // tell about manager node (also, explain that it is only used when there are a lot of nodes, not one and not SSD/in-memory), storage nodes (that it is basically kv storage. Also explain why Redis does not make
         // much sense here) and integration (using library or service running on the end node - explain why NBD is used). Tell what span is here (and how its size is being chosen and what effect it has).
         // Tell about span ids. Probably tell a bit how system can be deployed. Also, tell about metrics collection. Tell about run IDs and how those are used. can tell something about the expectations:
