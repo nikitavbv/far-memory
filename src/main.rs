@@ -144,7 +144,7 @@ async fn main() -> std::io::Result<()> {
             run();
         }
     } else if args.benchmark {
-        run_benchmark(&read_token(), &args.storage_endpoint.unwrap());
+        run_benchmark(&read_token(), args.storage_endpoint.clone());
     } else if args.block_device_demo {
         let run_id = generate_run_id();
         let run_id = args.run_id.map(|prefix| format!("{}_{}", prefix, run_id)).unwrap_or(run_id);
