@@ -30,10 +30,13 @@ pub fn far_memory_method() -> Block {
 мінімізації затримки з урахуванням особливостей задачі, що вирішується."),
         paragraph("Наявність багатьох вузлів зберігання та обчислення створює необхідність у компоненті, який керував би роботою кластеру - вузла керування (manager node). Цей компонент \
 повинен вирішувати декілька задач. По-перше, за запитом від вузлів обчислення надавати доступ до вузлів зберігання згідно з кількістю памʼяті необхідної для програмного забезпечення. \
-Для цього, вузел керування відслідковує рівень завантаженності вузлів у кластері, та пріоритизує ті вузли, де найбільше вільної памʼяті..."),
-        // tell about manager node (also, explain that it is only used when there are a lot of nodes, not one and not SSD/in-memory), storage nodes (that it is basically kv storage. Also explain why Redis does not make
-        // much sense here) and integration (using library or service running on the end node - explain why NBD is used). Tell what span is here (and how its size is being chosen and what effect it has).
-        // Tell about span ids. Probably tell a bit how system can be deployed. Also, tell about metrics collection. Tell about run IDs and how those are used. can tell something about the expectations:
+Для цього, вузел керування відслідковує рівень завантаженності вузлів у кластері, та пріоритизує ті вузли, де найбільше вільної памʼяті. Крім цього, вузел керування відслідковує стан інших \
+компонентів та обробляє випадки виходу з ладу інших вузлів, так і їх запланованого виводу на обслуговування. Також цей компонент надає інструменти для моніторингу стану віддаленої памʼяті. \
+У випадку використання локальної памʼяті (як наприклад SSD диску) чи лише одного віддаленого вузла зберігання наявність вузла керування не є необхідним."),
+        paragraph("Кожен з цих компонентів надається користувачу як виконуваний файл для операційної системи Linux (за винятком клієнту віддаленої памʼяті який може інтегруватися у вузел \
+обчислення за допомогою бібліотеки або окремого сервісу, що взаємодіє з механізмами керування памʼяттю операційної системи). Також надаються Docker контейнери та конфігурація Kubernetes, \
+що спрощує розгортання у кластері. До середовища, в якому розгортається система, ставиться вимога що всі вузли доступні всім іншим вузлам за мережею."),
+        // Also, tell about metrics collection. Tell about run IDs and how those are used. can tell something about the expectations:
         /* unordered_list(vec![
             "Вважається, що усі вузли системи розміщені у межах одного центру обробки даних та мають низькі мережеві затримки при спілкуванні між собою".to_owned(),
             "Мережа працює стабільно і між будь-якими двома вузлами в кластері є можливість встановити зʼєднання. Оскільки в багатьох інших задачах існує таке саме припущення (наприклад, у розподілених базах даних) і враховуючи той факт, що у межах одного центру обробки даних мережа зазвичай достатньо стабільна, то використання цього припущення не повинно накладати значних обмежень на середовища, в яких це програмне рішення може використатися".to_owned(),
@@ -55,6 +58,8 @@ pub fn far_memory_method() -> Block {
         // tell about ref-counting and identification which spans are not in use. explain how memory limits work. explain how user is supposed to use the swap file and what is done to prevent recursive swap (idk if that is
         // right name for that). tell about traces as a way to monitor the system (if that is a good topic to explain).
         // explained objects serialization.
+        // explain why NBD is used for running on the end node. tell that options are a library or a service running on the end node.
+        // Tell how span size is being chosen and what effect it has.
 
         subsection_header("Забезпечення відмовостійкості"),
         // tell about replication to remote nodes and local SSDs and erasure coding. Tell how exactly data will be restored and deleted. Explain that failure domain becomes larger when far memory is used.
