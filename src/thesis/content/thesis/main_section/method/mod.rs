@@ -28,6 +28,9 @@ pub fn far_memory_method() -> Block {
 так як немає сенсу одночасно зберігати одні й ті самі дані як на вузлах зберігання, так і на вузлах обчислення). Таке формулювання призначення цих вузлів може зробити привабливим використання \
 сховищ даних які працюють за схожим принципом, таких як наприклад Redis. Однак, використання такого сховища даних наклало б обмеження на можливості оптимізації протоколу, необхідних для \
 мінімізації затримки з урахуванням особливостей задачі, що вирішується."),
+        paragraph("Наявність багатьох вузлів зберігання та обчислення створює необхідність у компоненті, який керував би роботою кластеру - вузла керування (manager node). Цей компонент \
+повинен вирішувати декілька задач. По-перше, за запитом від вузлів обчислення надавати доступ до вузлів зберігання згідно з кількістю памʼяті необхідної для програмного забезпечення. \
+Для цього, вузел керування відслідковує рівень завантаженності вузлів у кластері, та пріоритизує ті вузли, де найбільше вільної памʼяті..."),
         // tell about manager node (also, explain that it is only used when there are a lot of nodes, not one and not SSD/in-memory), storage nodes (that it is basically kv storage. Also explain why Redis does not make
         // much sense here) and integration (using library or service running on the end node - explain why NBD is used). Tell what span is here (and how its size is being chosen and what effect it has).
         // Tell about span ids. Probably tell a bit how system can be deployed. Also, tell about metrics collection. Tell about run IDs and how those are used. can tell something about the expectations:
