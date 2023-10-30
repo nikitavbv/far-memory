@@ -14,6 +14,11 @@ pub fn far_memory_method() -> Block {
         components::components(),
 
         subsection_header("Інтеграція у програмне забезпечення"),
+        paragraph("Складність інтеграції віддаленої памʼяті у програмне забезпечення полягає у тому, що зазвичай у сучасних мовах програмування доступ до даних вібувається з припущенням що всі дані \
+розміщені в локальній оперативній памʼяті. Тобто структури даних, з якими працює програма, використовують показчики на памʼять які були видані алокатором памʼяті. Це робить неможливим прозору роботу \
+з даними у віддаленій памʼяті для програми, так як не є можливим створити показчик на памʼять у іншому пристрої. В операційних системах звісно існує віртуальна памʼять і, наприклад, механізм memory \
+mapping, але сам по собі він не підходить для того, щоб прозоро (тобто без значних змін у код) та швидко працювати з даними у памʼяті віддалених вузлів."),
+        paragraph("..."),
         // tell how library and service running on the end node would be working more specifically. Tell how spans are swapped in and out here. Tell about remotable pointers, buffers, optimized data structures and streaming.
         // tell about ref-counting and identification which spans are not in use. explain how memory limits work. explain how user is supposed to use the swap file and what is done to prevent recursive swap (idk if that is
         // right name for that). tell about traces as a way to monitor the system (if that is a good topic to explain).
