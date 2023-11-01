@@ -52,14 +52,17 @@ impl FarMemoryBackend for EncryptionBackend {
     }
 
     fn swap_in(&self, id: &SpanId) -> Vec<u8> {
+        // TODO: decrypt
         self.inner.swap_in(id)
     }
 
     fn batch_swap_out(&self, swap_out_operations: Vec<SwapOutOperation>) {
+        // TODO: encrypt
         self.inner.batch_swap_out(swap_out_operations)
     }
 
     fn batch(&self, swap_out_operations: Vec<SwapOutOperation>, swap_in: Option<&SpanId>) -> Option<Vec<u8>> {
+        // TODO: encrypt and decrypt
         self.inner.batch(swap_out_operations, swap_in)
     }
 
