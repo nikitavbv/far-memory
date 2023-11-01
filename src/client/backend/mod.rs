@@ -1,6 +1,7 @@
 use crate::client::span::SpanId;
 
 pub mod disk;
+pub mod encryption;
 pub mod erasure_coding;
 pub mod in_memory;
 pub mod metrics;
