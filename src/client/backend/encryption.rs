@@ -34,6 +34,16 @@ impl EncryptionBackend {
     fn decrypt(&self, data: &[u8]) -> Vec<u8> {
         self.cipher.decrypt(data[0..12].into(), &data[12..]).unwrap()
     }
+
+    fn encrypt_batch_swap_out(&self, swap_out_operations: Vec<SwapOutOperation>) -> Vec<SwapOutOperation> {
+        swap_out_operations.into_iter()
+            .map(|v| SwapOutOperation {
+                id: v.id,
+                data: self.encrypt(&v.data),
+                prepend: v.prepend,
+            })
+            .collect()
+    }
 }
 
 impl FarMemoryBackend for EncryptionBackend {
@@ -52,21 +62,40 @@ impl FarMemoryBackend for EncryptionBackend {
     }
 
     fn swap_in(&self, id: &SpanId) -> Vec<u8> {
-        // TODO: decrypt
-        self.inner.swap_in(id)
+        self.decrypt(&self.inner.swap_in(id))
     }
 
     fn batch_swap_out(&self, swap_out_operations: Vec<SwapOutOperation>) {
-        // TODO: encrypt
-        self.inner.batch_swap_out(swap_out_operations)
+        self.inner.batch_swap_out(self.encrypt_batch_swap_out(swap_out_operations))
     }
 
     fn batch(&self, swap_out_operations: Vec<SwapOutOperation>, swap_in: Option<&SpanId>) -> Option<Vec<u8>> {
-        // TODO: encrypt and decrypt
-        self.inner.batch(swap_out_operations, swap_in)
+        self.inner.batch(self.encrypt_batch_swap_out(swap_out_operations), swap_in).map(|v| self.decrypt(&v))
     }
 
     fn on_stop(&self) {
         self.inner.on_stop()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use {
+        rand::Rng,
+        crate::client::InMemoryBackend,
+        super::*,
+    };
+
+    #[test]
+    fn simple() {
+        let span_id = SpanId::from_id(42);
+        let data: Vec<u8> = (0..1024).map(|_| rand::thread_rng().gen()).collect();
+
+        let backend = EncryptionBackend::new(Box::new(InMemoryBackend::new()));
+
+        backend.swap_out(span_id.clone(), &data, false);
+
+        let swapped_in_data = backend.swap_in(&span_id);
+        assert_eq!(swapped_in_data, data);
     }
 }

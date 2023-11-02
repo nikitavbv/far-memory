@@ -41,3 +41,30 @@ impl SwapOutOperation {
         }
     }
 }
+
+enum AirplaneState {
+    Flying {
+        speed: f64,
+    },
+    Boarding {
+        passengers: u32,
+    },
+    Repair {
+        reason: String
+    },
+    Sleeping,
+}
+
+fn do_something() -> Option<i32> {
+    None
+}
+
+fn main() -> Result<(), String> {
+    let t = match do_something() {
+      Some(t) => t,
+      None => panic!("!!!!"),
+    };
+    let x = t + 10;
+
+    Ok(())
+}
