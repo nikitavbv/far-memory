@@ -1,5 +1,6 @@
 use crate::client::span::SpanId;
 
+pub mod compression;
 pub mod disk;
 pub mod encryption;
 pub mod erasure_coding;
