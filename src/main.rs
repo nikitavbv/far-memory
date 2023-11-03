@@ -6,6 +6,7 @@ use {
         utils::{init_logging, init_tracing, metrics::init_metrics, generate_run_id},
         thesis::build_thesis,
         storage::run_storage_server,
+        manager::run_manager_node,
         demo::{
             llm_inference::run_llm_inference_demo,
             benchmark::run_benchmark,
@@ -17,6 +18,7 @@ use {
 
 mod client;
 mod demo;
+mod manager;
 mod storage;
 mod thesis;
 
@@ -39,6 +41,9 @@ pub struct Args {
     // components
     #[arg(long)]
     storage: bool,
+
+    #[arg(long)]
+    manager: bool,
 
     #[arg(long)]
     port: Option<u16>,
@@ -158,6 +163,8 @@ pub fn main() {
             args.storage_endpoint.clone().map(|v| v.split(",").map(|v| v.to_owned()).collect::<Vec<String>>()).unwrap_or(Vec::new()),
             args.memory_limit_mb.map(|v| v * 1024 * 1024)
         );
+    } else if args.manager {
+        run_manager_node(read_token());
     } else if args.thesis || args.card || args.docs || args.practice_report {
         build_thesis(&args);
     }

@@ -35,7 +35,6 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
 
     let mut connections = 0;
     for stream in listener.incoming() {
-        println!("waiting for next connection");
         let mut stream = stream.unwrap();
         connections += 1;
 
@@ -76,7 +75,7 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
                 if let Err(err) = stream.read_exact(&mut req) {
                     error!("unexpected error when reading request body: {:?}", err);
                     break;
-                };
+                }
 
                 req
             };
