@@ -7,7 +7,7 @@ pub enum ManagerNodeRequest {
     },
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum ManagerNodeResponse {
     Ok,
     Forbidden,
