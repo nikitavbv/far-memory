@@ -4,6 +4,7 @@ use {
     self::protocol::{ManagerNodeRequest, ManagerNodeResponse},
 };
 
+mod client;
 mod protocol;
 
 const REQ_SIZE_LIMIT: u64 = 10 * 1024 * 1024 * 1024;
