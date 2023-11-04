@@ -49,6 +49,9 @@ pub struct Args {
     port: Option<u16>,
 
     #[arg(long)]
+    manager_endpoint: Option<String>,
+
+    #[arg(long)]
     storage_endpoint: Option<String>,
 
     // demo

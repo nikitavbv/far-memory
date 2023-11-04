@@ -85,6 +85,10 @@ impl Server {
                 } else {
                     ManagerNodeResponse::Forbidden
                 }
+            },
+            ManagerNodeRequest::SpanAccessStats(stats) => {
+                info!("received span access stats: {} entries", stats.len());
+                ManagerNodeResponse::Ok
             }
         }
     }
