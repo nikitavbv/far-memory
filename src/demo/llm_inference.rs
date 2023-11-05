@@ -6,6 +6,7 @@ use {
     prometheus::{Registry, register_gauge_with_registry, register_int_counter_with_registry},
     crate::{
         utils::allocator::current_memory_usage,
+        manager::ManagerClient,
         client::{
             FarMemoryBuffer,
             FarMemoryClient,
@@ -558,7 +559,7 @@ unsafe fn _unchecked_slice<Q>(s: &[Q], offset: usize, size: usize) -> &[Q] {
     std::slice::from_raw_parts(st, size)
 }
 
-pub fn run_llm_inference_demo(metrics: Registry, run_id: String, token: &str, endpoints: Vec<String>, time_limit: u64, optimize: bool, memory_limit: Option<u64>) {
+pub fn run_llm_inference_demo(metrics: Registry, run_id: String, token: &str, storage_endpoints: Vec<String>, manager_endpoint: Option<String>, time_limit: u64, optimize: bool, memory_limit: Option<u64>) {
     info!("running llm inference demo");
 
     let slo = 5.45;
@@ -570,7 +571,7 @@ pub fn run_llm_inference_demo(metrics: Registry, run_id: String, token: &str, en
         loop {
             info!("trying {}MB as local memory treshold", memory_threshold / (1024 * 1024));
 
-            let time_per_token = run_inference(metrics.clone(), run_id.clone(), token, endpoints.clone(), time_limit, memory_threshold);
+            let time_per_token = run_inference(metrics.clone(), run_id.clone(), token, storage_endpoints.clone(), manager_endpoint.clone(), time_limit, memory_threshold);
             if time_per_token > slo {
                 break;
             }
@@ -580,25 +581,31 @@ pub fn run_llm_inference_demo(metrics: Registry, run_id: String, token: &str, en
 
         info!("lowest local memory threshold which maintains SLO is {}MB", memory_threshold / (1024 * 1024));
     } else {
-        run_inference(metrics, run_id.clone(), token, endpoints, time_limit, memory_limit.unwrap_or(25600 * 1024 * 1024));
+        run_inference(metrics, run_id.clone(), token, storage_endpoints, manager_endpoint, time_limit, memory_limit.unwrap_or(25600 * 1024 * 1024));
     }
 }
 
-fn run_inference(metrics: Registry, run_id: String, token: &str, endpoints: Vec<String>, time_limit: u64, local_max_memory: u64) -> f32 {
-    let backend: Box<dyn FarMemoryBackend> = if !endpoints.is_empty() {
-        if endpoints.len() == 1 {
+fn run_inference(metrics: Registry, run_id: String, token: &str, storage_endpoints: Vec<String>, manager_endpoint: Option<String>, time_limit: u64, local_max_memory: u64) -> f32 {
+    let manager_client = manager_endpoint.map(|endpoint| {
+        let mut client = ManagerClient::new(&endpoint);
+        client.auth(token);
+        client
+    });
+
+    let backend: Box<dyn FarMemoryBackend> = if !storage_endpoints.is_empty() {
+        if storage_endpoints.len() == 1 {
             info!("running in single backend node mode");
-            Box::new(NetworkNodeBackend::new(&endpoints[0], token, run_id))
-        } else if endpoints.len() == 5 {
+            Box::new(NetworkNodeBackend::new(&storage_endpoints[0], token, run_id))
+        } else if storage_endpoints.len() == 5 {
             info!("running in erasure coded mode");
 
-            let nodes: Vec<_> = endpoints.iter()
+            let nodes: Vec<_> = storage_endpoints.iter()
                 .map(|v| Box::new(NetworkNodeBackend::new(&v, token, run_id.clone())) as Box<dyn FarMemoryBackend>)
                 .collect();
 
             Box::new(ErasureCodingBackend::new(nodes))
         } else {
-            let nodes: Vec<_> = endpoints.iter()
+            let nodes: Vec<_> = storage_endpoints.iter()
                 .map(|v| Box::new(NetworkNodeBackend::new(&v, token, run_id.clone())) as Box<dyn FarMemoryBackend>)
                 .collect();
 
@@ -614,6 +621,9 @@ fn run_inference(metrics: Registry, run_id: String, token: &str, endpoints: Vec<
     let backend = Box::new(InstrumentedBackend::new(metrics.clone(), backend));
 
     let mut client = FarMemoryClient::new(backend, local_max_memory);
+    if let Some(manager) = manager_client {
+        client.use_manager(manager);
+    }
     client.track_metrics(metrics.clone());
     client.start_swap_out_thread();
 

@@ -4,6 +4,8 @@ use {
     self::protocol::{ManagerNodeRequest, ManagerNodeResponse},
 };
 
+pub use self::client::Client as ManagerClient;
+
 mod client;
 mod protocol;
 

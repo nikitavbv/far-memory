@@ -1,5 +1,6 @@
 use {
     std::{net::TcpStream, thread, io::{Read, Write}, time::Duration},
+    crate::client::SpanId,
     super::protocol::{ManagerNodeRequest, ManagerNodeResponse},
 };
 
@@ -7,6 +8,7 @@ pub struct Client {
     stream: TcpStream,
 }
 
+// this client tends to have both high-level logic and communication layer. It probably needs to be split into two separate components. The client itself and manager logic.
 impl Client {
     pub fn new(addr: &str) -> Self {
         let mut stream = TcpStream::connect(addr);
@@ -29,6 +31,10 @@ impl Client {
             ManagerNodeResponse::Ok => (),
             other => panic!("unexpected auth response from manager node: {:?}", other),
         }
+    }
+
+    pub fn on_span_access(&self, span_id: &SpanId) {
+        unimplemented!()
     }
 
     fn request(&mut self, request: ManagerNodeRequest) -> ManagerNodeResponse {

@@ -3,6 +3,7 @@ use {
     tracing::{Level, span, info},
     crossbeam::utils::Backoff,
     prometheus::{Registry, register_int_gauge_with_registry, IntGauge, IntCounter, register_int_counter_with_registry},
+    crate::manager::ManagerClient,
     super::{
         backend::{FarMemoryBackend, SwapOutOperation},
         prefetching::{EvictionPolicy, MostRecentlyUsedEvictionPolicy, PreferRemoteSpansEvictionPolicy, ReplayEvictionPolicy},
@@ -18,6 +19,7 @@ pub struct FarMemoryClient {
 
     backend: Arc<Box<dyn FarMemoryBackend>>,
     eviction_policy: Arc<Box<dyn EvictionPolicy>>,
+    manager: Arc<Option<ManagerClient>>,
 
     local_memory_max_threshold: u64,
 
@@ -50,6 +52,7 @@ impl FarMemoryClient {
 
             backend: Arc::new(backend),
             eviction_policy: Arc::new(Box::new(ReplayEvictionPolicy::new(Box::new(PreferRemoteSpansEvictionPolicy::new(Box::new(MostRecentlyUsedEvictionPolicy::new())))))),
+            manager: Arc::new(None),
             local_memory_max_threshold,
 
             swap_in_out_lock: Arc::new(Mutex::new(())),
@@ -57,6 +60,10 @@ impl FarMemoryClient {
 
             metrics: None,
         }
+    }
+
+    pub fn use_manager(&mut self, manager: ManagerClient) {
+        self.manager = Arc::new(Some(manager));
     }
 
     pub fn track_metrics(&mut self, registry: Registry) {
@@ -108,6 +115,9 @@ impl FarMemoryClient {
         let started_at = Instant::now();
 
         self.eviction_policy.on_span_access(id);
+        if let Some(manager) = self.manager.as_ref() {
+            manager.on_span_access(id);
+        }
         if let Some(metrics) = self.metrics.as_ref() {
             metrics.span_access_ops.inc();
         }
