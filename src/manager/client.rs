@@ -1,5 +1,5 @@
 use {
-    std::{net::TcpStream, thread, io::{Read, Write}, time::Duration, sync::{Mutex, Arc, atomic::{AtomicBool, Ordering}}},
+    std::{net::TcpStream, thread, io::{Read, Write}, time::Duration, sync::{Mutex, Arc, atomic::{AtomicBool, AtomicU64, Ordering}}},
     crate::client::SpanId,
     super::protocol::{ManagerNodeRequest, ManagerNodeResponse},
 };
@@ -7,6 +7,15 @@ use {
 pub struct Client {
     stream: Arc<Mutex<TcpStream>>,
     is_running: Arc<AtomicBool>,
+
+    time_step_counter: AtomicU64,
+    span_access_stats: Arc<Mutex<Vec<SpanAccessStatsEntry>>>,
+
+}
+
+struct SpanAccessStatsEntry {
+    span_id: SpanId,
+    time_step: u64,
 }
 
 // this client tends to have both high-level logic and communication layer. It probably needs to be split into two separate components. The client itself and manager logic.
@@ -21,12 +30,14 @@ impl Client {
         let stream = Arc::new(Mutex::new(stream.unwrap()));
 
         let is_running = Arc::new(AtomicBool::new(true));
+        let span_access_stats = Arc::new(Mutex::new(Vec::new()));
 
-        thread::spawn(manager_client_thread(is_running.clone(), stream.clone()));
-
+        thread::Builder::new().name("manager-client".to_owned()).spawn(manager_client_thread(is_running.clone(), stream.clone())).unwrap();
         Self {
             stream,
             is_running,
+            time_step_counter: AtomicU64::new(0),
+            span_access_stats,
         }
     }
 
@@ -44,6 +55,9 @@ impl Client {
     }
 
     pub fn on_span_access(&self, span_id: &SpanId) {
+        // TODO: should time step be provided externally? How prediction would work?
+        let time_step = self.time_step_counter.fetch_add(1, Ordering::Relaxed);
+
         unimplemented!()
     }
 
