@@ -92,6 +92,9 @@ impl FarMemoryClient {
         if let Some(metrics) = self.metrics.as_ref() {
             metrics.unregister();
         }
+        if let Some(manager) = self.manager.as_ref() {
+            manager.on_stop();
+        }
     }
 
     pub fn is_running(&self) -> bool {
