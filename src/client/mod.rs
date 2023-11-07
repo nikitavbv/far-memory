@@ -21,7 +21,7 @@ pub use self::{
 };
 
 pub mod backend;
-pub mod prefetching;
+pub mod replacement;
 
 mod buffer;
 mod buffered_vec;

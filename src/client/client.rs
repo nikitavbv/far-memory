@@ -6,7 +6,7 @@ use {
     crate::manager::ManagerClient,
     super::{
         backend::{FarMemoryBackend, SwapOutOperation},
-        prefetching::{EvictionPolicy, MostRecentlyUsedEvictionPolicy, PreferRemoteSpansEvictionPolicy, ReplayEvictionPolicy},
+        replacement::{ReplacementPolicy, MostRecentlyUsedReplacementPolicy, PreferRemoteSpansReplacementPolicy, ReplayReplacementPolicy},
         span::{SpanId, FarMemorySpan, LocalSpanData},
     },
 };
@@ -18,7 +18,7 @@ pub struct FarMemoryClient {
     is_running: Arc<AtomicBool>,
 
     backend: Arc<Box<dyn FarMemoryBackend>>,
-    eviction_policy: Arc<Box<dyn EvictionPolicy>>,
+    replacement_policy: Arc<Box<dyn ReplacementPolicy>>,
     manager: Arc<Option<ManagerClient>>,
 
     local_memory_max_threshold: u64,
@@ -51,7 +51,7 @@ impl FarMemoryClient {
             is_running: Arc::new(AtomicBool::new(true)),
 
             backend: Arc::new(backend),
-            eviction_policy: Arc::new(Box::new(ReplayEvictionPolicy::new(Box::new(PreferRemoteSpansEvictionPolicy::new(Box::new(MostRecentlyUsedEvictionPolicy::new())))))),
+            replacement_policy: Arc::new(Box::new(ReplayReplacementPolicy::new(Box::new(PreferRemoteSpansReplacementPolicy::new(Box::new(MostRecentlyUsedReplacementPolicy::new())))))),
             manager: Arc::new(None),
             local_memory_max_threshold,
 
@@ -64,6 +64,10 @@ impl FarMemoryClient {
 
     pub fn use_manager(&mut self, manager: ManagerClient) {
         self.manager = Arc::new(Some(manager));
+    }
+
+    pub fn use_replacement_policy(&mut self, eviction_policy: Box<dyn ReplacementPolicy>) {
+        self.replacement_policy = Arc::new(eviction_policy);
     }
 
     pub fn track_metrics(&mut self, registry: Registry) {
@@ -87,7 +91,7 @@ impl FarMemoryClient {
 
     pub fn stop(&self) {
         self.is_running.store(false, Ordering::Relaxed);
-        self.eviction_policy.on_stop();
+        self.replacement_policy.on_stop();
         self.backend.on_stop();
         if let Some(metrics) = self.metrics.as_ref() {
             metrics.unregister();
@@ -117,10 +121,7 @@ impl FarMemoryClient {
     pub fn span_ptr(&self, id: &SpanId) -> *mut u8 {
         let started_at = Instant::now();
 
-        self.eviction_policy.on_span_access(id);
-        if let Some(manager) = self.manager.as_ref() {
-            manager.on_span_access(id);
-        }
+        self.replacement_policy.on_span_access(id);
         if let Some(metrics) = self.metrics.as_ref() {
             metrics.span_access_ops.inc();
         }
@@ -190,7 +191,7 @@ impl FarMemoryClient {
                 data: local_data,
             });
 
-            self.eviction_policy.on_span_swap_in(id);
+            self.replacement_policy.on_span_swap_in(id);
             if let Some(metrics) = self.metrics.as_ref() {
                 metrics.span_swap_in_ops.inc();
                 metrics.access_latency_micros_swap_in.inc_by((Instant::now() - started_at).as_micros() as u64);
@@ -274,7 +275,7 @@ impl FarMemoryClient {
                 panic!("expected span to be in swapping out state when actually swapping out");
             }
             *span_state = SpanState::Free;
-            self.eviction_policy.on_span_swap_out(&op.span_id);
+            self.replacement_policy.on_span_swap_out(&op.span_id);
 
             if let Some(metrics) = self.metrics.as_ref() {
                 metrics.span_swap_out_ops.inc();
@@ -327,7 +328,7 @@ impl FarMemoryClient {
             panic!("expected span to be in swapping out state when actually swapping out");
         }
         *span_state = SpanState::Free;
-        self.eviction_policy.on_span_swap_out(span_id);
+        self.replacement_policy.on_span_swap_out(span_id);
 
         if let Some(metrics) = self.metrics.as_ref() {
             metrics.span_swap_out_ops.inc();
@@ -375,7 +376,7 @@ impl FarMemoryClient {
                 break;
             }
 
-            let span_id = span!(Level::DEBUG, "picking span for eviction").in_scope(|| self.eviction_policy.pick_for_eviction(&possible_swap_out_spans).clone());
+            let span_id = span!(Level::DEBUG, "picking span for eviction").in_scope(|| self.replacement_policy.pick_for_eviction(&possible_swap_out_spans).clone());
             let index = possible_swap_out_spans.iter().position(|x| *x == span_id).unwrap();
             possible_swap_out_spans.remove(index);
 

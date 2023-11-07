@@ -4,7 +4,7 @@ use {
     super::SpanId,
 };
 
-pub trait EvictionPolicy: Send + Sync {
+pub trait ReplacementPolicy: Send + Sync {
     fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId;
 
     fn on_span_access(&self, span_id: &SpanId) {}
@@ -14,29 +14,29 @@ pub trait EvictionPolicy: Send + Sync {
 }
 
 // 6.01 per token (for 25700)
-pub struct RandomEvictionPolicy {
+pub struct RandomReplacementPolicy {
 }
 
-impl RandomEvictionPolicy {
+impl RandomReplacementPolicy {
     pub fn new() -> Self {
         Self {
         }
     }
 }
 
-impl EvictionPolicy for RandomEvictionPolicy {
+impl ReplacementPolicy for RandomReplacementPolicy {
     fn pick_for_eviction<'a>(&self, spans: &'a [SpanId]) -> &'a SpanId {
         spans.choose(&mut rand::thread_rng()).unwrap()
     }
 }
 
 // 108.3 per token (for 25700)
-pub struct LeastRecentlyUsedEvictionPolicy {
+pub struct LeastRecentlyUsedReplacementPolicy {
     counter: AtomicU64,
     history: RwLock<HashMap<SpanId, u64>>,
 }
 
-impl LeastRecentlyUsedEvictionPolicy {
+impl LeastRecentlyUsedReplacementPolicy {
     pub fn new() -> Self {
         Self {
             counter: AtomicU64::new(0),
@@ -45,7 +45,7 @@ impl LeastRecentlyUsedEvictionPolicy {
     }
 }
 
-impl EvictionPolicy for LeastRecentlyUsedEvictionPolicy {
+impl ReplacementPolicy for LeastRecentlyUsedReplacementPolicy {
     fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId {
         let history = self.history.read().unwrap();
         spans.iter().map(|v| (v, history.get(v).unwrap_or(&0))).reduce(|a, b| if a.1 < b.1 { a } else { b }).map(|a| a.0).unwrap()
@@ -58,12 +58,12 @@ impl EvictionPolicy for LeastRecentlyUsedEvictionPolicy {
 
 // 5.42 per token (for 25700)
 // 12.31 per token (for 25600)
-pub struct MostRecentlyUsedEvictionPolicy {
+pub struct MostRecentlyUsedReplacementPolicy {
     counter: AtomicU64,
     history: RwLock<HashMap<SpanId, u64>>,
 }
 
-impl MostRecentlyUsedEvictionPolicy {
+impl MostRecentlyUsedReplacementPolicy {
     pub fn new() -> Self {
         Self {
             counter: AtomicU64::new(0),
@@ -72,7 +72,7 @@ impl MostRecentlyUsedEvictionPolicy {
     }
 }
 
-impl EvictionPolicy for MostRecentlyUsedEvictionPolicy {
+impl ReplacementPolicy for MostRecentlyUsedReplacementPolicy {
     fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId {
         let history = self.history.read().unwrap();
         spans.iter()
@@ -87,15 +87,15 @@ impl EvictionPolicy for MostRecentlyUsedEvictionPolicy {
     }
 }
 
-// current best when combined with MostRecentlyUsedEvictionPolicy
+// current best when combined with MostRecentlyUsedReplacementPolicy
 // 8.34 per token (for 25600)
-pub struct PreferRemoteSpansEvictionPolicy {
+pub struct PreferRemoteSpansReplacementPolicy {
     remote_spans: RwLock<HashSet<SpanId>>,
-    inner: Box<dyn EvictionPolicy>,
+    inner: Box<dyn ReplacementPolicy>,
 }
 
-impl PreferRemoteSpansEvictionPolicy {
-    pub fn new(inner: Box<dyn EvictionPolicy>) -> Self {
+impl PreferRemoteSpansReplacementPolicy {
+    pub fn new(inner: Box<dyn ReplacementPolicy>) -> Self {
         Self {
             remote_spans: RwLock::new(HashSet::new()),
             inner,
@@ -103,7 +103,7 @@ impl PreferRemoteSpansEvictionPolicy {
     }
 }
 
-impl EvictionPolicy for PreferRemoteSpansEvictionPolicy {
+impl ReplacementPolicy for PreferRemoteSpansReplacementPolicy {
     fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId {
         let remote_spans: Vec<_> = {
             let remote_spans = self.remote_spans.try_read().unwrap();
@@ -133,16 +133,16 @@ impl EvictionPolicy for PreferRemoteSpansEvictionPolicy {
     }
 }
 
-pub struct ReplayEvictionPolicy {
+pub struct ReplayReplacementPolicy {
     history_file_path: String,
     record_mode: bool,
     history: RwLock<Vec<SpanId>>,
     access_counter: AtomicU64,
-    fallback: Box<dyn EvictionPolicy>,
+    fallback: Box<dyn ReplacementPolicy>,
 }
 
-impl ReplayEvictionPolicy {
-    pub fn new(fallback: Box<dyn EvictionPolicy>) -> Self {
+impl ReplayReplacementPolicy {
+    pub fn new(fallback: Box<dyn ReplacementPolicy>) -> Self {
         let history_file_path = "./data/eviction_history.json".to_owned();
 
         let path = Path::new(&history_file_path);
@@ -164,7 +164,7 @@ impl ReplayEvictionPolicy {
     }
 }
 
-impl EvictionPolicy for ReplayEvictionPolicy {
+impl ReplacementPolicy for ReplayReplacementPolicy {
     fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId {
         if self.record_mode {
             return self.fallback.pick_for_eviction(spans);
@@ -219,4 +219,8 @@ impl EvictionPolicy for ReplayEvictionPolicy {
             fs::write(&self.history_file_path, &serde_json::to_vec(&*self.history.read().unwrap()).unwrap()).unwrap();
         }
     }
+}
+
+// TODO: implement policy that tracks everything with manager
+pub struct TrackingReplacementPolicy {
 }
