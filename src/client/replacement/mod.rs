@@ -4,6 +4,8 @@ use {
     super::SpanId,
 };
 
+mod tracking;
+
 pub trait ReplacementPolicy: Send + Sync {
     fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId;
 
@@ -219,8 +221,4 @@ impl ReplacementPolicy for ReplayReplacementPolicy {
             fs::write(&self.history_file_path, &serde_json::to_vec(&*self.history.read().unwrap()).unwrap()).unwrap();
         }
     }
-}
-
-// TODO: implement policy that tracks everything with manager
-pub struct TrackingReplacementPolicy {
 }
