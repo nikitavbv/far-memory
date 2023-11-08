@@ -8,9 +8,7 @@ pub struct Client {
     stream: Arc<Mutex<TcpStream>>,
     is_running: Arc<AtomicBool>,
 
-    time_step_counter: AtomicU64,
     span_access_stats: Arc<Mutex<Vec<SpanAccessStatsEntry>>>,
-
 }
 
 struct SpanAccessStatsEntry {
@@ -36,7 +34,6 @@ impl Client {
         Self {
             stream,
             is_running,
-            time_step_counter: AtomicU64::new(0),
             span_access_stats,
         }
     }
@@ -54,11 +51,8 @@ impl Client {
         self.is_running.store(false, Ordering::Relaxed);
     }
 
-    pub fn on_span_access(&self, span_id: &SpanId) {
-        // TODO: should time step be provided externally? How prediction would work?
-        let time_step = self.time_step_counter.fetch_add(1, Ordering::Relaxed);
-
-        unimplemented!()
+    pub fn on_span_access(&self, span_id: &SpanId, time_step: u64) {
+        self.span_access_stats.lock().unwrap().push(SpanAccessStatsEntry { span_id: span_id.clone(), time_step });
     }
 
     fn request(&mut self, request: ManagerNodeRequest) -> ManagerNodeResponse {
