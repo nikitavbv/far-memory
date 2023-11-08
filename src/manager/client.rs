@@ -1,7 +1,7 @@
 use {
-    std::{net::TcpStream, thread, io::{Read, Write}, time::Duration, sync::{Mutex, Arc, atomic::{AtomicBool, AtomicU64, Ordering}}},
+    std::{net::TcpStream, thread, io::{Read, Write}, time::Duration, sync::{Mutex, Arc, atomic::{AtomicBool, Ordering}}},
     crate::client::SpanId,
-    super::protocol::{ManagerNodeRequest, ManagerNodeResponse},
+    super::protocol::{ManagerNodeRequest, ManagerNodeResponse, SpanAccessEvent},
 };
 
 pub struct Client {
@@ -30,7 +30,11 @@ impl Client {
         let is_running = Arc::new(AtomicBool::new(true));
         let span_access_stats = Arc::new(Mutex::new(Vec::new()));
 
-        thread::Builder::new().name("manager-client".to_owned()).spawn(manager_client_thread(is_running.clone(), stream.clone())).unwrap();
+        thread::Builder::new().name("manager-client".to_owned()).spawn(manager_client_thread(
+            is_running.clone(),
+            stream.clone(),
+            span_access_stats.clone(),
+        )).unwrap();
         Self {
             stream,
             is_running,
@@ -55,19 +59,50 @@ impl Client {
         self.span_access_stats.lock().unwrap().push(SpanAccessStatsEntry { span_id: span_id.clone(), time_step });
     }
 
-    fn request(&mut self, request: ManagerNodeRequest) -> ManagerNodeResponse {
-        let mut stream = self.stream.lock().unwrap();
-        write_request(&mut stream, request);
-        read_response(&mut stream)
+    fn request(&self, req: ManagerNodeRequest) -> ManagerNodeResponse {
+        request(&mut self.stream.lock().unwrap(), req)
     }
 }
 
-fn manager_client_thread(is_running: Arc<AtomicBool>, stream: Arc<Mutex<TcpStream>>) -> impl FnOnce() -> () {
+fn manager_client_thread(
+    is_running: Arc<AtomicBool>,
+    stream: Arc<Mutex<TcpStream>>,
+    span_access_stats: Arc<Mutex<Vec<SpanAccessStatsEntry>>>
+) -> impl FnOnce() -> () {
     move || {
         while is_running.load(Ordering::Relaxed) {
             thread::sleep(Duration::from_secs(5));
+
+            let span_access_stats = {
+                let mut stats = Vec::new();
+                let mut span_access_stats = span_access_stats.lock().unwrap();
+                std::mem::swap(&mut stats, &mut span_access_stats);
+                stats
+            };
+
+            if span_access_stats.is_empty() {
+                continue;
+            }
+
+            let span_access_stats: Vec<_> = span_access_stats.into_iter()
+                .map(|stat| SpanAccessEvent {
+                    span_id: stat.span_id.id(),
+                    time_step: stat.time_step,
+                })
+                .collect();
+
+            let req = ManagerNodeRequest::SpanAccessStats(span_access_stats);
+            match request(&mut stream.lock().unwrap(), req) {
+                ManagerNodeResponse::Ok => (),
+                other => panic!("unexpected response from manager node when sending span access stats: {:?}", other),
+            };
         }
     }
+}
+
+fn request(stream: &mut TcpStream, request: ManagerNodeRequest) -> ManagerNodeResponse {
+    write_request(stream, request);
+    read_response(stream)
 }
 
 fn write_request(stream: &mut TcpStream, request: ManagerNodeRequest) {

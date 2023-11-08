@@ -16,6 +16,6 @@ pub enum ManagerNodeResponse {
 
 #[derive(Serialize, Deserialize)]
 pub struct SpanAccessEvent {
-    time_step: u64,
-    span_id: u64,
+    pub time_step: u64,
+    pub span_id: u64,
 }
