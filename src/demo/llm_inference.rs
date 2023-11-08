@@ -1,5 +1,5 @@
 use {
-    std::{io::{self, Read, Seek, SeekFrom, Write}, fs::File, mem, time::Instant},
+    std::{io::{self, Read, Seek, SeekFrom, Write}, fs::File, mem, time::Instant, sync::Arc},
     tracing::{info, warn},
     rand::{rngs::SmallRng, SeedableRng, Rng},
     quantiles::ckms::CKMS,
@@ -18,6 +18,10 @@ use {
             ReplicationBackend,
             ErasureCodingBackend,
             InstrumentedBackend,
+            TrackingReplacementPolicy,
+            MostRecentlyUsedReplacementPolicy,
+            ReplayReplacementPolicy,
+            PreferRemoteSpansReplacementPolicy,
         },
     },
 };
@@ -622,6 +626,7 @@ fn run_inference(metrics: Registry, run_id: String, token: &str, storage_endpoin
 
     let mut client = FarMemoryClient::new(backend, local_max_memory);
     if let Some(manager) = manager_client {
+        client.use_replacement_policy(Box::new(TrackingReplacementPolicy::new(manager.clone(), Box::new(ReplayReplacementPolicy::new(Box::new(PreferRemoteSpansReplacementPolicy::new(Box::new(MostRecentlyUsedReplacementPolicy::new()))))))));
         client.use_manager(manager);
     }
     client.track_metrics(metrics.clone());

@@ -4,6 +4,7 @@ use {
     super::protocol::{ManagerNodeRequest, ManagerNodeResponse, SpanAccessEvent},
 };
 
+#[derive(Clone)]
 pub struct Client {
     stream: Arc<Mutex<TcpStream>>,
     is_running: Arc<AtomicBool>,

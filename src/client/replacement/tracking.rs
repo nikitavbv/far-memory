@@ -1,5 +1,5 @@
 use {
-    std::sync::{Arc, atomic::{AtomicU64, Ordering}},
+    std::sync::atomic::{AtomicU64, Ordering},
     crate::{
         manager::ManagerClient,
         client::SpanId,
@@ -9,12 +9,12 @@ use {
 
 pub struct TrackingReplacementPolicy {
     inner: Box<dyn ReplacementPolicy>,
-    manager: Arc<ManagerClient>,
+    manager: ManagerClient,
     step_counter: AtomicU64,
 }
 
 impl TrackingReplacementPolicy {
-    pub fn new(manager: Arc<ManagerClient>, inner: Box<dyn ReplacementPolicy>) -> Self {
+    pub fn new(manager: ManagerClient, inner: Box<dyn ReplacementPolicy>) -> Self {
         Self {
             manager,
             inner,

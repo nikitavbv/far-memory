@@ -4,6 +4,8 @@ use {
     super::SpanId,
 };
 
+pub use tracking::TrackingReplacementPolicy;
+
 mod tracking;
 
 pub trait ReplacementPolicy: Send + Sync {

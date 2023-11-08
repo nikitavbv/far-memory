@@ -18,6 +18,12 @@ pub use self::{
         erasure_coding::ErasureCodingBackend,
         metrics::InstrumentedBackend,
     },
+    replacement::{
+      TrackingReplacementPolicy,
+      MostRecentlyUsedReplacementPolicy,
+      PreferRemoteSpansReplacementPolicy,
+      ReplayReplacementPolicy,
+    },
 };
 
 pub mod backend;
