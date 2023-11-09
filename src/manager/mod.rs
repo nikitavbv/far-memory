@@ -12,9 +12,10 @@ mod protocol;
 const REQ_SIZE_LIMIT: u64 = 10 * 1024 * 1024 * 1024;
 
 pub fn run_manager_node(token: String) {
-    info!("running manager node");
+    let port = 14000;
+    info!("running manager node on port {}", port);
 
-    let addr = "0.0.0.0:14000";
+    let addr = format!("0.0.0.0:{}", port);
     let listener = TcpListener::bind(&addr).unwrap();
 
     for stream in listener.incoming() {
