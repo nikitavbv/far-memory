@@ -6,6 +6,7 @@ pub enum ManagerNodeRequest {
         token: String,
     },
     SpanAccessStats(Vec<SpanAccessEvent>),
+    FinishSession,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

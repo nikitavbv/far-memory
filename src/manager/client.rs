@@ -54,6 +54,11 @@ impl Client {
 
     pub fn on_stop(&self) {
         self.is_running.store(false, Ordering::Relaxed);
+        push_span_access_stats(&self.stream, &self.span_access_stats);
+        match self.request(ManagerNodeRequest::FinishSession) {
+            ManagerNodeResponse::Ok => (),
+            other => panic!("unexpected finish session response: {:?}", other),
+        }
     }
 
     pub fn on_span_access(&self, span_id: &SpanId, time_step: u64) {
@@ -73,32 +78,35 @@ fn manager_client_thread(
     move || {
         while is_running.load(Ordering::Relaxed) {
             thread::sleep(Duration::from_secs(5));
-
-            let span_access_stats = {
-                let mut stats = Vec::new();
-                let mut span_access_stats = span_access_stats.lock().unwrap();
-                std::mem::swap(&mut stats, &mut span_access_stats);
-                stats
-            };
-
-            if span_access_stats.is_empty() {
-                continue;
-            }
-
-            let span_access_stats: Vec<_> = span_access_stats.into_iter()
-                .map(|stat| SpanAccessEvent {
-                    span_id: stat.span_id.id(),
-                    time_step: stat.time_step,
-                })
-                .collect();
-
-            let req = ManagerNodeRequest::SpanAccessStats(span_access_stats);
-            match request(&mut stream.lock().unwrap(), req) {
-                ManagerNodeResponse::Ok => (),
-                other => panic!("unexpected response from manager node when sending span access stats: {:?}", other),
-            };
+            push_span_access_stats(&stream, &span_access_stats);
         }
     }
+}
+
+fn push_span_access_stats(stream: &Arc<Mutex<TcpStream>>, span_access_stats: &Arc<Mutex<Vec<SpanAccessStatsEntry>>>) {
+    let span_access_stats = {
+        let mut stats = Vec::new();
+        let mut span_access_stats = span_access_stats.lock().unwrap();
+        std::mem::swap(&mut stats, &mut span_access_stats);
+        stats
+    };
+
+    if span_access_stats.is_empty() {
+        return;
+    }
+
+    let span_access_stats: Vec<_> = span_access_stats.into_iter()
+        .map(|stat| SpanAccessEvent {
+            span_id: stat.span_id.id(),
+            time_step: stat.time_step,
+        })
+        .collect();
+
+    let req = ManagerNodeRequest::SpanAccessStats(span_access_stats);
+    match request(&mut stream.lock().unwrap(), req) {
+        ManagerNodeResponse::Ok => (),
+        other => panic!("unexpected response from manager node when sending span access stats: {:?}", other),
+    };
 }
 
 fn request(stream: &mut TcpStream, request: ManagerNodeRequest) -> ManagerNodeResponse {

@@ -92,6 +92,10 @@ impl Server {
             ManagerNodeRequest::SpanAccessStats(stats) => {
                 info!("received span access stats: {} entries", stats.len());
                 ManagerNodeResponse::Ok
+            },
+            ManagerNodeRequest::FinishSession => {
+                // TODO: save stats here
+                ManagerNodeResponse::Ok
             }
         }
     }
