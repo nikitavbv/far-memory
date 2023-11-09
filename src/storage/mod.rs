@@ -24,7 +24,7 @@ pub fn run_storage_server(metrics: Registry, token: String, port: Option<u16>) {
 }
 
 fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token: String, connections_limit: Option<usize>, requests_limit: Option<usize>) {
-    let port = port.unwrap_or(14000);
+    let port = port.unwrap_or(14001);
     let hostname = hostname::get().unwrap().to_str().unwrap().to_owned();
     let addr = format!("{}:{}", host, port);
     let listener = TcpListener::bind(&addr).unwrap();
