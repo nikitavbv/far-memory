@@ -1,15 +1,17 @@
 use {
-    std::{net::TcpListener, io::{Read, Write}},
+    std::{net::TcpListener, io::{Read, Write}, fs},
     tracing::{info, error},
     self::protocol::{ManagerNodeRequest, ManagerNodeResponse},
 };
 
 pub use self::client::Client as ManagerClient;
+use self::protocol::SpanAccessEvent;
 
 mod client;
 mod protocol;
 
 const REQ_SIZE_LIMIT: u64 = 10 * 1024 * 1024 * 1024;
+const SPAN_ACCESS_STATS_FILE: &str = "./data/span_access_stats.json";
 
 pub fn run_manager_node(token: String) {
     let port = 14000;
@@ -69,6 +71,8 @@ pub fn run_manager_node(token: String) {
 struct Server {
     auth: bool,
     token: String,
+
+    span_access_stats: Vec<SpanAccessEvent>,
 }
 
 impl Server {
@@ -76,6 +80,8 @@ impl Server {
         Self {
             auth: false,
             token,
+
+            span_access_stats: Vec::new(),
         }
     }
 
@@ -89,12 +95,12 @@ impl Server {
                     ManagerNodeResponse::Forbidden
                 }
             },
-            ManagerNodeRequest::SpanAccessStats(stats) => {
-                info!("received span access stats: {} entries", stats.len());
+            ManagerNodeRequest::SpanAccessStats(mut stats) => {
+                self.span_access_stats.append(&mut stats);
                 ManagerNodeResponse::Ok
             },
             ManagerNodeRequest::FinishSession => {
-                // TODO: save stats here
+                fs::write(SPAN_ACCESS_STATS_FILE, serde_json::to_vec(&self.span_access_stats).unwrap()).unwrap();
                 ManagerNodeResponse::Ok
             }
         }
