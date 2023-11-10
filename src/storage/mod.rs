@@ -348,7 +348,7 @@ mod tests {
         let server_thread = thread::spawn(|| run_server(
             None,
             "localhost".to_owned(),
-            None,
+            Some(14000),
             "some-token".to_owned(),
             Some(1),
             Some(3)
