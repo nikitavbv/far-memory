@@ -4,9 +4,13 @@ use {
     super::SpanId,
 };
 
-pub use tracking::TrackingReplacementPolicy;
+pub use {
+    tracking::TrackingReplacementPolicy,
+    replay::RemoteReplayReplacementPolicy,
+};
 
 mod tracking;
+mod replay;
 
 pub trait ReplacementPolicy: Send + Sync {
     fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId;
