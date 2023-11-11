@@ -23,6 +23,7 @@ pub use self::{
       MostRecentlyUsedReplacementPolicy,
       PreferRemoteSpansReplacementPolicy,
       ReplayReplacementPolicy,
+      RemoteReplayReplacementPolicy,
     },
 };
 

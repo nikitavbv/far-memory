@@ -22,6 +22,7 @@ use {
             MostRecentlyUsedReplacementPolicy,
             ReplayReplacementPolicy,
             PreferRemoteSpansReplacementPolicy,
+            RemoteReplayReplacementPolicy,
         },
     },
 };
@@ -626,7 +627,7 @@ fn run_inference(metrics: Registry, run_id: String, token: &str, storage_endpoin
 
     let mut client = FarMemoryClient::new(backend, local_max_memory);
     if let Some(manager) = manager_client {
-        client.use_replacement_policy(Box::new(TrackingReplacementPolicy::new(manager.clone(), Box::new(ReplayReplacementPolicy::new(Box::new(PreferRemoteSpansReplacementPolicy::new(Box::new(MostRecentlyUsedReplacementPolicy::new()))))))));
+        client.use_replacement_policy(Box::new(RemoteReplayReplacementPolicy::new(manager.clone(), Box::new(PreferRemoteSpansReplacementPolicy::new(Box::new(MostRecentlyUsedReplacementPolicy::new()))))));
         client.use_manager(manager);
     }
     client.track_metrics(metrics.clone());
