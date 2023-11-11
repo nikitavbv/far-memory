@@ -102,7 +102,7 @@ impl Server {
 
                 match policy_type {
                     ReplacementPolicyType::Replay => ManagerNodeResponse::ReplacementPolicyParams {
-                        span_access_history: serde_json::from_slice(&fs::read(SPAN_ACCESS_STATS_FILE).unwrap()).unwrap(),
+                        span_access_history: fs::read(SPAN_ACCESS_STATS_FILE).ok().map(|v| serde_json::from_slice(&v).unwrap()),
                     }
                 }
             },

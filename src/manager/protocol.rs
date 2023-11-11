@@ -15,7 +15,7 @@ pub enum ManagerNodeResponse {
     Ok,
     Forbidden,
     ReplacementPolicyParams {
-        span_access_history: Vec<SpanAccessEvent>,
+        span_access_history: Option<Vec<SpanAccessEvent>>,
     }
 }
 
