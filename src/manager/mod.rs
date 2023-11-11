@@ -1,11 +1,10 @@
 use {
     std::{net::TcpListener, io::{Read, Write}, fs},
     tracing::{info, error},
-    self::protocol::{ManagerNodeRequest, ManagerNodeResponse, ReplacementPolicyType},
+    self::protocol::{ManagerNodeRequest, ManagerNodeResponse, ReplacementPolicyType, ReplacementPolicyParams},
 };
 
-pub use self::client::Client as ManagerClient;
-use self::protocol::SpanAccessEvent;
+pub use self::{client::Client as ManagerClient, protocol::SpanAccessEvent};
 
 mod client;
 mod protocol;
@@ -101,9 +100,9 @@ impl Server {
                 }
 
                 match policy_type {
-                    ReplacementPolicyType::Replay => ManagerNodeResponse::ReplacementPolicyParams {
+                    ReplacementPolicyType::Replay => ManagerNodeResponse::ReplacementPolicyParams(ReplacementPolicyParams {
                         span_access_history: fs::read(SPAN_ACCESS_STATS_FILE).ok().map(|v| serde_json::from_slice(&v).unwrap()),
-                    }
+                    })
                 }
             },
             ManagerNodeRequest::SpanAccessStats(mut stats) => {

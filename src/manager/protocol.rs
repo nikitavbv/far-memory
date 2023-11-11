@@ -14,9 +14,7 @@ pub enum ManagerNodeRequest {
 pub enum ManagerNodeResponse {
     Ok,
     Forbidden,
-    ReplacementPolicyParams {
-        span_access_history: Option<Vec<SpanAccessEvent>>,
-    }
+    ReplacementPolicyParams(ReplacementPolicyParams),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -28,4 +26,9 @@ pub enum ReplacementPolicyType {
 pub struct SpanAccessEvent {
     pub time_step: u64,
     pub span_id: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ReplacementPolicyParams {
+    pub span_access_history: Option<Vec<SpanAccessEvent>>,
 }
