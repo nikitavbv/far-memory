@@ -95,16 +95,30 @@ impl Server {
                     ManagerNodeResponse::Forbidden
                 }
             },
-            ManagerNodeRequest::GetReplacementPolicyParams(policy_type) => match policy_type {
-                ReplacementPolicyType::Replay => ManagerNodeResponse::ReplacementPolicyParams {
-                    span_access_history: serde_json::from_slice(&fs::read(SPAN_ACCESS_STATS_FILE).unwrap()).unwrap(),
+            ManagerNodeRequest::GetReplacementPolicyParams(policy_type) => {
+                if !self.auth {
+                    return ManagerNodeResponse::Forbidden;
+                }
+
+                match policy_type {
+                    ReplacementPolicyType::Replay => ManagerNodeResponse::ReplacementPolicyParams {
+                        span_access_history: serde_json::from_slice(&fs::read(SPAN_ACCESS_STATS_FILE).unwrap()).unwrap(),
+                    }
                 }
             },
             ManagerNodeRequest::SpanAccessStats(mut stats) => {
+                if !self.auth {
+                    return ManagerNodeResponse::Forbidden;
+                }
+
                 self.span_access_stats.append(&mut stats);
                 ManagerNodeResponse::Ok
             },
             ManagerNodeRequest::FinishSession => {
+                if !self.auth {
+                    return ManagerNodeResponse::Forbidden;
+                }
+
                 fs::write(SPAN_ACCESS_STATS_FILE, serde_json::to_vec(&self.span_access_stats).unwrap()).unwrap();
                 ManagerNodeResponse::Ok
             }
