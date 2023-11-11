@@ -5,6 +5,7 @@ pub enum ManagerNodeRequest {
     Auth {
         token: String,
     },
+    GetReplacementPolicyParams(ReplacementPolicyType),
     SpanAccessStats(Vec<SpanAccessEvent>),
     FinishSession,
 }
@@ -13,9 +14,17 @@ pub enum ManagerNodeRequest {
 pub enum ManagerNodeResponse {
     Ok,
     Forbidden,
+    ReplacementPolicyParams {
+        span_access_history: Vec<SpanAccessEvent>,
+    }
 }
 
 #[derive(Serialize, Deserialize)]
+pub enum ReplacementPolicyType {
+    Replay,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct SpanAccessEvent {
     pub time_step: u64,
     pub span_id: u64,

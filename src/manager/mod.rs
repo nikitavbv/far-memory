@@ -1,7 +1,7 @@
 use {
     std::{net::TcpListener, io::{Read, Write}, fs},
     tracing::{info, error},
-    self::protocol::{ManagerNodeRequest, ManagerNodeResponse},
+    self::protocol::{ManagerNodeRequest, ManagerNodeResponse, ReplacementPolicyType},
 };
 
 pub use self::client::Client as ManagerClient;
@@ -93,6 +93,11 @@ impl Server {
                     ManagerNodeResponse::Ok
                 } else {
                     ManagerNodeResponse::Forbidden
+                }
+            },
+            ManagerNodeRequest::GetReplacementPolicyParams(policy_type) => match policy_type {
+                ReplacementPolicyType::Replay => ManagerNodeResponse::ReplacementPolicyParams {
+                    span_access_history: serde_json::from_slice(&fs::read(SPAN_ACCESS_STATS_FILE).unwrap()).unwrap(),
                 }
             },
             ManagerNodeRequest::SpanAccessStats(mut stats) => {
