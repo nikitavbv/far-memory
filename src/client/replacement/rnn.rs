@@ -16,10 +16,11 @@ struct RNNModel {
 }
 
 impl RNNModel {
-    pub fn new(vs: VarBuilder, classes: usize) -> Self {
+    pub fn new(vs: VarBuilder, total_spans: usize) -> Self {
+        // span = class, so total_spans is number of classes.
         let lstm_output_dim = 10;
-        let lstm = lstm(classes, lstm_output_dim, LSTMConfig::default(), vs.clone()).unwrap();
-        let linear = linear(lstm_output_dim, classes, vs).unwrap();
+        let lstm = lstm(total_spans, lstm_output_dim, LSTMConfig::default(), vs.clone()).unwrap();
+        let linear = linear(lstm_output_dim, total_spans, vs).unwrap();
 
         Self {
             lstm_output_dim,
@@ -43,6 +44,9 @@ pub fn rnn_training_test() {
     let varmap = VarMap::new();
     let vs = VarBuilder::from_varmap(&varmap, DType::F32, &dev);
 
+    // TODO: load span access history and use it as data.
+
+    // improve code below
     let data: Vec<u32> = vec![1, 2, 3, 77, 45, 32, 1, 2, 3, 23, 44, 67, 89, 1, 2, 3, 123, 456, 28, 29, 1, 2, 3, 45, 32, 42, 1];
     let predictions = {
         let mut data = data.clone();
