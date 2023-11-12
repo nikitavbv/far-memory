@@ -9,8 +9,9 @@ pub use {
     replay::RemoteReplayReplacementPolicy,
 };
 
-mod tracking;
 mod replay;
+mod rnn;
+mod tracking;
 
 pub trait ReplacementPolicy: Send + Sync {
     fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId;
@@ -227,4 +228,8 @@ impl ReplacementPolicy for ReplayReplacementPolicy {
             fs::write(&self.history_file_path, &serde_json::to_vec(&*self.history.read().unwrap()).unwrap()).unwrap();
         }
     }
+}
+
+pub fn run_replacement_policies_demo() {
+    rnn::rnn_training_test();
 }

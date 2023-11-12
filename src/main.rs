@@ -7,6 +7,7 @@ use {
         thesis::build_thesis,
         storage::run_storage_server,
         manager::run_manager_node,
+        client::run_replacement_policies_demo,
         demo::{
             llm_inference::run_llm_inference_demo,
             benchmark::run_benchmark,
@@ -72,6 +73,9 @@ pub struct Args {
 
     #[arg(long)]
     block_device_demo: bool,
+
+    #[arg(long)]
+    replacement_policies_demo: bool,
 
     // thesis
     #[arg(long)]
@@ -169,6 +173,8 @@ pub fn main() {
         );
     } else if args.manager {
         run_manager_node(read_token());
+    } else if args.replacement_policies_demo {
+        run_replacement_policies_demo();
     } else if args.thesis || args.card || args.docs || args.practice_report {
         build_thesis(&args);
     }
