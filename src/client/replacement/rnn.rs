@@ -45,6 +45,7 @@ pub fn rnn_training_test() {
 }
 
 fn rnn_training() {
+    // of course, this implementation is not optimal. The goal here is to demonstrate the idea.
     let dev = Device::cuda_if_available(0).unwrap();
     let varmap = VarMap::new();
     let vs = VarBuilder::from_varmap(&varmap, DType::F32, &dev);
@@ -59,7 +60,7 @@ fn rnn_training() {
         data
     };
     let predictions_len = predictions.len();
-    let predictions = one_hot_encode(total_classes, predictions).into_iter().flatten().collect();
+    let predictions = one_hot_encode(total_classes, &predictions).into_iter().flatten().collect();
     let predictions = Tensor::from_vec(predictions, &[1, predictions_len, total_classes], &dev).unwrap();
 
     let data = {
@@ -69,41 +70,50 @@ fn rnn_training() {
         data
     };
     let data_len = data.len();
-    let data = one_hot_encode(total_classes, data).into_iter().flatten().collect();
-    let data = Tensor::from_vec(data, &[1, data_len, total_classes], &dev).unwrap();
+    let data_tensor = one_hot_encode(total_classes, &data).into_iter().flatten().collect();
+    let data_tensor = Tensor::from_vec(data_tensor, &[1, data_len, total_classes], &dev).unwrap();
 
     let model = RNNModel::new(vs.clone(), total_classes);
     let mut adam = candle_nn::AdamW::new_lr(varmap.all_vars(), 0.01).unwrap();
 
     // train
     for _epoch in 0..1000 {
-        let output = model.forward(&data).reshape((1, data_len, total_classes)).unwrap();
+        let output = model.forward(&data_tensor).reshape((1, data_len, total_classes)).unwrap();
         let loss = loss::mse(&output, &predictions).unwrap();
         adam.backward_step(&loss).unwrap();
 
-        if loss.to_vec0::<f32>().unwrap() < 0.001 {
+        if loss.to_vec0::<f32>().unwrap() < 0.005 {
             break;
         }
 
         println!("loss: {:?}", loss);
     }
 
-    // TODO: test
+    // test
+    let mut correct_predictions = 0;
 
-    /*let result = model.forward(&Tensor::from_vec(one_hot_encode(&keys, vec![77, 45, 1, 2, 3, 77, 45, 32, 1, 2]).into_iter().flatten().collect(), &[1, 10, classes], &dev).unwrap()).to_vec2::<f32>().unwrap();
-    let result = &result[result.len() - 1];
-    let result = result.iter()
-        .enumerate()
-        .max_by(|(_, a), (_, b)| a.total_cmp(b))
-        .map(|(index, _)| index)
-        .unwrap();
-    let result = keys[result];
-    println!("output: {:?}", result);*/
+    for i in 1..data_len-1 {
+        let input = one_hot_encode(total_classes, &data[0..i]).into_iter().flatten().collect();
+        let input = Tensor::from_vec(input, &[1, i, total_classes], &dev).unwrap();
+        let result = model.forward(&input).to_vec2::<f32>().unwrap();
+        let result = &result[result.len() - 1];
+        let result = result.iter()
+            .enumerate()
+            .max_by(|(_, a), (_, b)| a.total_cmp(b))
+            .map(|(index, _)| index)
+            .unwrap();
+
+        if result as u64 == data[i + 1] {
+            correct_predictions += 1;
+        }
+
+        println!("{} {} {}", result, data[i + 1], correct_predictions);
+    }
 }
 
-fn one_hot_encode(total_classes: usize, data: Vec<u64>) -> Vec<Vec<f32>> {
+fn one_hot_encode(total_classes: usize, data: &[u64]) -> Vec<Vec<f32>> {
     let mut result = Vec::new();
-    for item in &data {
+    for item in data {
         let mut entry = vec![0.0; total_classes];
         entry[*item as usize] = 1.0;
         result.push(entry);
