@@ -25,17 +25,19 @@ pub fn far_memory_method() -> Block {
         paragraph("Неможливо зробити доступ до віддаленої памʼяті таким саме швидким як доступ до оперативної памʼяті (у умовах, коли пристрій зберігання є повільним). Але має сенс мінімізувати \
 затримку доступу до даних до того рівня, який є прийнятним для використання на практиці. Існує баланс між тим наскільки активно віддалена памʼять використовується програмним забезпеченням (\
 скільки даних та якого типу в ній зберігається) та негативним ефектом на швидкодію програмного забезпечення. Доцільність використання віддаленої памʼяті та параметрів її роботи є відповідальністю \
-розробника прикладного програмного забезпечення. Конфігурація обирається..."),
-        // tell about optimizing network requests (why TCP (also, why nodelay is used and duplex) is used and not UDP, or http or some kind of existing RPC implementation).
+розробника прикладного програмного забезпечення. Конфігурація віддаленої памʼяті обирається розробником базуючись на вимогах щодо швидкодії програмного забезпечення, його особливостях роботи \
+з памʼяттю та характеристках апаратного забезпечення (наприклад, швидкість мережі)."),
+        paragraph("Як було зазначено раніше, проміжки у віддаленій памʼяті ..."),
+        // tell about optimizing network requests (why TCP (also, why nodelay is used and duplex) is used and not UDP, or http or some kind of existing RPC implementation). Tell about latency/bandwidth and userspace networking (it is not needed).
         // tell about reasoning behind partial swap in/swap out. tell why compression is not used. tell why copies should be avoided. tell a bit about size classes.
         // tell about background swap in and swap out threads and how synchronization should be performed.
         // explain what is the key in minimizing latency (keeping all the needed memory locally and moving it quickly) - like explained in the docs.
-        // tell that only 3 out of 5 data shards are needed to minimize latency when restoring data.
         // tell about policies to evict and pre-fetch spans (and how those use stats collected, heuristics, FSM, ML models, including RNN). explain why grouping objects in spans is effective. explain why it is important to reduce fragmentation and how it can be
         // achieved. tell about compaction.
         // explain what typical performance numbers are in various environments.
         // tell about page placement algorithms
         // explain how different software accesses memory. Tell how "ideal" policy works. Tell why "least recently used" can be a bad policy in some cases.
+        // tell how performance is analyzed using tracing.
 
         Block::SubsectionHeader(SubsectionHeaderBlock::without_numbering("Висновки до розділу".to_owned())),
         // general conclusions

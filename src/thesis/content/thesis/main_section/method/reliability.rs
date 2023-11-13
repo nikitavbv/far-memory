@@ -28,5 +28,6 @@ SSD диск (якщо він використовується як бекенд
 шарди (частини) даних до існуючих реалізацій бекендів (наприклад NetworkNodeBackend)."),
         // tell about replication to remote nodes and local SSDs and erasure coding. Tell how exactly data will be restored and deleted. Explain that failure domain becomes larger when far memory is used.
         // tell about healthchecks.
+        // tell about reconnects.
     ])
 }
