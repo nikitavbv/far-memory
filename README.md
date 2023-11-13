@@ -1,5 +1,7 @@
 # far memory
 
+"download more ram" by seamlessly (almost) extending local memory with memory of remote nodes.
+
 Documentation can be found on [nikitavbv.github.io/far-memory](https://nikitavbv.github.io/far-memory).
 
 features:
