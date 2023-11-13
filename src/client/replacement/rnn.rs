@@ -1,8 +1,9 @@
 use {
     std::{collections::HashSet, fs, thread},
-    tracing::info,
+    tracing::{info, span, Level},
     candle_core::{Device, DType, Tensor},
     candle_nn::{rnn::{lstm, LSTMConfig, RNN, LSTM}, VarMap, VarBuilder, linear, Linear, Module, ops, loss, Optimizer},
+    rand::seq::SliceRandom,
     crate::manager::SpanAccessEvent,
 };
 
@@ -59,9 +60,6 @@ fn rnn_training() {
         data.remove(0);
         data
     };
-    let predictions_len = predictions.len();
-    let predictions = one_hot_encode(total_classes, &predictions).into_iter().flatten().collect();
-    let predictions = Tensor::from_vec(predictions, &[1, predictions_len, total_classes], &dev).unwrap();
 
     let data = {
         // remove last entry because we do not have prediction for it
@@ -69,30 +67,49 @@ fn rnn_training() {
         data.remove(data.len() - 1);
         data
     };
-    let data_len = data.len();
-    let data_tensor = one_hot_encode(total_classes, &data).into_iter().flatten().collect();
-    let data_tensor = Tensor::from_vec(data_tensor, &[1, data_len, total_classes], &dev).unwrap();
 
     let model = RNNModel::new(vs.clone(), total_classes);
     let mut adam = candle_nn::AdamW::new_lr(varmap.all_vars(), 0.01).unwrap();
 
     // train
-    for _epoch in 0..1000 {
-        let output = model.forward(&data_tensor).reshape((1, data_len, total_classes)).unwrap();
-        let loss = loss::mse(&output, &predictions).unwrap();
-        adam.backward_step(&loss).unwrap();
+    let window_size = 100;
+    for epoch in 0..1000 {
+        span!(Level::DEBUG, "training epoch", epoch = epoch).in_scope(|| {
+            let mut starting_points: Vec<usize> = (0..data.len()-window_size-1).collect();
+            starting_points.shuffle(&mut rand::thread_rng());
 
-        if loss.to_vec0::<f32>().unwrap() < 0.005 {
-            break;
-        }
+            let mut total_loss = 0.0;
+            let mut batch = 0;
 
-        println!("loss: {:?}", loss);
+            for point in &starting_points {
+                span!(Level::DEBUG, "batch", point, batch, total_batches = starting_points.len()).in_scope(|| {
+                    let (input_data, output_data) = span!(Level::DEBUG, "prepare data").in_scope(|| {
+                        let input_data = one_hot_encode(total_classes, &data[*point..point+window_size]).into_iter().flatten().collect();
+                        let input_data = Tensor::from_vec(input_data, &[1, window_size, total_classes], &dev).unwrap();
+
+                        let output_data = one_hot_encode(total_classes, &predictions[point + 1..point + 1 + window_size]).into_iter().flatten().collect();
+                        let output_data = Tensor::from_vec(output_data, &[1, window_size, total_classes], &dev).unwrap();
+
+                        (input_data, output_data)
+                    });
+
+                    let output = span!(Level::DEBUG, "model forward").in_scope(|| model.forward(&input_data).reshape((1, window_size, total_classes)).unwrap());
+                    let loss = loss::mse(&output, &output_data).unwrap();
+                    adam.backward_step(&loss).unwrap();
+
+                    total_loss += loss.to_vec0::<f32>().unwrap();
+                });
+                batch += 1;
+            }
+
+            println!("epoch: {}, loss: {}", epoch, total_loss);
+        });
     }
 
     // test
     let mut correct_predictions = 0;
 
-    for i in 1..data_len-1 {
+    for i in 1..data.len()-1 {
         let input = one_hot_encode(total_classes, &data[0..i]).into_iter().flatten().collect();
         let input = Tensor::from_vec(input, &[1, i, total_classes], &dev).unwrap();
         let result = model.forward(&input).to_vec2::<f32>().unwrap();
