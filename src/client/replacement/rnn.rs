@@ -1,8 +1,9 @@
 use {
-    std::collections::HashSet,
+    std::{collections::HashSet, fs, thread},
     tracing::info,
-    candle_core::{Device, DType, Tensor, D},
+    candle_core::{Device, DType, Tensor},
     candle_nn::{rnn::{lstm, LSTMConfig, RNN, LSTM}, VarMap, VarBuilder, linear, Linear, Module, ops, loss, Optimizer},
+    crate::manager::SpanAccessEvent,
 };
 
 pub struct RnnReplacementPolicy {
@@ -40,43 +41,56 @@ impl RNNModel {
 pub fn rnn_training_test() {
     info!("running rnn training");
 
+    thread::Builder::new().stack_size(32 * 1024 * 1024).spawn(rnn_training).unwrap().join().unwrap();
+}
+
+fn rnn_training() {
     let dev = Device::cuda_if_available(0).unwrap();
     let varmap = VarMap::new();
     let vs = VarBuilder::from_varmap(&varmap, DType::F32, &dev);
 
-    // TODO: load span access history and use it as data.
+    let data: Vec<SpanAccessEvent> = serde_json::from_slice(&fs::read("./data/span_access_stats.json").unwrap()).unwrap();
+    let data: Vec<u64> = data.iter().map(|v| v.span_id).collect();
 
-    // improve code below
-    let data: Vec<u32> = vec![1, 2, 3, 77, 45, 32, 1, 2, 3, 23, 44, 67, 89, 1, 2, 3, 123, 456, 28, 29, 1, 2, 3, 45, 32, 42, 1];
+    let total_classes = *data.iter().max().unwrap() as usize + 1; // +1 because start at zero
     let predictions = {
         let mut data = data.clone();
         data.remove(0);
-        data.push(2);
         data
     };
-    let mut keys: Vec<_> = data.iter().chain(predictions.iter()).collect::<HashSet<_>>().into_iter().cloned().collect();
-    keys.sort();
-
-    let data_len = data.len();
-    let classes = data.iter().collect::<HashSet<_>>().len();
-    let data: Vec<f32> = one_hot_encode(&keys, data).into_iter().flatten().collect();
-    let data = Tensor::from_vec(data.clone(), &[1, data_len, classes], &dev).unwrap();
-
     let predictions_len = predictions.len();
-    let predictions: Vec<f32> = one_hot_encode(&keys, predictions).into_iter().flatten().collect();
-    let predictions = Tensor::from_vec(predictions.clone(), &[1, predictions_len, classes], &dev).unwrap();
+    let predictions = one_hot_encode(total_classes, predictions).into_iter().flatten().collect();
+    let predictions = Tensor::from_vec(predictions, &[1, predictions_len, total_classes], &dev).unwrap();
 
-    let model = RNNModel::new(vs.clone(), classes);
+    let data = {
+        // remove last entry because we do not have prediction for it
+        let mut data = data;
+        data.remove(data.len() - 1);
+        data
+    };
+    let data_len = data.len();
+    let data = one_hot_encode(total_classes, data).into_iter().flatten().collect();
+    let data = Tensor::from_vec(data, &[1, data_len, total_classes], &dev).unwrap();
+
+    let model = RNNModel::new(vs.clone(), total_classes);
     let mut adam = candle_nn::AdamW::new_lr(varmap.all_vars(), 0.01).unwrap();
+
+    // train
     for _epoch in 0..1000 {
-        let output = model.forward(&data).reshape((1, 27, 15)).unwrap();
+        let output = model.forward(&data).reshape((1, data_len, total_classes)).unwrap();
         let loss = loss::mse(&output, &predictions).unwrap();
         adam.backward_step(&loss).unwrap();
+
+        if loss.to_vec0::<f32>().unwrap() < 0.001 {
+            break;
+        }
 
         println!("loss: {:?}", loss);
     }
 
-    let result = model.forward(&Tensor::from_vec(one_hot_encode(&keys, vec![77, 45, 1, 2, 3, 77, 45, 32, 1, 2]).into_iter().flatten().collect(), &[1, 10, classes], &dev).unwrap()).to_vec2::<f32>().unwrap();
+    // TODO: test
+
+    /*let result = model.forward(&Tensor::from_vec(one_hot_encode(&keys, vec![77, 45, 1, 2, 3, 77, 45, 32, 1, 2]).into_iter().flatten().collect(), &[1, 10, classes], &dev).unwrap()).to_vec2::<f32>().unwrap();
     let result = &result[result.len() - 1];
     let result = result.iter()
         .enumerate()
@@ -84,14 +98,14 @@ pub fn rnn_training_test() {
         .map(|(index, _)| index)
         .unwrap();
     let result = keys[result];
-    println!("output: {:?}", result);
+    println!("output: {:?}", result);*/
 }
 
-fn one_hot_encode(key: &Vec<u32>, data: Vec<u32>) -> Vec<Vec<f32>> {
+fn one_hot_encode(total_classes: usize, data: Vec<u64>) -> Vec<Vec<f32>> {
     let mut result = Vec::new();
     for item in &data {
-        let mut entry = vec![0.0; key.len()];
-        entry[key.iter().position(|v| v == item).unwrap()] = 1.0;
+        let mut entry = vec![0.0; total_classes];
+        entry[*item as usize] = 1.0;
         result.push(entry);
     }
 
