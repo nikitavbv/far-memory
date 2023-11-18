@@ -1,5 +1,5 @@
 use {
-    std::{collections::HashSet, fs, thread},
+    std::{collections::HashSet, fs, thread, time::Instant},
     tracing::{info, span, Level},
     candle_core::{Device, DType, Tensor},
     candle_nn::{rnn::{lstm, LSTMConfig, RNN, LSTM}, VarMap, VarBuilder, linear, Linear, Module, ops, loss, Optimizer},
@@ -74,6 +74,7 @@ fn rnn_training() {
     // train
     let window_size = 100;
     for epoch in 0..1000 {
+        let started_at = Instant::now();
         span!(Level::DEBUG, "training epoch", epoch = epoch).in_scope(|| {
             let mut starting_points: Vec<usize> = (0..data.len()-window_size-1).collect();
             starting_points.shuffle(&mut rand::thread_rng());
@@ -95,14 +96,21 @@ fn rnn_training() {
 
                     let output = span!(Level::DEBUG, "model forward").in_scope(|| model.forward(&input_data).reshape((1, window_size, total_classes)).unwrap());
                     let loss = loss::mse(&output, &output_data).unwrap();
-                    adam.backward_step(&loss).unwrap();
+                    span!(Level::DEBUG, "optimizer step").in_scope(|| adam.backward_step(&loss).unwrap());
 
                     total_loss += loss.to_vec0::<f32>().unwrap();
+
+                    span!(Level::DEBUG, "drop data").in_scope(move || {
+                       std::mem::drop(input_data);
+                       std::mem::drop(output_data);
+                       std::mem::drop(output);
+                       std::mem::drop(loss);
+                    });
                 });
                 batch += 1;
             }
 
-            println!("epoch: {}, loss: {}", epoch, total_loss);
+            println!("epoch: {}, loss: {}, time per epoch: {}", epoch, total_loss, (Instant::now() - started_at).as_secs());
         });
     }
 
