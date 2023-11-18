@@ -5,8 +5,9 @@ use {
 };
 
 pub use {
-    tracking::TrackingReplacementPolicy,
     replay::RemoteReplayReplacementPolicy,
+    rnn::RnnReplacementPolicy,
+    tracking::TrackingReplacementPolicy,
 };
 
 mod replay;

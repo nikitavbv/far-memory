@@ -20,6 +20,7 @@ pub enum ManagerNodeResponse {
 #[derive(Serialize, Deserialize)]
 pub enum ReplacementPolicyType {
     Replay,
+    RNN,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -31,4 +32,5 @@ pub struct SpanAccessEvent {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ReplacementPolicyParams {
     pub span_access_history: Option<Vec<SpanAccessEvent>>,
+    pub rnn_weights: Option<Vec<u8>>,
 }

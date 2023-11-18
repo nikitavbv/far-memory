@@ -1,6 +1,7 @@
 use {
     std::{net::TcpListener, io::{Read, Write}, fs},
     tracing::{info, error},
+    crate::client::RnnReplacementPolicy,
     self::protocol::{ManagerNodeRequest, ManagerNodeResponse, ReplacementPolicyType, ReplacementPolicyParams},
 };
 
@@ -99,10 +100,17 @@ impl Server {
                     return ManagerNodeResponse::Forbidden;
                 }
 
+                let span_access_history = fs::read(SPAN_ACCESS_STATS_FILE).ok().map(|v| serde_json::from_slice(&v).unwrap());
+
                 match policy_type {
                     ReplacementPolicyType::Replay => ManagerNodeResponse::ReplacementPolicyParams(ReplacementPolicyParams {
-                        span_access_history: fs::read(SPAN_ACCESS_STATS_FILE).ok().map(|v| serde_json::from_slice(&v).unwrap()),
-                    })
+                        span_access_history,
+                        rnn_weights: None,
+                    }),
+                    ReplacementPolicyType::RNN => ManagerNodeResponse::ReplacementPolicyParams(ReplacementPolicyParams {
+                        span_access_history: None,
+                        rnn_weights: span_access_history.map(RnnReplacementPolicy::train_rnn_model),
+                    }),
                 }
             },
             ManagerNodeRequest::SpanAccessStats(mut stats) => {

@@ -130,5 +130,6 @@ Rust."),
         // tell about page placement algorithms
         // explain how different software accesses memory. Tell how "ideal" policy works. Tell why "least recently used" can be a bad policy in some cases.
         // tell how performance is analyzed using tracing.
+        // tell about offline evaluation
     ])
 }

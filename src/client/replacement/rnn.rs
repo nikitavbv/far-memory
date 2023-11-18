@@ -10,26 +10,45 @@ use {
 pub struct RnnReplacementPolicy {
 }
 
+impl RnnReplacementPolicy {
+    pub fn new() -> Self {
+        Self {
+        }
+    }
+
+    pub fn train_rnn_model(data: Vec<SpanAccessEvent>) -> Vec<u8> {
+        train_rnn_model(data).export_weights()
+    }
+}
+
 struct RNNModel {
     lstm_output_dim: usize,
 
+    varmap: VarMap,
     lstm: LSTM,
     linear: Linear,
 }
 
 impl RNNModel {
-    pub fn new(vs: VarBuilder, total_spans: usize) -> Self {
+    pub fn new(varmap: VarMap, vs: VarBuilder, total_spans: usize) -> Self {
         // span = class, so total_spans is number of classes.
         let lstm_output_dim = 10;
         let lstm = lstm(total_spans, lstm_output_dim, LSTMConfig::default(), vs.clone()).unwrap();
         let linear = linear(lstm_output_dim, total_spans, vs).unwrap();
 
-        Self {
+         Self {
             lstm_output_dim,
 
+            varmap,
             lstm,
             linear,
         }
+    }
+
+    pub fn export_weights(&self) -> Vec<u8> {
+        let path = "./data/rnn_weights.safetensors";
+        self.varmap.save(path).unwrap();
+        std::fs::read(path).unwrap()
     }
 
     pub fn forward(&self, data: &Tensor) -> Tensor {
@@ -39,19 +58,14 @@ impl RNNModel {
     }
 }
 
-pub fn rnn_training_test() {
+fn train_rnn_model(data: Vec<SpanAccessEvent>) -> RNNModel {
     info!("running rnn training");
 
-    thread::Builder::new().stack_size(32 * 1024 * 1024).spawn(rnn_training).unwrap().join().unwrap();
-}
-
-fn rnn_training() {
     // of course, this implementation is not optimal. The goal here is to demonstrate the idea.
     let dev = Device::cuda_if_available(0).unwrap();
     let varmap = VarMap::new();
     let vs = VarBuilder::from_varmap(&varmap, DType::F32, &dev);
 
-    let data: Vec<SpanAccessEvent> = serde_json::from_slice(&fs::read("./data/span_access_stats.json").unwrap()).unwrap();
     let data: Vec<u64> = data.iter().map(|v| v.span_id).collect();
 
     let total_classes = *data.iter().max().unwrap() as usize + 1; // +1 because start at zero
@@ -68,8 +82,8 @@ fn rnn_training() {
         data
     };
 
-    let model = RNNModel::new(vs.clone(), total_classes);
-    let mut adam = candle_nn::AdamW::new_lr(varmap.all_vars(), 0.01).unwrap();
+    let model = RNNModel::new(varmap.clone(), vs.clone(), total_classes);
+    let mut adam = candle_nn::AdamW::new_lr(varmap.all_vars(), 0.1).unwrap();
 
     // train
     let window_size = 100;
@@ -110,7 +124,29 @@ fn rnn_training() {
                 batch += 1;
             }
 
-            println!("epoch: {}, loss: {}, time per epoch: {}", epoch, total_loss, (Instant::now() - started_at).as_secs());
+            // not good to do this without test set, but good for now anyway.
+            let mut test_starting_points: Vec<usize> = (0..data.len()-window_size-1).collect();
+            test_starting_points.shuffle(&mut rand::thread_rng());
+
+            let mut correct_predictions = 0;
+            for point in &test_starting_points {
+                let input_data = one_hot_encode(total_classes, &data[*point..point+window_size]).into_iter().flatten().collect();
+                let input_data = Tensor::from_vec(input_data, &[1, window_size, total_classes], &dev).unwrap();
+
+                let output_data = model.forward(&input_data).to_vec2::<f32>().unwrap();
+                let output_data = &output_data[output_data.len() - 1];
+                let result = output_data.iter()
+                    .enumerate()
+                    .max_by(|(_, a), (_, b)| a.total_cmp(b))
+                    .map(|(index, _)| index)
+                    .unwrap();
+
+                if result as u64 == data[point + 1] {
+                    correct_predictions += 1;
+                }
+            }
+
+            println!("epoch: {}, loss: {}, test accuracy: {}%, time per epoch: {}", epoch, total_loss, (correct_predictions as f32 / test_starting_points.len() as f32 * 100.0) as u32, (Instant::now() - started_at).as_secs());
         });
     }
 
@@ -134,6 +170,13 @@ fn rnn_training() {
 
         println!("{} {} {}", result, data[i + 1], correct_predictions);
     }
+
+    model
+}
+
+pub fn rnn_training_test() {
+    let data: Vec<SpanAccessEvent> = serde_json::from_slice(&fs::read("./data/span_access_stats.json").unwrap()).unwrap();
+    train_rnn_model(data);
 }
 
 fn one_hot_encode(total_classes: usize, data: &[u64]) -> Vec<Vec<f32>> {

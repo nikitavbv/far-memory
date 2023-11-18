@@ -24,6 +24,7 @@ pub use self::{
       PreferRemoteSpansReplacementPolicy,
       ReplayReplacementPolicy,
       RemoteReplayReplacementPolicy,
+      RnnReplacementPolicy,
       run_replacement_policies_demo,
     },
 };
