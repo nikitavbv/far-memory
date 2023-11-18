@@ -66,8 +66,8 @@ impl FarMemoryClient {
         self.manager = Arc::new(Some(manager));
     }
 
-    pub fn use_replacement_policy(&mut self, eviction_policy: Box<dyn ReplacementPolicy>) {
-        self.replacement_policy = Arc::new(eviction_policy);
+    pub fn use_replacement_policy(&mut self, replacement_policy: Box<dyn ReplacementPolicy>) {
+        self.replacement_policy = Arc::new(replacement_policy);
     }
 
     pub fn track_metrics(&mut self, registry: Registry) {

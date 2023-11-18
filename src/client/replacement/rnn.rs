@@ -4,20 +4,45 @@ use {
     candle_core::{Device, DType, Tensor},
     candle_nn::{rnn::{lstm, LSTMConfig, RNN, LSTM}, VarMap, VarBuilder, linear, Linear, Module, ops, loss, Optimizer},
     rand::seq::SliceRandom,
-    crate::manager::SpanAccessEvent,
+    crate::manager::{SpanAccessEvent, ManagerClient},
+    super::{ReplacementPolicy, SpanId},
 };
 
 pub struct RnnReplacementPolicy {
 }
 
 impl RnnReplacementPolicy {
-    pub fn new() -> Self {
+    pub fn new(manager: ManagerClient, fallback: Box<dyn ReplacementPolicy>) -> Self {
+        // todo: tracking replacement policy needs to be reused somehow
+
         Self {
         }
     }
 
     pub fn train_rnn_model(data: Vec<SpanAccessEvent>) -> Vec<u8> {
         train_rnn_model(data).export_weights()
+    }
+}
+
+impl ReplacementPolicy for RnnReplacementPolicy {
+    fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId {
+        unimplemented!()
+    }
+
+    fn on_span_access(&self, span_id: &SpanId) {
+        unimplemented!()
+    }
+
+    fn on_span_swap_out(&self, span_id: &SpanId) {
+        unimplemented!()
+    }
+
+    fn on_span_swap_in(&self, span_id: &SpanId) {
+        unimplemented!()
+    }
+
+    fn on_stop(&self) {
+        unimplemented!()
     }
 }
 
