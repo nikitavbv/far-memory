@@ -65,8 +65,8 @@ impl Client {
         self.span_access_stats.lock().unwrap().push(SpanAccessStatsEntry { span_id: span_id.clone(), time_step });
     }
 
-    pub fn get_replacement_policy_params(&self) -> ReplacementPolicyParams {
-        match self.request(ManagerNodeRequest::GetReplacementPolicyParams(ReplacementPolicyType::Replay)) {
+    pub fn get_replacement_policy_params(&self, replacement_policy_type: ReplacementPolicyType) -> ReplacementPolicyParams {
+        match self.request(ManagerNodeRequest::GetReplacementPolicyParams(replacement_policy_type)) {
             ManagerNodeResponse::ReplacementPolicyParams(params) => params,
             other => panic!("unexpected get replacement policy params response: {:?}", other),
         }

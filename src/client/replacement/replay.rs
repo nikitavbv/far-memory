@@ -1,7 +1,7 @@
 use {
     std::sync::{atomic::{AtomicU64, Ordering}, RwLock},
     crate::{
-        manager::{ManagerClient, SpanAccessEvent},
+        manager::{ManagerClient, SpanAccessEvent, ReplacementPolicyType},
         client::SpanId,
     },
     super::ReplacementPolicy,
@@ -17,7 +17,7 @@ pub struct RemoteReplayReplacementPolicy {
 
 impl RemoteReplayReplacementPolicy {
     pub fn new(manager: ManagerClient, fallback: Box<dyn ReplacementPolicy>) -> Self {
-        let params = manager.get_replacement_policy_params().span_access_history;
+        let params = manager.get_replacement_policy_params(ReplacementPolicyType::Replay).span_access_history;
 
         Self {
             manager,

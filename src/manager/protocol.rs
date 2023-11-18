@@ -32,5 +32,11 @@ pub struct SpanAccessEvent {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ReplacementPolicyParams {
     pub span_access_history: Option<Vec<SpanAccessEvent>>,
-    pub rnn_weights: Option<Vec<u8>>,
+    pub rnn_weights: Option<RNNWeights>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RNNWeights {
+    pub total_spans: u64,
+    pub weights: Vec<u8>,
 }

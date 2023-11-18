@@ -4,18 +4,24 @@ use {
     candle_core::{Device, DType, Tensor},
     candle_nn::{rnn::{lstm, LSTMConfig, RNN, LSTM}, VarMap, VarBuilder, linear, Linear, Module, ops, loss, Optimizer},
     rand::seq::SliceRandom,
-    crate::manager::{SpanAccessEvent, ManagerClient},
+    crate::manager::{SpanAccessEvent, ManagerClient, ReplacementPolicyType},
     super::{ReplacementPolicy, SpanId},
 };
 
 pub struct RnnReplacementPolicy {
+    fallback: Box<dyn ReplacementPolicy>,
+    model: Option<RNNModel>,
 }
 
 impl RnnReplacementPolicy {
     pub fn new(manager: ManagerClient, fallback: Box<dyn ReplacementPolicy>) -> Self {
         // todo: tracking replacement policy needs to be reused somehow
+        let model = manager.get_replacement_policy_params(ReplacementPolicyType::RNN).rnn_weights;
+        let model = model.map(|weights| RNNModel::from_weights(weights.total_spans, Device::cuda_if_available(0).unwrap(), weights.weights));
 
         Self {
+            fallback,
+            model,
         }
     }
 
@@ -55,11 +61,11 @@ struct RNNModel {
 }
 
 impl RNNModel {
-    pub fn new(varmap: VarMap, vs: VarBuilder, total_spans: usize) -> Self {
+    pub fn new(varmap: VarMap, vs: VarBuilder, total_spans: u64) -> Self {
         // span = class, so total_spans is number of classes.
         let lstm_output_dim = 10;
-        let lstm = lstm(total_spans, lstm_output_dim, LSTMConfig::default(), vs.clone()).unwrap();
-        let linear = linear(lstm_output_dim, total_spans, vs).unwrap();
+        let lstm = lstm(total_spans as usize, lstm_output_dim, LSTMConfig::default(), vs.clone()).unwrap();
+        let linear = linear(lstm_output_dim, total_spans as usize, vs).unwrap();
 
          Self {
             lstm_output_dim,
@@ -68,6 +74,18 @@ impl RNNModel {
             lstm,
             linear,
         }
+    }
+
+    pub fn from_weights(total_spans: u64, dev: Device, weights: Vec<u8>) -> Self {
+        let mut varmap = VarMap::new();
+
+        let path = "./data/rnn_weights.safetensors";
+        std::fs::write(path, weights).unwrap();
+        varmap.load(path).unwrap();
+
+        let vs = VarBuilder::from_varmap(&varmap, DType::F32, &dev);
+
+        Self::new(varmap, vs, total_spans)
     }
 
     pub fn export_weights(&self) -> Vec<u8> {
@@ -93,7 +111,7 @@ fn train_rnn_model(data: Vec<SpanAccessEvent>) -> RNNModel {
 
     let data: Vec<u64> = data.iter().map(|v| v.span_id).collect();
 
-    let total_classes = *data.iter().max().unwrap() as usize + 1; // +1 because start at zero
+    let total_classes = *data.iter().max().unwrap() + 1; // +1 because start at zero
     let predictions = {
         let mut data = data.clone();
         data.remove(0);
@@ -125,15 +143,15 @@ fn train_rnn_model(data: Vec<SpanAccessEvent>) -> RNNModel {
                 span!(Level::DEBUG, "batch", point, batch, total_batches = starting_points.len()).in_scope(|| {
                     let (input_data, output_data) = span!(Level::DEBUG, "prepare data").in_scope(|| {
                         let input_data = one_hot_encode(total_classes, &data[*point..point+window_size]).into_iter().flatten().collect();
-                        let input_data = Tensor::from_vec(input_data, &[1, window_size, total_classes], &dev).unwrap();
+                        let input_data = Tensor::from_vec(input_data, &[1, window_size, total_classes as usize], &dev).unwrap();
 
                         let output_data = one_hot_encode(total_classes, &predictions[point + 1..point + 1 + window_size]).into_iter().flatten().collect();
-                        let output_data = Tensor::from_vec(output_data, &[1, window_size, total_classes], &dev).unwrap();
+                        let output_data = Tensor::from_vec(output_data, &[1, window_size, total_classes as usize], &dev).unwrap();
 
                         (input_data, output_data)
                     });
 
-                    let output = span!(Level::DEBUG, "model forward").in_scope(|| model.forward(&input_data).reshape((1, window_size, total_classes)).unwrap());
+                    let output = span!(Level::DEBUG, "model forward").in_scope(|| model.forward(&input_data).reshape((1, window_size, total_classes as usize)).unwrap());
                     let loss = loss::mse(&output, &output_data).unwrap();
                     span!(Level::DEBUG, "optimizer step").in_scope(|| adam.backward_step(&loss).unwrap());
 
@@ -156,7 +174,7 @@ fn train_rnn_model(data: Vec<SpanAccessEvent>) -> RNNModel {
             let mut correct_predictions = 0;
             for point in &test_starting_points {
                 let input_data = one_hot_encode(total_classes, &data[*point..point+window_size]).into_iter().flatten().collect();
-                let input_data = Tensor::from_vec(input_data, &[1, window_size, total_classes], &dev).unwrap();
+                let input_data = Tensor::from_vec(input_data, &[1, window_size, total_classes as usize], &dev).unwrap();
 
                 let output_data = model.forward(&input_data).to_vec2::<f32>().unwrap();
                 let output_data = &output_data[output_data.len() - 1];
@@ -180,7 +198,7 @@ fn train_rnn_model(data: Vec<SpanAccessEvent>) -> RNNModel {
 
     for i in 1..data.len()-1 {
         let input = one_hot_encode(total_classes, &data[0..i]).into_iter().flatten().collect();
-        let input = Tensor::from_vec(input, &[1, i, total_classes], &dev).unwrap();
+        let input = Tensor::from_vec(input, &[1, i, total_classes as usize], &dev).unwrap();
         let result = model.forward(&input).to_vec2::<f32>().unwrap();
         let result = &result[result.len() - 1];
         let result = result.iter()
@@ -204,10 +222,10 @@ pub fn rnn_training_test() {
     train_rnn_model(data);
 }
 
-fn one_hot_encode(total_classes: usize, data: &[u64]) -> Vec<Vec<f32>> {
+fn one_hot_encode(total_classes: u64, data: &[u64]) -> Vec<Vec<f32>> {
     let mut result = Vec::new();
     for item in data {
-        let mut entry = vec![0.0; total_classes];
+        let mut entry = vec![0.0; total_classes as usize];
         entry[*item as usize] = 1.0;
         result.push(entry);
     }

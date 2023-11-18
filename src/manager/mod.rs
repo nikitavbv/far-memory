@@ -2,10 +2,10 @@ use {
     std::{net::TcpListener, io::{Read, Write}, fs},
     tracing::{info, error},
     crate::client::RnnReplacementPolicy,
-    self::protocol::{ManagerNodeRequest, ManagerNodeResponse, ReplacementPolicyType, ReplacementPolicyParams},
+    self::protocol::{ManagerNodeRequest, ManagerNodeResponse, ReplacementPolicyParams},
 };
 
-pub use self::{client::Client as ManagerClient, protocol::SpanAccessEvent};
+pub use self::{client::Client as ManagerClient, protocol::{SpanAccessEvent, ReplacementPolicyType, RNNWeights}};
 
 mod client;
 mod protocol;
@@ -109,7 +109,10 @@ impl Server {
                     }),
                     ReplacementPolicyType::RNN => ManagerNodeResponse::ReplacementPolicyParams(ReplacementPolicyParams {
                         span_access_history: None,
-                        rnn_weights: span_access_history.map(RnnReplacementPolicy::train_rnn_model),
+                        rnn_weights: span_access_history.map(|access_history| RNNWeights {
+                            total_spans: access_history.iter().map(|v| v.span_id).max().unwrap(),
+                            weights: RnnReplacementPolicy::train_rnn_model(access_history),
+                        }),
                     }),
                 }
             },
