@@ -1,5 +1,5 @@
 use {
-    std::{collections::HashSet, fs, thread, time::Instant},
+    std::{collections::VecDeque, fs, sync::RwLock, time::Instant},
     tracing::{info, span, Level},
     candle_core::{Device, DType, Tensor},
     candle_nn::{rnn::{lstm, LSTMConfig, RNN, LSTM}, VarMap, VarBuilder, linear, Linear, Module, ops, loss, Optimizer},
@@ -8,11 +8,14 @@ use {
     super::{ReplacementPolicy, SpanId, TrackingReplacementPolicy, RandomReplacementPolicy},
 };
 
+const RNN_WINDOW_SIZE: usize = 100;
+
 pub struct RnnReplacementPolicy {
     fallback: Box<dyn ReplacementPolicy>,
     tracking: TrackingReplacementPolicy,
 
     model: Option<RNNModel>,
+    span_access_history: RwLock<VecDeque<u64>>,
 }
 
 impl RnnReplacementPolicy {
@@ -27,6 +30,7 @@ impl RnnReplacementPolicy {
             tracking: TrackingReplacementPolicy::new(manager, Box::new(RandomReplacementPolicy::new())),
 
             model,
+            span_access_history: RwLock::new(VecDeque::new()),
         }
     }
 
@@ -40,7 +44,7 @@ impl ReplacementPolicy for RnnReplacementPolicy {
         if let Some(model) = &self.model {
             // if all spans are within bounds of the model.
             if spans.iter().map(|span| span.id()).find(|id| *id >= model.total_spans).is_none() {
-                // TODO: pick using RNN
+                let predictions = model.predict(&self.span_access_history.read().unwrap().iter().cloned().collect::<Vec<u64>>());
                 unimplemented!()
             }
         }
@@ -49,6 +53,13 @@ impl ReplacementPolicy for RnnReplacementPolicy {
     }
 
     fn on_span_access(&self, span_id: &SpanId) {
+        {
+            let mut span_access_history = self.span_access_history.write().unwrap();
+            span_access_history.push_back(span_id.id());
+            while span_access_history.len() > RNN_WINDOW_SIZE {
+                span_access_history.pop_front();
+            }
+        };
         self.tracking.on_span_access(span_id);
     }
 
@@ -114,6 +125,11 @@ impl RNNModel {
         let lstm_output = self.lstm.states_to_tensor(&lstm_output).unwrap().reshape(&[lstm_output.len(), self.lstm_output_dim]).unwrap();
         self.linear.forward(&lstm_output).unwrap()
     }
+
+    pub fn predict(&self, span_access_stats: &[u64]) -> Vec<f32> {
+        // TODO: implement making predictions
+        unimplemented!()
+    }
 }
 
 fn train_rnn_model(data: Vec<SpanAccessEvent>) -> RNNModel {
@@ -144,7 +160,7 @@ fn train_rnn_model(data: Vec<SpanAccessEvent>) -> RNNModel {
     let mut adam = candle_nn::AdamW::new_lr(varmap.all_vars(), 0.1).unwrap();
 
     // train
-    let window_size = 100;
+    let window_size = RNN_WINDOW_SIZE;
     for epoch in 0..1000 {
         let started_at = Instant::now();
         span!(Level::DEBUG, "training epoch", epoch = epoch).in_scope(|| {
