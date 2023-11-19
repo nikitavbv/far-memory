@@ -68,7 +68,8 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
                 let _req_body_span = span!(Level::DEBUG, "read request body").entered();
 
                 if req_len > REQ_SIZE_LIMIT {
-                    panic!("request is too large!");
+                    error!("request is too large!");
+                    break;
                 }
 
                 let mut req = vec![0u8; req_len as usize];
