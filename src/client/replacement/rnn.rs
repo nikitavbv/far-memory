@@ -5,22 +5,27 @@ use {
     candle_nn::{rnn::{lstm, LSTMConfig, RNN, LSTM}, VarMap, VarBuilder, linear, Linear, Module, ops, loss, Optimizer},
     rand::seq::SliceRandom,
     crate::manager::{SpanAccessEvent, ManagerClient, ReplacementPolicyType},
-    super::{ReplacementPolicy, SpanId},
+    super::{ReplacementPolicy, SpanId, TrackingReplacementPolicy, RandomReplacementPolicy},
 };
 
 pub struct RnnReplacementPolicy {
     fallback: Box<dyn ReplacementPolicy>,
+    tracking: TrackingReplacementPolicy,
+
     model: Option<RNNModel>,
 }
 
 impl RnnReplacementPolicy {
     pub fn new(manager: ManagerClient, fallback: Box<dyn ReplacementPolicy>) -> Self {
-        // todo: tracking replacement policy needs to be reused somehow
         let model = manager.get_replacement_policy_params(ReplacementPolicyType::RNN).rnn_weights;
         let model = model.map(|weights| RNNModel::from_weights(weights.total_spans, Device::cuda_if_available(0).unwrap(), weights.weights));
 
         Self {
             fallback,
+
+            // tracking is needed to collect fresh stats for next rnn training runs.
+            tracking: TrackingReplacementPolicy::new(manager, Box::new(RandomReplacementPolicy::new())),
+
             model,
         }
     }
@@ -32,28 +37,37 @@ impl RnnReplacementPolicy {
 
 impl ReplacementPolicy for RnnReplacementPolicy {
     fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId {
-        unimplemented!()
+        if let Some(model) = &self.model {
+            // if all spans are within bounds of the model.
+            if spans.iter().map(|span| span.id()).find(|id| *id >= model.total_spans).is_none() {
+                // TODO: pick using RNN
+                unimplemented!()
+            }
+        }
+
+        self.fallback.pick_for_eviction(spans)
     }
 
     fn on_span_access(&self, span_id: &SpanId) {
-        unimplemented!()
+        self.tracking.on_span_access(span_id);
     }
 
     fn on_span_swap_out(&self, span_id: &SpanId) {
-        unimplemented!()
+        self.tracking.on_span_swap_out(span_id);
     }
 
     fn on_span_swap_in(&self, span_id: &SpanId) {
-        unimplemented!()
+        self.tracking.on_span_swap_in(span_id);
     }
 
     fn on_stop(&self) {
-        unimplemented!()
+        self.tracking.on_stop();
     }
 }
 
 struct RNNModel {
     lstm_output_dim: usize,
+    total_spans: u64,
 
     varmap: VarMap,
     lstm: LSTM,
@@ -69,6 +83,7 @@ impl RNNModel {
 
          Self {
             lstm_output_dim,
+            total_spans,
 
             varmap,
             lstm,
