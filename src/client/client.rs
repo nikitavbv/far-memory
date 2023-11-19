@@ -546,7 +546,7 @@ fn swap_out_thread(client: FarMemoryClient, target_memory_usage: u64) -> impl Fn
         info!("starting swap out thread");
         span!(Level::DEBUG, "swap out thread").in_scope(|| {
             while client.is_running() {
-                thread::sleep(Duration::from_secs(5));
+                thread::sleep(Duration::from_secs(3));
 
                 let swap_out_result = span!(Level::DEBUG, "swap out iteration").in_scope(|| {
                     let _guard = span!(Level::DEBUG, "waiting for lock").in_scope(|| client.swap_in_out_lock.lock().unwrap());
