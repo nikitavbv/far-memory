@@ -20,8 +20,9 @@ pub fn far_memory_method() -> Block {
         performance::performance(),
 
         Block::SubsectionHeader(SubsectionHeaderBlock::without_numbering("Висновки до розділу".to_owned())),
-        paragraph("В даному розділі було розглянуто проблему надання віддаленої памʼяті та метод..."),
-
+        paragraph("В даному розділі було розглянуто проблему надання віддаленої памʼяті у розподіленій системі. Описано середовище та принцип роботи віддаленої памʼяті у \
+ньому."), // todo: continue this by telling that components and flows of data between them are inferred from environment. Then, this set of components defines subtasks of the
+// problem. Describe each of subtasks. Tell that the set of the solutions for these subtasks define the method that is used to approach the problem.
         // in third section explain that a demo app was implemented to measure how well everything works and the hardware of the test environment.
     ])
 }
