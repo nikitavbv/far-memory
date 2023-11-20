@@ -20,7 +20,7 @@ pub fn far_memory_method() -> Block {
         performance::performance(),
 
         Block::SubsectionHeader(SubsectionHeaderBlock::without_numbering("Висновки до розділу".to_owned())),
-        // general conclusions
+        paragraph("В даному розділі було розглянуто проблему надання віддаленої памʼяті та метод..."),
 
         // in third section explain that a demo app was implemented to measure how well everything works and the hardware of the test environment.
     ])
