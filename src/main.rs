@@ -91,6 +91,9 @@ pub struct Args {
     docs: bool,
 
     #[arg(long)]
+    conference_abstract: bool,
+
+    #[arg(long)]
     docx: bool,
 
     #[arg(long)]
@@ -175,7 +178,7 @@ pub fn main() {
         run_manager_node(read_token());
     } else if args.replacement_policies_demo {
         run_replacement_policies_demo();
-    } else if args.thesis || args.card || args.docs || args.practice_report {
+    } else if args.thesis || args.card || args.docs || args.practice_report || args.conference_abstract {
         build_thesis(&args);
     }
 }

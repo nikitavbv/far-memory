@@ -2,7 +2,7 @@ use {
     docx_rs::{Docx, Paragraph, Run, BreakType, AlignmentType, Table, TableRow, TableCell, LineSpacing, WidthType, TableBorders, VAlignType, TableCellMargins, TableAlignmentType},
     crate::thesis::{
         components::LineComponent,
-        content::Content,
+        content::{Content, classification_code},
     },
 };
 
@@ -45,7 +45,7 @@ impl FrontPageSection for Docx {
                                 .add_text("УДК "))
                             .add_run(Run::new()
                                 .underline("single")
-                                .add_text("004.75")
+                                .add_text(classification_code())
                             ))
                         .width(5000, WidthType::Dxa),
                     TableCell::new()

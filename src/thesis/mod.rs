@@ -9,6 +9,7 @@ use {
             topic_card_docx_template,
             documentation::documentation,
             practice_report_content,
+            conference_abstract::{conference_abstract, conference_abstract_docx_template},
         },
         context::Context,
         engine::{Document, Block, TextBlockComponent, render_block_to_html, print_placeholders},
@@ -51,6 +52,12 @@ pub fn build_thesis(args: &Args) {
     if args.docs {
         documents.push(
             Document::new("documentation", documentation()),
+        );
+    }
+
+    if args.conference_abstract {
+        documents.push(
+            Document::new("methods_and_software_for_providing_software_defined_far_memory_in_distributed_systems", conference_abstract()).with_docx_template(conference_abstract_docx_template())
         );
     }
 

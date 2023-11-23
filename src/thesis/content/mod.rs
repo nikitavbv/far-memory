@@ -3,6 +3,7 @@ pub use self::{
     topic_card::topic_card_docx_template,
 };
 
+pub mod conference_abstract;
 pub mod documentation;
 pub mod thesis;
 pub mod topic_card;
@@ -237,6 +238,10 @@ pub fn thesis_tasks() -> Vec<MultiLanguageString> {
             "провести оцінку ефективності запропонованого рішення".to_owned(),
         ),
     ]
+}
+
+pub fn classification_code() -> String {
+    "004.75".to_owned()
 }
 
 #[cfg(test)]
