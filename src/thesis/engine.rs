@@ -48,7 +48,7 @@ pub enum PageCountingError {
 pub enum Block {
     SectionHeader(SectionHeaderBlock),
     SubsectionHeader(SubsectionHeaderBlock),
-    Paragraph(TextSpan),
+    Paragraph(ParagraphBlock),
     UnorderedList(Vec<String>),
     Image(ImageBlock),
     Placeholder(Box<Block>, String),
@@ -104,6 +104,11 @@ impl SubsectionHeaderBlock {
             has_numbering: false,
         }
     }
+}
+
+#[derive(Debug, Clone)]
+pub struct ParagraphBlock {
+    span: TextSpan,
 }
 
 #[derive(Debug, Clone)]
@@ -174,9 +179,9 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
                     .add_run(Run::new().add_tab().add_text(text))
             )
         },
-        Block::Paragraph(text) => match placeholder {
-            Some(v) => document.add_paragraph_placeholder_component(text.to_plaintext(), v),
-            None => document.add_paragraph_component(text.to_plaintext()),
+        Block::Paragraph(paragraph) => match placeholder {
+            Some(v) => document.add_paragraph_placeholder_component(paragraph.span.to_plaintext(), v),
+            None => document.add_paragraph_component(paragraph.span.to_plaintext()),
         },
         Block::UnorderedList(list) => document.add_unordered_list_component(context, list),
         Block::Image(image) => document.add_image_component(context, context.last_section_index(), &image.path(), &image.description()),
@@ -319,7 +324,7 @@ fn render_block_to_html_inner(block: Block) -> String {
                 html_escape::encode_text(&header.title),
             )
         },
-        Block::Paragraph(text) => format!("<p>{}</p>", render_text_span_to_html(text)),
+        Block::Paragraph(paragraph) => format!("<p>{}</p>", render_text_span_to_html(paragraph.span)),
         Block::UnorderedList(text) => format!("<ul>{}</ul>", text.iter().map(|v| format!("<li>{}</li>", html_escape::encode_text(&v))).collect::<String>()),
         Block::Image(image) => format!("<img src=\"{}\" /><div class=\"image-description\">{}</div>", image.path(), html_escape::encode_text(&image.description())),
         Block::Placeholder(inner, _text) => format!("<div style=\"background-color: yellow;\">{}</div>", render_block_to_html_inner(*inner)),
@@ -373,7 +378,9 @@ pub fn subsection_header(text: impl Into<SubsectionHeaderBlock>) -> Block {
 }
 
 pub fn paragraph(text: impl Into<TextSpan>) -> Block {
-    Block::Paragraph(text.into())
+    Block::Paragraph(ParagraphBlock {
+        span: text.into(),
+    })
 }
 
 pub fn unordered_list(list: Vec<String>) -> Block {
