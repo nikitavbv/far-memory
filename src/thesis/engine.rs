@@ -109,12 +109,30 @@ impl SubsectionHeaderBlock {
 #[derive(Debug, Clone)]
 pub struct ParagraphBlock {
     span: TextSpan,
+    tab: bool,
+}
+
+impl ParagraphBlock {
+    pub fn new(span: TextSpan) -> Self {
+        Self {
+            span,
+            tab: false,
+        }
+    }
+
+    pub fn with_tab(self, tab: bool) -> Self {
+        Self {
+            tab,
+            ..self
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
 pub enum TextSpan {
     Regular(String),
     Bold(String),
+    Italic(String),
     Multiple(Vec<TextSpan>),
     Link {
         text: String,
@@ -181,7 +199,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
         },
         Block::Paragraph(paragraph) => match placeholder {
             Some(v) => document.add_paragraph_placeholder_component(paragraph.span.to_plaintext(), v),
-            None => document.add_paragraph_component(paragraph.span.to_plaintext()),
+            None => document.add_paragraph_component(paragraph.span.to_plaintext(), paragraph.tab),
         },
         Block::UnorderedList(list) => document.add_unordered_list_component(context, list),
         Block::Image(image) => document.add_image_component(context, context.last_section_index(), &image.path(), &image.description()),
@@ -364,6 +382,7 @@ fn render_text_span_to_html(span: TextSpan) -> String {
     match span {
         TextSpan::Regular(text) => html_escape::encode_text(&text).to_string(),
         TextSpan::Bold(text) => format!("<b>{}</b>", html_escape::encode_text(&text)),
+        TextSpan::Italic(text) => format!("<i>{}</i>", html_escape::encode_text(&text)),
         TextSpan::Multiple(texts) => texts.into_iter().map(render_text_span_to_html).collect::<String>(),
         TextSpan::Link { text, url } => format!("<a href=\"{}\">{}</a>", url, html_escape::encode_text(&text)),
     }
@@ -380,6 +399,7 @@ pub fn subsection_header(text: impl Into<SubsectionHeaderBlock>) -> Block {
 pub fn paragraph(text: impl Into<TextSpan>) -> Block {
     Block::Paragraph(ParagraphBlock {
         span: text.into(),
+        tab: true,
     })
 }
 
@@ -624,6 +644,7 @@ impl TextSpan {
         match self {
             TextSpan::Regular(text) => text.to_owned(),
             TextSpan::Bold(text) => text.to_owned(),
+            TextSpan::Italic(text) => text.to_owned(),
             TextSpan::Multiple(texts) => texts.iter().map(|v| v.to_plaintext()).collect::<String>(),
             TextSpan::Link { text, url: _ } => text.to_owned(),
         }

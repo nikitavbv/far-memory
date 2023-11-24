@@ -1,14 +1,27 @@
 use {
     docx_rs::{Docx, PageMargin, RunFonts},
     crate::thesis::{
-        engine::{Block, paragraph},
+        engine::{Block, ParagraphBlock, TextSpan},
         utils::mm_to_twentieth_of_a_point,
     },
 };
 
 pub fn conference_abstract() -> Block {
-    // todo: think about the best approach to blocks and components here
-    paragraph("some text here")
+    Block::Multiple(vec![
+        paragraph("UDC {code}"),
+        line_break(),
+        paragraph(TextSpan::Multiple(vec![
+            TextSpan::Italic("some text".to_owned()),
+        ])),
+    ])
+}
+
+fn line_break() -> Block {
+    paragraph("")
+}
+
+fn paragraph(text: impl Into<TextSpan>) -> Block {
+    Block::Paragraph(ParagraphBlock::new(text.into()).with_tab(false))
 }
 
 pub fn conference_abstract_docx_template() -> Docx {

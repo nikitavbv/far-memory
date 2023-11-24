@@ -57,7 +57,7 @@ impl MarkdownComponent for Docx {
                             other => panic!("unexpected span in markdown paragraph: {:?}", other),
                         }));
 
-                    document.add_paragraph_component(paragraph_text)
+                    document.add_paragraph_component(paragraph_text, true)
                 },
                 Block::UnorderedList(list) => {
                     document.add_unordered_list_component(context, list.into_iter().map(|item| match item {
