@@ -6,10 +6,14 @@ use {
     },
 };
 
+const FONT_SIZE: usize = 2 * 12;
+
 pub fn conference_abstract() -> Block {
     Block::Multiple(vec![
-        paragraph("УДК 004.414"),
-        line_break(),
+        paragraph(TextSpan::Multiple(vec![
+            "УДК 004.414".into(),
+            TextSpan::Break,
+        ])),
         paragraph(TextSpan::Multiple(vec![
             TextSpan::Italic(Box::new(TextSpan::Multiple(vec![
                 TextSpan::Bold(Box::new(TextSpan::Regular("Грищенко Сергій Володимирович".to_owned()))),
@@ -27,7 +31,8 @@ pub fn conference_abstract() -> Block {
                     TextSpan::Break,
                     TextSpan::Regular("КПІ ім. Ігоря Сікорського, Україна".to_owned()),
                 ]))),
-            ])
+            ]),
+            TextSpan::Break,
         ])),
     ])
 }
@@ -37,7 +42,7 @@ fn line_break() -> Block {
 }
 
 fn paragraph(text: impl Into<TextSpan>) -> Block {
-    Block::Paragraph(ParagraphBlock::new(text.into()).with_tab(false))
+    Block::Paragraph(ParagraphBlock::new(text.into()).with_tab(false).with_line_spacing(FONT_SIZE, 1.15))
 }
 
 pub fn conference_abstract_docx_template() -> Docx {
@@ -51,6 +56,6 @@ pub fn conference_abstract_docx_template() -> Docx {
                 .right(mm_to_twentieth_of_a_point(20.0))
         )
         .default_fonts(RunFonts::new().cs("Times New Roman"))
-        .default_size(2 * 12)
+        .default_size(FONT_SIZE)
         .default_tab_stop(0)
 }

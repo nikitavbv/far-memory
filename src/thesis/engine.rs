@@ -129,7 +129,7 @@ impl ParagraphBlock {
         }
     }
 
-    pub fn with_line_spacing(self, font_size: u32, interval: f32) -> Self {
+    pub fn with_line_spacing(self, font_size: usize, interval: f32) -> Self {
         Self {
             line_spacing: (font_size as f32 * interval * 10.0) as i32,
             ..self
