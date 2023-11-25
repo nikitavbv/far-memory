@@ -3,7 +3,6 @@ pub use self::{
     front_page::FrontPageSection,
     image::ImageComponent,
     line::LineComponent,
-    markdown::MarkdownComponent,
     page_break::PageBreakComponent,
     paragraph::ParagraphComponent,
     placeholder::PlaceholderComponent,
@@ -17,7 +16,6 @@ pub mod abstract_section;
 pub mod front_page;
 pub mod image;
 pub mod line;
-pub mod markdown;
 pub mod page_break;
 pub mod paragraph;
 pub mod placeholder;

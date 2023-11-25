@@ -198,8 +198,8 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
             )
         },
         Block::Paragraph(paragraph) => match placeholder {
-            Some(v) => document.add_paragraph_placeholder_component(paragraph.span.to_plaintext(), v),
-            None => document.add_paragraph_component(paragraph.span.to_plaintext(), paragraph.tab),
+            Some(v) => document.add_paragraph_placeholder_component(paragraph.span, v),
+            None => document.add_paragraph_component(paragraph.span, paragraph.tab),
         },
         Block::UnorderedList(list) => document.add_unordered_list_component(context, list),
         Block::Image(image) => document.add_image_component(context, context.last_section_index(), &image.path(), &image.description()),
@@ -640,7 +640,7 @@ impl Into<SubsectionHeaderBlock> for String {
 }
 
 impl TextSpan {
-    fn to_plaintext(&self) -> String {
+    pub fn to_plaintext(&self) -> String {
         match self {
             TextSpan::Regular(text) => text.to_owned(),
             TextSpan::Bold(text) => text.to_owned(),
