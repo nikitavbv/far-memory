@@ -110,6 +110,7 @@ impl SubsectionHeaderBlock {
 pub struct ParagraphBlock {
     span: TextSpan,
     tab: bool,
+    line_spacing: i32,
 }
 
 impl ParagraphBlock {
@@ -117,12 +118,20 @@ impl ParagraphBlock {
         Self {
             span,
             tab: false,
+            line_spacing: 24 * 15,
         }
     }
 
     pub fn with_tab(self, tab: bool) -> Self {
         Self {
             tab,
+            ..self
+        }
+    }
+
+    pub fn with_line_spacing(self, font_size: u32, interval: f32) -> Self {
+        Self {
+            line_spacing: (font_size as f32 * interval * 10.0) as i32,
             ..self
         }
     }
@@ -200,7 +209,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
         },
         Block::Paragraph(paragraph) => match placeholder {
             Some(v) => document.add_paragraph_placeholder_component(paragraph.span, v),
-            None => document.add_paragraph_component(paragraph.span, paragraph.tab),
+            None => document.add_paragraph_component(paragraph.span, paragraph.tab, paragraph.line_spacing),
         },
         Block::UnorderedList(list) => document.add_unordered_list_component(context, list),
         Block::Image(image) => document.add_image_component(context, context.last_section_index(), &image.path(), &image.description()),
@@ -399,10 +408,7 @@ pub fn subsection_header(text: impl Into<SubsectionHeaderBlock>) -> Block {
 }
 
 pub fn paragraph(text: impl Into<TextSpan>) -> Block {
-    Block::Paragraph(ParagraphBlock {
-        span: text.into(),
-        tab: true,
-    })
+    Block::Paragraph(ParagraphBlock::new(text.into()))
 }
 
 pub fn unordered_list(list: Vec<String>) -> Block {
