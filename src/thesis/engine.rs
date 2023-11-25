@@ -131,13 +131,14 @@ impl ParagraphBlock {
 #[derive(Debug, Clone)]
 pub enum TextSpan {
     Regular(String),
-    Bold(String),
-    Italic(String),
+    Bold(Box<TextSpan>),
+    Italic(Box<TextSpan>),
     Multiple(Vec<TextSpan>),
     Link {
         text: String,
         url: String,
     },
+    Break,
 }
 
 #[derive(Debug, Clone)]
@@ -381,10 +382,11 @@ fn render_table_row_to_html(row: &[String]) -> String {
 fn render_text_span_to_html(span: TextSpan) -> String {
     match span {
         TextSpan::Regular(text) => html_escape::encode_text(&text).to_string(),
-        TextSpan::Bold(text) => format!("<b>{}</b>", html_escape::encode_text(&text)),
-        TextSpan::Italic(text) => format!("<i>{}</i>", html_escape::encode_text(&text)),
+        TextSpan::Bold(inner) => format!("<b>{}</b>", render_text_span_to_html(*inner)),
+        TextSpan::Italic(inner) => format!("<i>{}</i>", render_text_span_to_html(*inner)),
         TextSpan::Multiple(texts) => texts.into_iter().map(render_text_span_to_html).collect::<String>(),
         TextSpan::Link { text, url } => format!("<a href=\"{}\">{}</a>", url, html_escape::encode_text(&text)),
+        TextSpan::Break => "<br />".to_owned(),
     }
 }
 
@@ -643,10 +645,11 @@ impl TextSpan {
     pub fn to_plaintext(&self) -> String {
         match self {
             TextSpan::Regular(text) => text.to_owned(),
-            TextSpan::Bold(text) => text.to_owned(),
-            TextSpan::Italic(text) => text.to_owned(),
+            TextSpan::Bold(inner) => inner.to_plaintext(),
+            TextSpan::Italic(inner) => inner.to_plaintext(),
             TextSpan::Multiple(texts) => texts.iter().map(|v| v.to_plaintext()).collect::<String>(),
             TextSpan::Link { text, url: _ } => text.to_owned(),
+            TextSpan::Break => "\n".to_owned(),
         }
     }
 }
@@ -667,4 +670,8 @@ impl Into<TextSpan> for Vec<TextSpan> {
     fn into(self) -> TextSpan {
         TextSpan::Multiple(self)
     }
+}
+
+pub fn bold(text: &str) -> TextSpan {
+    TextSpan::Bold(Box::new(TextSpan::Regular(text.to_owned())))
 }
