@@ -72,6 +72,7 @@ pub struct SectionHeaderBlock {
     title: String,
     has_numbering: bool, // will be added to document as "{section_number} {title}"
     include_in_table_of_contents: bool,
+    page_break_before: bool,
 }
 
 impl SectionHeaderBlock {
@@ -80,12 +81,20 @@ impl SectionHeaderBlock {
             title,
             has_numbering: false,
             include_in_table_of_contents: true,
+            page_break_before: true,
         }
     }
 
     pub fn do_not_include_in_table_of_contents(self) -> Self {
         Self {
             include_in_table_of_contents: false,
+            ..self
+        }
+    }
+
+    pub fn without_page_break_before(self) -> Self {
+        Self {
+            page_break_before: false,
             ..self
         }
     }
@@ -111,6 +120,7 @@ pub struct ParagraphBlock {
     span: TextSpan,
     tab: bool,
     line_spacing: i32,
+    after_spacing: Option<u32>,
 }
 
 impl ParagraphBlock {
@@ -119,6 +129,7 @@ impl ParagraphBlock {
             span,
             tab: false,
             line_spacing: 24 * 15,
+            after_spacing: None,
         }
     }
 
@@ -132,6 +143,13 @@ impl ParagraphBlock {
     pub fn with_line_spacing(self, font_size: usize, interval: f32) -> Self {
         Self {
             line_spacing: (font_size as f32 * interval * 10.0) as i32,
+            ..self
+        }
+    }
+
+    pub fn with_after_spacing(self, after_spacing: u32) -> Self {
+        Self {
+            after_spacing: Some(after_spacing),
             ..self
         }
     }
@@ -187,8 +205,8 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
             };
 
             match placeholder {
-                Some(v) => document.add_section_header_placeholder_component(text, v, header.include_in_table_of_contents),
-                None => document.add_section_header_component(text, header.include_in_table_of_contents),
+                Some(v) => document.add_section_header_placeholder_component(text, v, header.include_in_table_of_contents, header.page_break_before),
+                None => document.add_section_header_component(text, header.include_in_table_of_contents, header.page_break_before),
             }
         },
         Block::SubsectionHeader(header) => {
@@ -209,7 +227,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
         },
         Block::Paragraph(paragraph) => match placeholder {
             Some(v) => document.add_paragraph_placeholder_component(paragraph.span, v),
-            None => document.add_paragraph_component(paragraph.span, paragraph.tab, paragraph.line_spacing),
+            None => document.add_paragraph_component(paragraph.span, paragraph.tab, paragraph.line_spacing, paragraph.after_spacing),
         },
         Block::UnorderedList(list) => document.add_unordered_list_component(context, list),
         Block::Image(image) => document.add_image_component(context, context.last_section_index(), &image.path(), &image.description()),
@@ -615,6 +633,7 @@ impl Into<SectionHeaderBlock> for &str {
             title: self.to_owned(),
             has_numbering: true,
             include_in_table_of_contents: true,
+            page_break_before: true,
         }
     }
 }
@@ -625,6 +644,7 @@ impl Into<SectionHeaderBlock> for String {
             title: self,
             has_numbering: true,
             include_in_table_of_contents: true,
+            page_break_before: true,
         }
     }
 }
