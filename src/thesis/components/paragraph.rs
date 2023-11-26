@@ -1,5 +1,5 @@
 use {
-    docx_rs::{Docx, Paragraph, Run, Tab, LineSpacing, AlignmentType, BreakType, SectionProperty, PageMargin},
+    docx_rs::{Docx, Paragraph, Run, Tab, LineSpacing, AlignmentType, BreakType, SectionProperty, PageMargin, SectionType},
     crate::thesis::{engine::TextSpan, utils::mm_to_twentieth_of_a_point},
     super::PlaceholderComponent,
 };
@@ -63,7 +63,7 @@ fn paragraph(tab: bool, line_spacing: i32, after_spacing: Option<u32>, columns: 
             .bottom(mm_to_twentieth_of_a_point(15.0))
             .left(mm_to_twentieth_of_a_point(20.0))
             .right(mm_to_twentieth_of_a_point(20.0));
-        section.section_type = Some(docx_rs::SectionType::Continuous);
+        section.section_type = Some(SectionType::Continuous);
 
         section
     });

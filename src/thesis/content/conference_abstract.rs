@@ -1,12 +1,13 @@
 use {
     docx_rs::{Docx, PageMargin, RunFonts},
     crate::thesis::{
-        engine::{Block, ParagraphBlock, TextSpan, SectionHeaderBlock},
+        engine::{Block, ParagraphBlock, TextSpan, SectionHeaderBlock, SubsectionHeaderBlock},
         utils::mm_to_twentieth_of_a_point,
     },
 };
 
 const FONT_SIZE: usize = 2 * 12;
+const INTERVAL: f32 = 1.15;
 
 pub fn conference_abstract() -> Block {
     Block::Multiple(vec![
@@ -59,6 +60,21 @@ pub fn conference_abstract() -> Block {
             TextSpan::Bold(Box::new("Основна частина.".into())),
             " Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини.  Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини.".into(),
         ]), Some(2))),
+        paragraph(TextSpan::Multiple(vec![
+            TextSpan::Bold(Box::new("Висновки.".into())),
+            " Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків.".into(),
+        ])),
+        Block::SubsectionHeader(
+            SubsectionHeaderBlock::without_numbering("Список інформаційних джерел".to_owned())
+                .without_tab()
+                .center()
+                .bold()
+                .with_line_spacing(FONT_SIZE, INTERVAL)
+        ),
+        Block::OrderedList(vec![
+            "Виконання основних арифметичних дій з комплексними числами, які представлено в інтервальній гіперболічній формі / С. В. Гадецька [та ін.] // Сучасні інформаційні системи = Advanced Information Systems. – 2022. – Т. 6, № 1. – С. 104-113.".to_owned(),
+        ]),
+        Block::Paragraph(paragraph_block(TextSpan::Multiple(vec![]), Some(1))), // indicate section end
     ])
 }
 
@@ -67,7 +83,7 @@ fn paragraph(text: impl Into<TextSpan>) -> Block {
 }
 
 fn paragraph_block(text: impl Into<TextSpan>, columns: Option<usize>) -> ParagraphBlock {
-    let paragraph = ParagraphBlock::new(text.into()).with_tab(false).with_line_spacing(FONT_SIZE, 1.15).with_after_spacing(300);
+    let paragraph = ParagraphBlock::new(text.into()).with_tab(false).with_line_spacing(FONT_SIZE, INTERVAL).with_after_spacing(300);
 
     if let Some(columns) = columns {
         paragraph.with_columns(columns)

@@ -111,6 +111,7 @@ fn copy_images_to_output(path: &str, block: &Block) {
         Block::SectionHeader(_) => (),
         Block::SubsectionHeader(_) => (),
         Block::Paragraph(_) => (),
+        Block::OrderedList(_) => (),
         Block::UnorderedList(_) => (),
         Block::Image(image) => {
             fs::create_dir_all(path).unwrap();

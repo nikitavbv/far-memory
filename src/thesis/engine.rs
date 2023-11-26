@@ -49,6 +49,7 @@ pub enum Block {
     SectionHeader(SectionHeaderBlock),
     SubsectionHeader(SubsectionHeaderBlock),
     Paragraph(ParagraphBlock),
+    OrderedList(Vec<String>),
     UnorderedList(Vec<String>),
     Image(ImageBlock),
     Placeholder(Box<Block>, String),
@@ -103,7 +104,11 @@ impl SectionHeaderBlock {
 #[derive(Debug, Clone)]
 pub struct SubsectionHeaderBlock {
     title: String,
-    has_numbering: bool, // will be adde to document as "{subsection_number} {title}"
+    has_numbering: bool, // will be added to document as "{subsection_number} {title}"
+    with_tab: bool,
+    center: bool,
+    bold: bool,
+    line_spacing: i32,
 }
 
 impl SubsectionHeaderBlock {
@@ -111,6 +116,38 @@ impl SubsectionHeaderBlock {
         Self {
             title,
             has_numbering: false,
+            with_tab: true,
+            center: false,
+            bold: false,
+            line_spacing: 24 * 15,
+        }
+    }
+
+    pub fn without_tab(self) -> Self {
+        Self {
+            with_tab: false,
+            ..self
+        }
+    }
+
+    pub fn center(self) -> Self {
+        Self {
+            center: true,
+            ..self
+        }
+    }
+
+    pub fn bold(self) -> Self {
+        Self {
+            bold: true,
+            ..self
+        }
+    }
+
+    pub fn with_line_spacing(self, font_size: usize, interval: f32) -> Self {
+        Self {
+            line_spacing: (font_size as f32 * interval * 10.0) as i32,
+            ..self
         }
     }
 }
@@ -226,17 +263,64 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
                 header.title.clone()
             };
 
+            let paragraph = Paragraph::new();
+            let paragraph = if header.with_tab {
+                paragraph.add_tab(Tab::new().pos(710))
+            } else {
+                paragraph
+            };
+            let paragraph = if header.center {
+                paragraph.align(AlignmentType::Center)
+            } else {
+                paragraph
+            };
+
+            let run = Run::new();
+            let run = if header.bold {
+                run.bold()
+            } else {
+                run
+            };
+            let run = if header.with_tab {
+                run.add_tab()
+            } else {
+                run
+            };
+
             document.add_paragraph(
-                Paragraph::new()
-                    .add_tab(Tab::new().pos(710))
-                    .line_spacing(LineSpacing::new().before(300).line(24 * 15))
+                paragraph
+                    .line_spacing(LineSpacing::new().before(300).line(header.line_spacing))
                     .style("Heading2")
-                    .add_run(Run::new().add_tab().add_text(text))
+                    .add_run(run.add_text(text))
             )
         },
         Block::Paragraph(paragraph) => match placeholder {
             Some(v) => document.add_paragraph_placeholder_component(paragraph.span, v),
             None => document.add_paragraph_component(paragraph.span, paragraph.tab, paragraph.line_spacing, paragraph.after_spacing, paragraph.columns),
+        },
+        Block::OrderedList(list) => {
+            let numbering = context.next_numbering_id();
+
+            let mut document = document
+                .add_abstract_numbering(
+                    AbstractNumbering::new(numbering)
+                        .add_level(Level::new(
+                            0,
+                            Start::new(1),
+                            NumberFormat::new("decimal"),
+                            LevelText::new("%1. "),
+                            LevelJc::new("start")
+                        )
+                    )
+                )
+                .add_numbering(Numbering::new(numbering, numbering));
+
+            list.into_iter().fold(document, |document, list_item| document.add_paragraph(Paragraph::new()
+                .line_spacing(LineSpacing::new().line((24.0 * 1.15 * 10.0) as i32))
+                .numbering(NumberingId::new(numbering), IndentLevel::new(0))
+                .align(AlignmentType::Both)
+                .add_run(Run::new().add_text(list_item))
+            ))
         },
         Block::UnorderedList(list) => document.add_unordered_list_component(context, list),
         Block::Image(image) => document.add_image_component(context, context.last_section_index(), &image.path(), &image.description()),
@@ -516,6 +600,7 @@ pub fn print_placeholders(block: &Block) {
         Block::SectionHeader(_) => (),
         Block::SubsectionHeader(_) => (),
         Block::Paragraph(_) => (),
+        Block::OrderedList(_) => (),
         Block::UnorderedList(_) => (),
         Block::Image(_) => (),
         Block::ReferencesList(_) => (),
@@ -559,6 +644,7 @@ pub fn count_images(block: &Block) -> u32 {
         Block::SectionHeader(_) => 0,
         Block::SubsectionHeader(_) => 0,
         Block::Paragraph(_) => 0,
+        Block::OrderedList(_) => 0,
         Block::UnorderedList(_) => 0,
         Block::Image(_) => 1,
         Block::ReferencesList(_) => 0,
@@ -580,6 +666,7 @@ pub fn count_tables(block: &Block) -> u32 {
         Block::SectionHeader(_) => 0,
         Block::SubsectionHeader(_) => 0,
         Block::Paragraph(_) => 0,
+        Block::OrderedList(_) => 0,
         Block::UnorderedList(_) => 0,
         Block::Image(_) => 0,
         Block::ReferencesList(_) => 0,
@@ -601,6 +688,7 @@ pub fn count_applications(block: &Block) -> u32 {
         Block::SectionHeader(_) => 0,
         Block::SubsectionHeader(_) => 0,
         Block::Paragraph(_) => 0,
+        Block::OrderedList(_) => 0,
         Block::UnorderedList(_) => 0,
         Block::Image(_) => 0,
         Block::ReferencesList(_) => 0,
@@ -622,6 +710,7 @@ pub fn count_references(block: &Block) -> u32 {
         Block::SectionHeader(_) => 0,
         Block::SubsectionHeader(_) => 0,
         Block::Paragraph(_) => 0,
+        Block::OrderedList(_) => 0,
         Block::UnorderedList(_) => 0,
         Block::Image(_) => 0,
         Block::ReferencesList(refs) => refs.len() as u32,
@@ -663,6 +752,10 @@ impl Into<SubsectionHeaderBlock> for &str {
         SubsectionHeaderBlock {
             title: self.to_owned(),
             has_numbering: true,
+            with_tab: true,
+            center: false,
+            bold: false,
+            line_spacing: 24 * 15,
         }
     }
 }
@@ -672,6 +765,10 @@ impl Into<SubsectionHeaderBlock> for String {
         SubsectionHeaderBlock {
             title: self,
             has_numbering: true,
+            with_tab: true,
+            center: false,
+            bold: false,
+            line_spacing: 24 * 15,
         }
     }
 }
