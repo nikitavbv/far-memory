@@ -165,7 +165,7 @@ impl ParagraphBlock {
     pub fn new(span: TextSpan) -> Self {
         Self {
             span,
-            tab: false,
+            tab: true,
             line_spacing: 24 * 15,
             after_spacing: None,
             columns: None,
