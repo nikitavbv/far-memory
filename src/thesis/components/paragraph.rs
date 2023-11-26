@@ -1,21 +1,21 @@
 use {
-    docx_rs::{Docx, Paragraph, Run, Tab, LineSpacing, AlignmentType, BreakType},
-    crate::thesis::engine::TextSpan,
+    docx_rs::{Docx, Paragraph, Run, Tab, LineSpacing, AlignmentType, BreakType, SectionProperty, PageMargin},
+    crate::thesis::{engine::TextSpan, utils::mm_to_twentieth_of_a_point},
     super::PlaceholderComponent,
 };
 
 pub trait ParagraphComponent {
-    fn add_paragraph_component(self, text: TextSpan, tab: bool, line_spacing: i32, after_spacing: Option<u32>) -> Self;
+    fn add_paragraph_component(self, text: TextSpan, tab: bool, line_spacing: i32, after_spacing: Option<u32>, columns: Option<usize>) -> Self;
     fn add_paragraph_placeholder_component(self, text: TextSpan, description: impl Into<String>) -> Self;
 }
 
 impl ParagraphComponent for Docx {
-    fn add_paragraph_component(self, text: TextSpan, tab: bool, line_spacing: i32, after_spacing: Option<u32>) -> Self {
-        self.add_paragraph(runs_for_text_span(text, Run::new()).into_iter().fold(paragraph(tab, line_spacing, after_spacing), |p, r| p.add_run(r)))
+    fn add_paragraph_component(self, text: TextSpan, tab: bool, line_spacing: i32, after_spacing: Option<u32>, columns: Option<usize>) -> Self {
+        self.add_paragraph(runs_for_text_span(text, Run::new()).into_iter().fold(paragraph(tab, line_spacing, after_spacing, columns), |p, r| p.add_run(r)))
     }
 
     fn add_paragraph_placeholder_component(self, text: TextSpan, description: impl Into<String>) -> Self {
-        self.add_paragraph(paragraph(true, 24 * 15, None).add_placeholder_component(text.to_plaintext(), description))
+        self.add_paragraph(paragraph(true, 24 * 15, None, None).add_placeholder_component(text.to_plaintext(), description))
     }
 }
 
@@ -30,7 +30,7 @@ fn runs_for_text_span(text: TextSpan, run: Run) -> Vec<Run> {
     }
 }
 
-fn paragraph(tab: bool, line_spacing: i32, after_spacing: Option<u32>) -> Paragraph {
+fn paragraph(tab: bool, line_spacing: i32, after_spacing: Option<u32>, columns: Option<usize>) -> Paragraph {
     let paragraph = Paragraph::new();
 
     let paragraph = if tab {
@@ -53,8 +53,30 @@ fn paragraph(tab: bool, line_spacing: i32, after_spacing: Option<u32>) -> Paragr
         line_spacing
     };
 
-    paragraph
+    let section_property = columns.map(|columns| {
+        let mut section = SectionProperty::new();
+        section.columns = columns;
+        section.space = 720;
+        // TODO: do not hardcode page margin
+        section.page_margin = PageMargin::new()
+            .top(mm_to_twentieth_of_a_point(15.0))
+            .bottom(mm_to_twentieth_of_a_point(15.0))
+            .left(mm_to_twentieth_of_a_point(20.0))
+            .right(mm_to_twentieth_of_a_point(20.0));
+        section.section_type = Some(docx_rs::SectionType::Continuous);
+
+        section
+    });
+
+    let paragraph = paragraph
         .line_spacing(line_spacing)
-        .align(AlignmentType::Both)
-        .add_run(run)
+        .align(AlignmentType::Both);
+
+    let paragraph = if let Some(section_property) = section_property {
+        paragraph.section_property(section_property)
+    } else {
+        paragraph
+    };
+
+    paragraph.add_run(run)
 }

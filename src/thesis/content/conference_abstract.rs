@@ -11,7 +11,7 @@ const FONT_SIZE: usize = 2 * 12;
 pub fn conference_abstract() -> Block {
     Block::Multiple(vec![
         paragraph(TextSpan::Multiple(vec![
-            "УДК 004.414!!!".into(),
+            "УДК 004.414".into(),
         ])),
         paragraph(TextSpan::Multiple(vec![
             TextSpan::Italic(Box::new(TextSpan::Multiple(vec![
@@ -51,15 +51,29 @@ pub fn conference_abstract() -> Block {
             TextSpan::Bold(Box::new("KEY WORDS:".into())), // spelling matches the template
             " at least 3 words.".into(),
         ])),
-        paragraph(TextSpan::Multiple(vec![
+        Block::Paragraph(paragraph_block(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Вступ.".into())),
             " Текст вступу. Текст вступу. Текст вступу. Текст вступу. Текст вступу. Текст вступу. Текст вступу. Текст вступу.".into(),
-        ])),
+        ]), Some(1))),
+        Block::Paragraph(paragraph_block(TextSpan::Multiple(vec![
+            TextSpan::Bold(Box::new("Основна частина.".into())),
+            " Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини.  Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини.".into(),
+        ]), Some(2))),
     ])
 }
 
 fn paragraph(text: impl Into<TextSpan>) -> Block {
-    Block::Paragraph(ParagraphBlock::new(text.into()).with_tab(false).with_line_spacing(FONT_SIZE, 1.15).with_after_spacing(300))
+    Block::Paragraph(paragraph_block(text, None))
+}
+
+fn paragraph_block(text: impl Into<TextSpan>, columns: Option<usize>) -> ParagraphBlock {
+    let paragraph = ParagraphBlock::new(text.into()).with_tab(false).with_line_spacing(FONT_SIZE, 1.15).with_after_spacing(300);
+
+    if let Some(columns) = columns {
+        paragraph.with_columns(columns)
+    } else {
+        paragraph
+    }
 }
 
 pub fn conference_abstract_docx_template() -> Docx {

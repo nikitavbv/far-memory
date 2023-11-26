@@ -595,7 +595,7 @@ checksum = "f2696e8a945f658fd14dc3b87242e6b80cd0f36ff04ea560fa39082368847946"
 [[package]]
 name = "docx-rs"
 version = "0.4.7"
-source = "git+https://github.com/nikitavbv/docx-rs#cf3034960991c4728a184c4afc1ad06266e7270e"
+source = "git+https://github.com/nikitavbv/docx-rs#a10173c7ef152250113ac04cf3cc728cfb47cb95"
 dependencies = [
  "base64 0.13.1",
  "image",

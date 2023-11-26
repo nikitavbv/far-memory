@@ -121,6 +121,7 @@ pub struct ParagraphBlock {
     tab: bool,
     line_spacing: i32,
     after_spacing: Option<u32>,
+    columns: Option<usize>,
 }
 
 impl ParagraphBlock {
@@ -130,6 +131,7 @@ impl ParagraphBlock {
             tab: false,
             line_spacing: 24 * 15,
             after_spacing: None,
+            columns: None,
         }
     }
 
@@ -150,6 +152,13 @@ impl ParagraphBlock {
     pub fn with_after_spacing(self, after_spacing: u32) -> Self {
         Self {
             after_spacing: Some(after_spacing),
+            ..self
+        }
+    }
+
+    pub fn with_columns(self, columns: usize) -> Self {
+        Self {
+            columns: Some(columns),
             ..self
         }
     }
@@ -227,7 +236,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
         },
         Block::Paragraph(paragraph) => match placeholder {
             Some(v) => document.add_paragraph_placeholder_component(paragraph.span, v),
-            None => document.add_paragraph_component(paragraph.span, paragraph.tab, paragraph.line_spacing, paragraph.after_spacing),
+            None => document.add_paragraph_component(paragraph.span, paragraph.tab, paragraph.line_spacing, paragraph.after_spacing, paragraph.columns),
         },
         Block::UnorderedList(list) => document.add_unordered_list_component(context, list),
         Block::Image(image) => document.add_image_component(context, context.last_section_index(), &image.path(), &image.description()),
