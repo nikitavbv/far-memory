@@ -10,7 +10,11 @@ pub fn software() -> Block {
 пристрою. У разі використання бібліотеки, розробнику прикладного програмного забезпечення повинен надаватись клієнт віддаленої памʼяті, \
 який надає засоби для зберігання послідовностей байт, обʼєктів наданих користувачем та структур даних оптимізованих для роботи з віддаленою \
 памʼяттю."),
-        // todo: tell a bit more about integration if needed and move to next requirements (reliability, performance).
+        paragraph("Реалізація віддаленої памʼяті повинна коректно обробляти події виходу з ладу віддалених вузлів зберігання та підтримувати \
+запланований вивід вузлів на обслуговування, що є типовою вимогою для програмного забезпечення що працює у розподіленій системі. У разі \
+виходу вузла зберігання з ладу, клієнт віддаленої памʼяті повинен мінімізувати вирогідність втрати даних через їх відновлення з памʼяті \
+інших вузлів."),
+        // todo: move to next requirements (performance). tell about hardware requirements and tell that software needs to be easy to use.
         // requirements: I already told about requirements in previous section, but it makes sense to revise them briefly and talk a bit about hardware requirements as well.
         // вимоги до програмного продукту
         // - вимоги до функціональних характеристик
