@@ -52,14 +52,16 @@ pub fn conference_abstract() -> Block {
             TextSpan::Bold(Box::new("KEY WORDS:".into())), // spelling matches the template
             " at least 3 words.".into(),
         ])),
-        Block::Paragraph(paragraph_block(TextSpan::Multiple(vec![
+        paragraph(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Вступ.".into())),
             " Текст вступу. Текст вступу. Текст вступу. Текст вступу. Текст вступу. Текст вступу. Текст вступу. Текст вступу.".into(),
-        ]), Some(1))),
-        Block::Paragraph(paragraph_block(TextSpan::Multiple(vec![
+        ])),
+        end_section(1),
+        paragraph(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Основна частина.".into())),
             " Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини.  Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини.".into(),
-        ]), Some(2))),
+        ])),
+        end_section(2),
         paragraph(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Висновки.".into())),
             " Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків.".into(),
@@ -74,22 +76,16 @@ pub fn conference_abstract() -> Block {
         Block::OrderedList(vec![
             "Виконання основних арифметичних дій з комплексними числами, які представлено в інтервальній гіперболічній формі / С. В. Гадецька [та ін.] // Сучасні інформаційні системи = Advanced Information Systems. – 2022. – Т. 6, № 1. – С. 104-113.".to_owned(),
         ]),
-        Block::Paragraph(paragraph_block(TextSpan::Multiple(vec![]), Some(1))), // indicate section end
+        end_section(1)
     ])
 }
 
-fn paragraph(text: impl Into<TextSpan>) -> Block {
-    Block::Paragraph(paragraph_block(text, None))
+fn end_section(columns: usize) -> Block {
+    Block::Paragraph(ParagraphBlock::new(TextSpan::Multiple(vec![])).with_tab(false).with_columns(columns))
 }
 
-fn paragraph_block(text: impl Into<TextSpan>, columns: Option<usize>) -> ParagraphBlock {
-    let paragraph = ParagraphBlock::new(text.into()).with_tab(false).with_line_spacing(FONT_SIZE, INTERVAL).with_after_spacing(300);
-
-    if let Some(columns) = columns {
-        paragraph.with_columns(columns)
-    } else {
-        paragraph
-    }
+fn paragraph(text: impl Into<TextSpan>) -> Block {
+    Block::Paragraph(ParagraphBlock::new(text.into()).with_tab(false).with_line_spacing(FONT_SIZE, INTERVAL).with_after_spacing(300))
 }
 
 pub fn conference_abstract_docx_template() -> Docx {
