@@ -1,4 +1,4 @@
-use crate::thesis::engine::{Block, subsection_header, section_header};
+use crate::thesis::engine::{Block, subsection_header, section_header, paragraph, SubsectionHeaderBlock};
 
 pub fn software() -> Block {
     Block::Multiple(vec![
