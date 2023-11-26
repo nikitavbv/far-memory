@@ -301,7 +301,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
         Block::OrderedList(list) => {
             let numbering = context.next_numbering_id();
 
-            let mut document = document
+            let document = document
                 .add_abstract_numbering(
                     AbstractNumbering::new(numbering)
                         .add_level(Level::new(

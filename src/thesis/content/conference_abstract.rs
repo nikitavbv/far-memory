@@ -1,5 +1,5 @@
 use {
-    docx_rs::{Docx, PageMargin, RunFonts},
+    docx_rs::{Docx, PageMargin, RunFonts, SectionType},
     crate::thesis::{
         engine::{Block, ParagraphBlock, TextSpan, SectionHeaderBlock, SubsectionHeaderBlock},
         utils::mm_to_twentieth_of_a_point,
@@ -94,7 +94,7 @@ fn paragraph_block(text: impl Into<TextSpan>, columns: Option<usize>) -> Paragra
 
 pub fn conference_abstract_docx_template() -> Docx {
     // requirements: https://docs.google.com/document/d/1CoIPOtUko0ZpV3JgNn9JhV-l_kZDbKO8v66zrIS9dzg/edit
-    Docx::new()
+    let mut docx = Docx::new()
         .page_margin(
             PageMargin::new()
                 .top(mm_to_twentieth_of_a_point(15.0))
@@ -104,5 +104,9 @@ pub fn conference_abstract_docx_template() -> Docx {
         )
         .default_fonts(RunFonts::new().cs("Times New Roman"))
         .default_size(FONT_SIZE)
-        .default_tab_stop(0)
+        .default_tab_stop(0);
+
+    docx.document.section_property.section_type = Some(SectionType::Continuous);
+
+    docx
 }
