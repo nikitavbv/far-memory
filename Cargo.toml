@@ -19,7 +19,11 @@ clap = { version = "4.3.21", features = ["derive"] }
 markdown = "0.3.0"
 lopdf = "0.31.0"
 image = "0.24.7"
-docx-rs = { git = "https://github.com/nikitavbv/docx-rs" } # supports tab leader customization for table of contents, see https://github.com/bokuweb/docx-rs/issues/652
+
+# supports tab leader customization for table of contents, see https://github.com/bokuweb/docx-rs/issues/652
+# also supports sections for paragraphs (for example, to have paragraphs with multiple columns), see https://github.com/bokuweb/docx-rs/issues/664
+docx-rs = { git = "https://github.com/nikitavbv/docx-rs" }
+
 thiserror = "1.0.48"
 rand = "0.8.5"
 quantiles = "0.7.1"
