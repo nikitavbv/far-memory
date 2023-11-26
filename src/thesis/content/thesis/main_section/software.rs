@@ -4,7 +4,13 @@ pub fn software() -> Block {
     Block::Multiple(vec![
         section_header("Опис програмного забезпечення"),
         subsection_header("Вимоги до програмного забезпечення"),
-        Block::Placeholder(Box::new(paragraph("some text here")), "add some text here".to_owned()),
+        paragraph("Як було зазначено в попередніх розділах, до реалізації віддаленої памʼяті, що розглядається в цій роботі, висуваються \
+вимоги які визначені розглянутими особливостями середовища та програмного забезпечення, у яке вона інтегрується."),
+        paragraph("Віддалена памʼять повинна інтегруватися у програмне забезпечення за допомогою бібліотеки або віртуального блокового \
+пристрою. У разі використання бібліотеки, розробнику прикладного програмного забезпечення повинен надаватись клієнт віддаленої памʼяті, \
+який надає засоби для зберігання послідовностей байт, обʼєктів наданих користувачем та структур даних оптимізованих для роботи з віддаленою \
+памʼяттю."),
+        // todo: tell a bit more about integration if needed and move to next requirements (reliability, performance).
         // requirements: I already told about requirements in previous section, but it makes sense to revise them briefly and talk a bit about hardware requirements as well.
         // вимоги до програмного продукту
         // - вимоги до функціональних характеристик
