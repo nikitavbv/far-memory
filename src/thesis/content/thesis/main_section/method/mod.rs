@@ -38,7 +38,5 @@ pub fn far_memory_method() -> Block {
 памʼяті та її використання для оптимізації роботи віддаленої памʼяті."),
         paragraph("Реалізація віддаленої памʼяті, яка розглядається в цій роботі, складається з методів вирішення кожної з підзадач, які було сформульовано та \
 проаналізовано в цьому розділі."),
-
-        // in third section explain that a demo app was implemented to measure how well everything works and the hardware of the test environment.
     ])
 }

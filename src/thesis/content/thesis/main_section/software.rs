@@ -1,19 +1,7 @@
-use {
-    crate::thesis::engine::{Block, subsection_header, paragraph, unordered_list, section_header, SubsectionHeaderBlock},
-    self::{
-        research::research,
-        method::far_memory_method,
-    },
-};
+use crate::thesis::engine::{Block, subsection_header, section_header};
 
-mod method;
-mod research;
-
-pub fn main_section() -> Block {
+pub fn software() -> Block {
     Block::Multiple(vec![
-        research(),
-        far_memory_method(),
-
         section_header("Опис програмного забезпечення"),
         subsection_header("Вимоги до програмного забезпечення"),
         Block::Placeholder(Box::new(paragraph("some text here")), "add some text here".to_owned()),
@@ -43,13 +31,6 @@ pub fn main_section() -> Block {
         // tell how users are expected to install and operate far memory. tell a bit about deployment as well. tell about options to use Kubernetes.
 
         Block::SubsectionHeader(SubsectionHeaderBlock::without_numbering("Висновки до розділу".to_owned())),
-        Block::Placeholder(Box::new(paragraph("some text here")), "add some text here".to_owned()),
-
-        section_header("Оцінка ефективності"), // todo: how to name it correctly?
-        Block::Placeholder(Box::new(paragraph("some text here")), "add some text here".to_owned()),
-        // in third section explain that a demo app was implemented to measure how well everything works and the hardware of the test environment.
-
-        section_header("Маркетинговий аналіз стартап-проекту"),
         Block::Placeholder(Box::new(paragraph("some text here")), "add some text here".to_owned()),
     ])
 }
