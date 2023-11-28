@@ -263,24 +263,26 @@ impl FarMemoryClient {
 
         span!(Level::DEBUG, "swap out finalize ops").in_scope(|| {
             for op in finalize_ops {
-                if op.full_swap_out {
-                    self.spans.write().unwrap().insert(op.span_id.clone(), FarMemorySpan::Remote { local_part: None, total_size: op.total_size });
-                    op.local_part.free();
-                } else {
-                    self.spans.write().unwrap().insert(op.span_id.clone(), FarMemorySpan::Remote { local_part: Some(op.local_part.shrink(op.swap_out_size)), total_size: op.total_size });
-                }
+                span!(Level::DEBUG, "finalize op").in_scope(|| {
+                    if op.full_swap_out {
+                        self.spans.write().unwrap().insert(op.span_id.clone(), FarMemorySpan::Remote { local_part: None, total_size: op.total_size });
+                        span!(Level::DEBUG, "freeing local part").in_scope(|| op.local_part.free());
+                    } else {
+                        self.spans.write().unwrap().insert(op.span_id.clone(), FarMemorySpan::Remote { local_part: Some(op.local_part.shrink(op.swap_out_size)), total_size: op.total_size });
+                    }
 
-                let span_states = self.span_states.read().unwrap();
-                let mut span_state = span_states[&op.span_id].lock().unwrap();
-                if *span_state != SpanState::SwappingOut {
-                    panic!("expected span to be in swapping out state when actually swapping out");
-                }
-                *span_state = SpanState::Free;
-                self.replacement_policy.on_span_swap_out(&op.span_id);
+                    let span_states = self.span_states.read().unwrap();
+                    let mut span_state = span_states[&op.span_id].lock().unwrap();
+                    if *span_state != SpanState::SwappingOut {
+                        panic!("expected span to be in swapping out state when actually swapping out");
+                    }
+                    *span_state = SpanState::Free;
+                    self.replacement_policy.on_span_swap_out(&op.span_id);
 
-                if let Some(metrics) = self.metrics.as_ref() {
-                    metrics.span_swap_out_ops.inc();
-                }
+                    if let Some(metrics) = self.metrics.as_ref() {
+                        metrics.span_swap_out_ops.inc();
+                    }
+                });
             }
         });
 
