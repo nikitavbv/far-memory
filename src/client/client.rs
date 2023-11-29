@@ -268,7 +268,13 @@ impl FarMemoryClient {
                         self.spans.write().unwrap().insert(op.span_id.clone(), FarMemorySpan::Remote { local_part: None, total_size: op.total_size });
                         span!(Level::DEBUG, "freeing local part").in_scope(|| op.local_part.free());
                     } else {
-                        self.spans.write().unwrap().insert(op.span_id.clone(), FarMemorySpan::Remote { local_part: Some(op.local_part.shrink(op.swap_out_size)), total_size: op.total_size });
+                        self.spans.write().unwrap().insert(
+                            op.span_id.clone(),
+                            FarMemorySpan::Remote {
+                                local_part: Some(span!(Level::DEBUG, "shrinking local part").in_scope(|| op.local_part.shrink(op.swap_out_size))),
+                                total_size: op.total_size
+                            }
+                        );
                     }
 
                     let span_states = self.span_states.read().unwrap();
