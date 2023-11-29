@@ -21,6 +21,16 @@ unsafe impl GlobalAlloc for TrackingAllocator {
 
         System.dealloc(ptr, layout)
     }
+
+    unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
+        if new_size > layout.size() {
+            self.memory_usage.fetch_add((new_size - layout.size()) as u64, Ordering::Relaxed);
+        } else {
+            self.memory_usage.fetch_sub((layout.size() - new_size) as u64, Ordering::Relaxed);
+        }
+
+        System.realloc(ptr, layout, new_size)
+    }
 }
 
 pub fn current_memory_usage() -> u64 {
