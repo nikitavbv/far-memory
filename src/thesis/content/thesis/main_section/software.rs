@@ -30,9 +30,15 @@ pub fn software() -> Block {
         paragraph("Усі вузли розгортаються на операційній системі Linux."),
 
         subsection_header("Засоби розробки"),
-        Block::Placeholder(Box::new(paragraph("some text here")), "add some text here".to_owned()),
-        // засоби розробки
-        // tell about Rust and some main crates that I use and why.
+        paragraph("Для реалізації усіх компонентів віддаленої памʼяті було обрано мову програмування Rust. Rust є популярною мовою у сфері \
+системного програмування та є ефективною для цієї задачі так як ця мова є компільованою, не має збирача сміття, використовує абстракції з \
+нульовою ціною що дозволяє отримати рівень швидкодії що є подібним до рівня який забезпечують такі мови програмування як C чи C++. При цьому\
+, Rust гарантує безпечну роботу з памʼяттю завдяки системі статичної перевірки посилань (borrow checker), що спрощує написання безпеченого \
+програмного забезпечення та паралельних обчислень. Крім цього, Rust є сучасною мовою програмування що підтримує функціональну парадигму \
+програмування, має строгу типізацію, що спрощує розробку програмного забезпечення. Розвинена екосистема цієї мови дає можливість \
+використовувати якісні бібліотеки для типових задач, де це необхідно."),
+        // tell about some main crates (crossbeam, tokio, tracing, tracing-chrome, vblk, serde, serde-bytes, bincode, reed-solomon-erasure, candle, aes-gcm, lz4, thiserror, prometheus) that I use and why.
+        // tell a bit about docker and kubernetes.
 
         subsection_header("Архітектура програмного забезпечення"),
         Block::Placeholder(Box::new(paragraph("some text here")), "add some text here".to_owned()),
