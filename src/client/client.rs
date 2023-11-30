@@ -181,9 +181,9 @@ impl FarMemoryClient {
             };
 
             let local_data = span!(Level::DEBUG, "creating local data").in_scope(|| if let Some(local_data) = local_data {
-                local_data.extend_with_vec(data)
+                span!(Level::DEBUG, "extending local data").in_scope(|| local_data.extend_with_vec(data))
             } else {
-                LocalSpanData::from_vec(data)
+                span!(Level::DEBUG, "creating local data from vec").in_scope(|| LocalSpanData::from_vec(data))
             });
 
             let ptr = local_data.ptr();
