@@ -180,11 +180,11 @@ impl FarMemoryClient {
                 FarMemorySpan::Remote { local_part, total_size: _ } => local_part,
             };
 
-            let local_data = if let Some(local_data) = local_data {
+            let local_data = span!(Level::DEBUG, "creating local data").in_scope(|| if let Some(local_data) = local_data {
                 local_data.extend_with_vec(data)
             } else {
                 LocalSpanData::from_vec(data)
-            };
+            });
 
             let ptr = local_data.ptr();
             self.spans.write().unwrap().insert(id.clone(), FarMemorySpan::Local {
