@@ -159,7 +159,7 @@ impl FarMemoryClient {
             span.remote_memory_usage()
         };
 
-        let _guard = span!(Level::DEBUG, "waiting for lock").in_scope(|| self.swap_in_out_lock.lock().unwrap());
+        let swap_ops_lock_guard = span!(Level::DEBUG, "waiting for lock").in_scope(|| self.swap_in_out_lock.lock().unwrap());
 
         let data = span!(Level::DEBUG, "swap out and swap in").in_scope(|| {
             // only need to free as much memory as remote part will take. There is already memory for local part of span
@@ -190,6 +190,8 @@ impl FarMemoryClient {
             self.spans.write().unwrap().insert(id.clone(), FarMemorySpan::Local {
                 data: local_data,
             });
+
+            drop(swap_ops_lock_guard);
 
             self.replacement_policy.on_span_swap_in(id);
             if let Some(metrics) = self.metrics.as_ref() {
