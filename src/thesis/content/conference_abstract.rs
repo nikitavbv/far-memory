@@ -2,6 +2,7 @@ use {
     docx_rs::{Docx, PageMargin, RunFonts, SectionType},
     crate::thesis::{
         engine::{Block, ParagraphBlock, TextSpan, SectionHeaderBlock, SubsectionHeaderBlock},
+        content::classification_code,
         utils::mm_to_twentieth_of_a_point,
     },
 };
@@ -12,20 +13,20 @@ const INTERVAL: f32 = 1.15;
 pub fn conference_abstract() -> Block {
     Block::Multiple(vec![
         paragraph(TextSpan::Multiple(vec![
-            "УДК 004.414".into(),
+            format!("UDC {}", classification_code()).into(),
         ])),
         paragraph(TextSpan::Multiple(vec![
             TextSpan::Italic(Box::new(TextSpan::Multiple(vec![
-                TextSpan::Bold(Box::new(TextSpan::Regular("Грищенко Сергій Володимирович".to_owned()))),
-                TextSpan::Regular(", здобувач вищої освіти".to_owned()),
+                TextSpan::Bold(Box::new(TextSpan::Regular("Volobuiev Nikita Oleksandrovich".to_owned()))),
+                TextSpan::Regular(", master's degree student".to_owned()),
                 TextSpan::Break,
-                TextSpan::Regular("КПІ ім. Ігоря Сікорського, Україна".to_owned()),
+                TextSpan::Regular("Igor Sikorsky Kyiv Polytechnic Institute, Ukraine".to_owned()),
             ]))),
             TextSpan::Break,
             TextSpan::Multiple(vec![
                 TextSpan::Italic(Box::new(TextSpan::Multiple(vec![
-                    TextSpan::Bold(Box::new(TextSpan::Regular("Науковий керівник: Іваненко Олексій Петрович".to_owned()))),
-                    TextSpan::Regular(", доктор технічних наук,".to_owned()),
+                    TextSpan::Bold(Box::new(TextSpan::Regular("Supervisor: Pavlov Oleksandr Anatoliyovych".to_owned()))),
+                    TextSpan::Regular(", Doctor of Engineering Sciences,".to_owned()), // TODO: continue here
                     TextSpan::Break,
                     TextSpan::Regular("професор, професор кафедри інформатики та програмної інженерії".to_owned()),
                     TextSpan::Break,
