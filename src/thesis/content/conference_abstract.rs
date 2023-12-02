@@ -1,8 +1,9 @@
 use {
     docx_rs::{Docx, PageMargin, RunFonts, SectionType},
+    itertools::Itertools,
     crate::thesis::{
         engine::{Block, ParagraphBlock, TextSpan, SectionHeaderBlock, SubsectionHeaderBlock},
-        content::classification_code,
+        content::{classification_code, keywords, Language},
         utils::mm_to_twentieth_of_a_point,
     },
 };
@@ -35,23 +36,32 @@ pub fn conference_abstract() -> Block {
             ]),
         ])),
         Block::SectionHeader(
-            SectionHeaderBlock::without_numbering("РОЗРОБКА ІНФОРМАЦІЙНОЇ СИСТЕМИ УПРАВЛІННЯ ЗАКЛАДОМ ВИЩОЇ ОСВІТИ".to_owned())
+            SectionHeaderBlock::without_numbering("Methods and software for providing software-defined far memory in distributed systems".to_uppercase())
                 .do_not_include_in_table_of_contents()
                 .without_page_break_before()
         ),
         paragraph(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new(TextSpan::Regular("Анотація.".to_owned()))),
-            " Текст анотації. Текст анотації. Текст анотації. Текст анотації. Текст анотації. Текст анотації. Текст анотації. Текст анотації. Текст анотації. Текст анотації. Текст анотації. Текст анотації. Текст анотації. Текст анотації.".into(),
+            " У роботі розглянуто проблему надання віддаленої памʼяті у розподілених системах. Розглянуто підходи до інтеграції віддаленої памʼяті у програмне \
+забезпечення, забезпечення відмовостійкості та високого рівня швидкодії. Запропоновано удосконалений алгоритм заміщення проміжків, що спирається на статистику \
+доступів до проміжків памʼяті для більш ефективного переміщення проміжків між локальною та віддаленою памʼяттю, що дозволяє знизити затримку доступу до даних \
+у порівнянні з більш простими підходами заміщення проміжків.".into(),
             TextSpan::Break,
             TextSpan::Bold(Box::new("КЛЮЧОВІ СЛОВА:".into())),
-            " мінімум 3 слова.".into(),
+            " ".into(),
+            TextSpan::Multiple(keywords().into_iter().map(|v| v.for_language(&Language::Ukrainian).into()).intersperse(", ".into()).collect()),
+            ".".into(),
         ])),
         paragraph(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Abstract.".into())),
-            " Abstract text. Abstract text. Abstract text. Abstract text. Abstract text. Abstract text. Abstract text. Abstract text. Abstract text. Abstract text. Abstract text. Abstract text. Abstract text. Abstract text.".into(),
+            " This paper discusses the problem of providing far memory in distributed systems. The approaches to integrating far memory into software, ensuring \
+fault tolerance and high performance are reviewed. An improved span replacement algorithm is proposed which is based on memory span access statistics and provides \
+more efficient swapping between local and remote memory. This results in reduction of data access latency compared to simple span replacement approaches.".into(),
             TextSpan::Break,
-            TextSpan::Bold(Box::new("KEY WORDS:".into())), // spelling matches the template
-            " at least 3 words.".into(),
+            TextSpan::Bold(Box::new("KEYWORDS:".into())),
+            " ".into(),
+            TextSpan::Multiple(keywords().into_iter().map(|v| v.for_language(&Language::English).into()).intersperse(", ".into()).collect()),
+            ".".into(),
         ])),
         paragraph(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Вступ.".into())),

@@ -53,36 +53,7 @@ The result was achieved by developing a method of an online optimization of far 
 програмне забезпечення, забезпечує відмовостійкість та низький рівень затримки доступу до даних. Результат досягнутий шляхом розробки методу онлайн-оптимізації параметрів \
 роботи віддаленої памʼяті.".to_owned(),
             ),
-            keywords: vec![
-                MultiLanguageString::new(
-                    "Far memory",
-                    "Віддалена памʼять"
-                ),
-                MultiLanguageString::new(
-                    "Distributed systems",
-                    "Розподілені системи"
-                ),
-                MultiLanguageString::new(
-                    "Computer networks",
-                    "Комп'ютерні мережі"
-                ),
-                MultiLanguageString::new(
-                    "Data structures",
-                    "Структури даних"
-                ),
-                MultiLanguageString::new(
-                    "Computer networks",
-                    "Комп'ютерні мережі"
-                ),
-                MultiLanguageString::new(
-                    "Linux",
-                    "Linux"
-                ),
-                MultiLanguageString::new(
-                    "Rust",
-                    "Rust"
-                )
-            ],
+            keywords: keywords(),
             tasks: thesis_tasks(),
         }
     }
@@ -242,6 +213,35 @@ pub fn thesis_tasks() -> Vec<MultiLanguageString> {
 
 pub fn classification_code() -> String {
     "004.75".to_owned()
+}
+
+pub fn keywords() -> Vec<MultiLanguageString> {
+    vec![
+        MultiLanguageString::new(
+            "far memory",
+            "віддалена памʼять"
+        ),
+        MultiLanguageString::new(
+            "distributed systems",
+            "розподілені системи"
+        ),
+        MultiLanguageString::new(
+            "computer networks",
+            "комп'ютерні мережі"
+        ),
+        MultiLanguageString::new(
+            "page replacement",
+            "заміщення сторінок"
+        ),
+        MultiLanguageString::new(
+            "Linux",
+            "Linux"
+        ),
+        MultiLanguageString::new(
+            "Rust",
+            "Rust"
+        )
+    ]
 }
 
 #[cfg(test)]
