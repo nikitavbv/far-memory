@@ -69,7 +69,7 @@ more efficient swapping between local and remote memory. This results in reducti
         ])),
         end_section(1),
         paragraph(TextSpan::Multiple(vec![
-            TextSpan::Bold(Box::new("Main part.".into())),
+            TextSpan::Bold(Box::new("Main part.".into())), // TODO: this should be replaced with something better. For example, "background", "exisisting implementations", "far memory integration into software", etc.
             " Main part text.".into(),
         ])),
         end_section(2),
