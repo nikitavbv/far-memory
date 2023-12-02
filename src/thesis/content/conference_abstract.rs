@@ -20,17 +20,17 @@ pub fn conference_abstract() -> Block {
                 TextSpan::Bold(Box::new(TextSpan::Regular("Volobuiev Nikita Oleksandrovich".to_owned()))),
                 TextSpan::Regular(", master's degree student".to_owned()),
                 TextSpan::Break,
-                TextSpan::Regular("Igor Sikorsky Kyiv Polytechnic Institute, Ukraine".to_owned()),
+                TextSpan::Regular("National Technical University of Ukraine «Igor Sikorsky Kyiv Polytechnic Institute», Ukraine".to_owned()),
             ]))),
             TextSpan::Break,
             TextSpan::Multiple(vec![
                 TextSpan::Italic(Box::new(TextSpan::Multiple(vec![
                     TextSpan::Bold(Box::new(TextSpan::Regular("Supervisor: Pavlov Oleksandr Anatoliyovych".to_owned()))),
-                    TextSpan::Regular(", Doctor of Engineering Sciences,".to_owned()), // TODO: continue here
+                    TextSpan::Regular(", doctor of technical sciences,".to_owned()),
                     TextSpan::Break,
-                    TextSpan::Regular("професор, професор кафедри інформатики та програмної інженерії".to_owned()),
+                    TextSpan::Regular("professor, professor of computer science and software engineering department".to_owned()),
                     TextSpan::Break,
-                    TextSpan::Regular("КПІ ім. Ігоря Сікорського, Україна".to_owned()),
+                    TextSpan::Regular("National Technical University of Ukraine «Igor Sikorsky Kyiv Polytechnic Institute», Ukraine".to_owned()),
                 ]))),
             ]),
         ])),
