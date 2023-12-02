@@ -64,21 +64,21 @@ more efficient swapping between local and remote memory. This results in reducti
             ".".into(),
         ])),
         paragraph(TextSpan::Multiple(vec![
-            TextSpan::Bold(Box::new("Вступ.".into())),
-            " Текст вступу. Текст вступу. Текст вступу. Текст вступу. Текст вступу. Текст вступу. Текст вступу. Текст вступу.".into(),
+            TextSpan::Bold(Box::new("Introduction.".into())),
+            " Introduction text.".into(),
         ])),
         end_section(1),
         paragraph(TextSpan::Multiple(vec![
-            TextSpan::Bold(Box::new("Основна частина.".into())),
-            " Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини.  Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини. Текст основної частини.".into(),
+            TextSpan::Bold(Box::new("Main part.".into())),
+            " Main part text.".into(),
         ])),
         end_section(2),
         paragraph(TextSpan::Multiple(vec![
-            TextSpan::Bold(Box::new("Висновки.".into())),
-            " Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків. Текст висновків.".into(),
+            TextSpan::Bold(Box::new("Conclusion.".into())),
+            " Conclusion text.".into(),
         ])),
         Block::SubsectionHeader(
-            SubsectionHeaderBlock::without_numbering("Список інформаційних джерел".to_owned())
+            SubsectionHeaderBlock::without_numbering("References.".to_owned())
                 .without_tab()
                 .center()
                 .bold()
