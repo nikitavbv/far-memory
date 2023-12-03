@@ -65,7 +65,7 @@ more efficient swapping between local and remote memory. This results in reducti
         ])),
         paragraph(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Introduction.".into())),
-            " Introduction text.".into(),
+            " Modern datacenters rely on various approaches to improving resource utilization.".into(),
         ])),
         end_section(1),
         paragraph(TextSpan::Multiple(vec![
