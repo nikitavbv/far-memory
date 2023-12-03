@@ -249,13 +249,15 @@ impl FarMemoryClient {
                 let remaining_local_part = local_part.size() - swap_out_size;
                 let full_swap_out = remaining_local_part == 0;
 
-                let data = if full_swap_out {
+                let data = span!(Level::DEBUG, "reading local part").in_scope(|| if full_swap_out {
                     local_part.read_to_slice()
                 } else {
                     // read from end
                     local_part.read_to_slice_with_range(remaining_local_part..local_part.size())
-                };
+                });
 
+                let push_ops_span = span!(Level::DEBUG, "push ops");
+                let _push_ops_span_guard = push_ops_span.enter();
                 swap_out_ops.push(SwapOutOperation::new(span_id.clone(), data.to_vec(), prepend_to_backend));
                 finalize_ops.push(SwapOutFinalizeOperation { span_id: span_id.clone(), local_part, full_swap_out, total_size, swap_out_size: *swap_out_size })
             });
