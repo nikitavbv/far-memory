@@ -101,7 +101,19 @@ available from analyzing data access patterns."),
         paragraph_without_after_space("AIFM: High-Performance, Application-Integrated Far Memory shows the benefit of application-level far memory integration. \
 However, this implementation supports only one storage node and does not provide fault tolerance."),
         paragraph_without_after_space("Some implementations, like Hydra, rely on specialized hardware, for example network interface cards and network equipment \
-supporting Remote Direct Memory Access (RDMA) like InfiniBand. While it allows ..."),
+supporting Remote Direct Memory Access (RDMA) like InfiniBand. While it allows to transfer spans between nodes with low latency, installing or upgrading hardware \
+may not be desirable or achievable in most environments. Performing changes to the hardware configuration of a large datacenter has costs associated with it which \
+may outweigh the benefits of higher memory utilization that far memory provides."),
+        paragraph_without_after_space("Other implementations, like \"Software-Defined Far Memory in Warehouse-Scale Computers\", use more advanced approaches to \
+optimize far memory performance, including statistics collection across the fleet to build a model predicting optimal parameters for the system. However, this \
+implementation uses disk as storage backend, which is not optimal for many applications. Disk-backed memory has lower memory operations performance compared to \
+RAM of remote nodes (note that disk-backed memory still involves network operations in disaggregated infrastructure, so the difference here narrows down to \
+latency of local disk and local RAM on the remote node)."),
+        paragraph_without_after_space("These properties and problems associated with them of existing solutions create a need for far memory implementation that \
+would be open source, integrate into software with little or no changes to the codebase, while providing fault tolerance and high memory access operations \
+performance. The latter can be improved by developing more efficient span replacement algorithms."),
+        // todo: design
+        // todo: evaluation
         end_section(2),
         paragraph(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Conclusion.".into())),
