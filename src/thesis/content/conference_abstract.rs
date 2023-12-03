@@ -112,7 +112,20 @@ latency of local disk and local RAM on the remote node)."),
         paragraph_without_after_space("These properties and problems associated with them of existing solutions create a need for far memory implementation that \
 would be open source, integrate into software with little or no changes to the codebase, while providing fault tolerance and high memory access operations \
 performance. The latter can be improved by developing more efficient span replacement algorithms."),
-        // todo: design
+        paragraph_without_after_space(TextSpan::Multiple(vec![
+            TextSpan::Bold(Box::new("Designing a method and software for providing far memory.".into())),
+            " The implementation of far memory that is being discussed in this paper similarly to existing implementations operates on the following principle: \
+a far memory client is integrated into the software that moves some of its data to be managed by far memory client. Far memory client in its turn moves chunks \
+of data (called spans, represented as byte sequences) to the memory of remote nodes and moves back to local memory (swap in operation) when software requests \
+access to this data. Lower memory usage is possible due to only part of spans being present in local memory at once.".into(),
+        ])),
+        paragraph_without_after_space("This implementation consists of the following components: compute nodes, storage nodes and manager node. Compute node \
+is a node that puts memory spans into the system for storage. Compute nodes may be repesented by different applications and different versions of these \
+applications. Spans are the central entity which far memory client operates on and are identified by an ID (64 bit number). Data associated with span may be located \
+in the local memory or on storage backend. Far memory implementation that is being discussed in this paper supports multiple storage backend implementations: \
+local memory, solid state drives, one or multiple remote nodes. The latter is the main mode of operation, while others are implemented for testing purposes \
+and to fit specific environments when those storage backends may be more practical. Storage nodes serve the function of storing spans data that were swapped out \
+and can be viewed as a key-value storage. Having multiple ... creates a need for ..."),
         // todo: evaluation
         end_section(2),
         paragraph(TextSpan::Multiple(vec![
