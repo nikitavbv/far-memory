@@ -80,9 +80,18 @@ to this problem, because compute nodes may be constrained by some other resource
 with persistent storage is problematic due to more strict performance requirements set for this class of memory. Separating RAM into dedicated infrastructure \
 that is accessed over the network significantly affects latency and bandwidth numbers for memory access operations. This difference is enough for typical software \
 running on compute nodes to noticably degrade in peformance, breaching service level objectives (SLOs) defined for this software."),
-        paragraph(TextSpan::Multiple(vec![
-            TextSpan::Bold(Box::new("Main part.".into())), // TODO: this should be replaced with something better. For example, "background", "exisisting implementations", "far memory integration into software", etc.
-            " Main part text.".into(),
+        paragraph_without_after_space("One approach to solve this is software-defined far memory. The idea behind this method is that some chunks of data can be \
+moved from compute nodes with heavy RAM utilization to nodes where there is a lot of free RAM and access this data over the network when needed in a way that is \
+transparent to the software (working with data in far memory should be similar to working with data in regular RAM while requiring little or none changes to software \
+source code). This results in higher memory utilization overall while also allowing software to process datasets that are larger in size than RAM available on \
+single compute node."),
+        paragraph_without_after_space("The goal of far memory is to move as many data as possible from local memory to the memory of remote nodes while also solving challenges that \
+come up in this configuration. Far memory implementation should ensure high performance of memory access operations, provide fault tolerance given expanded \
+failure domain and integrate into software without significant changes to the codebase and without relying on additional hardware."),
+        paragraph_without_after_space(TextSpan::Multiple(vec![
+            TextSpan::Bold(Box::new("Overview of existing implementations.".into())), // TODO: this should be replaced with something better. For example, "exisisting implementations", "far memory integration into software", etc.
+            " There are not many existing implementations of far memory because this topic became interesting for operators of the largest datacenters relatively \
+recently. At the time of writing, Carbink is considered a state of the art far memory implementation, while other notable implementations include ...".into(),
         ])),
         end_section(2),
         paragraph(TextSpan::Multiple(vec![
