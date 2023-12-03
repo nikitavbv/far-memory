@@ -89,10 +89,19 @@ single compute node."),
 come up in this configuration. Far memory implementation should ensure high performance of memory access operations, provide fault tolerance given expanded \
 failure domain and integrate into software without significant changes to the codebase and without relying on additional hardware."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
-            TextSpan::Bold(Box::new("Overview of existing implementations.".into())), // TODO: this should be replaced with something better. For example, "exisisting implementations", "far memory integration into software", etc.
+            TextSpan::Bold(Box::new("Overview of existing implementations.".into())),
             " There are not many existing implementations of far memory because this topic became interesting for operators of the largest datacenters relatively \
-recently. At the time of writing, Carbink is considered a state of the art far memory implementation, while other notable implementations include ...".into(),
+recently. At the time of writing, Carbink is considered a state of the art far memory implementation, while other notable implementations include Hydra, AIFM and \
+\"Software-Defined Far Memory in Warehouse-Scale Computers\".".into(),
         ])),
+        paragraph_without_after_space("While Carbink is an advanced far memory implementation, it is closed source, tied to the infrastructure and tooling of a \
+specific datacenter operator (Google) and is not available for external use. It also relies on application-level integration and does not have a way to integrate \
+into software be other means. Memory spans replacements and defragmentation is optimized based on simple heuristics which do not use any information that may be \
+available from analyzing data access patterns."),
+        paragraph_without_after_space("AIFM: High-Performance, Application-Integrated Far Memory shows the benefit of application-level far memory integration. \
+However, this implementation supports only one storage node and does not provide fault tolerance."),
+        paragraph_without_after_space("Some implementations, like Hydra, rely on specialized hardware, for example network interface cards and network equipment \
+supporting Remote Direct Memory Access (RDMA) like InfiniBand. While it allows ..."),
         end_section(2),
         paragraph(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Conclusion.".into())),
