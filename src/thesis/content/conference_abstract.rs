@@ -65,8 +65,13 @@ more efficient swapping between local and remote memory. This results in reducti
         ])),
         paragraph(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Introduction.".into())),
-            " Modern datacenters rely on various approaches to improving resource utilization.".into(),
+            " Modern datacenters rely on various approaches to improving resource efficiency. For instance, CPU oversubscription is frequently used to improve \
+CPU compute time utilization. Another resource is persistent storage for which resource disaggregation is applied in modern infrastructure. Instead of storage \
+devices being located on individual compute nodes (servers), it is separated into dedicated storage infrastructure which forms a pool of storage shared \
+between all compute nodes. This allows to assign as much storage to compute nodes as it is needed by the software running on them. This also avoids situation \
+where storage space on individual nodes remains unused because tasks running have lower storage requests than what is provided by compute node hardware.".into(),
         ])),
+        paragraph("For random access memory (RAM), operators of world's largest datacenters report average utilization of around 60%. Just as with storage, ..."),
         end_section(1),
         paragraph(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Main part.".into())), // TODO: this should be replaced with something better. For example, "background", "exisisting implementations", "far memory integration into software", etc.
