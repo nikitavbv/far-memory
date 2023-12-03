@@ -63,16 +63,23 @@ more efficient swapping between local and remote memory. This results in reducti
             TextSpan::Multiple(keywords().into_iter().map(|v| v.for_language(&Language::English).into()).intersperse(", ".into()).collect()),
             ".".into(),
         ])),
-        paragraph(TextSpan::Multiple(vec![
+        end_section(1),
+        paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Introduction.".into())),
             " Modern datacenters rely on various approaches to improving resource efficiency. For instance, CPU oversubscription is frequently used to improve \
 CPU compute time utilization. Another resource is persistent storage for which resource disaggregation is applied in modern infrastructure. Instead of storage \
 devices being located on individual compute nodes (servers), it is separated into dedicated storage infrastructure which forms a pool of storage shared \
-between all compute nodes. This allows to assign as much storage to compute nodes as it is needed by the software running on them. This also avoids situation \
-where storage space on individual nodes remains unused because tasks running have lower storage requests than what is provided by compute node hardware.".into(),
+between all compute nodes. In this configuration, access to data stored on drives is provided over the network. This allows to assign as much storage to compute \
+nodes as it is needed by the software running on them. This also avoids situation where storage space on individual nodes remains unused because tasks running \
+have lower storage requests than what is provided by compute node hardware.".into(),
         ])),
-        paragraph("For random access memory (RAM), operators of world's largest datacenters report average utilization of around 60%. Just as with storage, ..."),
-        end_section(1),
+        paragraph_without_after_space(
+            "For random access memory (RAM), operators of world's largest datacenters report average utilization of around 60%. Just as with storage, \
+some compute nodes in the cluster may be running software that requires less memory than what the hardware provides. Efficiency of task scheduling is unrelated \
+to this problem, because compute nodes may be constrained by some other resource (for example, CPU compute time). Following the exact same approach with RAM as \
+with persistent storage is problematic due to more strict performance requirements set for this class of memory. Separating RAM into dedicated infrastructure \
+that is accessed over the network significantly affects latency and bandwidth numbers for memory access operations. This difference is enough for typical software \
+running on compute nodes to noticably degrade in peformance, breaching service level objectives (SLOs) defined for this software."),
         paragraph(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Main part.".into())), // TODO: this should be replaced with something better. For example, "background", "exisisting implementations", "far memory integration into software", etc.
             " Main part text.".into(),
@@ -101,7 +108,21 @@ fn end_section(columns: usize) -> Block {
 }
 
 fn paragraph(text: impl Into<TextSpan>) -> Block {
-    Block::Paragraph(ParagraphBlock::new(text.into()).with_tab(false).with_line_spacing(FONT_SIZE, INTERVAL).with_after_spacing(300))
+    paragraph_with_params(text, true)
+}
+
+fn paragraph_without_after_space(text: impl Into<TextSpan>) -> Block {
+    paragraph_with_params(text, false)
+}
+
+fn paragraph_with_params(text: impl Into<TextSpan>, after_spacing: bool) -> Block {
+    let block = ParagraphBlock::new(text.into()).with_tab(false).with_line_spacing(FONT_SIZE, INTERVAL);
+    let block = if after_spacing {
+        block.with_after_spacing(300)
+    } else {
+        block
+    };
+    Block::Paragraph(block)
 }
 
 pub fn conference_abstract_docx_template() -> Docx {
