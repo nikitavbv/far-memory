@@ -53,15 +53,9 @@ impl LocalSpanData {
     }
 
     pub fn from_vec(data: Vec<u8>) -> Self {
-        // TODO: just use vec pointer?
+        let ptr = data.as_ptr() as *mut u8;
         let size = data.len();
-        let ptr = unsafe {
-            GLOBAL.alloc(span_layout(size))
-        };
-
-        unsafe {
-            std::ptr::copy(data.as_slice() as *const _ as *const u8, ptr, size);
-        };
+        std::mem::forget(data);
 
         Self::for_local_ptr_and_size(ptr, size)
     }
