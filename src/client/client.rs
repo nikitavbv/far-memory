@@ -231,32 +231,34 @@ impl FarMemoryClient {
 
         // (span, how much memory to swap out - can be partial or full swap out)
         for (span_id, swap_out_size) in spans {
-            let span = self.spans.write().unwrap().remove(&span_id).unwrap();
-            let total_size = span.total_size();
-            let (local_part, prepend_to_backend) = match span {
-                FarMemorySpan::Local { data } => {
-                    (data, false) // not prepending to remote, because span is local
-                },
-                FarMemorySpan::Remote { local_part, total_size: _ } => (
-                    local_part.expect("expected span to contain local part when swapping out"),
-                    true, // prepending, because this span already contains a remote part
-                ),
-            };
-            if *swap_out_size > local_part.size() {
-                panic!("swap out size cannot be larger than local part size");
-            }
-            let remaining_local_part = local_part.size() - swap_out_size;
-            let full_swap_out = remaining_local_part == 0;
+            span!(Level::DEBUG, "creating swap op").in_scope(|| {
+                let span = self.spans.write().unwrap().remove(&span_id).unwrap();
+                let total_size = span.total_size();
+                let (local_part, prepend_to_backend) = match span {
+                    FarMemorySpan::Local { data } => {
+                        (data, false) // not prepending to remote, because span is local
+                    },
+                    FarMemorySpan::Remote { local_part, total_size: _ } => (
+                        local_part.expect("expected span to contain local part when swapping out"),
+                        true, // prepending, because this span already contains a remote part
+                    ),
+                };
+                if *swap_out_size > local_part.size() {
+                    panic!("swap out size cannot be larger than local part size");
+                }
+                let remaining_local_part = local_part.size() - swap_out_size;
+                let full_swap_out = remaining_local_part == 0;
 
-            let data = if full_swap_out {
-                local_part.read_to_slice()
-            } else {
-                // read from end
-                local_part.read_to_slice_with_range(remaining_local_part..local_part.size())
-            };
+                let data = if full_swap_out {
+                    local_part.read_to_slice()
+                } else {
+                    // read from end
+                    local_part.read_to_slice_with_range(remaining_local_part..local_part.size())
+                };
 
-            swap_out_ops.push(SwapOutOperation::new(span_id.clone(), data.to_vec(), prepend_to_backend));
-            finalize_ops.push(SwapOutFinalizeOperation { span_id: span_id.clone(), local_part, full_swap_out, total_size, swap_out_size: *swap_out_size })
+                swap_out_ops.push(SwapOutOperation::new(span_id.clone(), data.to_vec(), prepend_to_backend));
+                finalize_ops.push(SwapOutFinalizeOperation { span_id: span_id.clone(), local_part, full_swap_out, total_size, swap_out_size: *swap_out_size })
+            });
         }
 
         let swap_in_data = span!(Level::DEBUG, "backend batch swap").in_scope(|| {
