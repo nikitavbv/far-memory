@@ -258,7 +258,7 @@ impl FarMemoryClient {
 
                 let push_ops_span = span!(Level::DEBUG, "push ops");
                 let _push_ops_span_guard = push_ops_span.enter();
-                swap_out_ops.push(SwapOutOperation::new(span_id.clone(), data.to_vec(), prepend_to_backend));
+                swap_out_ops.push(SwapOutOperation::new(span_id.clone(), span!(Level::DEBUG, "data to vec").in_scope(|| data.to_vec()), prepend_to_backend));
                 finalize_ops.push(SwapOutFinalizeOperation { span_id: span_id.clone(), local_part, full_swap_out, total_size, swap_out_size: *swap_out_size })
             });
         }
