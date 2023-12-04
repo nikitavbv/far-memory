@@ -121,6 +121,14 @@ impl LocalSpanData {
         }
     }
 
+    pub fn into_vec(mut self) -> Vec<u8> {
+        let vec = unsafe {
+          Vec::from_raw_parts(self.ptr, self.size, self.size)
+        };
+        self.ptr = std::ptr::null_mut();
+        vec
+    }
+
     pub fn ptr(&self) -> *mut u8 {
         self.ptr.clone()
     }

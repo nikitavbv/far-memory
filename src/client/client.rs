@@ -220,7 +220,7 @@ impl FarMemoryClient {
     fn swap_out_spans_and_swap_in(&self, spans: &[(SpanId, usize)], swap_in: Option<&SpanId>) -> Option<Vec<u8>> {
         struct SwapOutFinalizeOperation {
             span_id: SpanId,
-            local_part: LocalSpanData,
+            local_part: Option<LocalSpanData>,
             full_swap_out: bool,
             total_size: usize,
             swap_out_size: usize,
@@ -249,16 +249,16 @@ impl FarMemoryClient {
                 let remaining_local_part = local_part.size() - swap_out_size;
                 let full_swap_out = remaining_local_part == 0;
 
-                let data = span!(Level::DEBUG, "reading local part").in_scope(|| if full_swap_out {
-                    local_part.read_to_slice()
+                let (data, local_part) = span!(Level::DEBUG, "reading local part").in_scope(|| if full_swap_out {
+                    (local_part.into_vec(), None)
                 } else {
                     // read from end
-                    local_part.read_to_slice_with_range(remaining_local_part..local_part.size())
+                    (local_part.read_to_slice_with_range(remaining_local_part..local_part.size()).to_vec(), Some(local_part))
                 });
 
                 let push_ops_span = span!(Level::DEBUG, "push ops");
                 let _push_ops_span_guard = push_ops_span.enter();
-                swap_out_ops.push(SwapOutOperation::new(span_id.clone(), span!(Level::DEBUG, "data to vec", full_swap_out).in_scope(|| data.to_vec()), prepend_to_backend));
+                swap_out_ops.push(SwapOutOperation::new(span_id.clone(), span!(Level::DEBUG, "data to vec", full_swap_out).in_scope(|| data), prepend_to_backend));
                 finalize_ops.push(SwapOutFinalizeOperation { span_id: span_id.clone(), local_part, full_swap_out, total_size, swap_out_size: *swap_out_size })
             });
         }
@@ -272,12 +272,11 @@ impl FarMemoryClient {
                 span!(Level::DEBUG, "finalize op").in_scope(|| {
                     if op.full_swap_out {
                         self.spans.write().unwrap().insert(op.span_id.clone(), FarMemorySpan::Remote { local_part: None, total_size: op.total_size });
-                        span!(Level::DEBUG, "freeing local part").in_scope(|| op.local_part.free());
                     } else {
                         self.spans.write().unwrap().insert(
                             op.span_id.clone(),
                             FarMemorySpan::Remote {
-                                local_part: Some(span!(Level::DEBUG, "shrinking local part").in_scope(|| op.local_part.shrink(op.swap_out_size))),
+                                local_part: Some(span!(Level::DEBUG, "shrinking local part").in_scope(|| op.local_part.unwrap().shrink(op.swap_out_size))),
                                 total_size: op.total_size
                             }
                         );
