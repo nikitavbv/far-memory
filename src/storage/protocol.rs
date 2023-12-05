@@ -38,5 +38,13 @@ pub enum SpanData {
     Inline(#[serde(with = "serde_bytes")] Vec<u8>),
     External {
         len: u64,
+    },
+}
+
+pub enum InlineSpanData {
+    Owned(Vec<u8>),
+    ReadFrom {
+        ptr: *mut u8,
+        size: usize,
     }
 }

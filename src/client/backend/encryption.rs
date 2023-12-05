@@ -2,7 +2,7 @@ use {
     aes_gcm::{aead::{KeyInit, Aead, AeadCore}, Aes256Gcm, Key},
     rand::rngs::OsRng,
     crate::client::span::SpanId,
-    super::{FarMemoryBackend, SwapOutOperation},
+    super::{FarMemoryBackend, SwapOutOperation, SwapOutOperationData},
 };
 
 pub struct EncryptionBackend {
@@ -39,7 +39,7 @@ impl EncryptionBackend {
         swap_out_operations.into_iter()
             .map(|v| SwapOutOperation {
                 id: v.id,
-                data: self.encrypt(&v.data),
+                data: SwapOutOperationData::Owned(self.encrypt(v.data.as_slice())),
                 prepend: v.prepend,
             })
             .collect()

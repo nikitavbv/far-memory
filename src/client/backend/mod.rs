@@ -20,7 +20,7 @@ pub trait FarMemoryBackend: Send + Sync {
     }
 
     fn batch(&self, swap_out_operations: Vec<SwapOutOperation>, swap_in: Option<&SpanId>) -> Option<Vec<u8>> {
-        swap_out_operations.iter().for_each(|op| self.swap_out(op.id.clone(), &op.data, op.prepend));
+        swap_out_operations.iter().for_each(|op| self.swap_out(op.id.clone(), op.data.as_slice(), op.prepend));
         swap_in.map(|v| self.swap_in(&v))
     }
 
@@ -29,16 +29,42 @@ pub trait FarMemoryBackend: Send + Sync {
 
 pub struct SwapOutOperation {
     id: SpanId,
-    data: Vec<u8>,
+    data: SwapOutOperationData,
     prepend: bool,
 }
 
 impl SwapOutOperation {
-    pub fn new(id: SpanId, data: Vec<u8>, prepend: bool) -> Self {
+    pub fn new(id: SpanId, data: SwapOutOperationData, prepend: bool) -> Self {
         Self {
             id,
             data,
             prepend,
+        }
+    }
+}
+
+pub enum SwapOutOperationData {
+    Owned(Vec<u8>),
+    ReadFrom {
+        ptr: *mut u8,
+        size: usize,
+    }
+}
+
+impl SwapOutOperationData {
+    pub fn as_slice(&self) -> &[u8] {
+        match self {
+            Self::Owned(data) => &data,
+            Self::ReadFrom { ptr, size } => unsafe {
+                std::slice::from_raw_parts(*ptr, *size)
+            }
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        match self {
+            Self::Owned(data) => data.len(),
+            Self::ReadFrom { ptr: _, size } => *size,
         }
     }
 }

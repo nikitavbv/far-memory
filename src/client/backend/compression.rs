@@ -2,7 +2,7 @@ use {
     std::io::{Write, Read},
     lz4::{EncoderBuilder, Decoder},
     crate::client::span::SpanId,
-    super::{FarMemoryBackend, SwapOutOperation},
+    super::{FarMemoryBackend, SwapOutOperation, SwapOutOperationData},
 };
 
 pub struct CompressionBackend {
@@ -40,7 +40,7 @@ impl CompressionBackend {
         swap_out_operations.into_iter()
             .map(|v| SwapOutOperation {
                 id: v.id,
-                data: self.compress(&v.data),
+                data: SwapOutOperationData::Owned(self.compress(v.data.as_slice())),
                 prepend: v.prepend,
             })
             .collect()

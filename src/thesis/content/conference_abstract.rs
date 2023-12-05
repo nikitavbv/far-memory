@@ -138,7 +138,9 @@ to identify when it is no longer needed and can be swapped out safely. Far memor
 backend, swap in and swap out processes. Given that providing higher level abstractions allows to make far memory more efficient due to additional information \
 available during memory access event (for example, knowing which specific part of data structure is accessed allows to swap it in only partially, avoiding full \
 swap in that would happen otherwise) this library provides implementations of data structures optimized for use with far memory. These data structures include \
-byte buffer, vector, hash table and others. Another important aspect is conversion of objects into byte sequence and vice versa. The simplest approach is ..."), // todo: tell about just taking memory and serialziation.
+byte buffer, vector, hash table and others. Another important aspect is conversion of objects into byte sequence and vice versa. The simplest approach is ..."),
+        // todo: tell about just taking memory and serialziation.
+        // todo: tell about virtual block device.
         // todo: evaluation
         end_section(2),
         paragraph(TextSpan::Multiple(vec![

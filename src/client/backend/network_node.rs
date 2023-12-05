@@ -4,7 +4,7 @@ use {
         storage::{Client, SwapOutRequest, SpanData},
         client::span::SpanId,
     },
-    super::{FarMemoryBackend, SwapOutOperation},
+    super::{FarMemoryBackend, SwapOutOperation, SwapOutOperationData},
 };
 
 pub struct NetworkNodeBackend {
@@ -39,7 +39,7 @@ impl FarMemoryBackend for NetworkNodeBackend {
     fn batch(&self, swap_out_operations: Vec<SwapOutOperation>, swap_in: Option<&SpanId>) -> Option<Vec<u8>> {
         self.client.lock().unwrap().batch(swap_out_operations.into_iter().map(|v| SwapOutRequest {
             span_id: v.id.id(),
-            data: SpanData::Inline(v.data),
+            data: SpanData::Inline(v.data.as_slice().to_vec()),
             prepend: v.prepend,
         }).collect(), swap_in.map(|v| v.id()))
     }

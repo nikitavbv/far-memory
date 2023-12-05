@@ -1,3 +1,5 @@
+use super::backend::SwapOutOperationData;
+
 use {
     std::{alloc::{GlobalAlloc, Layout}, ops::Range},
     tracing::{span, Level},
@@ -127,6 +129,13 @@ impl LocalSpanData {
         };
         self.ptr = std::ptr::null_mut();
         vec
+    }
+
+    pub fn to_swap_out_operation_data_with_range(&self, range: Range<usize>) -> SwapOutOperationData {
+        // not safe and not nice, but good enough for now
+        unsafe {
+            SwapOutOperationData::ReadFrom { ptr: self.ptr.add(range.start), size: range.len() }
+        }
     }
 
     pub fn ptr(&self) -> *mut u8 {

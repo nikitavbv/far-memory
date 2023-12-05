@@ -5,7 +5,7 @@ use {
     prometheus::{Registry, register_int_gauge_with_registry, IntGauge, IntCounter, register_int_counter_with_registry},
     crate::manager::ManagerClient,
     super::{
-        backend::{FarMemoryBackend, SwapOutOperation},
+        backend::{FarMemoryBackend, SwapOutOperation, SwapOutOperationData},
         replacement::{ReplacementPolicy, MostRecentlyUsedReplacementPolicy, PreferRemoteSpansReplacementPolicy, ReplayReplacementPolicy},
         span::{SpanId, FarMemorySpan, LocalSpanData},
     },
@@ -250,10 +250,10 @@ impl FarMemoryClient {
                 let full_swap_out = remaining_local_part == 0;
 
                 let (data, local_part) = span!(Level::DEBUG, "reading local part").in_scope(|| if full_swap_out {
-                    (local_part.into_vec(), None)
+                    (SwapOutOperationData::Owned(local_part.into_vec()), None)
                 } else {
                     // read from end
-                    (local_part.read_to_slice_with_range(remaining_local_part..local_part.size()).to_vec(), Some(local_part))
+                    (local_part.to_swap_out_operation_data_with_range(remaining_local_part..local_part.size()), Some(local_part))
                 });
 
                 let push_ops_span = span!(Level::DEBUG, "push ops");
