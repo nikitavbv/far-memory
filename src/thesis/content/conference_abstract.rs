@@ -138,9 +138,26 @@ to identify when it is no longer needed and can be swapped out safely. Far memor
 backend, swap in and swap out processes. Given that providing higher level abstractions allows to make far memory more efficient due to additional information \
 available during memory access event (for example, knowing which specific part of data structure is accessed allows to swap it in only partially, avoiding full \
 swap in that would happen otherwise) this library provides implementations of data structures optimized for use with far memory. These data structures include \
-byte buffer, vector, hash table and others. Another important aspect is conversion of objects into byte sequence and vice versa. The simplest approach is ..."),
-        // todo: tell about just taking memory and serialziation.
-        // todo: tell about virtual block device.
+byte buffer, vector, hash table and others. Another important aspect is conversion of objects into byte sequence and vice versa. The simplest approach is just \
+copying the whole area of memory where object is stored as is. While far memory client implements this approach, it is not optimal for a number of use cases. \
+Typically, data structures contain pointers to other nested data structures meaning that during swap out (and swap in as well) it may be desirable for client to \
+traverse the whole structure and send it to remote node along with nested objects. For this reason, far memory client provides FarMemorySerialized<T> which \
+relies on serialization (implemented using serde) to serialize and deserialize object with nested fields when performing swap out."),
+        paragraph_without_after_space("Given that scenarios when changing source code of software is not possible exist, this far memory implementation provides \
+a different method of integration for such cases. By implementing a virtual block device (based on nbd), far memory client provides a way for the user to place \
+Linux swap partition on block device backed by far memory. This allows to move infrequently accessed memory pages (by utilizing existing swapping mechanisms \
+in operating system) to far memory with performance higher than if swapping was performed to disk as it happens normally. This method also allows to use far \
+memory as a form of RAM disk which may be useful for some types of software."),
+        paragraph_without_after_space("Another important aspect of far memory implementation is providing fault tolerance. Moving data to other devices (including \
+remote nodes) expands failure domain of the system. It is not possible to make probability of data loss for far memory to be as low as it is for local RAM, but this \
+probability can be minimized. While storing a copy of data on disk is supported by this implementation, it is not optimal due to high recovery time and increased \
+use of a different storage class (SSD disk space). Another option is data replication to multiple remote nodes, but it results in inefficient use remote nodes \
+memory. The most efficient approach is using Reed-Solomon coding which is frequently applied to this class of tasks. In short, when swapping out data is split \
+into N shards and additional M parity shards. These shards are stored on different nodes and in the event of node failure and loss of any M shards, data can \
+still be restored by performing a linear transformation from the existing shards."),
+        paragraph_without_after_space("Performance is critical for far memory and defines field of software and use-cases where far memory can be applied. Data access \
+time for ..."), // todo: tell why in general far memory is slower than local ram, what can make it fast and how it is up to developer which parameters to choose.
+        // todo: tell about performance
         // todo: evaluation
         end_section(2),
         paragraph(TextSpan::Multiple(vec![
