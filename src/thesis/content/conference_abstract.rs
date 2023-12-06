@@ -156,8 +156,21 @@ memory. The most efficient approach is using Reed-Solomon coding which is freque
 into N shards and additional M parity shards. These shards are stored on different nodes and in the event of node failure and loss of any M shards, data can \
 still be restored by performing a linear transformation from the existing shards."),
         paragraph_without_after_space("Performance is critical for far memory and defines field of software and use-cases where far memory can be applied. Data access \
-time for ..."), // todo: tell why in general far memory is slower than local ram, what can make it fast and how it is up to developer which parameters to choose.
-        // todo: tell about performance
+time for data in far memory will always be higher compared to data stored in local RAM because latency and bandwidth numbers for remote storage devices is \
+significantly higher than for RAM. In these conditions it is not possible to make far memory as fast as local RAM, however additional latency can be minimzed to \
+level that acceptable for real world applications. There is a balance between how actively far memory is used by the application and impact on its performance. \
+It is up to application developer how much performance they are willing to trade for lower local memory usage."),
+        paragraph_without_after_space("To make this implementation of far memory performant, the client uses hardware resources efficiently by avoiding unnecessary \
+copying of data and communicating with other nodes using lightweight network protocol that is based on TCP and uses the simplest form of request serialization \
+based on bincode. Compression is not used (but can be optionally enabled by the user) because modern compression algorithms are typically slower (6.4Gbps for lz4) \
+than modern network transfer speed (10Gbps and more is typical for datacenter). Far memory client implements partial span swap out to move as much memory as \
+required to maintain enough free memory which is beneficial when dealing with large spans. To avoid blocking application threads with waiting for enough free \
+memory on swap in, a background thread is implemented to free memory (by swapping out) proactively."),
+        paragraph_without_after_space("However, the key to making far memory performance more close to local RAM is always having data that application is about \
+to access locally. One way to achieve this is to swap in spans in advance in a background thread. In ideal scenario, when this background thread chooses spans to \
+swap in accurately enough and transfers them to local memory quickly enough, application threads will never be blocked by waiting for far memory client to finish \
+swap in of spans."),
+        // todo: tell about span replacement algorithms
         // todo: evaluation
         end_section(2),
         paragraph(TextSpan::Multiple(vec![
