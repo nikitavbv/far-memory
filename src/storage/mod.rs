@@ -11,7 +11,7 @@ use {
 
 pub use self::{
     protocol::{SwapOutRequest, SpanData},
-    client::Client,
+    client::{Client, BatchSwapOutOperation, LocalSpanData},
 };
 
 const REQ_SIZE_LIMIT: u64 = 10 * 1024 * 1024 * 1024;

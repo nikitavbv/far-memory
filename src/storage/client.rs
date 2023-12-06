@@ -49,8 +49,13 @@ impl Client {
         }
     }
 
-    pub fn batch(&mut self, swap_out: Vec<SwapOutRequest>, swap_in: Option<u64>) -> Option<Vec<u8>> {
-        let mut reqs: Vec<_> = swap_out.into_iter().map(|v| StorageRequest::SwapOut(SwapOutRequest { span_id: v.span_id, prepend: v.prepend, data: v.data })).collect();
+    pub fn batch(&mut self, swap_out: Vec<BatchSwapOutOperation>, swap_in: Option<u64>) -> Option<Vec<u8>> {
+        let mut reqs: Vec<_> = swap_out.iter().map(|v| StorageRequest::SwapOut(SwapOutRequest {
+            span_id: v.span_id,
+            prepend: v.prepend,
+            data: SpanData::External { len: v.data.len() },
+        })).collect();
+        let local_span_data: Vec<_> = swap_out.into_iter().map(|v| v.data).collect();
         if let Some(span_id) = swap_in {
             reqs.push(StorageRequest::SwapIn { span_id });
         }
@@ -59,7 +64,7 @@ impl Client {
 
         let mut swap_in_result = None;
 
-        match self.request(req) {
+        match self.request_with_external_span_data(req, local_span_data) {
             StorageResponse::Batch(responses) => for res in responses {
                 match res {
                     StorageResponse::Ok => (),
@@ -105,15 +110,27 @@ impl Client {
         })
     }
 
+    fn request_with_external_span_data(&mut self, request: StorageRequest, span_data: Vec<LocalSpanData>) -> StorageResponse {
+        span!(Level::DEBUG, "writing request").in_scope(|| {
+            self.write_request_with_external_span_data(request, span_data);
+        });
+        span!(Level::DEBUG, "reading response").in_scope(|| {
+            self.read_response()
+        })
+    }
+
     fn write_request(&mut self, request: StorageRequest) {
         let mut span_data = Vec::new();
         let request = extract_span_data_from_request(request, &mut span_data);
+        self.write_request_with_external_span_data(request, span_data)
+    }
 
+    fn write_request_with_external_span_data(&mut self, request: StorageRequest, span_data: Vec<LocalSpanData>) {
         let serialized = span!(Level::DEBUG, "serialize").in_scope(|| bincode::serialize(&request).unwrap());
 
         span!(Level::DEBUG, "write header").in_scope(|| self.stream.write(&(serialized.len() as u64).to_be_bytes()).unwrap());
         span!(Level::DEBUG, "write data").in_scope(|| self.stream.write(&serialized).unwrap());
-        span!(Level::DEBUG, "writing span data").in_scope(|| span_data.into_iter().for_each(|v| { self.stream.write(span_data_as_slice(&v)).unwrap(); }));
+        span!(Level::DEBUG, "writing span data").in_scope(|| span_data.into_iter().for_each(|v| { self.stream.write(v.as_slice()).unwrap(); }));
     }
 
     fn read_response(&mut self) -> StorageResponse {
@@ -137,24 +154,41 @@ impl Client {
     }
 }
 
-fn span_data_as_slice(span_data: &SpanData) -> &[u8] {
-    match span_data {
-        SpanData::Inline(data) => &data,
-        _ => panic!("expected span data to be inline"),
+pub enum LocalSpanData {
+    Owned(Vec<u8>),
+}
+
+impl LocalSpanData {
+    fn as_slice(&self) -> &[u8] {
+        match self {
+            Self::Owned(data) => &data,
+        }
+    }
+
+    fn len(&self) -> u64 {
+        match self {
+            Self::Owned(data) => data.len() as u64,
+        }
     }
 }
 
-fn extract_span_data_from_request(request: StorageRequest, span_data: &mut Vec<SpanData>) -> StorageRequest {
+pub struct BatchSwapOutOperation {
+    pub span_id: u64,
+    pub data: LocalSpanData,
+    pub prepend: bool,
+}
+
+fn extract_span_data_from_request(request: StorageRequest, span_data: &mut Vec<LocalSpanData>) -> StorageRequest {
     match request {
         StorageRequest::SwapOut(swap_out_request) => {
-            let len = match &swap_out_request.data {
+            let len = match swap_out_request.data {
                 SpanData::Inline(data) => {
                     let len = data.len();
+                    span_data.push(LocalSpanData::Owned(data));
                     len as u64
                 },
                 _ => panic!("expected span data to be inline"),
             };
-            span_data.push(swap_out_request.data);
 
             StorageRequest::SwapOut(SwapOutRequest {
                 data: SpanData::External { len },
