@@ -113,7 +113,7 @@ impl Client {
 
         span!(Level::DEBUG, "write header").in_scope(|| self.stream.write(&(serialized.len() as u64).to_be_bytes()).unwrap());
         span!(Level::DEBUG, "write data").in_scope(|| self.stream.write(&serialized).unwrap());
-        span!(Level::DEBUG, "writing span data").in_scope(|| span_data.into_iter().for_each(|v| { self.stream.write(&v).unwrap(); }));
+        span!(Level::DEBUG, "writing span data").in_scope(|| span_data.into_iter().for_each(|v| { self.stream.write(span_data_as_slice(&v)).unwrap(); }));
     }
 
     fn read_response(&mut self) -> StorageResponse {
@@ -137,17 +137,24 @@ impl Client {
     }
 }
 
-fn extract_span_data_from_request(request: StorageRequest, span_data: &mut Vec<Vec<u8>>) -> StorageRequest {
+fn span_data_as_slice(span_data: &SpanData) -> &[u8] {
+    match span_data {
+        SpanData::Inline(data) => &data,
+        _ => panic!("expected span data to be inline"),
+    }
+}
+
+fn extract_span_data_from_request(request: StorageRequest, span_data: &mut Vec<SpanData>) -> StorageRequest {
     match request {
         StorageRequest::SwapOut(swap_out_request) => {
-            let len = match swap_out_request.data {
+            let len = match &swap_out_request.data {
                 SpanData::Inline(data) => {
                     let len = data.len();
-                    span_data.push(data);
                     len as u64
                 },
                 _ => panic!("expected span data to be inline"),
             };
+            span_data.push(swap_out_request.data);
 
             StorageRequest::SwapOut(SwapOutRequest {
                 data: SpanData::External { len },
