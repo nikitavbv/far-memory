@@ -166,11 +166,30 @@ based on bincode. Compression is not used (but can be optionally enabled by the 
 than modern network transfer speed (10Gbps and more is typical for datacenter). Far memory client implements partial span swap out to move as much memory as \
 required to maintain enough free memory which is beneficial when dealing with large spans. To avoid blocking application threads with waiting for enough free \
 memory on swap in, a background thread is implemented to free memory (by swapping out) proactively."),
-        paragraph_without_after_space("However, the key to making far memory performance more close to local RAM is always having data that application is about \
-to access locally. One way to achieve this is to swap in spans in advance in a background thread. In ideal scenario, when this background thread chooses spans to \
+        paragraph_without_after_space("However, the key to making far memory performance more close to local RAM is always keeping data that application is about \
+to access local. One way to achieve this is to swap in spans in advance in a background thread. In ideal scenario, when this background thread chooses spans to \
 swap in accurately enough and transfers them to local memory quickly enough, application threads will never be blocked by waiting for far memory client to finish \
-swap in of spans."),
-        // todo: tell about span replacement algorithms
+swap in of spans. Far memory implementation that is discussed in this paper includes such background thread."),
+        paragraph_without_after_space("It is easy to notice that the method of choosing spans to swap out (and swap in in advance) plays significant role in far \
+memory performance. To maximize performance, each time when swap out is needed it is more optimal to pick spans that will be accessed last of all. At the same time,
+for swap in in advance it is better to pick spans that are going to be accessed sooner than other spans. This creates a need for span replacement algorithm that \
+takes span access history (including previous application runs) as an input and produces candidates for swap in and swap out. With this formulation, it it similar \
+to page replacement algorithms in operating systems. There are various kinds of span replacement algorithms that can be used for far memory and in this work \
+multiple are implemented and can be choosed by user according to their needs. This implementation includes random replacement policy, least recently used policy, \
+most recently used policy. Most existing far memory implementations rely on simple heurisitics and algorithms as their replacement policy (usually \"least recently \
+used\" policy is used)."),
+        paragraph_without_after_space("However, real world software has different and complex memory access patterns which makes relying on simple heurisitic \
+inefficient. Imagine software that scans all of its working set sequently in cycle. LRU policy which is popular is actually the least efficient here: it will pick \
+exactly those spans for swap out that will be accessed soon. That's why this far memory implementation takes a different approach. Given that there is relatively \
+low number of spans in the system, it is feasible to collect and track access statistics for all of them. These stats are sent from compute notes to manager node \
+that processes them. Based on this data, manager node can build models that can rely on complex span access patterns to better predict next span access events. \
+After the model is built, it is fetched by compute nodes and is used as span replacement policy. This work includes an \"ideal model\" that picks spans for swap \
+in and swap out perfectly given that memory access patterns are static. Another implementation is based on recurrent neural network and is able to handle \
+applications with dynamic memory access patterns."),
+        paragraph_without_after_space(TextSpan::Multiple(vec![
+            TextSpan::Bold(Box::new("Performance evaluation.".into())),
+            " To evaluate end-to-end performance of this far memory implementation it was integrated into ...".into(),
+        ])),
         // todo: evaluation
         end_section(2),
         paragraph(TextSpan::Multiple(vec![
