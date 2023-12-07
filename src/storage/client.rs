@@ -156,18 +156,26 @@ impl Client {
 
 pub enum LocalSpanData {
     Owned(Vec<u8>),
+    ReadFrom {
+        ptr: *mut u8,
+        size: usize,
+    }
 }
 
 impl LocalSpanData {
     fn as_slice(&self) -> &[u8] {
         match self {
             Self::Owned(data) => &data,
+            Self::ReadFrom { ptr, size } => unsafe {
+                std::slice::from_raw_parts(*ptr, *size)
+            }
         }
     }
 
     fn len(&self) -> u64 {
         match self {
             Self::Owned(data) => data.len() as u64,
+            Self::ReadFrom { ptr: _, size } => *size as u64,
         }
     }
 }
