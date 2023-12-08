@@ -63,6 +63,9 @@ pub struct Args {
     llm_inference_demo: bool,
 
     #[arg(long)]
+    web_service_demo: bool,
+
+    #[arg(long)]
     benchmark: bool,
 
     #[arg(long)]
@@ -158,6 +161,11 @@ pub fn main() {
         } else {
             run();
         }
+    } else if args.web_service_demo {
+        let run_id = generate_run_id();
+        println!("run id: {:?}", run_id);
+
+        // TODO: run web service demo
     } else if args.benchmark {
         run_benchmark(&read_token(), args.storage_endpoint.clone());
     } else if args.block_device_demo {
