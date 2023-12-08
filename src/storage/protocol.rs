@@ -1,7 +1,12 @@
 use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Serialize, Deserialize)]
-pub enum StorageRequest {
+pub struct StorageRequest {
+    pub body: StorageRequestBody,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum StorageRequestBody {
     Auth {
         token: String,
     },
@@ -12,7 +17,7 @@ pub enum StorageRequest {
     SwapIn {
         span_id: u64,
     },
-    Batch(Vec<StorageRequest>),
+    Batch(Vec<StorageRequestBody>),
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]

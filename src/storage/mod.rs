@@ -6,7 +6,7 @@ use {
     },
     tracing::{info, error, span, Level},
     prometheus::{Registry, register_int_counter_vec_with_registry, IntCounterVec, IntGaugeVec, register_int_gauge_vec_with_registry},
-    self::protocol::{StorageRequest, StorageResponse},
+    self::protocol::{StorageRequest, StorageRequestBody, StorageResponse},
 };
 
 pub use self::{
@@ -81,7 +81,7 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
                 req
             };
 
-            let req = {
+            let mut req: StorageRequest = {
                 let _req_deserialize_body = span!(Level::DEBUG, "deserialize request body").entered();
 
                 match bincode::deserialize(&req) {
@@ -93,9 +93,9 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
                 }
             };
 
-            let req = inline_span_data_into_request(req, &mut stream);
+            req.body = inline_span_data_into_request(req.body, &mut stream);
 
-            let res = span!(Level::DEBUG, "handle request").in_scope(|| server.handle(req));
+            let res = span!(Level::DEBUG, "handle request").in_scope(|| server.handle(req.body));
             let (res, span_data) = match res {
                 StorageResponse::SwapIn { span_id, data } => {
                     let span_data = match data {
@@ -246,9 +246,9 @@ impl Server {
         }
     }
 
-    pub fn handle(&mut self, req: StorageRequest) -> StorageResponse {
+    pub fn handle(&mut self, req: StorageRequestBody) -> StorageResponse {
         match req {
-            StorageRequest::Auth { token } => {
+            StorageRequestBody::Auth { token } => {
                 self.auth = self.token == token;
                 if self.auth {
                     StorageResponse::Ok
@@ -256,11 +256,11 @@ impl Server {
                     StorageResponse::Forbidden
                 }
             },
-            StorageRequest::SetRunId { run_id } => {
+            StorageRequestBody::SetRunId { run_id } => {
                 self.run_id = run_id;
                 StorageResponse::Ok
             }
-            StorageRequest::SwapOut(swap_out_req) => {
+            StorageRequestBody::SwapOut(swap_out_req) => {
                 if !self.auth {
                     return StorageResponse::Forbidden;
                 }
@@ -286,7 +286,7 @@ impl Server {
 
                 StorageResponse::Ok
             },
-            StorageRequest::SwapIn { span_id } => {
+            StorageRequestBody::SwapIn { span_id } => {
                 if !self.auth {
                     return StorageResponse::Forbidden;
                 }
@@ -303,7 +303,7 @@ impl Server {
 
                 StorageResponse::SwapIn { span_id, data: SpanData::Inline(data) }
             },
-            StorageRequest::Batch(reqs) => {
+            StorageRequestBody::Batch(reqs) => {
                 let res = reqs.into_iter().map(|req| self.handle(req)).collect();
                 StorageResponse::Batch(res)
             },
@@ -315,9 +315,9 @@ impl Server {
     }
 }
 
-fn inline_span_data_into_request(request: StorageRequest, stream: &mut TcpStream) -> StorageRequest {
+fn inline_span_data_into_request(request: StorageRequestBody, stream: &mut TcpStream) -> StorageRequestBody {
     match request {
-        StorageRequest::SwapOut(swap_out_request) => {
+        StorageRequestBody::SwapOut(swap_out_request) => {
             let data = match swap_out_request.data {
                 SpanData::Inline(data) => SpanData::Inline(data),
                 SpanData::External { len } => SpanData::Inline({
@@ -327,12 +327,12 @@ fn inline_span_data_into_request(request: StorageRequest, stream: &mut TcpStream
                 })
             };
 
-            StorageRequest::SwapOut(SwapOutRequest {
+            StorageRequestBody::SwapOut(SwapOutRequest {
                 data,
                 ..swap_out_request
             })
         },
-        StorageRequest::Batch(reqs) => StorageRequest::Batch(reqs.into_iter().map(|v| inline_span_data_into_request(v, stream)).collect()),
+        StorageRequestBody::Batch(reqs) => StorageRequestBody::Batch(reqs.into_iter().map(|v| inline_span_data_into_request(v, stream)).collect()),
         other => other,
     }
 }

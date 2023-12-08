@@ -1,7 +1,7 @@
 use {
     std::{net::{TcpStream, Shutdown}, thread, time::Duration, io::{Write, Read}},
     tracing::{span, Level},
-    super::protocol::{StorageRequest, StorageResponse, SpanData, SwapOutRequest},
+    super::protocol::{StorageRequest, StorageRequestBody, StorageResponse, SpanData, SwapOutRequest},
 };
 
 pub struct Client {
@@ -25,7 +25,7 @@ impl Client {
     }
 
     pub fn auth(&mut self, token: &str) {
-        match self.request(StorageRequest::Auth {
+        match self.request(StorageRequestBody::Auth {
             token: token.to_owned(),
         }) {
             StorageResponse::Ok => (),
@@ -34,7 +34,7 @@ impl Client {
     }
 
     pub fn set_run_id(&mut self, run_id: String) {
-        match self.request(StorageRequest::SetRunId {
+        match self.request(StorageRequestBody::SetRunId {
             run_id,
         }) {
             StorageResponse::Ok => (),
@@ -43,24 +43,24 @@ impl Client {
     }
 
     pub fn swap_out(&mut self, span_id: u64, data: Vec<u8>, prepend: bool) {
-        match self.request(StorageRequest::SwapOut(SwapOutRequest { span_id, prepend, data: SpanData::Inline(data) })) {
+        match self.request(StorageRequestBody::SwapOut(SwapOutRequest { span_id, prepend, data: SpanData::Inline(data) })) {
             StorageResponse::Ok => (),
             other => panic!("unexpected swap out response: {:?}", other),
         }
     }
 
     pub fn batch(&mut self, swap_out: Vec<BatchSwapOutOperation>, swap_in: Option<u64>) -> Option<Vec<u8>> {
-        let mut reqs: Vec<_> = swap_out.iter().map(|v| StorageRequest::SwapOut(SwapOutRequest {
+        let mut reqs: Vec<_> = swap_out.iter().map(|v| StorageRequestBody::SwapOut(SwapOutRequest {
             span_id: v.span_id,
             prepend: v.prepend,
             data: SpanData::External { len: v.data.len() },
         })).collect();
         let local_span_data: Vec<_> = swap_out.into_iter().map(|v| v.data).collect();
         if let Some(span_id) = swap_in {
-            reqs.push(StorageRequest::SwapIn { span_id });
+            reqs.push(StorageRequestBody::SwapIn { span_id });
         }
 
-        let req = StorageRequest::Batch(reqs);
+        let req = StorageRequestBody::Batch(reqs);
 
         let mut swap_in_result = None;
 
@@ -86,7 +86,7 @@ impl Client {
     }
 
     pub fn swap_in(&mut self, span_id: u64) -> Vec<u8> {
-        let data = match self.request(StorageRequest::SwapIn { span_id }) {
+        let data = match self.request(StorageRequestBody::SwapIn { span_id }) {
             StorageResponse::SwapIn { span_id: _, data } => data,
             other => panic!("unexpected swap in response: {:?}", other),
         };
@@ -101,27 +101,27 @@ impl Client {
         }
     }
 
-    fn request(&mut self, request: StorageRequest) -> StorageResponse {
+    fn request(&mut self, request: StorageRequestBody) -> StorageResponse {
         span!(Level::DEBUG, "writing request").in_scope(|| {
-            self.write_request(request);
+            self.write_request(StorageRequest { body: request });
         });
         span!(Level::DEBUG, "reading response").in_scope(|| {
             self.read_response()
         })
     }
 
-    fn request_with_external_span_data(&mut self, request: StorageRequest, span_data: Vec<LocalSpanData>) -> StorageResponse {
+    fn request_with_external_span_data(&mut self, body: StorageRequestBody, span_data: Vec<LocalSpanData>) -> StorageResponse {
         span!(Level::DEBUG, "writing request").in_scope(|| {
-            self.write_request_with_external_span_data(request, span_data);
+            self.write_request_with_external_span_data(StorageRequest { body }, span_data);
         });
         span!(Level::DEBUG, "reading response").in_scope(|| {
             self.read_response()
         })
     }
 
-    fn write_request(&mut self, request: StorageRequest) {
+    fn write_request(&mut self, mut request: StorageRequest) {
         let mut span_data = Vec::new();
-        let request = extract_span_data_from_request(request, &mut span_data);
+        request.body = extract_span_data_from_request(request.body, &mut span_data);
         self.write_request_with_external_span_data(request, span_data)
     }
 
@@ -186,9 +186,9 @@ pub struct BatchSwapOutOperation {
     pub prepend: bool,
 }
 
-fn extract_span_data_from_request(request: StorageRequest, span_data: &mut Vec<LocalSpanData>) -> StorageRequest {
+fn extract_span_data_from_request(request: StorageRequestBody, span_data: &mut Vec<LocalSpanData>) -> StorageRequestBody {
     match request {
-        StorageRequest::SwapOut(swap_out_request) => {
+        StorageRequestBody::SwapOut(swap_out_request) => {
             let len = match swap_out_request.data {
                 SpanData::Inline(data) => {
                     let len = data.len();
@@ -198,12 +198,12 @@ fn extract_span_data_from_request(request: StorageRequest, span_data: &mut Vec<L
                 _ => panic!("expected span data to be inline"),
             };
 
-            StorageRequest::SwapOut(SwapOutRequest {
+            StorageRequestBody::SwapOut(SwapOutRequest {
                 data: SpanData::External { len },
                 ..swap_out_request
             })
         },
-        StorageRequest::Batch(reqs) => StorageRequest::Batch(reqs.into_iter().map(|v| extract_span_data_from_request(v, span_data)).collect()),
+        StorageRequestBody::Batch(reqs) => StorageRequestBody::Batch(reqs.into_iter().map(|v| extract_span_data_from_request(v, span_data)).collect()),
         other => other,
     }
 }
