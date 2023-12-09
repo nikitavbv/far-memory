@@ -10,13 +10,15 @@ pub struct ObjectId(u64);
 pub struct ObjectLocation {
     pub span_id: SpanId,
     pub offset: usize,
+    pub len: usize,
 }
 
 impl ObjectLocation {
-    pub fn new(span_id: SpanId, offset: usize) -> Self {
+    pub fn new(span_id: SpanId, offset: usize, len: usize) -> Self {
         Self {
             span_id,
             offset,
+            len,
         }
     }
 }
@@ -75,6 +77,7 @@ impl ObjectRegistry {
         let location = ObjectLocation {
             span_id: slot.span_id,
             offset: slot.offset,
+            len: object_size,
         };
         self.object_mapping.write().unwrap().insert(object_id, location.clone());
 
@@ -98,6 +101,10 @@ impl ObjectRegistry {
         }
 
         self.put_object(object_id, object_size).unwrap()
+    }
+
+    pub fn get_object(&self, object_id: &ObjectId) -> ObjectLocation {
+        self.object_mapping.read().unwrap().get(object_id).unwrap().clone()
     }
 }
 

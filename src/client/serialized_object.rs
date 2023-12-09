@@ -1,6 +1,6 @@
 use {
     std::{marker::PhantomData, ops::Deref},
-    serde::Serialize,
+    serde::{Serialize, de::DeserializeOwned},
     super::{FarMemoryClient, object::ObjectId},
 };
 
@@ -10,8 +10,9 @@ pub struct FarMemorySerialized<T> {
     _phantom: PhantomData<T>,
 }
 
-impl <T: Serialize> FarMemorySerialized<T> {
+impl <'a, T: Serialize> FarMemorySerialized<T> {
     pub fn from_value(client: FarMemoryClient, value: T) -> Self {
+        // TODO: use rkyv instead for better performance?
         let serialized = bincode::serialize(&value).unwrap();
         let object = client.put_object(serialized);
 
@@ -23,24 +24,18 @@ impl <T: Serialize> FarMemorySerialized<T> {
     }
 }
 
-impl<T> Deref for FarMemorySerialized<T> {
-    type Target = FarMemorySerializedLocal<T>;
+impl <T: DeserializeOwned> FarMemorySerialized<T> {
+    pub fn to_local(&self) -> T {
+        let location = self.client.get_object(&self.object);
+        let bytes = unsafe {
+            let ptr = self.client.span_ptr(&location.span_id).add(location.offset);
+            std::slice::from_raw_parts(ptr, location.len)
+        };
 
-    fn deref(&self) -> &Self::Target {
-        unimplemented!()
-    }
-}
+        let data = bincode::deserialize_from(bytes).unwrap();
+        self.client.decrease_refs_for_span(&location.span_id);
 
-pub struct FarMemorySerializedLocal<T> {
-    client: FarMemoryClient,
-    object: ObjectId,
-    data: T,
-}
-
-impl<T> Deref for FarMemorySerializedLocal<T> {
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        unimplemented!()
+        // returning just data, because it is owned, and spans refs are already decreased
+        data
     }
 }

@@ -472,6 +472,10 @@ impl FarMemoryClient {
 
         object_id
     }
+
+    pub fn get_object(&self, object_id: &ObjectId) -> ObjectLocation {
+        self.object_registry.get_object(object_id)
+    }
 }
 
 #[derive(Clone)]

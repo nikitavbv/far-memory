@@ -52,7 +52,7 @@ impl DemoWebService {
             .choose(&mut rand::thread_rng())
             .unwrap();
 
-        let picture = &self.pictures.get(picture_to_get as usize).unwrap().picture_data;
+        let picture = &self.pictures.get(picture_to_get as usize).unwrap().to_local().picture_data;
         let encrypted_picture = self.encrypt_picture(picture);
 
         // yes, encrpyted data cannot be compressed, but it still a good way to simulate CPU load. AIFM does the same for their evaluation.
