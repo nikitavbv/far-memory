@@ -1,3 +1,5 @@
+use rand::thread_rng;
+
 use {
     std::{collections::HashMap, io::Write},
     tracing::info,
@@ -30,10 +32,7 @@ impl DemoWebService {
             .map(|id| self.users.get(id).unwrap().picture_id)
             .sum();
 
-        // TODO: use zipf distribution
-        let index = rand::thread_rng().sample(Zipf::new(10, 1.5).unwrap());
-
-        let picture_to_get = picture_to_get % self.pictures.len() as u64; // TODO: zipf distribution
+        let picture_to_get = picture_to_get % self.pictures.len() as u64; // TODO: check if distribution is zipf here.
 
         let picture = &self.pictures.get(picture_to_get as usize).unwrap().picture_data;
         let encrypted_picture = self.encrypt_picture(picture);
@@ -137,37 +136,39 @@ example software to integrate to.
 pub fn run_web_service_demo() {
     info!("web service demo");
 
+    let zipf_s = 0.8;
+
     let pictures = generate_pictures(1000);
     info!("finished generating pictures");
 
     let total_users = 100;
-    let users = generate_users(total_users, pictures.len());
+    let users = generate_users(total_users, pictures.len(), zipf_s);
     info!("finished generating users");
 
     let web_service = DemoWebService::new(users, pictures);
 
-    let request = random_request(total_users);
+    let request = random_request(total_users, zipf_s);
     let response = web_service.handle_request(request);
 
 }
 
-fn random_request(total_users: usize) -> WebServiceRequest {
-    WebServiceRequest::new((0..32).map(|_| generate_user_id(total_users)).collect())
+fn random_request(total_users: usize, zipf_s: f64) -> WebServiceRequest {
+    WebServiceRequest::new((0..32).map(|_| generate_user_id(total_users, zipf_s)).collect())
 }
 
-fn generate_user_id(total_users: usize) -> UserId {
-    UserId::new(rand::thread_rng().gen_range(0..total_users as u64))
+fn generate_user_id(total_users: usize, zipf_s: f64) -> UserId {
+    UserId::new(rand::thread_rng().sample(Zipf::new(total_users as u64, zipf_s).unwrap()).round() as u64)
 }
 
-fn generate_users(total_users: usize, total_pictures: usize) -> HashMap<UserId, PictureId> {
+fn generate_users(total_users: usize, total_pictures: usize, zipf_s: f64) -> HashMap<UserId, PictureId> {
     (0..total_users)
         .into_iter()
-        .map(|user_id| (UserId::new(user_id as u64), PictureId::new(pick_picture_for_user(total_pictures))))
+        .map(|user_id| (UserId::new(user_id as u64), PictureId::new(pick_picture_for_user(total_pictures, zipf_s))))
         .collect()
 }
 
-fn pick_picture_for_user(total_pictures: usize) -> u64 {
-    rand::thread_rng().gen_range((0..total_pictures as u64))
+fn pick_picture_for_user(total_pictures: usize, zipf_s: f64) -> u64 {
+    rand::thread_rng().sample(Zipf::new(total_pictures as u64, zipf_s).unwrap()).round() as u64
 }
 
 fn generate_pictures(total_pictures: usize) -> Vec<Picture> {
