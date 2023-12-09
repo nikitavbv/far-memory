@@ -272,9 +272,9 @@ impl Server {
                 };
                 let bytes_swapped_out = data.len();
 
-                let existing = self.spans.insert(swap_out_req.span_id, data);
+                let existing = span!(Level::DEBUG, "inserting into spans").in_scope(|| self.spans.insert(swap_out_req.span_id, data));
                 if swap_out_req.prepend {
-                    self.spans.get_mut(&swap_out_req.span_id).unwrap().append(&mut existing.unwrap());
+                    span!(Level::DEBUG, "appending to existing span").in_scope(|| self.spans.get_mut(&swap_out_req.span_id).unwrap().append(&mut existing.unwrap()));
                 }
 
                 if let Some(metrics) = self.metrics.as_ref() {
