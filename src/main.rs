@@ -10,6 +10,7 @@ use {
         client::run_replacement_policies_demo,
         demo::{
             llm_inference::run_llm_inference_demo,
+            web_service::run_web_service_demo,
             benchmark::run_benchmark,
             simple::run_simple_demo,
             block_device::run_block_device_demo,
@@ -165,7 +166,7 @@ pub fn main() {
         let run_id = generate_run_id();
         println!("run id: {:?}", run_id);
 
-        // TODO: run web service demo
+        span!(Level::DEBUG, "web service demo").in_scope(|| run_web_service_demo());
     } else if args.benchmark {
         run_benchmark(&read_token(), args.storage_endpoint.clone());
     } else if args.block_device_demo {
