@@ -1,13 +1,12 @@
 use {
-    std::{collections::HashMap, io::Write},
+    std::{collections::HashMap, io::Write, time::Instant, hint::black_box},
     tracing::info,
     rand::{RngCore, Rng, rngs::OsRng, prelude::SliceRandom},
     rand_distr::Zipf,
     aes_gcm::{aead::{KeyInit, Aead, AeadCore}, Aes256Gcm},
-    indicatif::ProgressIterator,
 };
 
-const PICTURE_SIZE: usize = 8 * 1024 * 1024;
+const PICTURE_SIZE: usize = 8 * 1024;
 
 struct DemoWebService {
     users: HashMap<UserId, PictureId>,
@@ -140,18 +139,37 @@ pub fn run_web_service_demo() {
     let zipf_s = 0.8;
 
     let pictures = generate_pictures(1000);
-    info!("finished generating pictures");
+    println!("finished generating pictures");
 
     let total_users = 100;
     let users = generate_users(total_users, pictures.len(), zipf_s);
-    info!("finished generating users");
+    println!("finished generating users");
 
     let web_service = DemoWebService::new(users, pictures);
 
-    for n in (0..10000).progress() {
+    let mut total_requests = 0;
+    let started_at = Instant::now();
+
+    let mut checkpoint = Instant::now();
+
+    loop {
+        let now = Instant::now();
+        let time_since_start = (now - started_at).as_secs();
+        if time_since_start > 15 * 60 {
+            break;
+        }
+
         let request = random_request(total_users, zipf_s);
-        let response = web_service.handle_request(request);
+        let _res = black_box(web_service.handle_request(black_box(request)));
+        total_requests += 1;
+
+        if (now - checkpoint).as_secs() > 60 {
+            checkpoint = Instant::now();
+            println!("operations per second: {}", total_requests / time_since_start);
+        }
     }
+
+    println!("result: operations per second: {}", total_requests / (Instant::now() - started_at).as_secs());
 }
 
 fn random_request(total_users: usize, zipf_s: f64) -> WebServiceRequest {
