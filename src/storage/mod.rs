@@ -261,7 +261,7 @@ impl Server {
                 self.run_id = run_id;
                 StorageResponse::Ok
             }
-            StorageRequestBody::SwapOut(swap_out_req) => {
+            StorageRequestBody::SwapOut(swap_out_req) => span!(Level::DEBUG, "handling swap out request").in_scope(|| {
                 if !self.auth {
                     return StorageResponse::Forbidden;
                 }
@@ -286,8 +286,8 @@ impl Server {
                 }
 
                 StorageResponse::Ok
-            },
-            StorageRequestBody::SwapIn { span_id } => {
+            }),
+            StorageRequestBody::SwapIn { span_id } => span!(Level::DEBUG, "handling swap in request").in_scope(|| {
                 if !self.auth {
                     return StorageResponse::Forbidden;
                 }
@@ -303,11 +303,11 @@ impl Server {
                 }
 
                 StorageResponse::SwapIn { span_id, data: SpanData::Inline(data) }
-            },
-            StorageRequestBody::Batch(reqs) => {
+            }),
+            StorageRequestBody::Batch(reqs) => span!(Level::DEBUG, "handling batch request").in_scope(|| {
                 let res = reqs.into_iter().map(|req| self.handle(req)).collect();
                 StorageResponse::Batch(res)
-            },
+            }),
         }
     }
 
