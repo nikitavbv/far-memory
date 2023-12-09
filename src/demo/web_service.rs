@@ -138,10 +138,13 @@ pub fn run_web_service_demo() {
 
     let zipf_s = 0.8;
 
-    let pictures = generate_pictures(1000);
+    let total_pictures = 800_000; // 800_000 for 7.2GB of memory, 2_000_000 for 18GB.
+    let pictures = generate_pictures(total_pictures);
     println!("finished generating pictures");
 
-    let total_users = 100;
+    let total_users = pictures.len() * 64; // ratio as in AIFM evaluation (2M pictures vs 128M users).
+
+    // users table is more light compared to AIFM evaluation: approx. 2GB vs 10GB.
     let users = generate_users(total_users, pictures.len(), zipf_s);
     println!("finished generating users");
 
