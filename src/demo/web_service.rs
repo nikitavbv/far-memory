@@ -1,5 +1,3 @@
-use crate::client::FarMemoryHashMap;
-
 use {
     std::{collections::HashMap, io::Write, time::Instant, hint::black_box},
     tracing::{info, warn},
@@ -8,6 +6,7 @@ use {
     aes_gcm::{aead::{KeyInit, Aead, AeadCore}, Aes256Gcm},
     prometheus::Registry,
     serde::{Serialize, Deserialize},
+    indicatif::ProgressIterator,
     crate::{
         client::{
             FarMemoryClient,
@@ -21,6 +20,7 @@ use {
             MostRecentlyUsedReplacementPolicy,
             RemoteReplayReplacementPolicy,
             FarMemorySerialized,
+            FarMemoryHashMap,
         },
         manager::ManagerClient,
     },
@@ -205,7 +205,7 @@ pub fn run_web_service_demo(metrics: Registry, run_id: String, token: &str, stor
     // demo app
     let zipf_s = 0.8;
 
-    let total_pictures = 400_000; // 800_000 for 7.2GB of memory, 2_000_000 for 18GB.
+    let total_pictures = 100; // 800_000 for 7.2GB of memory, 2_000_000 for 18GB.
     let pictures = generate_pictures(total_pictures);
     println!("finished generating pictures");
 
@@ -219,7 +219,6 @@ pub fn run_web_service_demo(metrics: Registry, run_id: String, token: &str, stor
     println!("finished generating users");
 
     let mut far_memory_users = FarMemoryHashMap::new(client.clone(), (total_users as f32 * 0.75) as usize);
-    use indicatif::ProgressIterator;
     for (user, picture) in users.into_iter().progress() {
         far_memory_users.insert(user, picture);
     }

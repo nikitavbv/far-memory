@@ -168,7 +168,7 @@ impl<T> Deref for FarMemoryLocal<T> {
     fn deref(&self) -> &Self::Target {
         let location = self.client.get_object(&self.object);
         unsafe {
-            *(self.client.span_ptr(&location.span_id).add(location.offset) as *const _)
+            &*(self.client.span_ptr(&location.span_id).add(location.offset) as *const T)
         }
     }
 }
@@ -176,5 +176,25 @@ impl<T> Deref for FarMemoryLocal<T> {
 impl<T> Drop for FarMemoryLocal<T> {
     fn drop(&mut self) {
         self.client.decrease_refs_for_span(&self.client.get_object(&self.object).span_id);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use {
+        crate::client::InMemoryBackend,
+        super::*,
+    };
+
+    struct TestValue {
+        v: u64,
+    }
+
+    #[test]
+    fn simple() {
+        let client = FarMemoryClient::new(Box::new(InMemoryBackend::new()), 10 * 1024 * 1024);
+        let object = FarMemory::from_value(client, TestValue { v: 42 });
+
+        assert_eq!(42, object.to_local().v);
     }
 }
