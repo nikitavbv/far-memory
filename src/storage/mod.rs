@@ -93,9 +93,10 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
                 }
             };
 
+            let request_id = req.request_id;
             req.body = inline_span_data_into_request(req.body, &mut stream);
 
-            let res = span!(Level::DEBUG, "handle request").in_scope(|| server.handle(req.body));
+            let res = span!(Level::DEBUG, "handle request", request_id).in_scope(|| server.handle(req.body));
             let (res, span_data) = match res {
                 StorageResponse::SwapIn { span_id, data } => {
                     let span_data = match data {
@@ -129,9 +130,9 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
                 other => (other, None),
             };
 
-            let res = span!(Level::DEBUG, "serialize response").in_scope(|| bincode::serialize(&res).unwrap());
+            let res = span!(Level::DEBUG, "serialize response", request_id).in_scope(|| bincode::serialize(&res).unwrap());
 
-            span!(Level::DEBUG, "write response").in_scope(|| {
+            span!(Level::DEBUG, "write response", request_id).in_scope(|| {
                 stream.write(&(res.len() as u64).to_be_bytes()).unwrap();
                 stream.write(&res).unwrap();
 

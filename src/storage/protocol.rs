@@ -2,6 +2,7 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StorageRequest {
+    pub request_id: u64,
     pub body: StorageRequestBody,
 }
 

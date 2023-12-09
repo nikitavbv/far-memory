@@ -1,11 +1,12 @@
 use {
-    std::{net::{TcpStream, Shutdown}, thread, time::Duration, io::{Write, Read}},
+    std::{net::{TcpStream, Shutdown}, thread, time::Duration, io::{Write, Read}, sync::atomic::{AtomicU64, Ordering}},
     tracing::{span, Level},
     super::protocol::{StorageRequest, StorageRequestBody, StorageResponse, SpanData, SwapOutRequest},
 };
 
 pub struct Client {
     stream: TcpStream,
+    request_id: AtomicU64,
 }
 
 impl Client {
@@ -21,6 +22,7 @@ impl Client {
 
         Self {
             stream,
+            request_id: AtomicU64::new(0),
         }
     }
 
@@ -102,8 +104,10 @@ impl Client {
     }
 
     fn request(&mut self, request: StorageRequestBody) -> StorageResponse {
-        span!(Level::DEBUG, "writing request").in_scope(|| {
-            self.write_request(StorageRequest { body: request });
+        let request_id = self.next_request_id();
+
+        span!(Level::DEBUG, "writing request", request_id).in_scope(|| {
+            self.write_request(StorageRequest { body: request, request_id });
         });
         span!(Level::DEBUG, "reading response").in_scope(|| {
             self.read_response()
@@ -111,8 +115,10 @@ impl Client {
     }
 
     fn request_with_external_span_data(&mut self, body: StorageRequestBody, span_data: Vec<LocalSpanData>) -> StorageResponse {
-        span!(Level::DEBUG, "writing request").in_scope(|| {
-            self.write_request_with_external_span_data(StorageRequest { body }, span_data);
+        let request_id = self.next_request_id();
+
+        span!(Level::DEBUG, "writing request", request_id).in_scope(|| {
+            self.write_request_with_external_span_data(StorageRequest { body, request_id }, span_data);
         });
         span!(Level::DEBUG, "reading response").in_scope(|| {
             self.read_response()
@@ -151,6 +157,10 @@ impl Client {
 
     pub fn close(&mut self) {
         self.stream.shutdown(Shutdown::Both).unwrap();
+    }
+
+    fn next_request_id(&self) -> u64 {
+        self.request_id.fetch_add(1, Ordering::Relaxed)
     }
 }
 
