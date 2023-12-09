@@ -117,12 +117,12 @@ impl ObjectRegistry {
 }
 
 fn size_class_for_object(object_size: usize) -> usize {
-    if object_size != 8200 {
-        panic!("this object size is not supported");
+    // TODO: implement actual size classes
+    if object_size != 8200 && object_size != 8 {
+        panic!("this object size is not supported: {:?}", object_size);
     }
 
-    // for now, all objects have the same size class
-    8200
+    object_size
 }
 
 pub struct FarMemory<T> {

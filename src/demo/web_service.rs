@@ -1,3 +1,5 @@
+use crate::client::FarMemoryHashMap;
+
 use {
     std::{collections::HashMap, io::Write, time::Instant, hint::black_box},
     tracing::{info, warn},
@@ -27,14 +29,14 @@ use {
 const PICTURE_SIZE: usize = 8 * 1024;
 
 struct DemoWebService {
-    users: HashMap<UserId, PictureId>,
+    users: FarMemoryHashMap<UserId, PictureId>,
     pictures: Vec<FarMemorySerialized<Picture>>,
 
     cipher: Aes256Gcm,
 }
 
 impl DemoWebService {
-    pub fn new(users: HashMap<UserId, PictureId>, pictures: Vec<FarMemorySerialized<Picture>>) -> Self {
+    pub fn new(users: FarMemoryHashMap<UserId, PictureId>, pictures: Vec<FarMemorySerialized<Picture>>) -> Self {
         Self {
             users,
             pictures,
@@ -203,7 +205,7 @@ pub fn run_web_service_demo(metrics: Registry, run_id: String, token: &str, stor
     // demo app
     let zipf_s = 0.8;
 
-    let total_pictures = 800_000; // 800_000 for 7.2GB of memory, 2_000_000 for 18GB.
+    let total_pictures = 400_000; // 800_000 for 7.2GB of memory, 2_000_000 for 18GB.
     let pictures = generate_pictures(total_pictures);
     println!("finished generating pictures");
 
@@ -216,7 +218,14 @@ pub fn run_web_service_demo(metrics: Registry, run_id: String, token: &str, stor
     let users = generate_users(total_users, pictures.len(), zipf_s);
     println!("finished generating users");
 
-    let web_service = DemoWebService::new(users, pictures);
+    let mut far_memory_users = FarMemoryHashMap::new(client.clone(), (total_users as f32 * 0.75) as usize);
+    use indicatif::ProgressIterator;
+    for (user, picture) in users.into_iter().progress() {
+        far_memory_users.insert(user, picture);
+    }
+    println!("finished moving users to far memory");
+
+    let web_service = DemoWebService::new(far_memory_users, pictures);
 
     let mut total_requests = 0;
     let started_at = Instant::now();
