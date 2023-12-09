@@ -1,11 +1,10 @@
-use rand::thread_rng;
-
 use {
     std::{collections::HashMap, io::Write},
     tracing::info,
-    rand::{RngCore, Rng, rngs::OsRng},
+    rand::{RngCore, Rng, rngs::OsRng, prelude::SliceRandom},
     rand_distr::Zipf,
-    aes_gcm::{aead::{KeyInit, Aead, AeadCore}, Aes256Gcm, Key},
+    aes_gcm::{aead::{KeyInit, Aead, AeadCore}, Aes256Gcm},
+    indicatif::ProgressIterator,
 };
 
 const PICTURE_SIZE: usize = 8 * 1024 * 1024;
@@ -28,11 +27,13 @@ impl DemoWebService {
     }
 
     pub fn handle_request(&self, request: WebServiceRequest) -> WebServiceResponse {
-        let picture_to_get: u64 = request.user_ids.iter()
+        let picture_to_get: u64 = *request.user_ids.iter()
             .map(|id| self.users.get(id).unwrap().picture_id)
-            .sum();
-
-        let picture_to_get = picture_to_get % self.pictures.len() as u64; // TODO: check if distribution is zipf here.
+            .collect::<Vec<_>>()
+            // if sum and modulo is used here (looks like that is what AIFM does. I am not sure, though), then distribution will become uniform.
+            // that's why here a random item is picked and zipf distribution (well, something close to it) is kept.
+            .choose(&mut rand::thread_rng())
+            .unwrap();
 
         let picture = &self.pictures.get(picture_to_get as usize).unwrap().picture_data;
         let encrypted_picture = self.encrypt_picture(picture);
@@ -147,9 +148,10 @@ pub fn run_web_service_demo() {
 
     let web_service = DemoWebService::new(users, pictures);
 
-    let request = random_request(total_users, zipf_s);
-    let response = web_service.handle_request(request);
-
+    for n in (0..10000).progress() {
+        let request = random_request(total_users, zipf_s);
+        let response = web_service.handle_request(request);
+    }
 }
 
 fn random_request(total_users: usize, zipf_s: f64) -> WebServiceRequest {
@@ -157,7 +159,7 @@ fn random_request(total_users: usize, zipf_s: f64) -> WebServiceRequest {
 }
 
 fn generate_user_id(total_users: usize, zipf_s: f64) -> UserId {
-    UserId::new(rand::thread_rng().sample(Zipf::new(total_users as u64, zipf_s).unwrap()).round() as u64)
+    UserId::new(rand::thread_rng().sample(Zipf::new(total_users as u64, zipf_s).unwrap()).round() as u64 - 1) // -1 because zipf returns [1; n]
 }
 
 fn generate_users(total_users: usize, total_pictures: usize, zipf_s: f64) -> HashMap<UserId, PictureId> {
@@ -168,7 +170,7 @@ fn generate_users(total_users: usize, total_pictures: usize, zipf_s: f64) -> Has
 }
 
 fn pick_picture_for_user(total_pictures: usize, zipf_s: f64) -> u64 {
-    rand::thread_rng().sample(Zipf::new(total_pictures as u64, zipf_s).unwrap()).round() as u64
+    rand::thread_rng().sample(Zipf::new(total_pictures as u64, zipf_s).unwrap()).round() as u64 - 1 // -1 because zipf returns [1; n]
 }
 
 fn generate_pictures(total_pictures: usize) -> Vec<Picture> {
