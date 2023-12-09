@@ -1,6 +1,14 @@
 use {
-    std::{sync::{atomic::{AtomicU64, Ordering}, RwLock, Mutex}, collections::HashMap},
-    super::span::SpanId,
+    std::{
+        sync::{atomic::{AtomicU64, Ordering}, RwLock, Mutex},
+        collections::HashMap,
+        marker::PhantomData,
+        ops::Deref,
+    },
+    super::{
+        span::SpanId,
+        client::FarMemoryClient,
+    },
 };
 
 #[derive(Clone, Eq, PartialEq, Hash)]
@@ -115,4 +123,45 @@ fn size_class_for_object(object_size: usize) -> usize {
 
     // for now, all objects have the same size class
     8200
+}
+
+pub struct FarMemory<T> {
+    client: FarMemoryClient,
+    object: ObjectId,
+    _phantom: PhantomData<T>,
+}
+
+impl<T> FarMemory<T> {
+    pub fn from_value(client: FarMemoryClient, value: T) -> Self {
+        let object = client.put_object(unsafe {
+            std::slice::from_raw_parts(
+                (&value as *const _) as *const u8,
+                std::mem::size_of::<T>()
+            ).to_vec()
+        });
+
+        Self {
+            client,
+            object,
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<T> Deref for FarMemory<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        // TODO: this leaks memory
+        let location = self.client.get_object(&self.object);
+        unsafe {
+            *(self.client.span_ptr(&location.span_id).add(location.offset) as *const _)
+        }
+    }
+}
+
+pub struct FarMemoryLocal<T> {
+    client: FarMemoryClient,
+    span_id: SpanId,
+    _phantom: PhantomData<T>,
 }

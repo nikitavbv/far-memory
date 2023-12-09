@@ -36,6 +36,7 @@ pub mod replacement;
 mod buffer;
 mod buffered_vec;
 mod client;
+mod hashmap;
 mod object;
 mod serialized_object;
 mod span;
