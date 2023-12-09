@@ -146,13 +146,26 @@ impl<T> FarMemory<T> {
             _phantom: PhantomData,
         }
     }
+
+    pub fn to_local(&self) -> FarMemoryLocal<T> {
+        FarMemoryLocal {
+            client: self.client.clone(),
+            object: self.object.clone(),
+            _phantom: PhantomData,
+        }
+    }
 }
 
-impl<T> Deref for FarMemory<T> {
+pub struct FarMemoryLocal<T> {
+    client: FarMemoryClient,
+    object: ObjectId,
+    _phantom: PhantomData<T>,
+}
+
+impl<T> Deref for FarMemoryLocal<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        // TODO: this leaks memory
         let location = self.client.get_object(&self.object);
         unsafe {
             *(self.client.span_ptr(&location.span_id).add(location.offset) as *const _)
@@ -160,8 +173,8 @@ impl<T> Deref for FarMemory<T> {
     }
 }
 
-pub struct FarMemoryLocal<T> {
-    client: FarMemoryClient,
-    span_id: SpanId,
-    _phantom: PhantomData<T>,
+impl<T> Drop for FarMemoryLocal<T> {
+    fn drop(&mut self) {
+        self.client.decrease_refs_for_span(&self.client.get_object(&self.object).span_id);
+    }
 }
