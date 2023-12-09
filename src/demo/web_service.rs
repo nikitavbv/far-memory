@@ -2,6 +2,7 @@ use {
     std::{collections::HashMap, io::Write},
     tracing::info,
     rand::{RngCore, Rng, rngs::OsRng},
+    rand_distr::Zipf,
     aes_gcm::{aead::{KeyInit, Aead, AeadCore}, Aes256Gcm, Key},
 };
 
@@ -28,6 +29,10 @@ impl DemoWebService {
         let picture_to_get: u64 = request.user_ids.iter()
             .map(|id| self.users.get(id).unwrap().picture_id)
             .sum();
+
+        // TODO: use zipf distribution
+        let index = rand::thread_rng().sample(Zipf::new(10, 1.5).unwrap());
+
         let picture_to_get = picture_to_get % self.pictures.len() as u64; // TODO: zipf distribution
 
         let picture = &self.pictures.get(picture_to_get as usize).unwrap().picture_data;

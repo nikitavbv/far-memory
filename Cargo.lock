@@ -606,6 +606,7 @@ dependencies = [
  "prometheus",
  "quantiles",
  "rand",
+ "rand_distr",
  "reed-solomon-erasure",
  "reqwest",
  "serde",
