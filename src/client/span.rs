@@ -1,10 +1,9 @@
-use super::backend::SwapOutOperationData;
-
 use {
     std::{alloc::{GlobalAlloc, Layout}, ops::Range},
     tracing::{span, Level},
     serde::{Serialize, Deserialize},
     crate::utils::allocator::GLOBAL,
+    super::backend::SwapOutOperationData,
 };
 
 #[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]

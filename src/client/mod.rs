@@ -9,6 +9,7 @@ pub use self::{
     vec::FarMemoryVec,
     client::FarMemoryClient,
     span::SpanId,
+    serialized_object::FarMemorySerialized,
     backend::{
         FarMemoryBackend,
         in_memory::InMemoryBackend,
@@ -35,6 +36,8 @@ pub mod replacement;
 mod buffer;
 mod buffered_vec;
 mod client;
+mod object;
+mod serialized_object;
 mod span;
 mod vec;
 

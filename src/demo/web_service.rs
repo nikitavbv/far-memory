@@ -5,6 +5,7 @@ use {
     rand_distr::Zipf,
     aes_gcm::{aead::{KeyInit, Aead, AeadCore}, Aes256Gcm},
     prometheus::Registry,
+    serde::{Serialize, Deserialize},
     crate::{
         client::{
             FarMemoryClient,
@@ -17,6 +18,7 @@ use {
             PreferRemoteSpansReplacementPolicy,
             MostRecentlyUsedReplacementPolicy,
             RemoteReplayReplacementPolicy,
+            FarMemorySerialized,
         },
         manager::ManagerClient,
     },
@@ -26,13 +28,13 @@ const PICTURE_SIZE: usize = 8 * 1024;
 
 struct DemoWebService {
     users: HashMap<UserId, PictureId>,
-    pictures: Vec<Picture>,
+    pictures: Vec<FarMemorySerialized<Picture>>,
 
     cipher: Aes256Gcm,
 }
 
 impl DemoWebService {
-    pub fn new(users: HashMap<UserId, PictureId>, pictures: Vec<Picture>) -> Self {
+    pub fn new(users: HashMap<UserId, PictureId>, pictures: Vec<FarMemorySerialized<Picture>>) -> Self {
         Self {
             users,
             pictures,
@@ -105,7 +107,7 @@ impl PictureId {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 struct Picture {
     picture_data: Vec<u8>,
 }
@@ -204,6 +206,9 @@ pub fn run_web_service_demo(metrics: Registry, run_id: String, token: &str, stor
     let total_pictures = 800_000; // 800_000 for 7.2GB of memory, 2_000_000 for 18GB.
     let pictures = generate_pictures(total_pictures);
     println!("finished generating pictures");
+
+    let pictures: Vec<_> = pictures.into_iter().map(|v| FarMemorySerialized::from_value(client.clone(), v)).collect();
+    println!("finished moving pictures to far memory");
 
     let total_users = pictures.len() * 64; // ratio as in AIFM evaluation (2M pictures vs 128M users).
 

@@ -8,6 +8,7 @@ use {
         backend::{FarMemoryBackend, SwapOutOperation, SwapOutOperationData},
         replacement::{ReplacementPolicy, MostRecentlyUsedReplacementPolicy, PreferRemoteSpansReplacementPolicy, ReplayReplacementPolicy},
         span::{SpanId, FarMemorySpan, LocalSpanData},
+        object::{ObjectId, ObjectRegistry, ObjectLocation},
     },
 };
 
@@ -25,6 +26,8 @@ pub struct FarMemoryClient {
 
     swap_in_out_lock: Arc<Mutex<()>>,
     span_states: Arc<RwLock<HashMap<SpanId, Mutex<SpanState>>>>,
+
+    object_registry: Arc<ObjectRegistry>,
 
     metrics: Option<ClientMetrics>,
 }
@@ -57,6 +60,8 @@ impl FarMemoryClient {
 
             swap_in_out_lock: Arc::new(Mutex::new(())),
             span_states: Arc::new(RwLock::new(HashMap::new())),
+
+            object_registry: Arc::new(ObjectRegistry::new()),
 
             metrics: None,
         }
@@ -442,6 +447,30 @@ impl FarMemoryClient {
             },
             SpanState::SwappingOut => panic!("cannot decrease refs for span that is being swapped out")
         }
+    }
+
+    // objects
+    pub fn put_object(&self, object: Vec<u8>) -> ObjectId {
+        let object_id = self.object_registry.next_object_id();
+        let object_location = self.object_registry.put_object(object_id.clone(), object.len());
+        let object_location = if let Some(object_location) = object_location {
+            // append object to existing span
+            object_location
+        } else {
+            // create new span for this object
+            let span_size = 2 * 1024 * 1024;
+            let span_size = span_size + (object.len() - span_size % object.len());
+            let span = self.allocate_span(span_size);
+            self.object_registry.add_span_for_object(span.clone(), span_size, object_id.clone(), object.len())
+        };
+
+        let span_ptr = self.span_ptr(&object_location.span_id);
+        unsafe {
+            std::ptr::copy_nonoverlapping(object.as_ptr(), span_ptr.add(object_location.offset), object.len());
+        }
+        self.decrease_refs_for_span(&object_location.span_id);
+
+        object_id
     }
 }
 
