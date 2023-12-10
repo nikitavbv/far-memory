@@ -42,6 +42,11 @@ pub struct SwapOutRequest {
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub enum SpanData {
     Inline(#[serde(with = "serde_bytes")] Vec<u8>),
+    Concat {
+        // same as one big span data, but in chunks. This is introduced to avoid merging parts in storage server
+        // and just store and process them separately.
+        data: Vec<Vec<u8>>,
+    },
     External {
         len: u64,
     },

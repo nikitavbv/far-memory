@@ -100,7 +100,8 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
             let (res, span_data) = match res {
                 StorageResponse::SwapIn { span_id, data } => {
                     let span_data = match data {
-                        SpanData::Inline(data) => data,
+                        SpanData::Inline(data) => vec![data],
+                        SpanData::Concat { data } => data,
                         _ => panic!("didn't expect data to be external at this point"),
                     };
 
@@ -114,7 +115,8 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
                         let new_response = match response {
                             StorageResponse::SwapIn { span_id, data } => {
                                 span_data = Some(match data {
-                                    SpanData::Inline(data) => data,
+                                    SpanData::Inline(data) => vec![data],
+                                    SpanData::Concat { data } => data,
                                     _ => panic!("didn't expect data to be external at this point"),
                                 });
 
@@ -137,7 +139,9 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
                 stream.write(&res).unwrap();
 
                 if let Some(span_data) = span_data {
-                    stream.write(&span_data).unwrap();
+                    for chunk in span_data {
+                        stream.write(&chunk).unwrap();
+                    }
                 }
             });
         }
@@ -158,7 +162,7 @@ pub struct Server {
     auth: bool,
     token: String,
 
-    spans: HashMap<u64, Vec<u8>>,
+    spans: HashMap<u64, Vec<Vec<u8>>>,
 
     metrics: Option<ServerMetrics>,
     addr: String,
@@ -272,10 +276,11 @@ impl Server {
                 };
                 let bytes_swapped_out = data.len();
 
-                let existing = span!(Level::DEBUG, "inserting into spans").in_scope(|| self.spans.insert(swap_out_req.span_id, data));
-                if swap_out_req.prepend {
-                    span!(Level::DEBUG, "appending to existing span").in_scope(|| self.spans.get_mut(&swap_out_req.span_id).unwrap().append(&mut existing.unwrap()));
-                }
+                span!(Level::DEBUG, "inserting into spans").in_scope(|| if swap_out_req.prepend {
+                   self.spans.insert(swap_out_req.span_id, vec![data]);
+                } else {
+                    self.spans.get_mut(&swap_out_req.span_id).unwrap().push(data);
+                });
 
                 if let Some(metrics) = self.metrics.as_ref() {
                     metrics.total_spans.with_label_values(&[&self.addr, &self.run_id]).set(self.spans.len() as i64);
@@ -302,7 +307,7 @@ impl Server {
                     metrics.swap_in_bytes.with_label_values(&[&self.addr, &self.run_id]).inc_by(data.len() as u64);
                 }
 
-                StorageResponse::SwapIn { span_id, data: SpanData::Inline(data) }
+                StorageResponse::SwapIn { span_id, data: SpanData::Concat { data } }
             }),
             StorageRequestBody::Batch(reqs) => span!(Level::DEBUG, "handling batch request").in_scope(|| {
                 let res = reqs.into_iter().map(|req| self.handle(req)).collect();
@@ -321,6 +326,7 @@ fn inline_span_data_into_request(request: StorageRequestBody, stream: &mut TcpSt
         StorageRequestBody::SwapOut(swap_out_request) => {
             let data = match swap_out_request.data {
                 SpanData::Inline(data) => SpanData::Inline(data),
+                SpanData::Concat { data } => SpanData::Inline(data.concat()),
                 SpanData::External { len } => SpanData::Inline({
                     let mut data = vec![0; len as usize];
                     stream.read_exact(&mut data).unwrap();
