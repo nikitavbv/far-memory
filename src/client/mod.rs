@@ -10,7 +10,7 @@ pub use self::{
     client::FarMemoryClient,
     span::SpanId,
     serialized_object::FarMemorySerialized,
-    serialized_object_set::FarMemorySerializedObjectSet,
+    serialized_object_vec::FarMemorySerializedObjectVec,
     hashmap::FarMemoryHashMap,
     backend::{
         FarMemoryBackend,
@@ -41,7 +41,7 @@ mod client;
 mod hashmap;
 mod object;
 mod serialized_object;
-mod serialized_object_set;
+mod serialized_object_vec;
 mod span;
 mod vec;
 

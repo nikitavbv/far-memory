@@ -18,7 +18,7 @@ use {
             PreferRemoteSpansReplacementPolicy,
             MostRecentlyUsedReplacementPolicy,
             RemoteReplayReplacementPolicy,
-            FarMemorySerializedObjectSet,
+            FarMemorySerializedObjectVec,
         },
         manager::ManagerClient,
     },
@@ -97,11 +97,11 @@ struct FlightsQuery {
 }
 
 struct DemoDataFramePipeline {
-    dataframe: FarMemorySerializedObjectSet<FlightData>,
+    dataframe: FarMemorySerializedObjectVec<FlightData>,
 }
 
 impl DemoDataFramePipeline {
-    pub fn new(dataframe: FarMemorySerializedObjectSet<FlightData>) -> Self {
+    pub fn new(dataframe: FarMemorySerializedObjectVec<FlightData>) -> Self {
         Self {
             dataframe,
         }
@@ -186,7 +186,7 @@ pub fn run_dataframe_demo(metrics: Registry, run_id: String, token: &str, storag
     client.start_swap_out_thread();
 
     // demo app
-    let mut dataframe: FarMemorySerializedObjectSet<FlightData> = FarMemorySerializedObjectSet::new(client.clone());
+    let mut dataframe: FarMemorySerializedObjectVec<FlightData> = FarMemorySerializedObjectVec::new(client.clone());
     let dataframe_size_limit = 1_000_000; // 20M for 12GB memory.
 
     'loading: loop {
