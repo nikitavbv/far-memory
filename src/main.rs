@@ -11,6 +11,7 @@ use {
         demo::{
             llm_inference::run_llm_inference_demo,
             web_service::run_web_service_demo,
+            dataframe::run_dataframe_demo,
             benchmark::run_benchmark,
             simple::run_simple_demo,
             block_device::run_block_device_demo,
@@ -65,6 +66,9 @@ pub struct Args {
 
     #[arg(long)]
     web_service_demo: bool,
+
+    #[arg(long)]
+    dataframe_demo: bool,
 
     #[arg(long)]
     benchmark: bool,
@@ -169,6 +173,19 @@ pub fn main() {
         let metrics = init_metrics(Some(run_id.clone()));
 
         span!(Level::DEBUG, "web service demo").in_scope(|| run_web_service_demo(
+            metrics.clone(),
+            run_id.clone(),
+            &read_token(),
+            args.storage_endpoint.clone().map(|v| v.split(",").map(|v| v.to_owned()).collect::<Vec<String>>()).unwrap_or(Vec::new()),
+            args.manager_endpoint.clone(),
+            args.memory_limit_mb.map(|v| v * 1024 * 1024)
+        ));
+    } else if args.dataframe_demo {
+        let run_id = generate_run_id();
+        println!("run id: {:?}", run_id);
+
+        let metrics = init_metrics(Some(run_id.clone()));
+        span!(Level::DEBUG, "dataframe demo").in_scope(|| run_dataframe_demo(
             metrics.clone(),
             run_id.clone(),
             &read_token(),
