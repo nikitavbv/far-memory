@@ -189,7 +189,6 @@ applications with dynamic memory access patterns."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Performance evaluation.".into())),
             " Evaluation of this far memory implementation seeks to answer the following questions: ".into(),
-            // " To evaluate end-to-end performance of this far memory implementation it was integrated into ...".into(),
         ])),
         Block::OrderedList(vec![
            "What end-to-end performance does this far memory implementation achieve for typical applications with different memory access patterns?".to_owned(),
@@ -197,19 +196,42 @@ applications with dynamic memory access patterns."),
            "What end-to-end performance is achieved with different span replacement policies?".to_owned(),
         ]),
         paragraph_without_after_space(TextSpan::Multiple(vec![
-            " To answer these questions a number of experiments were run on two nodes with AMD Ryzen 5 3600 6-core CPUs (3.6GHz), 64GB RAM and Intel 82599 10 \
+            "To answer these questions a number of experiments were run on two nodes with AMD Ryzen 5 3600 6-core CPUs (3.6GHz), 64GB RAM and Intel 82599 10 \
 Gbit/s NIC (direct connectivity). Both nodes are running ArchLinux (with kernel version 6.5.8).".into(),
         ])),
         paragraph_without_after_space(TextSpan::Multiple(vec![
-            " To evaluate end-to-end peformance of this far memory implementation it was integrated into three synthetic applications with different memory access \
+            "To evaluate end-to-end peformance of this far memory implementation it was integrated into three synthetic applications with different memory access \
 patterns:".into()
         ])),
         Block::OrderedList(vec![
            "Large language model inference application. Neural network weights are stored in far memory and are fully scanned in interations as text is being \
 generated. This software represents class of tasks where the whole working set is scanned in pre-defined order.".to_owned(),
-           // todo: other types.
+           "Web service application that accepts requests with zipf-distributed user IDs to compute an index (also zipf-distributed) to a collection of pictures \
+item from which is picked, encrypted with AES GCM, compressed with Snappy and sent back to the client. This software represents a class of software built around \
+key-value data structures, where memory access is performed to a lot of small objects with a certain distribution.".to_owned(),
+           "An application that performs queries over a dataframe with data from Kaggle delayed flights dataset. Dataframe is stored in far memory and is loaded \
+row by row as query is processed similarly to typical data processing system or a database. In this case, data access pattern is a bit different because \
+rows can be processed in any order in a stream which allows far memory client to rely on various optimizations when high level data structures are used.".to_owned(),
         ]),
-        // todo: evaluation
+        paragraph_without_after_space(TextSpan::Multiple(vec![
+            "In each case, far memory client is ran with default settings and system throughput is measured with different levels of spans swapped out to remote \
+node.".into(),
+        ])),
+
+        /* picture with througput for different applications. */
+        /* analysis of data. */
+
+        paragraph_without_after_space("When data in far memory is accessed in random order (as in the second demo application), distribution of span access \
+plays an important role. When distribution is skewed, far memory client should be able to make data access latency close to RAM access latency because hot \
+data should fit local memory. On the other hand, when distribution is more uniform, swap out and swap in performance defines end-to-end performance of the \
+system."),
+        paragraph_without_after_space("To evaluate that, web service application is run with different s parameters of zipf distribution and throughput is \
+measured."),
+
+        /* picture with throughput for different s-param. */
+        /* analysis of data. */
+
+        // todo: evaluation of span replacement algorithms.
         end_section(2),
         paragraph(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Conclusion.".into())),
