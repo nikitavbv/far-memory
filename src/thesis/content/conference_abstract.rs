@@ -238,7 +238,9 @@ replacement algorithms and levels of local memory."),
         paragraph(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Conclusion.".into())),
             " This work proposes a method of providing software-defined far memory in distributed systems. Method and software that was designed ensures \
-integration simplicity, fault tolerance and high data access performance without relying on specializied hardware. ....".into(),
+integration simplicity, fault tolerance and high data access performance without relying on specializied hardware. Span replacement algorithm choice was \
+analyzed as a factor of far memory performance. Relying on recoding and analyzing span access statistics to build a model for span replacement has shown \
+better performance compared to simple heurisitics used by existing implementations.".into(),
         ])),
         Block::SubsectionHeader(
             SubsectionHeaderBlock::without_numbering("References.".to_owned())
