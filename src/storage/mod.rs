@@ -277,7 +277,7 @@ impl Server {
                 let bytes_swapped_out = data.len();
 
                 span!(Level::DEBUG, "inserting into spans").in_scope(|| if swap_out_req.prepend {
-                    self.spans.get_mut(&swap_out_req.span_id).unwrap().push(data);
+                    self.spans.get_mut(&swap_out_req.span_id).unwrap().insert(0, data);
                 } else {
                     self.spans.insert(swap_out_req.span_id, vec![data]);
                 });
@@ -368,6 +368,30 @@ mod tests {
         let res = client.swap_in(42);
 
         assert_eq!(vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1], res);
+
+        server_thread.join().unwrap();
+    }
+
+    #[test]
+    fn prepend() {
+        let server_thread = thread::spawn(|| run_server(
+            None,
+            "localhost".to_owned(),
+            Some(14001),
+            "some-token".to_owned(),
+            Some(1),
+            Some(4)
+        ));
+        let mut client = Client::new("localhost:14001");
+
+        client.auth("some-token");
+
+        client.swap_out(42, vec![10, 9, 8], false);
+        client.swap_out(42, vec![7, 6, 5], true);
+
+        let res = client.swap_in(42);
+
+        assert_eq!(vec![7, 6, 5, 10, 9, 8], res);
 
         server_thread.join().unwrap();
     }
