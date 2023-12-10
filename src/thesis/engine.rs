@@ -157,6 +157,7 @@ pub struct ParagraphBlock {
     span: TextSpan,
     tab: bool,
     line_spacing: i32,
+    before_spacing: Option<u32>,
     after_spacing: Option<u32>,
     columns: Option<usize>,
 }
@@ -167,6 +168,7 @@ impl ParagraphBlock {
             span,
             tab: true,
             line_spacing: 24 * 15,
+            before_spacing: None,
             after_spacing: None,
             columns: None,
         }
@@ -182,6 +184,13 @@ impl ParagraphBlock {
     pub fn with_line_spacing(self, font_size: usize, interval: f32) -> Self {
         Self {
             line_spacing: (font_size as f32 * interval * 10.0) as i32,
+            ..self
+        }
+    }
+
+    pub fn with_before_spacing(self, before_spacing: u32) -> Self {
+        Self {
+            before_spacing: Some(before_spacing),
             ..self
         }
     }
@@ -296,7 +305,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
         },
         Block::Paragraph(paragraph) => match placeholder {
             Some(v) => document.add_paragraph_placeholder_component(paragraph.span, v),
-            None => document.add_paragraph_component(paragraph.span, paragraph.tab, paragraph.line_spacing, paragraph.after_spacing, paragraph.columns),
+            None => document.add_paragraph_component(paragraph.span, paragraph.tab, paragraph.line_spacing, paragraph.before_spacing, paragraph.after_spacing, paragraph.columns),
         },
         Block::OrderedList(list) => {
             let numbering = context.next_numbering_id();

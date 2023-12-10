@@ -116,16 +116,16 @@ nodes to free local memory. Spans are moved back to local memory (swap in) when 
 once allow to lower memory usage.".into(),
         ])),
         paragraph_without_after_space("This implementation consists of the following components: compute nodes, storage nodes and manager node. Compute node \
-is a node that puts memory spans into the system for storage. Compute nodes may be repesented by different applications and different versions of these \
-applications. Spans are the central entity which far memory client operates on and are identified by an ID (64 bit number). Data associated with span may be located \
-in the local memory or on storage backend. Far memory implementation that is being discussed in this work supports multiple storage backend implementations: \
-local memory, solid state drives, one or multiple remote nodes. The latter is the main mode of operation, while others are implemented for testing purposes \
-and to fit specific environments when those storage backends may be more practical. Storage nodes serve the function of storing spans data that were swapped out \
-and can be viewed as a key-value storage. Having multiple compute and storage nodes creates a need for a manager node. Manager node allocates space on storage nodes \
+is a node that puts memory spans into the system for storage. \
+Spans are the central entity which far memory client operates on and are identified by an ID (64 bit number). Data associated with span may be located \
+in the local memory or on storage backend. Far memory implementation in this work supports multiple storage backend implementations: \
+local memory, file system, one or multiple remote nodes with the latter is the main mode of operation. \
+Storage nodes serve the function of storing spans data that were swapped out \
+and function as a key-value storage. Manager node allocates space on storage nodes \
 and assigns it for use by specific compute nodes. It also tracks health of all components and restores data on storage nodes that go down as well as provides means \
-for scheduled maintenance. Additionally, manager node collects span access statistics and uses it to update parameters of the system."),
+for scheduled maintenance."),
         paragraph_without_after_space("Integration of far memory into software is a complex problem because modern programming languages are built with an \
-assumption that all data is located in local RAM. That makes it difficult to place objects in far memory transparently, because there is no way to create a \
+assumption that all data is located in local RAM and there is no way to create a \
 pointer to a different storage device. While operating systems have a concept of virtual memory and memory mapping mechanisms, that cannot be used to provide \
 far memory without significant changes into the codebase while providing high performance. For these reasons, the implementation of far memory discussed in this \
 work picks two approaches for far memory integration. The first one is application-level integration with a far memory client library. In short, it works by \
@@ -235,7 +235,7 @@ replacement algorithms and levels of local memory."),
         /* todo: analysis of data. */
 
         end_section(2),
-        paragraph(TextSpan::Multiple(vec![
+        paragraph_with_before_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Conclusion.".into())),
             " This work proposes a method of providing software-defined far memory in distributed systems. Method and software that was designed ensures \
 integration simplicity, fault tolerance and high data access performance without relying on specializied hardware. Span replacement algorithm choice was \
@@ -261,17 +261,26 @@ fn end_section(columns: usize) -> Block {
 }
 
 fn paragraph(text: impl Into<TextSpan>) -> Block {
-    paragraph_with_params(text, true)
+    paragraph_with_params(text, false, true)
+}
+
+fn paragraph_with_before_space(text: impl Into<TextSpan>) -> Block {
+    paragraph_with_params(text, true, false)
 }
 
 fn paragraph_without_after_space(text: impl Into<TextSpan>) -> Block {
-    paragraph_with_params(text, false)
+    paragraph_with_params(text, false, false)
 }
 
-fn paragraph_with_params(text: impl Into<TextSpan>, after_spacing: bool) -> Block {
+fn paragraph_with_params(text: impl Into<TextSpan>, before_spacing: bool, after_spacing: bool) -> Block {
     let block = ParagraphBlock::new(text.into()).with_tab(false).with_line_spacing(FONT_SIZE, INTERVAL);
     let block = if after_spacing {
         block.with_after_spacing(300)
+    } else {
+        block
+    };
+    let block = if before_spacing {
+        block.with_before_spacing(300)
     } else {
         block
     };

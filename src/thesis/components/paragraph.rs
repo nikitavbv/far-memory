@@ -5,17 +5,17 @@ use {
 };
 
 pub trait ParagraphComponent {
-    fn add_paragraph_component(self, text: TextSpan, tab: bool, line_spacing: i32, after_spacing: Option<u32>, columns: Option<usize>) -> Self;
+    fn add_paragraph_component(self, text: TextSpan, tab: bool, line_spacing: i32, before_spacing: Option<u32>, after_spacing: Option<u32>, columns: Option<usize>) -> Self;
     fn add_paragraph_placeholder_component(self, text: TextSpan, description: impl Into<String>) -> Self;
 }
 
 impl ParagraphComponent for Docx {
-    fn add_paragraph_component(self, text: TextSpan, tab: bool, line_spacing: i32, after_spacing: Option<u32>, columns: Option<usize>) -> Self {
-        self.add_paragraph(runs_for_text_span(text, Run::new()).into_iter().fold(paragraph(tab, line_spacing, after_spacing, columns), |p, r| p.add_run(r)))
+    fn add_paragraph_component(self, text: TextSpan, tab: bool, line_spacing: i32, before_spacing: Option<u32>, after_spacing: Option<u32>, columns: Option<usize>) -> Self {
+        self.add_paragraph(runs_for_text_span(text, Run::new()).into_iter().fold(paragraph(tab, line_spacing, before_spacing, after_spacing, columns), |p, r| p.add_run(r)))
     }
 
     fn add_paragraph_placeholder_component(self, text: TextSpan, description: impl Into<String>) -> Self {
-        self.add_paragraph(paragraph(true, 24 * 15, None, None).add_placeholder_component(text.to_plaintext(), description))
+        self.add_paragraph(paragraph(true, 24 * 15, None, None, None).add_placeholder_component(text.to_plaintext(), description))
     }
 }
 
@@ -30,7 +30,7 @@ fn runs_for_text_span(text: TextSpan, run: Run) -> Vec<Run> {
     }
 }
 
-fn paragraph(tab: bool, line_spacing: i32, after_spacing: Option<u32>, columns: Option<usize>) -> Paragraph {
+fn paragraph(tab: bool, line_spacing: i32, before_spacing: Option<u32>, after_spacing: Option<u32>, columns: Option<usize>) -> Paragraph {
     let paragraph = Paragraph::new();
 
     let paragraph = if tab {
@@ -47,6 +47,11 @@ fn paragraph(tab: bool, line_spacing: i32, after_spacing: Option<u32>, columns: 
     };
 
     let line_spacing = LineSpacing::new().line(line_spacing);
+    let line_spacing = if let Some(before_spacing) = before_spacing {
+        line_spacing.before(before_spacing)
+    } else {
+        line_spacing
+    };
     let line_spacing = if let Some(after_spacing) = after_spacing {
         line_spacing.after(after_spacing)
     } else {
