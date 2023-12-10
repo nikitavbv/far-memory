@@ -58,7 +58,7 @@ impl ObjectRegistry {
     }
 
     pub fn put_object(&self, object_id: ObjectId, object_size: usize) -> Option<ObjectLocation> {
-        let size_class = size_class_for_object(object_size);
+        let size_class = self.size_class_for_object(object_size);
         let mut slots_map = self.slots_by_size_class.lock().unwrap();
         let slots_by_size_class = match slots_map.get_mut(&size_class) {
             Some(v) => v,
@@ -70,16 +70,22 @@ impl ObjectRegistry {
         }
 
         let slot = if slots_by_size_class[0].len > object_size {
-            let remaining = ObjectSlot {
-                span_id: slots_by_size_class[0].span_id.clone(),
-                offset: slots_by_size_class[0].offset + object_size,
-                len: slots_by_size_class[0].len - object_size,
-            };
-            std::mem::replace(&mut slots_by_size_class[0], remaining)
+            let remaining_len = slots_by_size_class[0].len - size_class;
+
+            if remaining_len > 0 {
+                let remaining = ObjectSlot {
+                    span_id: slots_by_size_class[0].span_id.clone(),
+                    offset: slots_by_size_class[0].offset + size_class,
+                    len: remaining_len,
+                };
+                std::mem::replace(&mut slots_by_size_class[0], remaining)
+            } else {
+                slots_by_size_class.remove(0)
+            }
         } else if slots_by_size_class[0].len == object_size {
             slots_by_size_class.remove(0)
         } else {
-            panic!("it is not expected that slot size is smaller than object size: {}", slots_by_size_class[0].len);
+            panic!("it is not expected that slot size is smaller than object size: {}, size class is {}", slots_by_size_class[0].len, size_class);
         };
 
         let location = ObjectLocation {
@@ -93,7 +99,7 @@ impl ObjectRegistry {
     }
 
     pub fn add_span_for_object(&self, span_id: SpanId, span_size: usize, object_id: ObjectId, object_size: usize) -> ObjectLocation {
-        let size_class = size_class_for_object(object_size);
+        let size_class = self.size_class_for_object(object_size);
         {
             let mut slots_by_size_class = self.slots_by_size_class.lock().unwrap();
 
@@ -114,15 +120,25 @@ impl ObjectRegistry {
     pub fn get_object(&self, object_id: &ObjectId) -> ObjectLocation {
         self.object_mapping.read().unwrap().get(object_id).unwrap().clone()
     }
-}
 
-fn size_class_for_object(object_size: usize) -> usize {
-    // TODO: implement actual size classes
-    if object_size != 8200 && object_size != 8 {
-        panic!("this object size is not supported: {:?}", object_size);
+    pub fn size_class_for_object(&self, object_size: usize) -> usize {
+        // TODO: implement actual size classes
+
+        // for flights in dataframe demo
+        if object_size >= 110 && object_size <= 120 {
+            return 120;
+        } else if object_size >= 310 && object_size <= 400 {
+            return 400;
+        } else if object_size >= 400 && object_size <= 500 {
+            return 500;
+        }
+
+        if object_size != 8200 && object_size != 8 {
+            panic!("this object size is not supported: {:?}", object_size);
+        }
+
+        object_size
     }
-
-    object_size
 }
 
 pub struct FarMemory<T> {

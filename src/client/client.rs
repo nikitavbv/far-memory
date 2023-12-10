@@ -458,8 +458,9 @@ impl FarMemoryClient {
             object_location
         } else {
             // create new span for this object
+            let size_class = self.object_registry.size_class_for_object(object.len());
             let span_size = 2 * 1024 * 1024;
-            let span_size = span_size + (object.len() - span_size % object.len());
+            let span_size = span_size + (size_class - span_size % size_class);
             let span = self.allocate_span(span_size);
             self.object_registry.add_span_for_object(span.clone(), span_size, object_id.clone(), object.len())
         };

@@ -18,6 +18,10 @@ impl<T> FarMemorySerializedObjectVec<T> {
             objects: Vec::new(),
         }
     }
+
+    pub fn len(&self) -> usize {
+        self.objects.len()
+    }
 }
 
 impl<T: Serialize> FarMemorySerializedObjectVec<T> {
