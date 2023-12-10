@@ -250,7 +250,7 @@ pub fn run_web_service_demo(metrics: Registry, run_id: String, token: &str, stor
         }
     }
 
-    println!("result: operations per second: {}", total_requests / (Instant::now() - started_at).as_secs());
+    println!("result: operations per second: {}, total requests processed: {}", total_requests / (Instant::now() - started_at).as_secs(), total_requests);
 }
 
 fn random_request(total_users: usize, zipf_s: f64) -> WebServiceRequest {
