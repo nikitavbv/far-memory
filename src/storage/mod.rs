@@ -105,7 +105,7 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
                         _ => panic!("didn't expect data to be external at this point"),
                     };
 
-                    (StorageResponse::SwapIn { span_id, data: SpanData::External { len: span_data.len() as u64 } }, Some(span_data))
+                    (StorageResponse::SwapIn { span_id, data: SpanData::External { len: span_data.iter().map(|v| v.len() as u64).sum() } }, Some(span_data))
                 },
                 StorageResponse::Batch(responses) => {
                     let mut span_data = None;
@@ -120,7 +120,7 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
                                     _ => panic!("didn't expect data to be external at this point"),
                                 });
 
-                                StorageResponse::SwapIn { span_id, data: SpanData::External { len: span_data.as_ref().unwrap().len() as u64 } }
+                                StorageResponse::SwapIn { span_id, data: SpanData::External { len: span_data.as_ref().map(|data| data.iter().map(|v| v.len() as u64).sum()).unwrap() } }
                             },
                             other => other
                         };
@@ -277,9 +277,9 @@ impl Server {
                 let bytes_swapped_out = data.len();
 
                 span!(Level::DEBUG, "inserting into spans").in_scope(|| if swap_out_req.prepend {
-                   self.spans.insert(swap_out_req.span_id, vec![data]);
-                } else {
                     self.spans.get_mut(&swap_out_req.span_id).unwrap().push(data);
+                } else {
+                    self.spans.insert(swap_out_req.span_id, vec![data]);
                 });
 
                 if let Some(metrics) = self.metrics.as_ref() {
