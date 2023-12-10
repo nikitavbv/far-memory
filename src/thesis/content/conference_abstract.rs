@@ -214,8 +214,8 @@ rows can be processed in any order in a stream which allows far memory client to
 node.".into(),
         ])),
 
-        /* picture with througput for different applications. */
-        /* analysis of data. */
+        /* todo: picture with througput for different applications. */
+        /* todo: analysis of data. */
 
         paragraph_without_after_space("When data in far memory is accessed in random order (as in the second demo application), distribution of span access \
 plays an important role. When distribution is skewed, far memory client should be able to make data access latency close to RAM access latency because hot \
@@ -224,10 +224,16 @@ system."),
         paragraph_without_after_space("To evaluate that, web service application is run with different s parameters of zipf distribution and throughput is \
 measured."),
 
-        /* picture with throughput for different s-param. */
-        /* analysis of data. */
+        /* todo: picture with throughput for different s-param. */
+        /* todo: analysis of data. */
 
-        // todo: evaluation of span replacement algorithms.
+        paragraph_without_after_space("Span replacement policy affects how frequently spans will be swapped in from memory of remote nodes blocking execution \
+of the application. To evaluate how well different replacement policies perform, throughput was measured for neural network inference application with different \
+replacement algorithms and levels of local memory."),
+
+        /* todo: picture with throughput for different replacement policies. */
+        /* todo: analysis of data. */
+
         end_section(2),
         paragraph(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Conclusion.".into())),
