@@ -205,7 +205,7 @@ pub fn run_web_service_demo(metrics: Registry, run_id: String, token: &str, stor
     // demo app
     let zipf_s = 0.8;
 
-    let total_pictures = 2_000_000; // 800_000 for 7.2GB of memory, 2_000_000 for 18GB.
+    let total_pictures = 1_000_000; // 800_000 for 7.2GB of memory, 2_000_000 for 18GB.
     let pictures = generate_pictures(total_pictures);
     println!("finished generating pictures");
 
