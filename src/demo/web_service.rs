@@ -205,7 +205,7 @@ pub fn run_web_service_demo(metrics: Registry, run_id: String, token: &str, stor
     // demo app
     let zipf_s = 0.8;
 
-    let total_pictures = 100; // 800_000 for 7.2GB of memory, 2_000_000 for 18GB.
+    let total_pictures = 2_000_000; // 800_000 for 7.2GB of memory, 2_000_000 for 18GB.
     let pictures = generate_pictures(total_pictures);
     println!("finished generating pictures");
 
@@ -223,6 +223,8 @@ pub fn run_web_service_demo(metrics: Registry, run_id: String, token: &str, stor
         far_memory_users.insert(user, picture);
     }
     println!("finished moving users to far memory");
+
+    println!("total memory, local: {}MB, remote: {}MB", client.total_local_memory() / (1024 * 1024), client.total_remote_memory() / (1024 * 1024));
 
     let web_service = DemoWebService::new(far_memory_users, pictures);
 
