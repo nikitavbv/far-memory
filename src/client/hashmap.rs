@@ -28,7 +28,7 @@ impl<K: Hash + PartialEq, V> FarMemoryHashMap<K, V> {
         let key = FarMemory::from_value(self.client.clone(), key);
         let value = FarMemory::from_value(self.client.clone(), value);
 
-        let mut slot = self.index.get_mut(index).unwrap();
+        let slot = self.index.get_mut(index).unwrap();
         if let Some(node) = slot {
             node.insert(key, value);
         } else {

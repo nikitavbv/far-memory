@@ -21,5 +21,7 @@ impl<T> FarMemorySerializedObjectVec<T> {
 }
 
 impl<T: Serialize> FarMemorySerializedObjectVec<T> {
-    // TODO: implement insert
+    pub fn push(&mut self, object: T) {
+        self.objects.push(FarMemorySerialized::from_value(self.client.clone(), object));
+    }
 }

@@ -10,6 +10,7 @@ pub use self::{
     client::FarMemoryClient,
     span::SpanId,
     serialized_object::FarMemorySerialized,
+    serialized_object_vec::FarMemorySerializedObjectVec,
     hashmap::FarMemoryHashMap,
     backend::{
         FarMemoryBackend,
