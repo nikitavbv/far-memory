@@ -87,7 +87,10 @@ impl LocalSpanData {
 
         Self {
             ptr: unsafe {
-                GLOBAL.realloc(prev_ptr, span_layout(self.size), new_size)
+                let new_ptr = GLOBAL.alloc(span_layout(new_size));
+                std::ptr::copy_nonoverlapping(prev_ptr, new_ptr, new_size);
+                GLOBAL.dealloc(prev_ptr, span_layout(self.size));
+                new_ptr
             },
             size: new_size,
         }
