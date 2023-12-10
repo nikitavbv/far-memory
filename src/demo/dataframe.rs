@@ -21,6 +21,8 @@ use {
 /**
 This demo is designed to rely on streaming to demonstrate optimizations that are available in
 such case.
+
+using this dataset: https://www.kaggle.com/datasets/robikscube/flight-delay-dataset-20182022/
 */
 pub fn run_dataframe_demo(metrics: Registry, run_id: String, token: &str, storage_endpoints: Vec<String>, manager_endpoint: Option<String>, local_max_memory: Option<u64>) {
     info!("running dataframe demo");
@@ -72,5 +74,7 @@ pub fn run_dataframe_demo(metrics: Registry, run_id: String, token: &str, storag
     client.start_swap_out_thread();
 
     // demo app
+
+
     // TODO: read dataset and load it into far memory
 }

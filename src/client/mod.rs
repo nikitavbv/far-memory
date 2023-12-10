@@ -40,6 +40,7 @@ mod client;
 mod hashmap;
 mod object;
 mod serialized_object;
+mod serialized_object_vec;
 mod span;
 mod vec;
 
