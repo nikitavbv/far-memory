@@ -111,9 +111,9 @@ performance provided by more efficient span replacement algorithms."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Designing a method and software for providing far memory.".into())),
             " The implementation of far memory that is being discussed in this paper operates on a similar principle: \
-a far memory client is integrated into the software that moves some of its data to be managed by far memory client. Far memory client in its turn moves chunks \
-of data (called spans, represented as byte sequences) to the memory of remote nodes and moves back to local memory (swap in operation) when software requests \
-access to this data. Lower memory usage is possible due to only part of spans being present in local memory at once.".into(),
+far memory client is integrated into the software, chunks of data managed by it (called spans, represented as byte sequences) are moved to the memory of remote \
+nodes to free local memory. Spans are moved back to local memory (swap in) when access to data is requested. Only part of spans being present locally at \
+once allow to lower memory usage.".into(),
         ])),
         paragraph_without_after_space("This implementation consists of the following components: compute nodes, storage nodes and manager node. Compute node \
 is a node that puts memory spans into the system for storage. Compute nodes may be repesented by different applications and different versions of these \
