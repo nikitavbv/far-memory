@@ -6,12 +6,12 @@ use {
     },
 };
 
-pub struct FarMemorySerializedObjectVec<T> {
+pub struct FarMemorySerializedObjectSet<T> {
     client: FarMemoryClient,
     objects: Vec<FarMemorySerialized<T>>,
 }
 
-impl<T> FarMemorySerializedObjectVec<T> {
+impl<T> FarMemorySerializedObjectSet<T> {
     pub fn new(client: FarMemoryClient) -> Self {
         Self {
             client,
@@ -24,27 +24,27 @@ impl<T> FarMemorySerializedObjectVec<T> {
     }
 }
 
-impl<T: Serialize> FarMemorySerializedObjectVec<T> {
+impl<T: Serialize> FarMemorySerializedObjectSet<T> {
     pub fn push(&mut self, object: T) {
         self.objects.push(FarMemorySerialized::from_value(self.client.clone(), object));
     }
 }
 
-impl<T: DeserializeOwned> FarMemorySerializedObjectVec<T> {
+impl<T: DeserializeOwned> FarMemorySerializedObjectSet<T> {
     pub fn get(&self, index: usize) -> T {
         self.objects.get(index).unwrap().to_local()
     }
 
-    pub fn iter(&self) -> FarMemorySerializedObjectVecIterator<T> {
-        FarMemorySerializedObjectVecIterator::new()
+    pub fn iter(&self) -> FarMemorySerializedObjectSetIterator<T> {
+        FarMemorySerializedObjectSetIterator::new()
     }
 }
 
-pub struct FarMemorySerializedObjectVecIterator<T> {
+pub struct FarMemorySerializedObjectSetIterator<T> {
     objects: Vec<FarMemorySerialized<T>>,
 }
 
-impl<T> FarMemorySerializedObjectVecIterator<T> {
+impl<T> FarMemorySerializedObjectSetIterator<T> {
     pub fn new() -> Self {
         Self {
             objects: Vec::new(),
@@ -52,7 +52,7 @@ impl<T> FarMemorySerializedObjectVecIterator<T> {
     }
 }
 
-impl<T> Iterator for FarMemorySerializedObjectVecIterator<T> {
+impl<T> Iterator for FarMemorySerializedObjectSetIterator<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
