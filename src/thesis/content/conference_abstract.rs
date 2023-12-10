@@ -71,7 +71,7 @@ CPU compute time utilization. Another resource is persistent storage for which r
 devices being located on individual compute nodes (servers), it is separated into dedicated storage infrastructure which forms a pool of storage shared \
 between all compute nodes. In this configuration, access to data stored on drives is provided over the network. This allows to assign as much storage to compute \
 nodes as it is needed by the software running on them. This also avoids situation where storage space on individual nodes remains unused because tasks running \
-have lower storage requests than what is provided by compute node hardware.".into(),
+have lower storage requests than what is provided by hardware.".into(),
         ])),
         paragraph_without_after_space(
             "For random access memory (RAM), operators of world's largest datacenters report average utilization of around 60%. Just as with storage, \
@@ -81,40 +81,36 @@ with persistent storage is problematic due to more strict performance requiremen
 that is accessed over the network significantly affects latency and bandwidth numbers for memory access operations. This difference is enough for typical software \
 running on compute nodes to noticably degrade in peformance, breaching service level objectives (SLOs) defined for this software."),
         paragraph_without_after_space("One approach to solve this is software-defined far memory. The idea behind this method is that some chunks of data can be \
-moved from compute nodes with heavy RAM utilization to nodes where there is a lot of free RAM and access this data over the network when needed in a way that is \
-transparent to the software (working with data in far memory should be similar to working with data in regular RAM while requiring little or none changes to software \
-source code). This results in higher memory utilization overall while also allowing software to process datasets that are larger in size than RAM available on \
-single compute node."),
-        paragraph_without_after_space("The goal of far memory is to move as many data as possible from local memory to the memory of remote nodes while also solving challenges that \
-come up in this configuration. Far memory implementation should ensure high performance of memory access operations, provide fault tolerance given expanded \
-failure domain and integrate into software without significant changes to the codebase and without relying on additional hardware."),
+moved from compute nodes with heavy RAM utilization to nodes with a lot of free RAM and access this data over the network in a way that is \
+transparent to the software (working with data in far memory should be similar to working with data in regular RAM). This results in higher memory utilization \
+overall while also allowing software to process datasets that are larger in size than RAM of a single compute node."),
+        paragraph_without_after_space("The goal of far memory is to move as many data as possible from local memory to remote nodes while solving challenges that \
+this configuration introduces. Far memory implementation should ensure high performance of memory access operations, provide fault tolerance, \
+ integrate without significant changes to the codebase while not relying on additional hardware."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Overview of existing implementations.".into())),
             " There are not many existing implementations of far memory because this topic became interesting for operators of the largest datacenters relatively \
-recently. At the time of writing, Carbink is considered a state of the art far memory implementation, while other notable implementations include Hydra, AIFM and \
-\"Software-Defined Far Memory in Warehouse-Scale Computers\".".into(),
+recently. At the time of writing, Carbink is considered a state of the art far memory implementation along with multiple other notable implementations.".into(),
         ])),
         paragraph_without_after_space("While Carbink is an advanced far memory implementation, it is closed source, tied to the infrastructure and tooling of a \
-specific datacenter operator (Google) and is not available for external use. It also relies on application-level integration and does not have a way to integrate \
-into software be other means. Memory spans replacements and defragmentation is optimized based on simple heuristics which do not use any information that may be \
-available from analyzing data access patterns."),
+specific datacenter operator (Google) and is not available for external use. It relies on application-level integration and does not have a way to integrate \
+into software be other means. Memory spans replacements and defragmentation is optimized based on simple heuristics that do not rely on analyzing data access \
+patterns."),
         paragraph_without_after_space("AIFM: High-Performance, Application-Integrated Far Memory shows the benefit of application-level far memory integration. \
 However, this implementation supports only one storage node and does not provide fault tolerance."),
-        paragraph_without_after_space("Some implementations, like Hydra, rely on specialized hardware, for example network interface cards and network equipment \
+        paragraph_without_after_space("Some implementations, like Hydra, rely on specialized hardware, for example network interface cards \
 supporting Remote Direct Memory Access (RDMA) like InfiniBand. While it allows to transfer spans between nodes with low latency, installing or upgrading hardware \
-may not be desirable or achievable in most environments. Performing changes to the hardware configuration of a large datacenter has costs associated with it which \
-may outweigh the benefits of higher memory utilization that far memory provides."),
+may not be desirable or achievable in most environments. Performing changes to the hardware configuration usually has costs associated with it that \
+may outweigh the benefits provided by far memory."),
         paragraph_without_after_space("Other implementations, like \"Software-Defined Far Memory in Warehouse-Scale Computers\", use more advanced approaches to \
 optimize far memory performance, including statistics collection across the fleet to build a model predicting optimal parameters for the system. However, this \
-implementation uses disk as storage backend, which is not optimal for many applications. Disk-backed memory has lower memory operations performance compared to \
-RAM of remote nodes (note that disk-backed memory still involves network operations in disaggregated infrastructure, so the difference here narrows down to \
-latency of local disk and local RAM on the remote node)."),
-        paragraph_without_after_space("These properties and problems associated with them of existing solutions create a need for far memory implementation that \
-would be open source, integrate into software with little or no changes to the codebase, while providing fault tolerance and high memory access operations \
-performance. The latter can be improved by developing more efficient span replacement algorithms."),
+implementation uses disk as storage backend, which is not optimal for many applications due to lower performance compared to storing data in RAM of remote nodes."),
+        paragraph_without_after_space("These properties and problems of existing solutions create a need for far memory implementation that \
+would be open source, integrate into software with little changes to the codebase, while providing fault tolerance and high memory access operations \
+performance provided by more efficient span replacement algorithms."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Designing a method and software for providing far memory.".into())),
-            " The implementation of far memory that is being discussed in this paper similarly to existing implementations operates on the following principle: \
+            " The implementation of far memory that is being discussed in this paper operates on a similar principle: \
 a far memory client is integrated into the software that moves some of its data to be managed by far memory client. Far memory client in its turn moves chunks \
 of data (called spans, represented as byte sequences) to the memory of remote nodes and moves back to local memory (swap in operation) when software requests \
 access to this data. Lower memory usage is possible due to only part of spans being present in local memory at once.".into(),
@@ -182,10 +178,10 @@ used\" policy is used)."),
 inefficient. Imagine software that scans all of its working set sequently in cycle. LRU policy which is popular is actually the least efficient here: it will pick \
 exactly those spans for swap out that will be accessed soon. That's why this far memory implementation takes a different approach. Given that there is relatively \
 low number of spans in the system, it is feasible to collect and track access statistics for all of them. These stats are sent from compute notes to manager node \
-that processes them. Based on this data, manager node can build models that can rely on complex span access patterns to better predict next span access events. \
-After the model is built, it is fetched by compute nodes and is used as span replacement policy. This work includes an \"ideal model\" that picks spans for swap \
-in and swap out perfectly given that memory access patterns are static. Another implementation is based on recurrent neural network and is able to handle \
-applications with dynamic memory access patterns."),
+that processes them by building models that can rely on complex span access patterns to better predict next span access events. \
+This model is later used by compute nodes used as a span replacement policy. This work includes an \"ideal model\" that picks spans for swap \
+operations perfectly given static memory access patterns. For software with dynamic memory access patterns, implementation based on recurrent neural network \
+is provided."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Performance evaluation.".into())),
             " Evaluation of this far memory implementation seeks to answer the following questions: ".into(),
