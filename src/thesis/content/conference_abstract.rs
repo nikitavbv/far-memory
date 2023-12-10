@@ -196,6 +196,19 @@ applications with dynamic memory access patterns."),
            "How span access distribution affects performance of far memory operations?".to_owned(),
            "What end-to-end performance is achieved with different span replacement policies?".to_owned(),
         ]),
+        paragraph_without_after_space(TextSpan::Multiple(vec![
+            " To answer these questions a number of experiments were run on two nodes with AMD Ryzen 5 3600 6-core CPUs (3.6GHz), 64GB RAM and Intel 82599 10 \
+Gbit/s NIC (direct connectivity). Both nodes are running ArchLinux (with kernel version 6.5.8).".into(),
+        ])),
+        paragraph_without_after_space(TextSpan::Multiple(vec![
+            " To evaluate end-to-end peformance of this far memory implementation it was integrated into three synthetic applications with different memory access \
+patterns:".into()
+        ])),
+        Block::OrderedList(vec![
+           "Large language model inference application. Neural network weights are stored in far memory and are fully scanned in interations as text is being \
+generated. This software represents class of tasks where the whole working set is scanned in pre-defined order.".to_owned(),
+           // todo: other types.
+        ]),
         // todo: evaluation
         end_section(2),
         paragraph(TextSpan::Multiple(vec![
