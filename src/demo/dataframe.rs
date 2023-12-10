@@ -1,9 +1,11 @@
 use {
-    std::fs::File,
+    std::{fs::File, time::Instant, hint::black_box},
     tracing::{info, warn},
     prometheus::Registry,
     serde::{Serialize, Deserialize},
     chrono::NaiveDate,
+    rand::Rng,
+    rand_distr::Zipf,
     crate::{
         client::{
             FarMemoryClient,
@@ -87,19 +89,11 @@ struct FlightData {
     div_airport_landings: Option<f32>,
 }
 
-enum DataFrameQuery {
-    PickRandom,
-    GetAverageDelayWithCriteria(FlightsQuery),
-}
-
+#[derive(Debug)]
 struct FlightsQuery {
-    after_date: NaiveDate,
-    origin_airport_id: u32,
-    airline_code: u32, // based on dot_id_operating_airline
-}
-
-enum DataFrameResponse {
-    Entry(FlightData),
+    after_date: Option<NaiveDate>,
+    origin_airport_id: Option<u32>,
+    airline_code: Option<u32>, // based on dot_id_operating_airline
 }
 
 struct DemoDataFramePipeline {
@@ -110,6 +104,28 @@ impl DemoDataFramePipeline {
     pub fn new(dataframe: FarMemorySerializedObjectVec<FlightData>) -> Self {
         Self {
             dataframe,
+        }
+    }
+
+    pub fn pick_random(&self, zipf_s: f32) -> FlightData {
+        let index = rand::thread_rng().sample(Zipf::new(self.dataframe.len() as u64, zipf_s).unwrap()).round() as u64 - 1; // -1 because zipf returns [1; n]
+        self.dataframe.get(index as usize)
+    }
+
+    /* get average delay based on arr_delay */
+    pub fn get_average_delay_with_criteria(&self, query: FlightsQuery) -> Option<f32> {
+        let (total_delay, total_objects) = self.dataframe
+            .iter()
+            .filter(|v| query.after_date.is_none() || query.after_date.unwrap() > v.flight_date)
+            .filter(|v| query.airline_code.is_none() || query.airline_code.unwrap() == v.dot_id_operating_airline)
+            .filter(|v| query.origin_airport_id.is_none() || query.origin_airport_id.unwrap() == v.origin_airport_id)
+            .filter(|v| v.arr_delay.is_some())
+            .fold((0.0, 0), |acc, v| (acc.0 + v.arr_delay.unwrap(), acc.1 + 1));
+
+        if total_objects == 0 {
+            None
+        } else {
+            Some(total_delay / total_objects as f32)
         }
     }
 }
@@ -171,7 +187,7 @@ pub fn run_dataframe_demo(metrics: Registry, run_id: String, token: &str, storag
 
     // demo app
     let mut dataframe: FarMemorySerializedObjectVec<FlightData> = FarMemorySerializedObjectVec::new(client.clone());
-    let dataframe_size_limit = 20_000_000; // 20M for 12GB memory.
+    let dataframe_size_limit = 1_000_000; // 20M for 12GB memory.
 
     'loading: loop {
         for year in 2018..2023 {
@@ -249,8 +265,59 @@ pub fn run_dataframe_demo(metrics: Registry, run_id: String, token: &str, storag
             }
         }
     }
+    println!("finished loading data");
 
+    // run queries
+    let dataframe = DemoDataFramePipeline::new(dataframe);
+    let mut total_queries = 0;
+    let started_at = Instant::now();
+    let zipf_s = 0.8;
 
+    let mut checkpoint = Instant::now();
+
+    loop {
+        let now = Instant::now();
+        let time_since_start = (now - started_at).as_secs();
+        if time_since_start > 15 * 60 {
+            break;
+        }
+
+        let flight = black_box(dataframe.pick_random(zipf_s));
+        let query = random_query_for_similar_flights(flight);
+
+        let _avg = black_box(dataframe.get_average_delay_with_criteria(black_box(query)));
+
+        total_queries += 1;
+
+        if (now - checkpoint).as_secs() > 60 {
+            checkpoint = Instant::now();
+            println!("operations per second: {}", total_queries / time_since_start);
+        }
+    }
+
+    println!("result: operations per second: {}", total_queries / (Instant::now() - started_at).as_secs());
+}
+
+fn random_query_for_similar_flights(flight: FlightData) -> FlightsQuery {
+    let mut query = FlightsQuery {
+        after_date: None,
+        origin_airport_id: None,
+        airline_code: None,
+    };
+
+    if rand::thread_rng().gen_bool(0.7) {
+        query.after_date = Some(flight.flight_date);
+    }
+
+    if rand::thread_rng().gen_bool(0.7) {
+        query.origin_airport_id = Some(flight.origin_airport_id);
+    }
+
+    if rand::thread_rng().gen_bool(0.7) {
+        query.airline_code = Some(flight.dot_id_operating_airline);
+    }
+
+    query
 }
 
 fn parse_bool(s: &str) -> bool {
