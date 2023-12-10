@@ -54,7 +54,7 @@ pub fn conference_abstract() -> Block {
         ])),
         paragraph(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Abstract.".into())),
-            " This paper discusses the problem of providing far memory in distributed systems. The approaches to integrating far memory into software, ensuring \
+            " This work discusses the problem of providing far memory in distributed systems. The approaches to integrating far memory into software, ensuring \
 fault tolerance and high performance are reviewed. An improved span replacement algorithm is proposed which is based on memory span access statistics and provides \
 more efficient swapping between local and remote memory. This results in reduction of data access latency compared to simple span replacement approaches.".into(),
             TextSpan::Break,
@@ -110,7 +110,7 @@ would be open source, integrate into software with little changes to the codebas
 performance provided by more efficient span replacement algorithms."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Designing a method and software for providing far memory.".into())),
-            " The implementation of far memory that is being discussed in this paper operates on a similar principle: \
+            " The implementation of far memory that is being discussed in this work operates on a similar principle: \
 far memory client is integrated into the software, chunks of data managed by it (called spans, represented as byte sequences) are moved to the memory of remote \
 nodes to free local memory. Spans are moved back to local memory (swap in) when access to data is requested. Only part of spans being present locally at \
 once allow to lower memory usage.".into(),
@@ -118,7 +118,7 @@ once allow to lower memory usage.".into(),
         paragraph_without_after_space("This implementation consists of the following components: compute nodes, storage nodes and manager node. Compute node \
 is a node that puts memory spans into the system for storage. Compute nodes may be repesented by different applications and different versions of these \
 applications. Spans are the central entity which far memory client operates on and are identified by an ID (64 bit number). Data associated with span may be located \
-in the local memory or on storage backend. Far memory implementation that is being discussed in this paper supports multiple storage backend implementations: \
+in the local memory or on storage backend. Far memory implementation that is being discussed in this work supports multiple storage backend implementations: \
 local memory, solid state drives, one or multiple remote nodes. The latter is the main mode of operation, while others are implemented for testing purposes \
 and to fit specific environments when those storage backends may be more practical. Storage nodes serve the function of storing spans data that were swapped out \
 and can be viewed as a key-value storage. Having multiple compute and storage nodes creates a need for a manager node. Manager node allocates space on storage nodes \
@@ -128,7 +128,7 @@ for scheduled maintenance. Additionally, manager node collects span access stati
 assumption that all data is located in local RAM. That makes it difficult to place objects in far memory transparently, because there is no way to create a \
 pointer to a different storage device. While operating systems have a concept of virtual memory and memory mapping mechanisms, that cannot be used to provide \
 far memory without significant changes into the codebase while providing high performance. For these reasons, the implementation of far memory discussed in this \
-paper picks two approaches for far memory integration. The first one is application-level integration with a far memory client library. In short, it works by \
+work picks two approaches for far memory integration. The first one is application-level integration with a far memory client library. In short, it works by \
 creating wrappers for data managed by far memory. Two nested smart pointers are used to track when software requests access to data being located in far memory and \
 to identify when it is no longer needed and can be swapped out safely. Far memory client library is written in Rust and supports in-depth configuration of storage \
 backend, swap in and swap out processes. Given that providing higher level abstractions allows to make far memory more efficient due to additional information \
@@ -237,7 +237,8 @@ replacement algorithms and levels of local memory."),
         end_section(2),
         paragraph(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Conclusion.".into())),
-            " Conclusion text.".into(),
+            " This work proposes a method of providing software-defined far memory in distributed systems. Method and software that was designed ensures \
+integration simplicity, fault tolerance and high data access performance without relying on specializied hardware. ....".into(),
         ])),
         Block::SubsectionHeader(
             SubsectionHeaderBlock::without_numbering("References.".to_owned())
