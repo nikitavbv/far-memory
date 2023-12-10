@@ -1,7 +1,7 @@
 use {
     std::{marker::PhantomData, ops::Deref},
     serde::{Serialize, de::DeserializeOwned},
-    super::{FarMemoryClient, object::ObjectId},
+    super::{FarMemoryClient, object::ObjectId, span::SpanId},
 };
 
 pub struct FarMemorySerialized<T> {
@@ -10,7 +10,17 @@ pub struct FarMemorySerialized<T> {
     _phantom: PhantomData<T>,
 }
 
-impl <'a, T: Serialize> FarMemorySerialized<T> {
+impl<T> FarMemorySerialized<T> {
+    pub fn is_local(&self) -> bool {
+        self.client.is_object_local(&self.object)
+    }
+
+    pub fn span(&self) -> SpanId {
+        self.client.get_object(&self.object).span_id
+    }
+}
+
+impl <T: Serialize> FarMemorySerialized<T> {
     pub fn from_value(client: FarMemoryClient, value: T) -> Self {
         // TODO: use rkyv instead for better performance?
         let serialized = bincode::serialize(&value).unwrap();
@@ -37,5 +47,16 @@ impl <T: DeserializeOwned> FarMemorySerialized<T> {
 
         // returning just data, because it is owned, and spans refs are already decreased
         data
+    }
+}
+
+impl<T> Clone for FarMemorySerialized<T> {
+    fn clone(&self) -> Self {
+        // TODO: ref count for objects to avoid leaking memory
+        Self {
+            client: self.client.clone(),
+            object: self.object.clone(),
+            _phantom: PhantomData,
+        }
     }
 }

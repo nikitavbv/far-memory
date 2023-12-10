@@ -477,6 +477,15 @@ impl FarMemoryClient {
     pub fn get_object(&self, object_id: &ObjectId) -> ObjectLocation {
         self.object_registry.get_object(object_id)
     }
+
+    pub fn is_object_local(&self, object_id: &ObjectId) -> bool {
+        let location = self.object_registry.get_object(object_id);
+        self.is_span_local(&location.span_id)
+    }
+
+    fn is_span_local(&self, span_id: &SpanId) -> bool {
+        self.spans.read().unwrap().get(span_id).map(|v| v.is_local()).unwrap_or(false)
+    }
 }
 
 #[derive(Clone)]

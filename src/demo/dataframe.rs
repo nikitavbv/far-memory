@@ -108,8 +108,8 @@ impl DemoDataFramePipeline {
     }
 
     pub fn pick_random(&self, zipf_s: f32) -> FlightData {
-        let index = rand::thread_rng().sample(Zipf::new(self.dataframe.len() as u64, zipf_s).unwrap()).round() as u64 - 1; // -1 because zipf returns [1; n]
-        self.dataframe.get(index as usize)
+        let index = rand::thread_rng().sample(Zipf::new(self.dataframe.len() as u64 - 1, zipf_s).unwrap()).floor() as u64 - 1; // -1 because zipf returns [1; n]. Not clear why -2 is needed though.
+        self.dataframe.get(index as usize).expect(&format!("failed to get entry for index {} with dataframe len {}", index, self.dataframe.len()))
     }
 
     /* get average delay based on arr_delay */
@@ -120,6 +120,7 @@ impl DemoDataFramePipeline {
             .filter(|v| query.airline_code.is_none() || query.airline_code.unwrap() == v.dot_id_operating_airline)
             .filter(|v| query.origin_airport_id.is_none() || query.origin_airport_id.unwrap() == v.origin_airport_id)
             .filter(|v| v.arr_delay.is_some())
+            .take(10_000)
             .fold((0.0, 0), |acc, v| (acc.0 + v.arr_delay.unwrap(), acc.1 + 1));
 
         if total_objects == 0 {
@@ -187,7 +188,7 @@ pub fn run_dataframe_demo(metrics: Registry, run_id: String, token: &str, storag
 
     // demo app
     let mut dataframe: FarMemorySerializedObjectVec<FlightData> = FarMemorySerializedObjectVec::new(client.clone());
-    let dataframe_size_limit = 1_000_000; // 20M for 12GB memory.
+    let dataframe_size_limit = 20_000_000; // 20M for 17.5GB memory.
 
     'loading: loop {
         for year in 2018..2023 {
@@ -286,12 +287,13 @@ pub fn run_dataframe_demo(metrics: Registry, run_id: String, token: &str, storag
         let query = random_query_for_similar_flights(flight);
 
         let _avg = black_box(dataframe.get_average_delay_with_criteria(black_box(query)));
+        println!("avg is {:?}", _avg);
 
         total_queries += 1;
 
         if (now - checkpoint).as_secs() > 60 {
             checkpoint = Instant::now();
-            println!("operations per second: {}", total_queries / time_since_start);
+            println!("operations per second: {}, total {}", total_queries / time_since_start, total_queries);
         }
     }
 
