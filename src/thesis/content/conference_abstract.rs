@@ -188,8 +188,14 @@ in and swap out perfectly given that memory access patterns are static. Another 
 applications with dynamic memory access patterns."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Performance evaluation.".into())),
-            " To evaluate end-to-end performance of this far memory implementation it was integrated into ...".into(),
+            " Evaluation of this far memory implementation seeks to answer the following questions: ".into(),
+            // " To evaluate end-to-end performance of this far memory implementation it was integrated into ...".into(),
         ])),
+        Block::OrderedList(vec![
+           "What end-to-end performance does this far memory implementation achieve for typical applications with different memory access patterns?".to_owned(),
+           "How span access distribution affects performance of far memory operations?".to_owned(),
+           "What end-to-end performance is achieved with different span replacement policies?".to_owned(),
+        ]),
         // todo: evaluation
         end_section(2),
         paragraph(TextSpan::Multiple(vec![
