@@ -1,5 +1,3 @@
-use std::ptr::addr_of_mut;
-
 use {
     std::fs::File,
     tracing::{info, warn},
@@ -87,6 +85,33 @@ struct FlightData {
     arr_time_blk: String,
     distance_group: u32,
     div_airport_landings: Option<f32>,
+}
+
+enum DataFrameQuery {
+    PickRandom,
+    GetAverageDelayWithCriteria(FlightsQuery),
+}
+
+struct FlightsQuery {
+    after_date: NaiveDate,
+    origin_airport_id: u32,
+    airline_code: u32, // based on dot_id_operating_airline
+}
+
+enum DataFrameResponse {
+    Entry(FlightData),
+}
+
+struct DemoDataFramePipeline {
+    dataframe: FarMemorySerializedObjectVec<FlightData>,
+}
+
+impl DemoDataFramePipeline {
+    pub fn new(dataframe: FarMemorySerializedObjectVec<FlightData>) -> Self {
+        Self {
+            dataframe,
+        }
+    }
 }
 
 /**
@@ -225,7 +250,7 @@ pub fn run_dataframe_demo(metrics: Registry, run_id: String, token: &str, storag
         }
     }
 
-    // TODO: read dataset and load it into far memory
+
 }
 
 fn parse_bool(s: &str) -> bool {
