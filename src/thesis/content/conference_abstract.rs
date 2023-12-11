@@ -2,7 +2,7 @@ use {
     docx_rs::{Docx, PageMargin, RunFonts, SectionType},
     itertools::Itertools,
     crate::thesis::{
-        engine::{Block, ParagraphBlock, TextSpan, SectionHeaderBlock, SubsectionHeaderBlock},
+        engine::{Block, ParagraphBlock, TextSpan, SectionHeaderBlock, SubsectionHeaderBlock, ImageBlock},
         content::{classification_code, keywords, Language},
         utils::mm_to_twentieth_of_a_point,
     },
@@ -215,6 +215,7 @@ node.".into(),
         ])),
 
         /* todo: picture with througput for different applications. */
+        demo_throughput(),
         /* todo: analysis of data. */
 
         paragraph_without_after_space("When data in far memory is accessed in random order (as in the second demo application), distribution of span access \
@@ -254,6 +255,41 @@ better performance compared to simple heurisitics used by existing implementatio
         ]),
         end_section(1)
     ])
+}
+
+fn demo_throughput() -> Block {
+    use plotters::prelude::*;
+    let root_area = BitMapBackend::new("./output/images/demo-throughput.png", (600, 800)).into_drawing_area();
+    root_area.fill(&WHITE).unwrap();
+
+    let mut cc = ChartBuilder::on(&root_area)
+        .margin(5)
+        .x_label_area_size(30)
+        .y_label_area_size(30)
+        .build_cartesian_2d(0.0..100.0, 0.0..100.0)
+        .unwrap();
+
+    cc.configure_mesh()
+        .x_labels(10)
+        .y_labels(10)
+        .disable_mesh()
+        .x_label_formatter(&|v| format!("{:.1}", v))
+        .y_label_formatter(&|v| format!("{:.1}", v))
+        .x_label_style(TextStyle::from(("sans-serif", 20).into_font()))
+        .x_desc("something")
+        .draw()
+        .unwrap();
+
+    cc.draw_series(LineSeries::new(
+        [(10.0, 10.0), (20.0, 90.0)],
+        BLUE.stroke_width(2)
+    )).unwrap().label("app1").legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], BLUE));
+
+    cc.configure_series_labels().border_style(BLACK).draw().unwrap();
+
+    root_area.present().unwrap();
+
+    Block::Image(ImageBlock::new("./output/images/demo-throughput.png".to_owned(), "something".to_owned()).with_scaling(0.5))
 }
 
 fn end_section(columns: usize) -> Block {

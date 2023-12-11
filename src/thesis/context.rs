@@ -26,7 +26,19 @@ impl Context {
     }
 
     fn section(&mut self, section_index: usize) -> &mut SectionContext {
-        self.sections.get_mut(section_index - 1).unwrap()
+        // quick fix for images in conference abstract
+        if self.sections.is_empty() {
+            self.sections.push(SectionContext::new());
+        }
+
+        // quick fix for images in conference abstract
+        let section_index = if section_index == 0 {
+            0
+        } else {
+            section_index - 1
+        };
+
+        self.sections.get_mut(section_index).unwrap()
     }
 
     pub fn next_subsection_index(&mut self, section_index: usize) -> usize {

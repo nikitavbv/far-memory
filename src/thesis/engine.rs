@@ -227,6 +227,7 @@ pub enum TextSpan {
 pub struct ImageBlock {
     path: String,
     description: String,
+    scaling: f32,
 }
 
 impl ImageBlock {
@@ -234,6 +235,7 @@ impl ImageBlock {
         Self {
             path,
             description,
+            scaling: 1.0,
         }
     }
 
@@ -243,6 +245,13 @@ impl ImageBlock {
 
     pub fn description(&self) -> String {
         self.description.clone()
+    }
+
+    pub fn with_scaling(self, scaling: f32) -> Self {
+        Self {
+            scaling,
+            ..self
+        }
     }
 }
 
@@ -332,7 +341,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
             ))
         },
         Block::UnorderedList(list) => document.add_unordered_list_component(context, list),
-        Block::Image(image) => document.add_image_component(context, context.last_section_index(), &image.path(), &image.description()),
+        Block::Image(image) => document.add_image_component(context, context.last_section_index(), &image.path(), &image.description(), image.scaling),
         Block::Placeholder(inner, description) => render_block_to_docx_with_params(document, context, content, Some(description), *inner),
         Block::Multiple(blocks) => blocks.into_iter().fold(document, |doc, block| render_block_to_docx_with_params(doc, context, content, placeholder.clone(), block)),
         Block::ReferencesList(references) => {

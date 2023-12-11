@@ -4,17 +4,17 @@ use {
 };
 
 pub trait ImageComponent {
-    fn add_image_component(self, context: &mut Context, section_index: usize, path: &str, description: &str) -> Self;
+    fn add_image_component(self, context: &mut Context, section_index: usize, path: &str, description: &str, scaling: f32) -> Self;
 }
 
 impl ImageComponent for Docx {
-    fn add_image_component(self, context: &mut Context, section_index: usize, path: &str, description: &str) -> Self {
+    fn add_image_component(self, context: &mut Context, section_index: usize, path: &str, description: &str, scaling: f32) -> Self {
         let img = image::io::Reader::open(path).unwrap().decode().unwrap();
 
         let width = img.width();
         let height = img.height();
 
-        let width_emu = 5000000;
+        let width_emu = (5000000 as f32 * scaling) as u32;
         let height_emu = ((height as f32) / (width as f32) * (width_emu as f32)) as u32;
 
         let image_index = context.next_image_index(section_index);
