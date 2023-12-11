@@ -289,7 +289,6 @@ pub fn run_dataframe_demo(metrics: Registry, run_id: String, token: &str, storag
         let query = random_query_for_similar_flights(flight);
 
         let _avg = black_box(dataframe.get_average_delay_with_criteria(black_box(query)));
-        println!("avg is {:?}", _avg);
 
         total_queries += 1;
 
@@ -299,7 +298,7 @@ pub fn run_dataframe_demo(metrics: Registry, run_id: String, token: &str, storag
         }
     }
 
-    println!("result: operations per second: {}", total_queries / (Instant::now() - started_at).as_secs());
+    println!("result: operations per second: {}, total operations: {}", total_queries / (Instant::now() - started_at).as_secs(), total_queries);
 }
 
 fn random_query_for_similar_flights(flight: FlightData) -> FlightsQuery {
