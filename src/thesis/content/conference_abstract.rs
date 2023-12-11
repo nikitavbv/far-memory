@@ -25,7 +25,7 @@ pub fn conference_abstract() -> Block {
                 .bold()
                 .with_line_spacing(FONT_SIZE, INTERVAL)
         ),
-        Block::OrderedList(references),
+        Block::OrderedList(references.into_iter().map(|v| TextSpan::Regular(v)).collect()),
         end_section(1)
     ])
 }
@@ -40,6 +40,7 @@ fn extract_references_text_inner(references: &mut Vec<String>, block: &Block) {
     match &block {
         Block::Paragraph(paragraph) => extract_references_text_span(references, paragraph.text()),
         Block::Multiple(multi) => multi.iter().for_each(|v| extract_references_text_inner(references, v)),
+        Block::OrderedList(list) => list.iter().for_each(|v| extract_references_text_span(references, v)),
         _ => (),
     }
 }
@@ -315,9 +316,9 @@ is provided."),
             " Evaluation of this far memory implementation seeks to answer the following questions: ".into(),
         ])),
         Block::OrderedList(vec![
-           "What end-to-end performance does this far memory implementation achieve for typical applications with different memory access patterns?".to_owned(),
-           "How span access distribution affects performance of far memory operations?".to_owned(),
-           "What end-to-end performance is achieved with different span replacement policies?".to_owned(),
+           "What end-to-end performance does this far memory implementation achieve for typical applications with different memory access patterns?".into(),
+           "How span access distribution affects performance of far memory operations?".into(),
+           "What end-to-end performance is achieved with different span replacement policies?".into(),
         ]),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             "To answer these questions a number of experiments were run on two nodes with AMD Ryzen 5 3600 6-core CPUs (3.6GHz), 64GB RAM and Intel 82599 10 \
@@ -329,15 +330,27 @@ patterns:".into()
         ])),
         Block::OrderedList(vec![
            "Large language model inference application. Neural network weights are stored in far memory and are fully scanned in interations as text is being \
-generated. This software represents class of tasks where the whole working set is scanned in pre-defined order.".to_owned(),
-           "Web service application that accepts requests with ".into(),
-           "zipf-distributed".to_owned(), // TODO: add reference
-           " user IDs to compute an index (also zipf-distributed) to a collection of pictures \
+generated. This software represents class of tasks where the whole working set is scanned in pre-defined order.".into(),
+           TextSpan::Multiple(vec!["Web service application that accepts requests with ".into(),
+
+                TextSpan::Reference(Box::new(TextSpan::Regular("zipf-distributed".to_owned())), Reference::for_website(
+                    "Zipf Distribution - Wolfram MathWorld".to_owned(),
+                    "https://mathworld.wolfram.com/ZipfDistribution.html".to_owned()
+                )),
+
+                " user IDs to compute an index (also zipf-distributed) to a collection of pictures \
 item from which is picked, encrypted with AES GCM, compressed with Snappy and sent back to the client. This software represents a class of software built around \
-key-value data structures, where memory access is performed to a lot of small objects with a certain distribution.".to_owned(),
-           "An application that performs queries over a dataframe with data from Kaggle delayed flights dataset. Dataframe is stored in far memory and is loaded \
+key-value data structures, where memory access is performed to a lot of small objects with a certain distribution.".into(),
+           ]),
+           TextSpan::Multiple(vec!["An application that performs queries over a dataframe with data from ".into(),
+               TextSpan::Reference(Box::new(TextSpan::Regular("Kaggle delayed flights dataset".to_owned())), Reference::for_website(
+                   "Flight Status Prediction - Kaggle".to_owned(),
+                   "https://www.kaggle.com/datasets/robikscube/flight-delay-dataset-20182022/".to_owned()
+               )),
+               ". Dataframe is stored in far memory and is loaded \
 row by row as query is processed similarly to typical data processing system or a database. In this case, data access pattern is a bit different because \
-rows can be processed in any order in a stream which allows far memory client to rely on various optimizations when high level data structures are used.".to_owned(),
+rows can be processed in any order in a stream which allows far memory client to rely on various optimizations when high level data structures are used.".into(),
+           ]),
         ]),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             "In each case, far memory client is ran with default settings and system throughput is measured with different levels of spans swapped out to remote \

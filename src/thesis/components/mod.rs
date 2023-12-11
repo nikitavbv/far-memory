@@ -4,7 +4,7 @@ pub use self::{
     image::ImageComponent,
     line::LineComponent,
     page_break::PageBreakComponent,
-    paragraph::ParagraphComponent,
+    paragraph::{ParagraphComponent, runs_for_text_span},
     placeholder::PlaceholderComponent,
     section_header::SectionHeaderComponent,
     task::TaskSection,

@@ -34,6 +34,7 @@ use {
             TaskSection,
             FrontPageSection,
             TopicCardDocument,
+            runs_for_text_span,
         },
     },
 };
@@ -49,7 +50,7 @@ pub enum Block {
     SectionHeader(SectionHeaderBlock),
     SubsectionHeader(SubsectionHeaderBlock),
     Paragraph(ParagraphBlock),
-    OrderedList(Vec<String>),
+    OrderedList(Vec<TextSpan>),
     UnorderedList(Vec<String>),
     Image(ImageBlock),
     Placeholder(Box<Block>, String),
@@ -373,17 +374,24 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
 
             for i in 0..list.len() {
                 let text = list.get(i).unwrap().clone();
-                let text = if !text.ends_with("?") {
-                    format!("{}{}", text, if i == list.len() - 1 { "." } else { ";" })
+                let text = if !text.to_plaintext().ends_with("?") {
+                    TextSpan::Multiple(vec![text, if i == list.len() - 1 { "." } else { ";" }.into()])
                 } else {
                     text
                 };
 
-                document = document.add_paragraph(Paragraph::new()
+                let runs = runs_for_text_span(context, text, Run::new());
+
+                let mut paragraph = Paragraph::new()
                     .line_spacing(LineSpacing::new().line((24.0 * 1.15 * 10.0) as i32))
                     .numbering(NumberingId::new(numbering), IndentLevel::new(0))
-                    .align(AlignmentType::Both)
-                    .add_run(Run::new().add_text(text)));
+                    .align(AlignmentType::Both);
+
+                for run in runs {
+                    paragraph = paragraph.add_run(run);
+                }
+
+                document = document.add_paragraph(paragraph);
             }
 
             document

@@ -19,7 +19,7 @@ impl ParagraphComponent for Docx {
     }
 }
 
-fn runs_for_text_span(context: &mut Context, text: TextSpan, run: Run) -> Vec<Run> {
+pub fn runs_for_text_span(context: &mut Context, text: TextSpan, run: Run) -> Vec<Run> {
     match text {
         TextSpan::Bold(inner) => runs_for_text_span(context, *inner, run.bold()),
         TextSpan::Italic(inner) => runs_for_text_span(context, *inner, run.italic()),
