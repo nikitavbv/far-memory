@@ -421,6 +421,16 @@ fn throughput_replacement_policies() -> Block {
         .map(|v| (v.0 as f64, v.1 as f64 / max_performance as f64))
         .collect();
 
+    let results_lru = vec![
+        (0.1, 13),
+        (0.5, 13),
+        (1.0, 122),
+    ];
+    let max_performance = results_lru.iter().map(|(_, performance)| *performance).max().unwrap();
+    let results_lru: Vec<_> = results_lru.into_iter()
+        .map(|v| (v.0 as f64, v.1 as f64 / max_performance as f64))
+        .collect();
+
     // graph
     let k = 20;
     let root_area = BitMapBackend::new("./output/images/replacement_policies.png", (k * 55, k * 45)).into_drawing_area();
@@ -459,6 +469,11 @@ fn throughput_replacement_policies() -> Block {
         results_ideal,
         GREEN.stroke_width(4)
     )).unwrap().label("stats-based").legend(|(x, y)| PathElement::new(vec![(x, y), (x + 30, y)], GREEN.stroke_width(4)));
+
+    cc.draw_series(LineSeries::new(
+        results_lru,
+        BLUE.stroke_width(4)
+    )).unwrap().label("LRU").legend(|(x, y)| PathElement::new(vec![(x, y), (x + 30, y)], BLUE.stroke_width(4)));
 
     cc.configure_series_labels().position(SeriesLabelPosition::Coordinate(20, 10)).legend_area_size(40).margin(10).border_style(BLACK.stroke_width(3)).label_font(("arial", 50).into_font()).draw().unwrap();
 
