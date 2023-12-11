@@ -124,6 +124,11 @@ Storage nodes serve the function of storing spans data that were swapped out \
 and function as a key-value storage. Manager node allocates space on storage nodes \
 and assigns it for use by specific compute nodes. It also tracks health of all components and restores data on storage nodes that go down as well as provides means \
 for scheduled maintenance."),
+        end_section(2),
+
+        image_with_scale("./images/components.jpg", "Far memory components", 0.9),
+        end_section(1),
+
         paragraph_without_after_space("Integration of far memory into software is a complex problem because modern programming languages are built with an \
 assumption that all data is located in local RAM and there is no way to create a \
 pointer to a different storage device. While operating systems have a concept of virtual memory and memory mapping mechanisms, that cannot be used to provide \
@@ -151,11 +156,17 @@ use of a different storage class (SSD disk space). Another option is data replic
 memory. The most efficient approach is using Reed-Solomon coding which is frequently applied to this class of tasks. In short, when swapping out data is split \
 into N shards and additional M parity shards. These shards are stored on different nodes and in the event of node failure and loss of any M shards, data can \
 still be restored by performing a linear transformation from the existing shards."),
+        end_section(2),
+
+        image_with_scale("./images/fault_tolerance.jpg", "Swapping spans to multiple nodes using Reed-Solomon coding", 0.9),
+        end_section(1),
+
         paragraph_without_after_space("Performance is critical for far memory and defines field of software and use-cases where far memory can be applied. Data access \
 time for data in far memory will always be higher compared to data stored in local RAM because latency and bandwidth numbers for remote storage devices is \
 significantly higher than for RAM. In these conditions it is not possible to make far memory as fast as local RAM, however additional latency can be minimzed to \
 level that acceptable for real world applications. There is a balance between how actively far memory is used by the application and impact on its performance. \
 It is up to application developer how much performance they are willing to trade for lower local memory usage."),
+        image_with_scale("./images/latency.jpg", "Span access flow", 0.5),
         paragraph_without_after_space("To make this implementation of far memory performant, the client uses hardware resources efficiently by avoiding unnecessary \
 copying of data and communicating with other nodes using lightweight network protocol that is based on TCP and uses the simplest form of request serialization \
 based on bincode. Compression is not used (but can be optionally enabled by the user) because modern compression algorithms are typically slower (6.4Gbps for lz4) \
@@ -341,7 +352,15 @@ fn demo_throughput() -> Block {
 
     root_area.present().unwrap();
 
-    Block::Image(ImageBlock::new("./output/images/demo-throughput.png".to_owned(), "Application throughput by type and ratio of local memory".to_owned()).with_scaling(0.55).with_paper_style())
+    image("./output/images/demo-throughput.png",  "Application throughput by type and ratio of local memory")
+}
+
+fn image(path: &str, description: &str) -> Block {
+    image_with_scale(path, description, 0.55)
+}
+
+fn image_with_scale(path: &str, description: &str, scaling: f32) -> Block {
+    Block::Image(ImageBlock::new(path.to_owned(), description.to_owned()).with_scaling(scaling).with_paper_style())
 }
 
 fn end_section(columns: usize) -> Block {
