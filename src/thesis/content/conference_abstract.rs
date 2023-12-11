@@ -258,38 +258,75 @@ better performance compared to simple heurisitics used by existing implementatio
 }
 
 fn demo_throughput() -> Block {
+    // data
+    let llm_inference_results = vec![
+        (0.1, 14),
+        (0.5, 23),
+        (1.0, 122)
+    ];
+    let llm_inference_max_performance = llm_inference_results.iter().map(|v| v.1).max().unwrap();
+    let llm_inference_results: Vec<_> = llm_inference_results.into_iter()
+        .map(|v| (v.0 as f64, v.1 as f64 / llm_inference_max_performance as f64))
+        .collect();
+
+    let web_service_results = vec![
+        (0.1, 2528),
+        (0.5, 5710),
+        (0.8, 14224),
+        (0.9, 23765),
+        (1.0, 9932828),
+    ];
+    let web_service_results_max_performance = web_service_results.iter().map(|v| v.1).max().unwrap();
+    let web_service_results: Vec<_> = web_service_results.into_iter()
+        .map(|v| (v.0 as f64, v.1 as f64 / web_service_results_max_performance as f64))
+        .collect();
+
+    // graph
     use plotters::prelude::*;
-    let root_area = BitMapBackend::new("./output/images/demo-throughput.png", (600, 800)).into_drawing_area();
+
+    let k = 20;
+    let root_area = BitMapBackend::new("./output/images/demo-throughput.png", (k * 55, k * 45)).into_drawing_area();
     root_area.fill(&WHITE).unwrap();
 
     let mut cc = ChartBuilder::on(&root_area)
-        .margin(5)
-        .x_label_area_size(30)
-        .y_label_area_size(30)
-        .build_cartesian_2d(0.0..100.0, 0.0..100.0)
+        .margin_top(60)
+        .margin_bottom(30)
+        .margin_left(0)
+        .margin_right(60)
+        .x_label_area_size(110)
+        .y_label_area_size(110)
+        .build_cartesian_2d(0.0..1.0, 0.0..1.0)
         .unwrap();
 
     cc.configure_mesh()
         .x_labels(10)
         .y_labels(10)
+        .axis_style(BLACK.stroke_width(4))
         .disable_mesh()
-        .x_label_formatter(&|v| format!("{:.1}", v))
+        .x_label_formatter(&|v| format!("{:.0}%", v * 100.0))
         .y_label_formatter(&|v| format!("{:.1}", v))
-        .x_label_style(TextStyle::from(("sans-serif", 20).into_font()))
-        .x_desc("something")
+        .x_label_style(TextStyle::from(("arial", 48).into_font()))
+        .y_label_style(TextStyle::from(("arial", 48).into_font()))
+        .x_desc("Local Memory")
+        .y_desc("Normalized Throughput")
         .draw()
         .unwrap();
 
     cc.draw_series(LineSeries::new(
-        [(10.0, 10.0), (20.0, 90.0)],
-        BLUE.stroke_width(2)
-    )).unwrap().label("app1").legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], BLUE));
+        llm_inference_results,
+        RED.stroke_width(4)
+    )).unwrap().label("LLM inference").legend(|(x, y)| PathElement::new(vec![(x, y), (x + 30, y)], RED.stroke_width(4)));
 
-    cc.configure_series_labels().border_style(BLACK).draw().unwrap();
+    cc.draw_series(LineSeries::new(
+        web_service_results,
+        BLUE.stroke_width(4)
+    )).unwrap().label("web service").legend(|(x, y)| PathElement::new(vec![(x, y), (x + 30, y)], BLUE.stroke_width(4)));
+
+    cc.configure_series_labels().position(SeriesLabelPosition::Coordinate(20, 10)).legend_area_size(40).margin(10).border_style(BLACK.stroke_width(3)).label_font(("arial", 50).into_font()).draw().unwrap();
 
     root_area.present().unwrap();
 
-    Block::Image(ImageBlock::new("./output/images/demo-throughput.png".to_owned(), "something".to_owned()).with_scaling(0.5))
+    Block::Image(ImageBlock::new("./output/images/demo-throughput.png".to_owned(), "something".to_owned()).with_scaling(0.55))
 }
 
 fn end_section(columns: usize) -> Block {
