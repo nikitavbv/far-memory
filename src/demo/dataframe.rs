@@ -16,8 +16,7 @@ use {
             LocalDiskBackend,
             InstrumentedBackend,
             PreferRemoteSpansReplacementPolicy,
-            MostRecentlyUsedReplacementPolicy,
-            RemoteReplayReplacementPolicy,
+            LeastRecentlyUsedReplacementPolicy,
             FarMemorySerializedObjectVec,
         },
         manager::ManagerClient,
@@ -178,11 +177,9 @@ pub fn run_dataframe_demo(metrics: Registry, run_id: String, token: &str, storag
     let backend = Box::new(InstrumentedBackend::new(metrics.clone(), backend));
     let mut client = FarMemoryClient::new(backend, local_max_memory);
     if let Some(manager) = manager_client {
-        let fallback = PreferRemoteSpansReplacementPolicy::new(Box::new(MostRecentlyUsedReplacementPolicy::new()));
-
-        client.use_replacement_policy(Box::new(RemoteReplayReplacementPolicy::new(manager.clone(), Box::new(fallback))));
         client.use_manager(manager);
     }
+    client.use_replacement_policy(Box::new(PreferRemoteSpansReplacementPolicy::new(Box::new(LeastRecentlyUsedReplacementPolicy::new()))));
     client.track_metrics(metrics.clone());
     client.start_swap_out_thread();
 

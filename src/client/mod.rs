@@ -28,6 +28,7 @@ pub use self::{
       ReplayReplacementPolicy,
       RemoteReplayReplacementPolicy,
       RnnReplacementPolicy,
+      LeastRecentlyUsedReplacementPolicy,
       run_replacement_policies_demo,
     },
 };
