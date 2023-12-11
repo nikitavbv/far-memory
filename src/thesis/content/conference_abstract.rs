@@ -186,6 +186,7 @@ to page replacement algorithms in operating systems. There are various kinds of 
 multiple are implemented and can be choosed by user according to their needs. This implementation includes random replacement policy, least recently used policy, \
 most recently used policy. Most existing far memory implementations rely on simple heurisitics and algorithms as their replacement policy (usually \"least recently \
 used\" policy is used)."),
+        image_with_scale("./images/span_replacement.jpg", "Span replacement algorithm based on memory access statistics", 0.55),
         paragraph_without_after_space("However, real world software has different and complex memory access patterns which makes relying on simple heurisitic \
 inefficient. Imagine software that scans all of its working set sequently in cycle. LRU policy which is popular is actually the least efficient here: it will pick \
 exactly those spans for swap out that will be accessed soon. That's why this far memory implementation takes a different approach. Given that there is relatively \
@@ -302,7 +303,7 @@ fn throughput_distribution() -> Block {
         .y_labels(10)
         .axis_style(BLACK.stroke_width(4))
         .disable_mesh()
-        .x_label_formatter(&|v| format!("{:.0}%", v * 100.0))
+        .x_label_formatter(&|v| format!("{:.1}", v))
         .y_label_formatter(&|v| format!("{:.1}", v))
         .x_label_style(TextStyle::from(("arial", 48).into_font()))
         .y_label_style(TextStyle::from(("arial", 48).into_font()))
