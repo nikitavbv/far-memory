@@ -311,16 +311,16 @@ to ".into(),
         )),
         " in operating systems. There are various kinds of span replacement algorithms that can be used for far memory and in this work \
 multiple are implemented and can be choosed by user according to their needs. Software implementation of this method of providing far memory includes random \
-replacement policy, least recently used policy, most recently used policy. Most existing far memory methods rely on simple heurisitics and algorithms \
-as their replacement policy (usually \"least recently used\" policy is used).".into()
+replacement algorithm, least recently used algorithm, most recently used algorithm. Most existing far memory methods rely on simple heurisitics \
+as their replacement algorithm (usually \"least recently used\" algorithm is used).".into()
         ])),
         image_with_scale("./images/span_replacement.jpg", "Span replacement algorithm based on memory access statistics", 0.55),
         paragraph_without_after_space("However, real world software has different and complex memory access patterns which makes relying on simple heurisitic \
-inefficient. Imagine software that scans all of its working set sequently in cycle. LRU policy which is popular is actually the least efficient here: it will pick \
+inefficient. Imagine software that scans all of its working set sequently in cycle. LRU algorithm which is popular is actually the least efficient here: it will pick \
 exactly those spans for swap out that will be accessed soon. That's why this method of providing far memory takes a different approach. Given that there is relatively \
 low number of spans in the system, it is feasible to collect and track access statistics for all of them. These stats are sent from compute notes to manager node \
 that processes them by building models that can rely on complex span access patterns to better predict next span access events. \
-This model is later used by compute nodes used as a span replacement policy. This work includes an \"optimal model\" that picks spans for swap \
+This model is later used by compute nodes used as a span replacement algorithm. This work includes an \"optimal model\" that picks spans for swap \
 operations perfectly given static memory access patterns. For software with dynamic memory access patterns, implementation based on recurrent neural network \
 is provided."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
@@ -385,7 +385,7 @@ measured."),
         paragraph_without_after_space("After running tests with different distribution skew, it can be noted that far memory keeps high performance until the \
 majority of requests work with local memory. As requests become more uniform, performance decreased due to increased swapping."),
 
-        paragraph_without_after_space("Span replacement policy affects how frequently spans will be swapped in from memory of remote nodes blocking execution \
+        paragraph_without_after_space("Span replacement algorithm affects how frequently spans will be swapped in from memory of remote nodes blocking execution \
 of the application. To evaluate how well different replacement policies perform, throughput was measured for neural network inference application with different \
 replacement algorithms and levels of local memory."),
 
