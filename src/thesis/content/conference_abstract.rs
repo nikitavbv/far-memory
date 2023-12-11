@@ -281,6 +281,16 @@ fn demo_throughput() -> Block {
         .map(|v| (v.0 as f64, v.1 as f64 / web_service_results_max_performance as f64))
         .collect();
 
+    let dataframe_results = vec![
+        (0.1, 6),
+        (0.5, 11),
+        (1.0, 39),
+    ];
+    let dataframe_results_max_performance = dataframe_results.iter().map(|v| v.1).max().unwrap();
+    let dataframe_results: Vec<_> = dataframe_results.into_iter()
+        .map(|v| (v.0 as f64, v.1 as f64 / dataframe_results_max_performance as f64))
+        .collect();
+
     // graph
     use plotters::prelude::*;
 
@@ -322,11 +332,16 @@ fn demo_throughput() -> Block {
         BLUE.stroke_width(4)
     )).unwrap().label("web service").legend(|(x, y)| PathElement::new(vec![(x, y), (x + 30, y)], BLUE.stroke_width(4)));
 
+    cc.draw_series(LineSeries::new(
+        dataframe_results,
+        GREEN.stroke_width(4)
+    )).unwrap().label("dataframe").legend(|(x, y)| PathElement::new(vec![(x, y), (x + 30, y)], GREEN.stroke_width(4)));
+
     cc.configure_series_labels().position(SeriesLabelPosition::Coordinate(20, 10)).legend_area_size(40).margin(10).border_style(BLACK.stroke_width(3)).label_font(("arial", 50).into_font()).draw().unwrap();
 
     root_area.present().unwrap();
 
-    Block::Image(ImageBlock::new("./output/images/demo-throughput.png".to_owned(), "something".to_owned()).with_scaling(0.55))
+    Block::Image(ImageBlock::new("./output/images/demo-throughput.png".to_owned(), "Application throughput by type and ratio of local memory".to_owned()).with_scaling(0.55).with_paper_style())
 }
 
 fn end_section(columns: usize) -> Block {
