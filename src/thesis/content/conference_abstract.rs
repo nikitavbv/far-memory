@@ -39,12 +39,24 @@ fn extract_references_text(block: &Block) -> Vec<String> {
 fn extract_references_text_inner(references: &mut Vec<String>, block: &Block) {
     match &block {
         Block::Paragraph(paragraph) => extract_references_text_span(references, paragraph.text()),
+        Block::Multiple(multi) => multi.iter().for_each(|v| extract_references_text_inner(references, v)),
         _ => (),
     }
 }
 
 fn extract_references_text_span(references: &mut Vec<String>, text: &TextSpan) {
-    unimplemented!()
+    match &text {
+        TextSpan::Regular(_) => (),
+        TextSpan::Bold(inner) => extract_references_text_span(references, inner),
+        TextSpan::Italic(inner) => extract_references_text_span(references, inner),
+        TextSpan::Multiple(multi) => multi.iter().for_each(|v| extract_references_text_span(references, v)),
+        TextSpan::Link { .. } => (),
+        TextSpan::Reference(inner, reference) => {
+            extract_references_text_span(references, inner);
+            references.push(reference.text().to_owned());
+        },
+        TextSpan::Break => (),
+    }
 }
 
 fn conference_abstract_body() -> Block {
@@ -109,13 +121,21 @@ between all compute nodes. In this configuration, access to data stored on drive
 nodes as it is needed by the software running on them. This also avoids situation where storage space on individual nodes remains unused because tasks running \
 have lower storage requests than what is provided by hardware.".into(),
         ])),
-        paragraph_without_after_space(
-            "For random access memory (RAM), operators of world's largest datacenters report average utilization of around 60%. Just as with storage, \
+        paragraph_without_after_space(TextSpan::Multiple(vec![
+            "For random access memory (RAM), operators of world's largest datacenters report average utilization of around ".into(),
+            TextSpan::Reference(Box::new(TextSpan::Regular("60%".to_owned())), Reference::for_publication(
+                "Borg: the Next Generation".to_owned(),
+                "Muhammad Tirmazi, Adam Barker, Nan Deng, Md E. Haque, Zhijing Gene Qin, Steven Hand, Mor HarcholBalter, and John Wilkes".to_owned(),
+                2020,
+                "Proceedings of ACM EuroSys".to_owned(),
+            )),
+            ". Just as with storage, \
 some compute nodes in the cluster may be running software that requires less memory than what the hardware provides. Efficiency of task scheduling is unrelated \
 to this problem, because compute nodes may be constrained by some other resource (for example, CPU compute time). Following the exact same approach with RAM as \
 with persistent storage is problematic due to more strict performance requirements set for this class of memory. Separating RAM into dedicated infrastructure \
 that is accessed over the network significantly affects latency and bandwidth numbers for memory access operations. This difference is enough for typical software \
-running on compute nodes to noticably degrade in peformance, breaching service level objectives (SLOs) defined for this software."),
+running on compute nodes to noticably degrade in peformance, breaching service level objectives (SLOs) defined for this software.".into()
+        ])),
         paragraph_without_after_space("One approach to solve this is software-defined far memory. The idea behind this method is that some chunks of data can be \
 moved from compute nodes with heavy RAM utilization to nodes with a lot of free RAM and access this data over the network in a way that is \
 transparent to the software (working with data in far memory should be similar to working with data in regular RAM). This results in higher memory utilization \
@@ -127,22 +147,56 @@ this configuration introduces. Far memory implementation should ensure high perf
             TextSpan::Bold(Box::new("Overview of existing implementations.".into())),
             " There are not many existing implementations of far memory because this topic became interesting for operators of the largest datacenters relatively \
 recently. At the time of writing, ".into(),
-            TextSpan::Reference(Box::new(TextSpan::Regular("Carbink".to_owned())), Reference::new()),
+            TextSpan::Reference(Box::new(TextSpan::Regular("Carbink".to_owned())), Reference::for_publication(
+                "Carbink: Fault-tolerant Far Memory".to_owned(),
+                "Yang Zhou, Hassan Wassel, Sihang Liu, Jiaqi Gao, James Mickens, Minlan Yu, Chris Kennelly, Paul Jack Turner, David E Culler, Hank Levy, Amin Vahdat".to_owned(),
+                2022,
+                "Proceedings of the 16th USENIX Symposium on Operating Systems Design and Implementation".to_owned(),
+            )),
             " is considered a state of the art far memory implementation along with multiple other notable implementations.".into(),
         ])),
         paragraph_without_after_space("While Carbink is an advanced far memory implementation, it is closed source, tied to the infrastructure and tooling of a \
 specific datacenter operator (Google) and is not available for external use. It relies on application-level integration and does not have a way to integrate \
 into software be other means. Memory spans replacements and defragmentation is optimized based on simple heuristics that do not rely on analyzing data access \
 patterns."),
-        paragraph_without_after_space("AIFM: High-Performance, Application-Integrated Far Memory shows the benefit of application-level far memory integration. \
-However, this implementation supports only one storage node and does not provide fault tolerance."),
-        paragraph_without_after_space("Some implementations, like Hydra, rely on specialized hardware, for example network interface cards \
+        paragraph_without_after_space(TextSpan::Multiple(vec![
+            TextSpan::Reference(Box::new(TextSpan::Regular("AIFM: High-Performance, Application-Integrated Far Memory".to_owned())), Reference::for_publication(
+                "AIFM: High-Performance, Application-Integrated Far Memory".to_owned(),
+                "Ruan, Zhenyuan and Schwarzkopf, Malte and Aguilera, Marcos K. and Belay, Adam".to_owned(),
+                2020,
+                "Proceedings of the 14th USENIX Conference on Operating Systems Design and Implementation".to_owned(),
+            )),
+
+            " shows the benefit of application-level far memory integration. \
+However, this implementation supports only one storage node and does not provide fault tolerance.".into()
+        ])),
+        paragraph_without_after_space(TextSpan::Multiple(vec![
+            "Some implementations, like ".into(),
+
+            TextSpan::Reference(Box::new(TextSpan::Regular("Hydra".to_owned())), Reference::for_publication(
+                "Hydra : Resilient and Highly Available Remote Memory".to_owned(),
+                "Youngmoon Lee, Hasan Al Maruf, Mosharaf Chowdhury, Asaf Cidon, Kang G. Shin".to_owned(),
+                2022,
+                "20th USENIX Conference on File and Storage Technologies (FAST 22)".to_owned(),
+            )),
+
+            ", rely on specialized hardware, for example network interface cards \
 supporting Remote Direct Memory Access (RDMA) like InfiniBand. While it allows to transfer spans between nodes with low latency, installing or upgrading hardware \
 may not be desirable or achievable in most environments. Performing changes to the hardware configuration usually has costs associated with it that \
-may outweigh the benefits provided by far memory."),
-        paragraph_without_after_space("Other implementations, like \"Software-Defined Far Memory in Warehouse-Scale Computers\", use more advanced approaches to \
+may outweigh the benefits provided by far memory.".into(),
+        ])),
+        paragraph_without_after_space(TextSpan::Multiple(vec![
+            "Other implementations, like ".into(),
+            TextSpan::Reference(Box::new(TextSpan::Regular("\"Software-Defined Far Memory in Warehouse-Scale Computers\"".to_owned())), Reference::for_publication(
+                "Software-defined far memory in warehouse-scale computers".to_owned(),
+                "Andres Lagar-Cavilla, Junwhan Ahn, Suleiman Souhlal, Neha Agarwal, Radoslaw Burny, Shakeel Butt, Jichuan Chang, Ashwin Chaugule, Nan Deng, Junaid Shahid, Greg Thelen, Kamil Adam Yurtsever, Yu Zhao and Parthasarathy Ranganathan".to_owned(),
+                2019,
+                "International Conference on Architectural Support for Programming Languages and Operating Systems".to_owned(),
+            )),
+            ", use more advanced approaches to \
 optimize far memory performance, including statistics collection across the fleet to build a model predicting optimal parameters for the system. However, this \
-implementation uses disk as storage backend, which is not optimal for many applications due to lower performance compared to storing data in RAM of remote nodes."),
+implementation uses disk as storage backend, which is not optimal for many applications due to lower performance compared to storing data in RAM of remote nodes.".into()
+        ])),
         paragraph_without_after_space("These properties and problems of existing solutions create a need for far memory implementation that \
 would be open source, integrate into software with little changes to the codebase, while providing fault tolerance and high memory access operations \
 performance provided by more efficient span replacement algorithms."),

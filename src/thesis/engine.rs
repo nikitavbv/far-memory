@@ -230,12 +230,18 @@ pub enum TextSpan {
 
 #[derive(Debug, Clone)]
 pub struct Reference {
+    text: String,
 }
 
 impl Reference {
-    pub fn new() -> Self {
+    pub fn for_publication(title: String, author: String, year: u32, published_in: String) -> Self {
         Self {
+            text: format!("{}/{} // {}. {}", title, author, published_in, year),
         }
+    }
+
+    pub fn text(&self) -> &str {
+        &self.text
     }
 }
 
@@ -344,7 +350,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
         Block::OrderedList(list) => {
             let numbering = context.next_numbering_id();
 
-            let document = document
+            let mut document = document
                 .add_abstract_numbering(
                     AbstractNumbering::new(numbering)
                         .add_level(Level::new(
@@ -358,12 +364,23 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
                 )
                 .add_numbering(Numbering::new(numbering, numbering));
 
-            list.into_iter().fold(document, |document, list_item| document.add_paragraph(Paragraph::new()
-                .line_spacing(LineSpacing::new().line((24.0 * 1.15 * 10.0) as i32))
-                .numbering(NumberingId::new(numbering), IndentLevel::new(0))
-                .align(AlignmentType::Both)
-                .add_run(Run::new().add_text(list_item))
-            ))
+
+            for i in 0..list.len() {
+                let text = list.get(i).unwrap().clone();
+                let text = if !text.ends_with("?") {
+                    format!("{}{}", text, if i == list.len() - 1 { "." } else { ";" })
+                } else {
+                    text
+                };
+
+                document = document.add_paragraph(Paragraph::new()
+                    .line_spacing(LineSpacing::new().line((24.0 * 1.15 * 10.0) as i32))
+                    .numbering(NumberingId::new(numbering), IndentLevel::new(0))
+                    .align(AlignmentType::Both)
+                    .add_run(Run::new().add_text(text)));
+            }
+
+            document
         },
         Block::UnorderedList(list) => document.add_unordered_list_component(context, list),
         Block::Image(image) => document.add_image_component(context, context.last_section_index(), &image.path(), &image.description(), image.scaling, image.paper_style),
