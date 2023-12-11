@@ -221,7 +221,7 @@ for scheduled maintenance."),
         image_with_scale("./images/components.jpg", "Far memory components", 0.9),
         end_section(1),
 
-        paragraph_without_after_space("Integration of far memory into software is a complex problem because modern programming languages are built with an \
+        paragraph_without_after_space(TextSpan::Multiple(vec!["Integration of far memory into software is a complex problem because modern programming languages are built with an \
 assumption that all data is located in local RAM and there is no way to create a \
 pointer to a different storage device. While operating systems have a concept of virtual memory and memory mapping mechanisms, that cannot be used to provide \
 far memory without significant changes into the codebase while providing high performance. For these reasons, the implementation of far memory discussed in this \
@@ -235,22 +235,40 @@ byte buffer, vector, hash table and others. Another important aspect is conversi
 copying the whole area of memory where object is stored as is. While far memory client implements this approach, it is not optimal for a number of use cases. \
 Typically, data structures contain pointers to other nested data structures meaning that during swap out (and swap in as well) it may be desirable for client to \
 traverse the whole structure and send it to remote node along with nested objects. For this reason, far memory client provides FarMemorySerialized<T> which \
-relies on serialization (implemented using serde) to serialize and deserialize object with nested fields when performing swap out."),
-        paragraph_without_after_space("Given that scenarios when changing source code of software is not possible exist, this far memory implementation provides \
-a different method of integration for such cases. By implementing a virtual block device (based on nbd), far memory client provides a way for the user to place \
+relies on serialization (implemented using ".into(),
+            TextSpan::Reference(Box::new(TextSpan::Regular("serde".to_owned())), Reference::for_website(
+                "Serde".to_owned(),
+                "https://serde.rs".to_owned()
+            )),
+            ") to serialize and deserialize object with nested fields when performing swap out.".into()
+        ])),
+        paragraph_without_after_space(TextSpan::Multiple(vec!["Given that scenarios when changing source code of software is not possible exist, this far memory implementation provides \
+a different method of integration for such cases. By implementing a virtual block device (based on ".into(),
+            TextSpan::Reference(Box::new(TextSpan::Regular("NBD".to_owned())), Reference::for_website(
+                "Network Block Device - The Linux Kernel documentation".to_owned(),
+                "https://docs.kernel.org/admin-guide/blockdev/nbd.html".to_owned()
+            )),
+            "), far memory client provides a way for the user to place \
 Linux swap partition on block device backed by far memory. This allows to move infrequently accessed memory pages (by utilizing existing swapping mechanisms \
 in operating system) to far memory with performance higher than if swapping was performed to disk as it happens normally. This method also allows to use far \
-memory as a form of RAM disk which may be useful for some types of software."),
-        paragraph_without_after_space("Another important aspect of far memory implementation is providing fault tolerance. Moving data to other devices (including \
+memory as a form of RAM disk which may be useful for some types of software.".into()
+        ])),
+        paragraph_without_after_space(TextSpan::Multiple(vec!["Another important aspect of far memory implementation is providing fault tolerance. Moving data to other devices (including \
 remote nodes) expands failure domain of the system. It is not possible to make probability of data loss for far memory to be as low as it is for local RAM, but this \
 probability can be minimized. While storing a copy of data on disk is supported by this implementation, it is not optimal due to high recovery time and increased \
 use of a different storage class (SSD disk space). Another option is data replication to multiple remote nodes, but it results in inefficient use remote nodes \
-memory. The most efficient approach is using Reed-Solomon coding which is frequently applied to this class of tasks. In short, when swapping out data is split \
+memory. The most efficient approach is using ".into(),
+            TextSpan::Reference(Box::new(TextSpan::Regular("Reed-Solomon".to_owned())), Reference::for_website(
+                "An introduction to Reed-Solomon codes: principles, architecture and implementation".to_owned(),
+                "https://www.cs.cmu.edu/~guyb/realworld/reedsolomon/reed_solomon_codes.html".to_owned()
+            )),
+            " coding which is frequently applied to this class of tasks. In short, when swapping out data is split \
 into N shards and additional M parity shards. These shards are stored on different nodes and in the event of node failure and loss of any M shards, data can \
-still be restored by performing a linear transformation from the existing shards."),
+still be restored by performing a linear transformation from the existing shards.".into()
+        ])),
         end_section(2),
 
-        image_with_scale("./images/fault_tolerance.jpg", "Swapping spans to multiple nodes using Reed-Solomon coding", 0.9),
+        image_with_scale("./images/fault_tolerance.jpg", "Swapping spans to multiple nodes using Reed-Solomon coding", 0.7),
         end_section(1),
 
         paragraph_without_after_space("Performance is critical for far memory and defines field of software and use-cases where far memory can be applied. Data access \
@@ -258,7 +276,7 @@ time for data in far memory will always be higher compared to data stored in loc
 significantly higher than for RAM. In these conditions it is not possible to make far memory as fast as local RAM, however additional latency can be minimzed to \
 level that acceptable for real world applications. There is a balance between how actively far memory is used by the application and impact on its performance. \
 It is up to application developer how much performance they are willing to trade for lower local memory usage."),
-        image_with_scale("./images/latency.jpg", "Span access flow", 0.5),
+        image_with_scale("./images/latency.jpg", "Span access flow", 0.45),
         paragraph_without_after_space("To make this implementation of far memory performant, the client uses hardware resources efficiently by avoiding unnecessary \
 copying of data and communicating with other nodes using lightweight network protocol that is based on TCP and uses the simplest form of request serialization \
 based on bincode. Compression is not used (but can be optionally enabled by the user) because modern compression algorithms are typically slower (6.4Gbps for lz4) \
@@ -328,7 +346,6 @@ system."),
         paragraph_without_after_space("To evaluate that, web service application is run with different s parameters of zipf distribution and throughput is \
 measured."),
 
-        /* todo: picture with throughput for different s-param. */
         throughput_distribution(),
         /* todo: analysis of data. */
 
@@ -336,7 +353,7 @@ measured."),
 of the application. To evaluate how well different replacement policies perform, throughput was measured for neural network inference application with different \
 replacement algorithms and levels of local memory."),
 
-        /* todo: picture with throughput for different replacement policies. */
+        throughput_replacement_policies(),
         /* todo: analysis of data. */
 
         end_section(2),
@@ -348,6 +365,74 @@ analyzed as a factor of far memory performance. Relying on recoding and analyzin
 better performance compared to simple heurisitics used by existing implementations.".into(),
         ])),
     ])
+}
+
+fn throughput_replacement_policies() -> Block {
+    // data
+    let results_random = vec![
+        (0.1, 13),
+        (0.5, 15),
+        (1.0, 120),
+    ];
+    let max_performance = results_random.iter().map(|(_, performance)| *performance).max().unwrap();
+    let results_random: Vec<_> = results_random.into_iter()
+        .map(|v| (v.0 as f64, v.1 as f64 / max_performance as f64))
+        .collect();
+
+    let results_ideal = vec![
+        (0.1, 14),
+        (0.5, 23),
+        (1.0, 122)
+    ];
+    let max_performance = results_ideal.iter().map(|(_, performance)| *performance).max().unwrap();
+    let results_ideal: Vec<_> = results_ideal.into_iter()
+        .map(|v| (v.0 as f64, v.1 as f64 / max_performance as f64))
+        .collect();
+
+    // graph
+    let k = 20;
+    let root_area = BitMapBackend::new("./output/images/replacement_policies.png", (k * 55, k * 45)).into_drawing_area();
+    root_area.fill(&WHITE).unwrap();
+
+    let mut cc = ChartBuilder::on(&root_area)
+        .margin_top(60)
+        .margin_bottom(30)
+        .margin_left(0)
+        .margin_right(60)
+        .x_label_area_size(110)
+        .y_label_area_size(110)
+        .build_cartesian_2d(0.0..1.0, 0.0..1.0)
+        .unwrap();
+
+    cc.configure_mesh()
+        .x_labels(10)
+        .y_labels(10)
+        .axis_style(BLACK.stroke_width(4))
+        .disable_mesh()
+        .x_label_formatter(&|v| format!("{:.0}%", v * 100.0))
+        .y_label_formatter(&|v| format!("{:.1}", v))
+        .x_label_style(TextStyle::from(("arial", 48).into_font()))
+        .y_label_style(TextStyle::from(("arial", 48).into_font()))
+        .x_desc("Local Memory")
+        .y_desc("Normalized Throughput")
+        .draw()
+        .unwrap();
+
+    cc.draw_series(LineSeries::new(
+        results_random,
+        RED.stroke_width(4)
+    )).unwrap().label("random").legend(|(x, y)| PathElement::new(vec![(x, y), (x + 30, y)], RED.stroke_width(4)));
+
+    cc.draw_series(LineSeries::new(
+        results_ideal,
+        GREEN.stroke_width(4)
+    )).unwrap().label("stats-based").legend(|(x, y)| PathElement::new(vec![(x, y), (x + 30, y)], GREEN.stroke_width(4)));
+
+    cc.configure_series_labels().position(SeriesLabelPosition::Coordinate(20, 10)).legend_area_size(40).margin(10).border_style(BLACK.stroke_width(3)).label_font(("arial", 50).into_font()).draw().unwrap();
+
+    root_area.present().unwrap();
+
+    image_with_scale("./output/images/replacement_policies.png",  "Throughput by replacement algorithm and ratio of local memory", 0.4)
 }
 
 fn throughput_distribution() -> Block {
@@ -399,7 +484,7 @@ fn throughput_distribution() -> Block {
 
     root_area.present().unwrap();
 
-    image("./output/images/throughput-distrubution.png",  "Web service throughput by skew of requests")
+    image_with_scale("./output/images/throughput-distrubution.png",  "Web service throughput by skew of requests", 0.4)
 }
 
 fn demo_throughput() -> Block {
@@ -484,7 +569,7 @@ fn demo_throughput() -> Block {
 
     root_area.present().unwrap();
 
-    image("./output/images/demo-throughput.png",  "Application throughput by type and ratio of local memory")
+    image_with_scale("./output/images/demo-throughput.png",  "Application throughput by type and ratio of local memory", 0.4)
 }
 
 fn image(path: &str, description: &str) -> Block {

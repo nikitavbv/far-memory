@@ -28,7 +28,7 @@ impl ImageComponent for Docx {
         self.add_paragraph(
             Paragraph::new()
                 .add_tab(Tab::new().pos(710))
-                .line_spacing(LineSpacing::new().line(24 * 15))
+                .line_spacing(LineSpacing::new().line(if paper_style { (24 as f32 * 1.15 * 10.0) as i32 } else { 24 * 15 }))
                 .align(AlignmentType::Center)
                 .add_run(
                     Run::new()

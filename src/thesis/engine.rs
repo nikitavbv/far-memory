@@ -240,6 +240,12 @@ impl Reference {
         }
     }
 
+    pub fn for_website(title: String, link: String) -> Self {
+        Self {
+            text: format!("{} [Online] Available at: {}", title, link),
+        }
+    }
+
     pub fn text(&self) -> &str {
         &self.text
     }
