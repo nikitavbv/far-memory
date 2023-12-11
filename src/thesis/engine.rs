@@ -208,6 +208,10 @@ impl ParagraphBlock {
             ..self
         }
     }
+
+    pub fn text(&self) -> &TextSpan {
+        &self.span
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -335,7 +339,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
         },
         Block::Paragraph(paragraph) => match placeholder {
             Some(v) => document.add_paragraph_placeholder_component(paragraph.span, v),
-            None => document.add_paragraph_component(paragraph.span, paragraph.tab, paragraph.line_spacing, paragraph.before_spacing, paragraph.after_spacing, paragraph.columns),
+            None => document.add_paragraph_component(context, paragraph.span, paragraph.tab, paragraph.line_spacing, paragraph.before_spacing, paragraph.after_spacing, paragraph.columns),
         },
         Block::OrderedList(list) => {
             let numbering = context.next_numbering_id();

@@ -13,6 +13,41 @@ const FONT_SIZE: usize = 2 * 12;
 const INTERVAL: f32 = 1.15;
 
 pub fn conference_abstract() -> Block {
+    let body = conference_abstract_body();
+    let references = extract_references_text(&body);
+
+    Block::Multiple(vec![
+        body,
+        Block::SubsectionHeader(
+            SubsectionHeaderBlock::without_numbering("References.".to_owned())
+                .without_tab()
+                .center()
+                .bold()
+                .with_line_spacing(FONT_SIZE, INTERVAL)
+        ),
+        Block::OrderedList(references),
+        end_section(1)
+    ])
+}
+
+fn extract_references_text(block: &Block) -> Vec<String> {
+    let mut result = Vec::new();
+    extract_references_text_inner(&mut result, block);
+    result
+}
+
+fn extract_references_text_inner(references: &mut Vec<String>, block: &Block) {
+    match &block {
+        Block::Paragraph(paragraph) => extract_references_text_span(references, paragraph.text()),
+        _ => (),
+    }
+}
+
+fn extract_references_text_span(references: &mut Vec<String>, text: &TextSpan) {
+    unimplemented!()
+}
+
+fn conference_abstract_body() -> Block {
     Block::Multiple(vec![
         paragraph(TextSpan::Multiple(vec![
             format!("UDC {}", classification_code()).into(),
@@ -258,17 +293,6 @@ integration simplicity, fault tolerance and high data access performance without
 analyzed as a factor of far memory performance. Relying on recoding and analyzing span access statistics to build a model for span replacement has shown \
 better performance compared to simple heurisitics used by existing implementations.".into(),
         ])),
-        Block::SubsectionHeader(
-            SubsectionHeaderBlock::without_numbering("References.".to_owned())
-                .without_tab()
-                .center()
-                .bold()
-                .with_line_spacing(FONT_SIZE, INTERVAL)
-        ),
-        Block::OrderedList(vec![
-            "Виконання основних арифметичних дій з комплексними числами, які представлено в інтервальній гіперболічній формі / С. В. Гадецька [та ін.] // Сучасні інформаційні системи = Advanced Information Systems. – 2022. – Т. 6, № 1. – С. 104-113.".to_owned(),
-        ]),
-        end_section(1)
     ])
 }
 

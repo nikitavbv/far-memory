@@ -1,6 +1,7 @@
 pub struct Context {
     numbering_id_counter: usize,
     sections: Vec<SectionContext>,
+    references_counter: usize,
 }
 
 impl Context {
@@ -8,6 +9,7 @@ impl Context {
         Self {
             numbering_id_counter: 0,
             sections: Vec::new(),
+            references_counter: 0,
         }
     }
 
@@ -47,6 +49,11 @@ impl Context {
 
     pub fn next_image_index(&mut self, section_index: usize) -> usize {
         self.section(section_index).next_image_index()
+    }
+
+    pub fn next_reference_id(&mut self) -> usize {
+        self.references_counter += 1;
+        self.references_counter
     }
 }
 
