@@ -152,13 +152,13 @@ moved from compute nodes with heavy RAM utilization to nodes with a lot of free 
 transparent to the software (working with data in far memory should be similar to working with data in regular RAM). This results in higher memory utilization \
 overall while also allowing software to process datasets that are larger in size than RAM of a single compute node."),
         paragraph("The goal of far memory is to move as many data as possible from local memory to remote nodes while solving challenges that \
-this configuration introduces. Far memory implementation should ensure high performance of memory access operations, provide fault tolerance, \
+this configuration introduces. Far memory software should ensure high performance of memory access operations, provide fault tolerance, \
  integrate without significant changes to the codebase while not relying on additional hardware."),
         end_section(1),
 
         paragraph_without_after_space(TextSpan::Multiple(vec![
-            TextSpan::Bold(Box::new("Overview of existing implementations.".into())),
-            " There are not many existing implementations of far memory because this topic became interesting for operators of the largest datacenters relatively \
+            TextSpan::Bold(Box::new("Overview of existing methods.".into())),
+            " There are not many existing works in this field because operators of the largest datacenters because interested in using far memory relatively \
 recently. At the time of writing, ".into(),
             TextSpan::Reference(Box::new(TextSpan::Regular("Carbink".to_owned())), Reference::for_publication(
                 "Carbink: Fault-tolerant Far Memory".to_owned(),
@@ -166,7 +166,7 @@ recently. At the time of writing, ".into(),
                 2022,
                 "Proceedings of the 16th USENIX Symposium on Operating Systems Design and Implementation".to_owned(),
             )),
-            " is considered a state of the art far memory implementation along with multiple other notable implementations.".into(),
+            " is considered a state of the art far memory implementation along with multiple other notable works.".into(),
         ])),
         paragraph_without_after_space("While Carbink is an advanced far memory implementation, it is closed source, tied to the infrastructure and tooling of a \
 specific datacenter operator (Google) and is not available for external use. It relies on application-level integration and does not have a way to integrate \
@@ -184,7 +184,7 @@ patterns."),
 However, this implementation supports only one storage node and does not provide fault tolerance.".into()
         ])),
         paragraph_without_after_space(TextSpan::Multiple(vec![
-            "Some implementations, like ".into(),
+            "Some methods of providing far memory, like ".into(),
 
             TextSpan::Reference(Box::new(TextSpan::Regular("Hydra".to_owned())), Reference::for_publication(
                 "Hydra : Resilient and Highly Available Remote Memory".to_owned(),
@@ -199,7 +199,7 @@ may not be desirable or achievable in most environments. Performing changes to t
 may outweigh the benefits provided by far memory.".into(),
         ])),
         paragraph_without_after_space(TextSpan::Multiple(vec![
-            "Other implementations, like ".into(),
+            "Other methods, like ".into(),
             TextSpan::Reference(Box::new(TextSpan::Regular("\"Software-Defined Far Memory in Warehouse-Scale Computers\"".to_owned())), Reference::for_publication(
                 "Software-defined far memory in warehouse-scale computers".to_owned(),
                 "Andres Lagar-Cavilla, Junwhan Ahn, Suleiman Souhlal, Neha Agarwal, Radoslaw Burny, Shakeel Butt, Jichuan Chang, Ashwin Chaugule, Nan Deng, Junaid Shahid, Greg Thelen, Kamil Adam Yurtsever, Yu Zhao and Parthasarathy Ranganathan".to_owned(),
@@ -210,20 +210,20 @@ may outweigh the benefits provided by far memory.".into(),
 optimize far memory performance, including statistics collection across the fleet to build a model predicting optimal parameters for the system. However, this \
 implementation uses disk as storage backend, which is not optimal for many applications due to lower performance compared to storing data in RAM of remote nodes.".into()
         ])),
-        paragraph_without_after_space("These properties and problems of existing solutions create a need for far memory implementation that \
+        paragraph_without_after_space("These properties and problems of existing solutions create a need for far memory method and its software implementation that \
 would be open source, integrate into software with little changes to the codebase, while providing fault tolerance and high memory access operations \
 performance provided by more efficient span replacement algorithms."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Designing a method and software for providing far memory.".into())),
-            " The implementation of far memory that is being discussed in this work operates on a similar principle: \
+            " The method of providing far memory that is being discussed in this work operates on a similar principle: \
 far memory client is integrated into the software, chunks of data managed by it (called spans, represented as byte sequences) are moved to the memory of remote \
 nodes to free local memory. Spans are moved back to local memory (swap in) when access to data is requested. Only part of spans being present locally at \
 once allow to lower memory usage.".into(),
         ])),
-        paragraph_without_after_space("This implementation consists of the following components: compute nodes, storage nodes and manager node. Compute node \
-is a node that puts memory spans into the system for storage. \
+        paragraph_without_after_space("Method dicussed in this work consists of the following components: compute nodes, storage nodes and manager node. \
+Compute node is a node that puts memory spans into the system for storage. \
 Spans are the central entity which far memory client operates on and are identified by an ID (64 bit number). Data associated with span may be located \
-in the local memory or on storage backend. Far memory implementation in this work supports multiple storage backend implementations: \
+in the local memory or on storage backend. Far memory software implementation in this work supports multiple storage backends: \
 local memory, file system, one or multiple remote nodes with the latter is the main mode of operation. \
 Storage nodes serve the function of storing spans data that were swapped out \
 and function as a key-value storage. Manager node allocates space on storage nodes \
@@ -237,7 +237,7 @@ for scheduled maintenance."),
         paragraph_without_after_space(TextSpan::Multiple(vec!["Integration of far memory into software is a complex problem because modern programming languages are built with an \
 assumption that all data is located in local RAM and there is no way to create a \
 pointer to a different storage device. While operating systems have a concept of virtual memory and memory mapping mechanisms, that cannot be used to provide \
-far memory without significant changes into the codebase while providing high performance. For these reasons, the implementation of far memory discussed in this \
+far memory without significant changes into the codebase while providing high performance. For these reasons, the method of providing of far memory discussed in this \
 work picks two approaches for far memory integration. The first one is application-level integration with a far memory client library. In short, it works by \
 creating wrappers for data managed by far memory. Two nested smart pointers are used to track when software requests access to data being located in far memory and \
 to identify when it is no longer needed and can be swapped out safely. Far memory client library is written in Rust and supports in-depth configuration of storage \
@@ -266,9 +266,9 @@ Linux swap partition on block device backed by far memory. This allows to move i
 in operating system) to far memory with performance higher than if swapping was performed to disk as it happens normally. This method also allows to use far \
 memory as a form of RAM disk which may be useful for some types of software.".into()
         ])),
-        paragraph_without_after_space(TextSpan::Multiple(vec!["Another important aspect of far memory implementation is providing fault tolerance. Moving data to other devices (including \
+        paragraph_without_after_space(TextSpan::Multiple(vec!["Another important aspect of far memory is providing fault tolerance. Moving data to other devices (including \
 remote nodes) expands failure domain of the system. It is not possible to make probability of data loss for far memory to be as low as it is for local RAM, but this \
-probability can be minimized. While storing a copy of data on disk is supported by this implementation, it is not optimal due to high recovery time and increased \
+probability can be minimized. While storing a copy of data on disk is supported, it is not optimal due to high recovery time and increased \
 use of a different storage class (SSD disk space). Another option is data replication to multiple remote nodes, but it results in inefficient use remote nodes \
 memory. The most efficient approach is using ".into(),
             TextSpan::Reference(Box::new(TextSpan::Regular("Reed-Solomon".to_owned())), Reference::for_website(
@@ -290,7 +290,7 @@ significantly higher than for RAM. In these conditions it is not possible to mak
 level that acceptable for real world applications. There is a balance between how actively far memory is used by the application and impact on its performance. \
 It is up to application developer how much performance they are willing to trade for lower local memory usage."),
         image_with_scale("./images/latency.jpg", "Span access flow", 0.45),
-        paragraph_without_after_space("To make this implementation of far memory performant, the client uses hardware resources efficiently by avoiding unnecessary \
+        paragraph_without_after_space("To make far memory performant, the client uses hardware resources efficiently by avoiding unnecessary \
 copying of data and communicating with other nodes using lightweight network protocol that is based on TCP and uses the simplest form of request serialization \
 based on bincode. Compression is not used (but can be optionally enabled by the user) because modern compression algorithms are typically slower (6.4Gbps for lz4) \
 than modern network transfer speed (10Gbps and more is typical for datacenter). Far memory client implements partial span swap out to move as much memory as \
@@ -299,7 +299,7 @@ memory on swap in, a background thread is implemented to free memory (by swappin
         paragraph_without_after_space("However, the key to making far memory performance more close to local RAM is always keeping data that application is about \
 to access local. One way to achieve this is to swap in spans in advance in a background thread. In ideal scenario, when this background thread chooses spans to \
 swap in accurately enough and transfers them to local memory quickly enough, application threads will never be blocked by waiting for far memory client to finish \
-swap in of spans. Far memory implementation that is discussed in this paper includes such background thread."),
+swap in of spans. Far memory method that is discussed in this work includes such background thread."),
         paragraph_without_after_space(TextSpan::Multiple(vec!["It is easy to notice that the method of choosing spans to swap out (and swap in in advance) plays significant role in far \
 memory performance. To maximize performance, each time when swap out is needed it is more optimal to pick spans that will be accessed last of all. At the same time, \
 for swap in in advance it is better to pick spans that are going to be accessed sooner than other spans. This creates a need for span replacement algorithm that \
@@ -310,14 +310,14 @@ to ".into(),
             "https://en.wikipedia.org/wiki/Page_replacement_algorithm".to_owned()
         )),
         " in operating systems. There are various kinds of span replacement algorithms that can be used for far memory and in this work \
-multiple are implemented and can be choosed by user according to their needs. This implementation includes random replacement policy, least recently used policy, \
-most recently used policy. Most existing far memory implementations rely on simple heurisitics and algorithms as their replacement policy (usually \"least recently \
-used\" policy is used).".into()
+multiple are implemented and can be choosed by user according to their needs. Software implementation of this method of providing far memory includes random \
+replacement policy, least recently used policy, most recently used policy. Most existing far memory methods rely on simple heurisitics and algorithms \
+as their replacement policy (usually \"least recently used\" policy is used).".into()
         ])),
         image_with_scale("./images/span_replacement.jpg", "Span replacement algorithm based on memory access statistics", 0.55),
         paragraph_without_after_space("However, real world software has different and complex memory access patterns which makes relying on simple heurisitic \
 inefficient. Imagine software that scans all of its working set sequently in cycle. LRU policy which is popular is actually the least efficient here: it will pick \
-exactly those spans for swap out that will be accessed soon. That's why this far memory implementation takes a different approach. Given that there is relatively \
+exactly those spans for swap out that will be accessed soon. That's why this method of providing far memory takes a different approach. Given that there is relatively \
 low number of spans in the system, it is feasible to collect and track access statistics for all of them. These stats are sent from compute notes to manager node \
 that processes them by building models that can rely on complex span access patterns to better predict next span access events. \
 This model is later used by compute nodes used as a span replacement policy. This work includes an \"optimal model\" that picks spans for swap \
@@ -325,10 +325,10 @@ operations perfectly given static memory access patterns. For software with dyna
 is provided."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Performance evaluation.".into())),
-            " Evaluation of this far memory implementation seeks to answer the following questions: ".into(),
+            " Evaluation of this method of providing far memory seeks to answer the following questions: ".into(),
         ])),
         Block::OrderedList(vec![
-           "What end-to-end performance does this far memory implementation achieve for typical applications with different memory access patterns?".into(),
+           "What end-to-end performance does this method of providing far memory achieve for typical applications with different memory access patterns?".into(),
            "How span access distribution affects performance of far memory operations?".into(),
            "What end-to-end performance is achieved with different span replacement policies?".into(),
         ]),
@@ -337,7 +337,7 @@ is provided."),
 Gbit/s NIC (direct connectivity). Both nodes are running ArchLinux (with kernel version 6.5.8).".into(),
         ])),
         paragraph_without_after_space(TextSpan::Multiple(vec![
-            "To evaluate end-to-end peformance of this far memory implementation it was integrated into three synthetic applications with different memory access \
+            "To evaluate end-to-end peformance of this method of providing far memory it was integrated into three synthetic applications with different memory access \
 patterns:".into()
         ])),
         Block::OrderedList(vec![
@@ -399,7 +399,7 @@ observed for span replacement algorithm that relies on span access statistics fr
             " This work proposes a method of providing software-defined far memory in distributed systems. Method and software that was designed ensures \
 integration simplicity, fault tolerance and high data access performance without relying on specializied hardware. Span replacement algorithm choice was \
 analyzed as a factor of far memory performance. Relying on recoding and analyzing span access statistics to build a model for span replacement has shown \
-better performance compared to simple heurisitics used by existing implementations.".into(),
+better performance compared to simple heurisitics used by existing approaches to providing far memory.".into(),
         ])),
     ])
 }
