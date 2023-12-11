@@ -374,7 +374,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
 
             for i in 0..list.len() {
                 let text = list.get(i).unwrap().clone();
-                let text = if !text.to_plaintext().ends_with("?") {
+                let text = if !text.to_plaintext().ends_with("?") && !text.to_plaintext().ends_with(".") {
                     TextSpan::Multiple(vec![text, if i == list.len() - 1 { "." } else { ";" }.into()])
                 } else {
                     text

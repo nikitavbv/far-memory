@@ -370,7 +370,9 @@ node.".into(),
         ])),
 
         demo_throughput(),
-        /* todo: analysis of data. */
+        paragraph_without_after_space("Based on measured performance, it can be noted that far memory works best for applications that can utilize high-level \
+data structures that are designed for use with far memory. When working with objects, far memory achieves better throughput with larger objects and predictable \
+access patterns. As share of local memory decreases, far memory leads to lower throughput as the result of being bottlenecked by network bandwidth."),
 
         paragraph_without_after_space("When data in far memory is accessed in random order (as in the second demo application), distribution of span access \
 plays an important role. When distribution is skewed, far memory client should be able to make data access latency close to RAM access latency because hot \
@@ -380,14 +382,16 @@ system."),
 measured."),
 
         throughput_distribution(),
-        /* todo: analysis of data. */
+        paragraph_without_after_space("After running tests with different distribution skew, it can be noted that far memory keeps high performance until the \
+majority of requests work with local memory. As requests become more uniform, performance decreased due to increased swapping."),
 
         paragraph_without_after_space("Span replacement policy affects how frequently spans will be swapped in from memory of remote nodes blocking execution \
 of the application. To evaluate how well different replacement policies perform, throughput was measured for neural network inference application with different \
 replacement algorithms and levels of local memory."),
 
         throughput_replacement_policies(),
-        /* todo: analysis of data. */
+        paragraph_without_after_space("After running the same application with different span replacement algorithms, an improvement to throughput can be \
+observed for span replacement algorithm that relies on span access statistics from previous software runs."),
 
         end_section(2),
         paragraph_with_before_space(TextSpan::Multiple(vec![
