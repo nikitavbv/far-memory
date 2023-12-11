@@ -7,6 +7,7 @@ use {
     super::{
         llm_inference::run_llm_inference_demo,
         web_service::run_web_service_demo,
+        dataframe::run_dataframe_demo,
     },
 };
 
@@ -31,6 +32,7 @@ impl Experiment {
 pub enum DemoApplicationType {
     LlmInference,
     WebService,
+    Dataframe,
 }
 
 impl DemoApplicationType {
@@ -38,6 +40,7 @@ impl DemoApplicationType {
         match self {
             Self::LlmInference => 25710,
             Self::WebService => 8799,
+            Self::Dataframe => 9485,
         }
     }
 
@@ -45,6 +48,7 @@ impl DemoApplicationType {
         match self {
             Self::LlmInference => "llm_inference",
             Self::WebService => "web_service",
+            Self::Dataframe => "dataframe",
         }.to_owned()
     }
 }
@@ -55,7 +59,7 @@ pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
     let evaluation_data = load_evaluation_data();
 
     let mut experiments: Vec<Experiment> = vec![];
-    for application in [DemoApplicationType::LlmInference, DemoApplicationType::WebService] {
+    for application in [DemoApplicationType::LlmInference, DemoApplicationType::WebService, DemoApplicationType::Dataframe] {
         for local_memory_percent in (10..=100).step_by(10) {
             experiments.push(Experiment {
                 local_memory_percent,
@@ -119,6 +123,14 @@ fn run_experiment(experiment: &Experiment, storage_endpoint: String, manager_end
             storage_endpoints,
             Some(manager_endpoint),
             memory_limit
+        ),
+        DemoApplicationType::Dataframe => run_dataframe_demo(
+            metrics.clone(),
+            run_id.clone(),
+            &token,
+            storage_endpoints,
+            Some(manager_endpoint),
+            memory_limit,
         ),
     }
 }

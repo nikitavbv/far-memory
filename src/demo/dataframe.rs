@@ -136,7 +136,7 @@ such case.
 
 using this dataset: https://www.kaggle.com/datasets/robikscube/flight-delay-dataset-20182022/
 */
-pub fn run_dataframe_demo(metrics: Registry, run_id: String, token: &str, storage_endpoints: Vec<String>, manager_endpoint: Option<String>, local_max_memory: Option<u64>) {
+pub fn run_dataframe_demo(metrics: Registry, run_id: String, token: &str, storage_endpoints: Vec<String>, manager_endpoint: Option<String>, local_max_memory: Option<u64>) -> f32 {
     info!("running dataframe demo");
 
     // far memory client init
@@ -296,6 +296,8 @@ pub fn run_dataframe_demo(metrics: Registry, run_id: String, token: &str, storag
     }
 
     println!("result: operations per second: {}, total operations: {}", total_queries / (Instant::now() - started_at).as_secs(), total_queries);
+
+    total_queries as f32
 }
 
 fn random_query_for_similar_flights(flight: FlightData) -> FlightsQuery {
