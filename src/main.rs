@@ -157,7 +157,8 @@ pub fn main() {
                     args.manager_endpoint.clone(),
                     args.time_limit.unwrap_or(10 * 60),
                     args.optimize,
-                    args.memory_limit_mb.map(|v| v * 1024 * 1024)
+                    args.memory_limit_mb.map(|v| v * 1024 * 1024),
+                    None
                 ));
         };
 

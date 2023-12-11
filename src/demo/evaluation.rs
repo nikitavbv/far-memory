@@ -3,7 +3,10 @@ use {
     tracing::info,
     serde::{Serialize, Deserialize},
     rand::seq::SliceRandom,
-    crate::utils::{metrics::init_metrics, generate_run_id},
+    crate::{
+        utils::{metrics::init_metrics, generate_run_id},
+        client::{ReplacementPolicy, RandomReplacementPolicy, LeastRecentlyUsedReplacementPolicy, MostRecentlyUsedReplacementPolicy, PreferRemoteSpansReplacementPolicy},
+    },
     super::{
         llm_inference::run_llm_inference_demo,
         web_service::run_web_service_demo,
@@ -21,6 +24,7 @@ struct Experiment {
     local_memory_percent: u32,
     application: DemoApplicationType,
     zipf_s: Option<u32>, // 0..100
+    span_replacement_policy: Option<SpanReplacementPolicy>,
 }
 
 impl Experiment {
@@ -28,7 +32,13 @@ impl Experiment {
         let mut res = format!("local_{}_application_{}", self.local_memory_percent, self.application.get_key());
 
         if let Some(zipf_s) = self.zipf_s {
-            res = format!("{}{}", res, zipf_s);
+            res = format!("{}_zipf_{}", res, zipf_s);
+        }
+
+        if let Some(replacement_policy) = &self.span_replacement_policy {
+            if replacement_policy != &SpanReplacementPolicy::Replay {
+                res = format!("{}_replacement_{}", res, replacement_policy.get_key());
+            }
         }
 
         res
@@ -60,6 +70,29 @@ impl DemoApplicationType {
     }
 }
 
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub enum SpanReplacementPolicy {
+    Replay,
+    LRU,
+    MRU,
+    Random,
+    PreferRemoteLRU,
+    PreferRemoteMRU,
+}
+
+impl SpanReplacementPolicy {
+    pub fn get_key(&self) -> String {
+        match self {
+            Self::Replay => "replay",
+            Self::LRU => "lru",
+            Self::MRU => "mru",
+            Self::Random => "random",
+            Self::PreferRemoteLRU => "prefer_remote_lru",
+            Self::PreferRemoteMRU => "prefer_remote_mru",
+        }.to_owned()
+    }
+}
+
 pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
     info!("running evaluation");
 
@@ -74,6 +107,7 @@ pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
                 local_memory_percent,
                 application: application.clone(),
                 zipf_s: None,
+                span_replacement_policy: None,
             });
         }
     }
@@ -84,7 +118,27 @@ pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
             local_memory_percent: 80,
             application: DemoApplicationType::WebService,
             zipf_s: Some(zipf_s),
+            span_replacement_policy: None,
         })
+    }
+
+    // test different repacement policies
+    for span_replacement_policy in [
+        SpanReplacementPolicy::Replay,
+        SpanReplacementPolicy::LRU,
+        SpanReplacementPolicy::MRU,
+        SpanReplacementPolicy::Random,
+        SpanReplacementPolicy::PreferRemoteLRU,
+        SpanReplacementPolicy::PreferRemoteMRU,
+    ] {
+        for local_memory_percent in (10..=100).step_by(10) {
+            experiments.push(Experiment {
+                local_memory_percent,
+                application: DemoApplicationType::LlmInference,
+                zipf_s: None,
+                span_replacement_policy: Some(span_replacement_policy.clone()),
+            });
+        }
     }
 
     info!("total {} experiments", experiments.len());
@@ -124,6 +178,19 @@ fn run_experiment(experiment: &Experiment, storage_endpoint: String, manager_end
     let token = read_token();
     let storage_endpoints = storage_endpoint.split(",").map(|v| v.to_owned()).collect::<Vec<_>>();
 
+    let replacement_policy: Option<Box<dyn ReplacementPolicy>> = if let Some(policy_type) = &experiment.span_replacement_policy {
+        match policy_type {
+            SpanReplacementPolicy::Replay => None,
+            SpanReplacementPolicy::LRU => Some(Box::new(LeastRecentlyUsedReplacementPolicy::new())),
+            SpanReplacementPolicy::MRU => Some(Box::new(MostRecentlyUsedReplacementPolicy::new())),
+            SpanReplacementPolicy::PreferRemoteLRU => Some(Box::new(PreferRemoteSpansReplacementPolicy::new(Box::new(LeastRecentlyUsedReplacementPolicy::new())))),
+            SpanReplacementPolicy::PreferRemoteMRU => Some(Box::new(PreferRemoteSpansReplacementPolicy::new(Box::new(MostRecentlyUsedReplacementPolicy::new())))),
+            SpanReplacementPolicy::Random => Some(Box::new(RandomReplacementPolicy::new())),
+        }
+    } else {
+        None
+    };
+
     match experiment.application {
         DemoApplicationType::LlmInference => run_llm_inference_demo(
             metrics.clone(),
@@ -133,7 +200,8 @@ fn run_experiment(experiment: &Experiment, storage_endpoint: String, manager_end
             Some(manager_endpoint),
             10 * 60,
             false,
-            memory_limit
+            memory_limit,
+            replacement_policy,
         ),
         DemoApplicationType::WebService => run_web_service_demo(
             metrics.clone(),
