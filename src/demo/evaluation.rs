@@ -20,11 +20,18 @@ struct EvaluationData {
 struct Experiment {
     local_memory_percent: u32,
     application: DemoApplicationType,
+    zipf_s: Option<u32>, // 0..100
 }
 
 impl Experiment {
     pub fn get_key(&self) -> String {
-        format!("local_{}_application_{}", self.local_memory_percent, self.application.get_key())
+        let mut res = format!("local_{}_application_{}", self.local_memory_percent, self.application.get_key());
+
+        if let Some(zipf_s) = self.zipf_s {
+            res = format!("{}{}", res, zipf_s);
+        }
+
+        res
     }
 }
 
@@ -59,13 +66,25 @@ pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
     let evaluation_data = load_evaluation_data();
 
     let mut experiments: Vec<Experiment> = vec![];
+
+    // plot with throughput per application and memory usage.
     for application in [DemoApplicationType::LlmInference, DemoApplicationType::WebService, DemoApplicationType::Dataframe] {
         for local_memory_percent in (10..=100).step_by(10) {
             experiments.push(Experiment {
                 local_memory_percent,
                 application: application.clone(),
+                zipf_s: None,
             });
         }
+    }
+
+    // plot different distributions
+    for zipf_s in (0..=100).step_by(10) {
+        experiments.push(Experiment {
+            local_memory_percent: 80,
+            application: DemoApplicationType::WebService,
+            zipf_s: Some(zipf_s),
+        })
     }
 
     info!("total {} experiments", experiments.len());
@@ -122,7 +141,8 @@ fn run_experiment(experiment: &Experiment, storage_endpoint: String, manager_end
             &token,
             storage_endpoints,
             Some(manager_endpoint),
-            memory_limit
+            memory_limit,
+            experiment.zipf_s.map(|v| (v as f32 / 100.0))
         ),
         DemoApplicationType::Dataframe => run_dataframe_demo(
             metrics.clone(),

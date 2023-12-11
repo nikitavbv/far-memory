@@ -182,7 +182,8 @@ pub fn main() {
             &read_token(),
             args.storage_endpoint.clone().map(|v| v.split(",").map(|v| v.to_owned()).collect::<Vec<String>>()).unwrap_or(Vec::new()),
             args.manager_endpoint.clone(),
-            args.memory_limit_mb.map(|v| v * 1024 * 1024)
+            args.memory_limit_mb.map(|v| v * 1024 * 1024),
+            None,
         ));
     } else if args.dataframe_demo {
         let run_id = generate_run_id();

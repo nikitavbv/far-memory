@@ -152,7 +152,7 @@ Inspired by "Web Service Frontend" demo from AIFM.
 This example is not intended to compare performance against AIFM (this demo app implementation is a bit different), it is just their demo app is a good
 example software to integrate to.
 */
-pub fn run_web_service_demo(metrics: Registry, run_id: String, token: &str, storage_endpoints: Vec<String>, manager_endpoint: Option<String>, local_max_memory: Option<u64>) -> f32 {
+pub fn run_web_service_demo(metrics: Registry, run_id: String, token: &str, storage_endpoints: Vec<String>, manager_endpoint: Option<String>, local_max_memory: Option<u64>, zipf_s: Option<f32>) -> f32 {
     info!("web service demo");
 
     // far memory client init
@@ -200,7 +200,7 @@ pub fn run_web_service_demo(metrics: Registry, run_id: String, token: &str, stor
     client.start_swap_out_thread();
 
     // demo app
-    let zipf_s = 0.8;
+    let zipf_s = zipf_s.unwrap_or(0.8) as f64;
 
     let total_pictures = 1_000_000; // 800_000 for 7.2GB of memory, 2_000_000 for 18GB.
     let pictures = generate_pictures(total_pictures);
