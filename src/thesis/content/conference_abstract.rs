@@ -287,21 +287,27 @@ memory on swap in, a background thread is implemented to free memory (by swappin
 to access local. One way to achieve this is to swap in spans in advance in a background thread. In ideal scenario, when this background thread chooses spans to \
 swap in accurately enough and transfers them to local memory quickly enough, application threads will never be blocked by waiting for far memory client to finish \
 swap in of spans. Far memory implementation that is discussed in this paper includes such background thread."),
-        paragraph_without_after_space("It is easy to notice that the method of choosing spans to swap out (and swap in in advance) plays significant role in far \
-memory performance. To maximize performance, each time when swap out is needed it is more optimal to pick spans that will be accessed last of all. At the same time,
+        paragraph_without_after_space(TextSpan::Multiple(vec!["It is easy to notice that the method of choosing spans to swap out (and swap in in advance) plays significant role in far \
+memory performance. To maximize performance, each time when swap out is needed it is more optimal to pick spans that will be accessed last of all. At the same time, \
 for swap in in advance it is better to pick spans that are going to be accessed sooner than other spans. This creates a need for span replacement algorithm that \
 takes span access history (including previous application runs) as an input and produces candidates for swap in and swap out. With this formulation, it it similar \
-to page replacement algorithms in operating systems. There are various kinds of span replacement algorithms that can be used for far memory and in this work \
+to ".into(),
+        TextSpan::Reference(Box::new(TextSpan::Regular("page replacement algorithms".to_owned())), Reference::for_website(
+            "Page Replacement Algorithm - Wikipedia.".to_owned(),
+            "https://en.wikipedia.org/wiki/Page_replacement_algorithm".to_owned()
+        )),
+        " in operating systems. There are various kinds of span replacement algorithms that can be used for far memory and in this work \
 multiple are implemented and can be choosed by user according to their needs. This implementation includes random replacement policy, least recently used policy, \
 most recently used policy. Most existing far memory implementations rely on simple heurisitics and algorithms as their replacement policy (usually \"least recently \
-used\" policy is used)."),
+used\" policy is used).".into()
+        ])),
         image_with_scale("./images/span_replacement.jpg", "Span replacement algorithm based on memory access statistics", 0.55),
         paragraph_without_after_space("However, real world software has different and complex memory access patterns which makes relying on simple heurisitic \
 inefficient. Imagine software that scans all of its working set sequently in cycle. LRU policy which is popular is actually the least efficient here: it will pick \
 exactly those spans for swap out that will be accessed soon. That's why this far memory implementation takes a different approach. Given that there is relatively \
 low number of spans in the system, it is feasible to collect and track access statistics for all of them. These stats are sent from compute notes to manager node \
 that processes them by building models that can rely on complex span access patterns to better predict next span access events. \
-This model is later used by compute nodes used as a span replacement policy. This work includes an \"ideal model\" that picks spans for swap \
+This model is later used by compute nodes used as a span replacement policy. This work includes an \"optimal model\" that picks spans for swap \
 operations perfectly given static memory access patterns. For software with dynamic memory access patterns, implementation based on recurrent neural network \
 is provided."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
@@ -324,7 +330,9 @@ patterns:".into()
         Block::OrderedList(vec![
            "Large language model inference application. Neural network weights are stored in far memory and are fully scanned in interations as text is being \
 generated. This software represents class of tasks where the whole working set is scanned in pre-defined order.".to_owned(),
-           "Web service application that accepts requests with zipf-distributed user IDs to compute an index (also zipf-distributed) to a collection of pictures \
+           "Web service application that accepts requests with ".into(),
+           "zipf-distributed".to_owned(), // TODO: add reference
+           " user IDs to compute an index (also zipf-distributed) to a collection of pictures \
 item from which is picked, encrypted with AES GCM, compressed with Snappy and sent back to the client. This software represents a class of software built around \
 key-value data structures, where memory access is performed to a lot of small objects with a certain distribution.".to_owned(),
            "An application that performs queries over a dataframe with data from Kaggle delayed flights dataset. Dataframe is stored in far memory and is loaded \
