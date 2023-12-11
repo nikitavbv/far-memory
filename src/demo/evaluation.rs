@@ -2,6 +2,7 @@ use {
     std::{collections::HashMap, path::Path, fs},
     tracing::info,
     serde::{Serialize, Deserialize},
+    rand::seq::SliceRandom,
     crate::utils::{metrics::init_metrics, generate_run_id},
     super::llm_inference::run_llm_inference_demo,
 };
@@ -45,7 +46,7 @@ pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
         return;
     }
 
-    let experiment = experiments.into_iter().next().unwrap();
+    let experiment = experiments.choose(&mut rand::thread_rng()).unwrap();
 
     let result = run_experiment(&experiment, storage_endpoint, manager_endpoint);
     let evaluation_data = {
@@ -81,7 +82,7 @@ fn run_experiment(experiment: &Experiment, storage_endpoint: String, manager_end
 }
 
 fn load_evaluation_data() -> EvaluationData {
-    let path = "./data/evaluation.json";
+    let path = "./evaluation.json";
     if !Path::new(&path).exists() {
         return EvaluationData {
             values: HashMap::new(),
@@ -92,7 +93,7 @@ fn load_evaluation_data() -> EvaluationData {
 }
 
 fn save_evaluation_data(evaluation_data: EvaluationData) {
-    std::fs::write("./data/evaluation.json", serde_json::to_vec(&evaluation_data).unwrap()).unwrap();
+    std::fs::write("./evaluation.json", serde_json::to_vec(&evaluation_data).unwrap()).unwrap();
 }
 
 fn read_token() -> String {
