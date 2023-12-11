@@ -564,7 +564,7 @@ unsafe fn _unchecked_slice<Q>(s: &[Q], offset: usize, size: usize) -> &[Q] {
     std::slice::from_raw_parts(st, size)
 }
 
-pub fn run_llm_inference_demo(metrics: Registry, run_id: String, token: &str, storage_endpoints: Vec<String>, manager_endpoint: Option<String>, time_limit: u64, optimize: bool, memory_limit: Option<u64>) {
+pub fn run_llm_inference_demo(metrics: Registry, run_id: String, token: &str, storage_endpoints: Vec<String>, manager_endpoint: Option<String>, time_limit: u64, optimize: bool, memory_limit: Option<u64>) -> f32 {
     info!("running llm inference demo");
 
     let slo = 5.45;
@@ -576,8 +576,8 @@ pub fn run_llm_inference_demo(metrics: Registry, run_id: String, token: &str, st
         loop {
             info!("trying {}MB as local memory treshold", memory_threshold / (1024 * 1024));
 
-            let time_per_token = run_inference(metrics.clone(), run_id.clone(), token, storage_endpoints.clone(), manager_endpoint.clone(), time_limit, memory_threshold);
-            if time_per_token > slo {
+            let total_tokens = run_inference(metrics.clone(), run_id.clone(), token, storage_endpoints.clone(), manager_endpoint.clone(), time_limit, memory_threshold);
+            if (15.0 * 60.0 / total_tokens as f32) < slo {
                 break;
             }
 
@@ -585,12 +585,13 @@ pub fn run_llm_inference_demo(metrics: Registry, run_id: String, token: &str, st
         }
 
         info!("lowest local memory threshold which maintains SLO is {}MB", memory_threshold / (1024 * 1024));
+        0.0
     } else {
-        run_inference(metrics, run_id.clone(), token, storage_endpoints, manager_endpoint, time_limit, memory_limit.unwrap_or(25600 * 1024 * 1024));
+        run_inference(metrics, run_id.clone(), token, storage_endpoints, manager_endpoint, time_limit, memory_limit.unwrap_or(25600 * 1024 * 1024)) as f32
     }
 }
 
-fn run_inference(metrics: Registry, run_id: String, token: &str, storage_endpoints: Vec<String>, manager_endpoint: Option<String>, time_limit: u64, local_max_memory: u64) -> f32 {
+fn run_inference(metrics: Registry, run_id: String, token: &str, storage_endpoints: Vec<String>, manager_endpoint: Option<String>, time_limit: u64, local_max_memory: u64) -> u32 {
     let manager_client = manager_endpoint.map(|endpoint| {
         let mut client = ManagerClient::new(&endpoint);
         client.auth(token);
@@ -750,5 +751,5 @@ fn run_inference(metrics: Registry, run_id: String, token: &str, storage_endpoin
         memory_usage_far_remote_memory.query(0.5).unwrap().1
     );
 
-    time_per_token.query(0.5).unwrap().1
+    total_tokens_generated
 }

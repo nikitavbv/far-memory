@@ -485,10 +485,10 @@ fn throughput_replacement_policies() -> Block {
 fn throughput_distribution() -> Block {
     // data
     let results = vec![
-        (0.1, 14258),
-        (0.5, 14584),
-        (0.8, 14224),
-        (1.0, 8793),
+        (0.1, 14258), // TODO: try after replacement policy update
+        (0.5, 14584), // TODO: try after replacement policy update
+        (0.8, 14224), // TODO: try after replacement policy update
+        (1.0, 8793), // TODO: try after replacement policy update
     ];
     let max_performance = results.iter().map(|(_, performance)| *performance).max().unwrap();
     let results: Vec<_> = results.into_iter()
@@ -547,11 +547,19 @@ fn demo_throughput() -> Block {
         .collect();
 
     let web_service_results = vec![
-        (0.1, 2528),
-        (0.5, 5710),
-        (0.8, 14224),
-        (0.9, 23765),
-        (1.0, 9932828),
+        (0.1, 2528), // TODO: try after replacement policy update
+
+        // 0.5 is 4400
+        (0.5, 447911),
+
+        // 0.8 is 7039
+        (0.8, 1404928),
+
+        // 0.9 is 7919
+        (0.9, 2503741),
+
+        // 1.0 is 8799
+        (1.0, 9932828), // TODO: try after replacement policy update
     ];
     let web_service_results_max_performance = web_service_results.iter().map(|v| v.1).max().unwrap();
     let web_service_results: Vec<_> = web_service_results.into_iter()
@@ -559,9 +567,9 @@ fn demo_throughput() -> Block {
         .collect();
 
     let dataframe_results = vec![
-        (0.1, 6),
-        (0.5, 11),
-        (1.0, 39),
+        (0.1, 6), // TODO: try after replacement policy update
+        (0.5, 11), // TODO: try after replacement policy update
+        (1.0, 39), // TODO: try after replacement policy update
     ];
     let dataframe_results_max_performance = dataframe_results.iter().map(|v| v.1).max().unwrap();
     let dataframe_results: Vec<_> = dataframe_results.into_iter()

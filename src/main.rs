@@ -15,6 +15,7 @@ use {
             benchmark::run_benchmark,
             simple::run_simple_demo,
             block_device::run_block_device_demo,
+            evaluation::run_evaluation,
         },
     },
 };
@@ -78,6 +79,9 @@ pub struct Args {
 
     #[arg(long)]
     run_loop: bool, // run demo in a loop until it crashes, lol.
+
+    #[arg(long)]
+    evaluation: bool,
 
     #[arg(long)]
     block_device_demo: bool,
@@ -193,6 +197,8 @@ pub fn main() {
             args.manager_endpoint.clone(),
             args.memory_limit_mb.map(|v| v * 1024 * 1024)
         ));
+    } else if args.evaluation {
+        run_evaluation(args.storage_endpoint.unwrap(), args.manager_endpoint.unwrap());
     } else if args.benchmark {
         run_benchmark(&read_token(), args.storage_endpoint.clone());
     } else if args.block_device_demo {
