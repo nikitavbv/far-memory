@@ -268,6 +268,8 @@ pub fn run_dataframe_demo(metrics: Registry, run_id: String, token: &str, storag
     }
     println!("finished loading data");
 
+    println!("total memory, local: {}MB, remote: {}MB", client.total_local_memory() / (1024 * 1024), client.total_remote_memory() / (1024 * 1024));
+
     // run queries
     let dataframe = DemoDataFramePipeline::new(dataframe);
     let mut total_queries = 0;
