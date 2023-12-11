@@ -86,7 +86,7 @@ fn conference_abstract_body() -> Block {
             TextSpan::Break,
             TextSpan::Multiple(vec![
                 TextSpan::Italic(Box::new(TextSpan::Multiple(vec![
-                    TextSpan::Bold(Box::new(TextSpan::Regular("Supervisor: Holovchenko Maxim Mykolayovych".to_owned()))),
+                    TextSpan::Bold(Box::new(TextSpan::Regular("Holovchenko Maxim Mykolayovych".to_owned()))),
                     TextSpan::Regular(",".to_owned()),
                     TextSpan::Break,
                     TextSpan::Regular("senior lecturer at computer science and software engineering department".to_owned()),
@@ -123,7 +123,6 @@ more efficient swapping between local and remote memory. This results in reducti
             TextSpan::Multiple(keywords().into_iter().map(|v| v.for_language(&Language::English).into()).intersperse(", ".into()).collect()),
             ".".into(),
         ])),
-        end_section(1),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Introduction.".into())),
             " Modern datacenters rely on various approaches to improving resource efficiency. For instance, CPU oversubscription is frequently used to improve \
@@ -152,9 +151,11 @@ running on compute nodes to noticably degrade in peformance, breaching service l
 moved from compute nodes with heavy RAM utilization to nodes with a lot of free RAM and access this data over the network in a way that is \
 transparent to the software (working with data in far memory should be similar to working with data in regular RAM). This results in higher memory utilization \
 overall while also allowing software to process datasets that are larger in size than RAM of a single compute node."),
-        paragraph_without_after_space("The goal of far memory is to move as many data as possible from local memory to remote nodes while solving challenges that \
+        paragraph("The goal of far memory is to move as many data as possible from local memory to remote nodes while solving challenges that \
 this configuration introduces. Far memory implementation should ensure high performance of memory access operations, provide fault tolerance, \
  integrate without significant changes to the codebase while not relying on additional hardware."),
+        end_section(1),
+
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Overview of existing implementations.".into())),
             " There are not many existing implementations of far memory because this topic became interesting for operators of the largest datacenters relatively \
