@@ -152,7 +152,7 @@ Inspired by "Web Service Frontend" demo from AIFM.
 This example is not intended to compare performance against AIFM (this demo app implementation is a bit different), it is just their demo app is a good
 example software to integrate to.
 */
-pub fn run_web_service_demo(metrics: Registry, run_id: String, token: &str, storage_endpoints: Vec<String>, manager_endpoint: Option<String>, local_max_memory: Option<u64>) {
+pub fn run_web_service_demo(metrics: Registry, run_id: String, token: &str, storage_endpoints: Vec<String>, manager_endpoint: Option<String>, local_max_memory: Option<u64>) -> f32 {
     info!("web service demo");
 
     // far memory client init
@@ -248,6 +248,8 @@ pub fn run_web_service_demo(metrics: Registry, run_id: String, token: &str, stor
     }
 
     println!("result: operations per second: {}, total requests processed: {}", total_requests / (Instant::now() - started_at).as_secs(), total_requests);
+
+    total_requests as f32
 }
 
 fn random_request(total_users: usize, zipf_s: f64) -> WebServiceRequest {

@@ -4,7 +4,10 @@ use {
     serde::{Serialize, Deserialize},
     rand::seq::SliceRandom,
     crate::utils::{metrics::init_metrics, generate_run_id},
-    super::llm_inference::run_llm_inference_demo,
+    super::{
+        llm_inference::run_llm_inference_demo,
+        web_service::run_web_service_demo,
+    },
 };
 
 #[derive(Serialize, Deserialize)]
@@ -15,11 +18,34 @@ struct EvaluationData {
 #[derive(Debug)]
 struct Experiment {
     local_memory_percent: u32,
+    application: DemoApplicationType,
 }
 
 impl Experiment {
     pub fn get_key(&self) -> String {
-        format!("local_{}", self.local_memory_percent)
+        format!("local_{}_application_{}", self.local_memory_percent, self.application.get_key())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum DemoApplicationType {
+    LlmInference,
+    WebService,
+}
+
+impl DemoApplicationType {
+    pub fn total_memory(&self) -> u32 {
+        match self {
+            Self::LlmInference => 25710,
+            Self::WebService => 8799,
+        }
+    }
+
+    pub fn get_key(&self) -> String {
+        match self {
+            Self::LlmInference => "llm_inference",
+            Self::WebService => "web_service",
+        }.to_owned()
     }
 }
 
@@ -29,10 +55,13 @@ pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
     let evaluation_data = load_evaluation_data();
 
     let mut experiments: Vec<Experiment> = vec![];
-    for local_memory_percent in (10..=100).step_by(10) {
-        experiments.push(Experiment {
-            local_memory_percent,
-        });
+    for application in [DemoApplicationType::LlmInference, DemoApplicationType::WebService] {
+        for local_memory_percent in (10..=100).step_by(10) {
+            experiments.push(Experiment {
+                local_memory_percent,
+                application: application.clone(),
+            });
+        }
     }
 
     info!("total {} experiments", experiments.len());
@@ -63,22 +92,35 @@ fn run_experiment(experiment: &Experiment, storage_endpoint: String, manager_end
     let run_id = generate_run_id();
     let metrics = init_metrics(None);
 
-    let memory_limit_mb = if experiment.local_memory_percent == 100  {
+    let memory_limit = if experiment.local_memory_percent == 100  {
         None
     } else {
-        Some((25710 as f32 * experiment.local_memory_percent as f32 / 100.0) as u64)
-    };
+        Some((experiment.application.total_memory() as f32 * experiment.local_memory_percent as f32 / 100.0) as u64)
+    }.map(|v| v * 1024 * 1024);
 
-    run_llm_inference_demo(
-        metrics.clone(),
-        run_id.clone(),
-        &read_token(),
-        storage_endpoint.split(",").map(|v| v.to_owned()).collect::<Vec<_>>(),
-        Some(manager_endpoint),
-        10 * 60,
-        false,
-        memory_limit_mb.map(|v| v * 1024 * 1024)
-    )
+    let token = read_token();
+    let storage_endpoints = storage_endpoint.split(",").map(|v| v.to_owned()).collect::<Vec<_>>();
+
+    match experiment.application {
+        DemoApplicationType::LlmInference => run_llm_inference_demo(
+            metrics.clone(),
+            run_id.clone(),
+            &token,
+            storage_endpoints,
+            Some(manager_endpoint),
+            10 * 60,
+            false,
+            memory_limit
+        ),
+        DemoApplicationType::WebService => run_web_service_demo(
+            metrics.clone(),
+            run_id.clone(),
+            &token,
+            storage_endpoints,
+            Some(manager_endpoint),
+            memory_limit
+        ),
+    }
 }
 
 fn load_evaluation_data() -> EvaluationData {
