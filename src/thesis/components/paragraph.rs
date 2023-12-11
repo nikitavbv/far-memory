@@ -25,6 +25,7 @@ fn runs_for_text_span(text: TextSpan, run: Run) -> Vec<Run> {
         TextSpan::Italic(inner) => runs_for_text_span(*inner, run.italic()),
         TextSpan::Link { .. } => unimplemented!(),
         TextSpan::Regular(text) => vec![run.add_text(text)],
+        TextSpan::Reference(text, reference) => runs_for_text_span(TextSpan::Multiple(vec![*text, TextSpan::Regular(" [x]".to_owned())]), run),
         TextSpan::Multiple(texts) => texts.into_iter().flat_map(|text| runs_for_text_span(text, run.clone()).into_iter()).collect(),
         TextSpan::Break => vec![run.add_break(BreakType::TextWrapping)],
     }

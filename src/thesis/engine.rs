@@ -220,7 +220,19 @@ pub enum TextSpan {
         text: String,
         url: String,
     },
+    Reference(Box<TextSpan>, Reference),
     Break,
+}
+
+#[derive(Debug, Clone)]
+pub struct Reference {
+}
+
+impl Reference {
+    pub fn new() -> Self {
+        Self {
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -533,6 +545,7 @@ fn render_text_span_to_html(span: TextSpan) -> String {
         TextSpan::Italic(inner) => format!("<i>{}</i>", render_text_span_to_html(*inner)),
         TextSpan::Multiple(texts) => texts.into_iter().map(render_text_span_to_html).collect::<String>(),
         TextSpan::Link { text, url } => format!("<a href=\"{}\">{}</a>", url, html_escape::encode_text(&text)),
+        TextSpan::Reference(_text, _reference) => unimplemented!(),
         TextSpan::Break => "<br />".to_owned(),
     }
 }
@@ -808,6 +821,7 @@ impl TextSpan {
             TextSpan::Italic(inner) => inner.to_plaintext(),
             TextSpan::Multiple(texts) => texts.iter().map(|v| v.to_plaintext()).collect::<String>(),
             TextSpan::Link { text, url: _ } => text.to_owned(),
+            TextSpan::Reference(text, _) => text.to_plaintext(),
             TextSpan::Break => "\n".to_owned(),
         }
     }

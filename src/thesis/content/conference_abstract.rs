@@ -3,7 +3,7 @@ use {
     itertools::Itertools,
     plotters::prelude::*,
     crate::thesis::{
-        engine::{Block, ParagraphBlock, TextSpan, SectionHeaderBlock, SubsectionHeaderBlock, ImageBlock},
+        engine::{Block, ParagraphBlock, TextSpan, SectionHeaderBlock, SubsectionHeaderBlock, ImageBlock, Reference},
         content::{classification_code, keywords, Language},
         utils::mm_to_twentieth_of_a_point,
     },
@@ -91,7 +91,9 @@ this configuration introduces. Far memory implementation should ensure high perf
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Overview of existing implementations.".into())),
             " There are not many existing implementations of far memory because this topic became interesting for operators of the largest datacenters relatively \
-recently. At the time of writing, Carbink is considered a state of the art far memory implementation along with multiple other notable implementations.".into(),
+recently. At the time of writing, ".into(),
+            TextSpan::Reference(Box::new(TextSpan::Regular("Carbink".to_owned())), Reference::new()),
+            " is considered a state of the art far memory implementation along with multiple other notable implementations.".into(),
         ])),
         paragraph_without_after_space("While Carbink is an advanced far memory implementation, it is closed source, tied to the infrastructure and tooling of a \
 specific datacenter operator (Google) and is not available for external use. It relies on application-level integration and does not have a way to integrate \
