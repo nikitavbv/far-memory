@@ -83,6 +83,17 @@ fn conference_abstract_body() -> Block {
                     TextSpan::Regular("National Technical University of Ukraine «Igor Sikorsky Kyiv Polytechnic Institute», Ukraine".to_owned()),
                 ]))),
             ]),
+            TextSpan::Break,
+            TextSpan::Multiple(vec![
+                TextSpan::Italic(Box::new(TextSpan::Multiple(vec![
+                    TextSpan::Bold(Box::new(TextSpan::Regular("Supervisor: Holovchenko Maxim Mykolayovych".to_owned()))),
+                    TextSpan::Regular(",".to_owned()),
+                    TextSpan::Break,
+                    TextSpan::Regular("senior lecturer at computer science and software engineering department".to_owned()),
+                    TextSpan::Break,
+                    TextSpan::Regular("National Technical University of Ukraine «Igor Sikorsky Kyiv Polytechnic Institute», Ukraine".to_owned()),
+                ]))),
+            ]),
         ])),
         Block::SectionHeader(
             SectionHeaderBlock::without_numbering("Methods and software for providing software-defined far memory in distributed systems".to_uppercase())
