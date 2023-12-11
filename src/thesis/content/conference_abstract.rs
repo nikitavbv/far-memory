@@ -1,6 +1,7 @@
 use {
     docx_rs::{Docx, PageMargin, RunFonts, SectionType},
     itertools::Itertools,
+    plotters::prelude::*,
     crate::thesis::{
         engine::{Block, ParagraphBlock, TextSpan, SectionHeaderBlock, SubsectionHeaderBlock, ImageBlock},
         content::{classification_code, keywords, Language},
@@ -225,7 +226,6 @@ rows can be processed in any order in a stream which allows far memory client to
 node.".into(),
         ])),
 
-        /* todo: picture with througput for different applications. */
         demo_throughput(),
         /* todo: analysis of data. */
 
@@ -237,6 +237,7 @@ system."),
 measured."),
 
         /* todo: picture with throughput for different s-param. */
+        throughput_distribution(),
         /* todo: analysis of data. */
 
         paragraph_without_after_space("Span replacement policy affects how frequently spans will be swapped in from memory of remote nodes blocking execution \
@@ -266,6 +267,58 @@ better performance compared to simple heurisitics used by existing implementatio
         ]),
         end_section(1)
     ])
+}
+
+fn throughput_distribution() -> Block {
+    // data
+    let results = vec![
+        (0.1, 14258),
+        (0.5, 14584),
+        (0.8, 14224),
+        (1.0, 8793),
+    ];
+    let max_performance = results.iter().map(|(_, performance)| *performance).max().unwrap();
+    let results: Vec<_> = results.into_iter()
+        .map(|v| (v.0 as f64, v.1 as f64 / max_performance as f64))
+        .collect();
+
+    // graph
+    let k = 20;
+    let root_area = BitMapBackend::new("./output/images/throughput-distrubution.png", (k * 55, k * 45)).into_drawing_area();
+    root_area.fill(&WHITE).unwrap();
+
+    let mut cc = ChartBuilder::on(&root_area)
+        .margin_top(60)
+        .margin_bottom(30)
+        .margin_left(0)
+        .margin_right(60)
+        .x_label_area_size(110)
+        .y_label_area_size(110)
+        .build_cartesian_2d(0.0..1.0, 0.0..1.0)
+        .unwrap();
+
+    cc.configure_mesh()
+        .x_labels(10)
+        .y_labels(10)
+        .axis_style(BLACK.stroke_width(4))
+        .disable_mesh()
+        .x_label_formatter(&|v| format!("{:.0}%", v * 100.0))
+        .y_label_formatter(&|v| format!("{:.1}", v))
+        .x_label_style(TextStyle::from(("arial", 48).into_font()))
+        .y_label_style(TextStyle::from(("arial", 48).into_font()))
+        .x_desc("Zipf skew parameter (s)")
+        .y_desc("Normalized Throughput")
+        .draw()
+        .unwrap();
+
+    cc.draw_series(LineSeries::new(
+        results,
+        RED.stroke_width(4)
+    )).unwrap();
+
+    root_area.present().unwrap();
+
+    image("./output/images/throughput-distrubution.png",  "Web service throughput by skew of requests")
 }
 
 fn demo_throughput() -> Block {
@@ -303,8 +356,6 @@ fn demo_throughput() -> Block {
         .collect();
 
     // graph
-    use plotters::prelude::*;
-
     let k = 20;
     let root_area = BitMapBackend::new("./output/images/demo-throughput.png", (k * 55, k * 45)).into_drawing_area();
     root_area.fill(&WHITE).unwrap();
