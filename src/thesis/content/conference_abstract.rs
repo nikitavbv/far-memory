@@ -216,13 +216,8 @@ for scheduled maintenance.".into()])),
 
         image_with_scale("./images/components.jpg", "Far memory components", 0.55),
 
-        paragraph_without_after_space(TextSpan::Multiple(vec!["Integration of far memory into software is a complex problem because modern programming languages are built with an \
-assumption that all data is located in local RAM and there is no way to create a \
-pointer to a different storage device. While operating systems have a concept of virtual memory and memory mapping mechanisms, that cannot be used to provide \
-far memory without significant changes into the codebase while providing high performance. For these reasons, the method of providing of far memory discussed in this \
-work picks two approaches for far memory integration. The first".into()])),
-
-        paragraph_without_after_space(TextSpan::Multiple(vec!["one is application-level integration with a far memory client library. Client library works by \
+        paragraph_without_after_space(TextSpan::Multiple(vec!["To integrate far memory into the software, the method discussed in this work takes two approaches. \
+The first one is application-level integration with a far memory client library. Client library works by \
 creating wrappers for data managed by far memory. Two nested smart pointers are used to track when software requests access to data being located in far memory and \
 to identify when it is no longer needed and can be swapped out safely. When the first pointer (FarMemory<T>) is dereferenced, far memory client checks if \
 span where the object is stored is located in local or remote memory. Far memory client swaps in the span to local memory if needed and returns another smart \
@@ -269,10 +264,8 @@ memory. The most efficient approach is using ".into(),
 into N shards and additional M parity shards. These shards are stored on different nodes and in the event of node failure and loss of any M shards, data can \
 still be restored by performing a linear transformation from the existing shards.".into()
         ])),
-        end_section(2),
 
-        image_with_scale("./images/fault_tolerance.jpg", "Swapping spans to multiple nodes using Reed-Solomon coding", 0.7),
-        end_section(1),
+        image_with_scale("./images/fault_tolerance.jpg", "Swapping spans to multiple nodes using Reed-Solomon coding", 0.55),
 
         paragraph_without_after_space("Performance is critical for far memory and defines field of software and use-cases where far memory can be applied. Data access \
 time for data in far memory will always be higher compared to data stored in local RAM because latency and bandwidth numbers for remote storage devices is \
