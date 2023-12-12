@@ -1,7 +1,7 @@
 use {
     docx_rs::{Docx, PageMargin, RunFonts, SectionType},
     itertools::Itertools,
-    plotters::prelude::*,
+    plotters::{prelude::*, coord::{Shift, types::RangedCoordf64}},
     crate::{
         thesis::{
             engine::{Block, ParagraphBlock, TextSpan, SectionHeaderBlock, SubsectionHeaderBlock, ImageBlock, Reference},
@@ -391,8 +391,8 @@ system."),
 measured."),
 
         throughput_distribution(),
-        paragraph_without_after_space("After running tests with different distribution skew, it can be noted that far memory keeps high performance until the \
-majority of requests work with local memory. As requests become more uniform, performance decreased due to increased swapping."),
+        paragraph_without_after_space("After running tests with different distribution skew, it can be noted that applications with high skew of requests \
+distribution can benefit from using far memory while having lower performance impact compared to applications with uniform distribution of requests."),
 
         paragraph_without_after_space("Span replacement algorithm affects how frequently spans will be swapped in from memory of remote nodes blocking execution \
 of the application. To evaluate how well different replacement policies perform, throughput was measured for neural network inference application with different \
@@ -498,31 +498,30 @@ fn throughput_replacement_policies() -> Block {
 
 fn throughput_distribution() -> Block {
     // data
-    let results = vec![
-        (0.1, 14258), // TODO: try after replacement policy update
-        (0.5, 14584), // TODO: try after replacement policy update
-        (0.8, 14224), // TODO: try after replacement policy update
-        (1.0, 8793), // TODO: try after replacement policy update
-    ];
-    let max_performance = results.iter().map(|(_, performance)| *performance).max().unwrap();
-    let results: Vec<_> = results.into_iter()
-        .map(|v| (v.0 as f64, v.1 as f64 / max_performance as f64))
-        .collect();
+    let evaluation_data = load_evaluation_data();
+    let experiments = (10..=100).step_by(10)
+        .into_iter()
+        .map(|zipf_s| Experiment {
+            local_memory_percent: 80,
+            application: DemoApplicationType::WebService,
+            zipf_s: Some(zipf_s),
+            span_replacement_policy: None,
+        })
+        .collect::<Vec<_>>();
+
+    let results = normalize_throughput(&experiments
+        .iter()
+        .map(|v| (v.zipf_s.unwrap() as f64 / 100.0, evaluation_data.get_experiment_result(&v)))
+        .filter(|(_, result)| result.is_some())
+        .map(|(percent, result)| (percent, result.unwrap() as u32))
+        .collect::<Vec<_>>());
 
     // graph
     let k = 20;
     let root_area = BitMapBackend::new("./output/images/throughput-distrubution.png", (k * 55, k * 45)).into_drawing_area();
     root_area.fill(&WHITE).unwrap();
 
-    let mut cc = ChartBuilder::on(&root_area)
-        .margin_top(60)
-        .margin_bottom(30)
-        .margin_left(0)
-        .margin_right(60)
-        .x_label_area_size(110)
-        .y_label_area_size(110)
-        .build_cartesian_2d(0.0..1.0, 0.0..1.0)
-        .unwrap();
+    let mut cc = setup_chart_context(&root_area);
 
     cc.configure_mesh()
         .x_labels(10)
@@ -586,15 +585,7 @@ fn demo_throughput() -> Block {
     let root_area = BitMapBackend::new("./output/images/demo-throughput.png", (k * 55, k * 45)).into_drawing_area();
     root_area.fill(&WHITE).unwrap();
 
-    let mut cc = ChartBuilder::on(&root_area)
-        .margin_top(60)
-        .margin_bottom(30)
-        .margin_left(0)
-        .margin_right(60)
-        .x_label_area_size(110)
-        .y_label_area_size(110)
-        .build_cartesian_2d(0.0..1.0, 0.0..1.0)
-        .unwrap();
+    let mut cc = setup_chart_context(&root_area);
 
     cc.configure_mesh()
         .x_labels(10)
@@ -632,6 +623,18 @@ fn demo_throughput() -> Block {
     image_with_scale("./output/images/demo-throughput.png",  "Application throughput by type and ratio of local memory", 0.4)
 }
 
+fn setup_chart_context<'a, 'b>(root_area: &'a DrawingArea<BitMapBackend<'b>, Shift>) -> ChartContext<'a, BitMapBackend<'b>, Cartesian2d<RangedCoordf64, RangedCoordf64>> {
+    ChartBuilder::on(&root_area)
+        .margin_top(60)
+        .margin_bottom(30)
+        .margin_left(0)
+        .margin_right(60)
+        .x_label_area_size(110)
+        .y_label_area_size(110)
+        .build_cartesian_2d(0.0..1.0, 0.0..1.0)
+        .unwrap()
+}
+
 fn throughput_plot_for_experiments(evaluation_data: &EvaluationData, experiments: &[Experiment]) -> Vec<(f64, f64)> {
     normalize_throughput(&experiments.into_iter()
             .map(|v| (v.local_memory_percent as f64 / 100.0, evaluation_data.get_experiment_result(&v)))
@@ -641,10 +644,14 @@ fn throughput_plot_for_experiments(evaluation_data: &EvaluationData, experiments
 }
 
 fn normalize_throughput(data: &[(f64, u32)]) -> Vec<(f64, f64)> {
-    let max_performance = data.iter().map(|v| v.1).max().unwrap();
-    data.into_iter()
-        .map(|v| (v.0 as f64, v.1 as f64 / max_performance as f64))
-        .collect()
+    if data.is_empty() {
+        vec![]
+    } else {
+        let max_performance = data.iter().map(|v| v.1).max().unwrap();
+        data.into_iter()
+            .map(|v| (v.0 as f64, v.1 as f64 / max_performance as f64))
+            .collect()
+    }
 }
 
 fn image(path: &str, description: &str) -> Block {
