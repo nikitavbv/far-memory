@@ -8,7 +8,7 @@ use {
             content::{classification_code, keywords, Language},
             utils::mm_to_twentieth_of_a_point,
         },
-        demo::evaluation::{load_evaluation_data, Experiment, DemoApplicationType, SpanReplacementPolicy},
+        demo::evaluation::{load_evaluation_data, Experiment, DemoApplicationType, SpanReplacementPolicy, EvaluationData},
     },
 };
 
@@ -545,7 +545,7 @@ fn throughput_distribution() -> Block {
 fn demo_throughput() -> Block {
     // data
     let evaluation_data = load_evaluation_data();
-    let llm_inference_results = normalize_throughput(&(10..=100).step_by(10)
+    let llm_inference_results = throughput_plot_for_experiments(&evaluation_data, &(10..=100).step_by(10)
             .into_iter()
             .map(|local_memory_percent| Experiment {
                 local_memory_percent,
@@ -553,12 +553,9 @@ fn demo_throughput() -> Block {
                 zipf_s: None,
                 span_replacement_policy: None,
             })
-            .map(|v| (v.local_memory_percent as f64 / 100.0, evaluation_data.get_experiment_result(&v)))
-            .filter(|(_, result)| result.is_some())
-            .map(|(percent, result)| (percent, result.unwrap() as u32))
             .collect::<Vec<_>>());
 
-    let web_service_results = normalize_throughput(&(10..=100).step_by(10)
+    let web_service_results = throughput_plot_for_experiments(&evaluation_data, &(10..=100).step_by(10)
             .into_iter()
             .map(|local_memory_percent| Experiment {
                 local_memory_percent,
@@ -566,20 +563,17 @@ fn demo_throughput() -> Block {
                 zipf_s: None,
                 span_replacement_policy: None,
             })
-            .map(|v| (v.local_memory_percent as f64 / 100.0, evaluation_data.get_experiment_result(&v)))
-            .filter(|(_, result)| result.is_some())
-            .map(|(percent, result)| (percent, result.unwrap() as u32))
             .collect::<Vec<_>>());
 
-    let dataframe_results = vec![
-        (0.1, 6), // TODO: try after replacement policy update
-        (0.5, 11), // TODO: try after replacement policy update
-        (1.0, 39), // TODO: try after replacement policy update
-    ];
-    let dataframe_results_max_performance = dataframe_results.iter().map(|v| v.1).max().unwrap();
-    let dataframe_results: Vec<_> = dataframe_results.into_iter()
-        .map(|v| (v.0 as f64, v.1 as f64 / dataframe_results_max_performance as f64))
-        .collect();
+    let dataframe_results = throughput_plot_for_experiments(&evaluation_data, &(10..=100).step_by(10)
+            .into_iter()
+            .map(|local_memory_percent| Experiment {
+                local_memory_percent,
+                application: DemoApplicationType::Dataframe,
+                zipf_s: None,
+                span_replacement_policy: None,
+            })
+            .collect::<Vec<_>>());
 
     // graph
     let k = 20;
@@ -630,6 +624,14 @@ fn demo_throughput() -> Block {
     root_area.present().unwrap();
 
     image_with_scale("./output/images/demo-throughput.png",  "Application throughput by type and ratio of local memory", 0.4)
+}
+
+fn throughput_plot_for_experiments(evaluation_data: &EvaluationData, experiments: &[Experiment]) -> Vec<(f64, f64)> {
+    normalize_throughput(&experiments.into_iter()
+            .map(|v| (v.local_memory_percent as f64 / 100.0, evaluation_data.get_experiment_result(&v)))
+            .filter(|(_, result)| result.is_some())
+            .map(|(percent, result)| (percent, result.unwrap() as u32))
+            .collect::<Vec<_>>())
 }
 
 fn normalize_throughput(data: &[(f64, u32)]) -> Vec<(f64, f64)> {
