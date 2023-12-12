@@ -418,25 +418,15 @@ fn throughput_replacement_policies() -> Block {
     let evaluation_data = load_evaluation_data();
     let steps = (10..=100).step_by(10).collect::<Vec<_>>();
 
-    let results_random = throughput_plot_for_experiments(&evaluation_data, &steps
-            .iter()
-            .map(|local_memory_percent| Experiment {
-                local_memory_percent: *local_memory_percent,
-                application: DemoApplicationType::LlmInference,
-                zipf_s: None,
-                span_replacement_policy: Some(SpanReplacementPolicy::Random),
-            })
-            .collect::<Vec<_>>());
+    let results_random = throughput_plot_for_experiments(
+        &evaluation_data,
+        &experiments_for_replacement_policy(&steps, SpanReplacementPolicy::Random)
+    );
 
-    let results_ideal = vec![
-        (0.1, 14),
-        (0.5, 23),
-        (1.0, 122)
-    ];
-    let max_performance = results_ideal.iter().map(|(_, performance)| *performance).max().unwrap();
-    let results_ideal: Vec<_> = results_ideal.into_iter()
-        .map(|v| (v.0 as f64, v.1 as f64 / max_performance as f64))
-        .collect();
+    let results_optimal = throughput_plot_for_experiments(
+        &evaluation_data,
+        &experiments_for_replacement_policy(&steps, SpanReplacementPolicy::Replay)
+    );
 
     let results_lru = vec![
         (0.1, 13),
@@ -453,15 +443,7 @@ fn throughput_replacement_policies() -> Block {
     let root_area = BitMapBackend::new("./output/images/replacement_policies.png", (k * 55, k * 45)).into_drawing_area();
     root_area.fill(&WHITE).unwrap();
 
-    let mut cc = ChartBuilder::on(&root_area)
-        .margin_top(60)
-        .margin_bottom(30)
-        .margin_left(0)
-        .margin_right(60)
-        .x_label_area_size(110)
-        .y_label_area_size(110)
-        .build_cartesian_2d(0.0..1.0, 0.0..1.0)
-        .unwrap();
+    let mut cc = setup_chart_context(&root_area);
 
     cc.configure_mesh()
         .x_labels(10)
@@ -483,7 +465,7 @@ fn throughput_replacement_policies() -> Block {
     )).unwrap().label("random").legend(|(x, y)| PathElement::new(vec![(x, y), (x + 30, y)], RED.stroke_width(4)));
 
     cc.draw_series(LineSeries::new(
-        results_ideal,
+        results_optimal,
         GREEN.stroke_width(4)
     )).unwrap().label("stats-based").legend(|(x, y)| PathElement::new(vec![(x, y), (x + 30, y)], GREEN.stroke_width(4)));
 
@@ -497,6 +479,18 @@ fn throughput_replacement_policies() -> Block {
     root_area.present().unwrap();
 
     image_with_scale("./output/images/replacement_policies.png",  "Throughput by replacement algorithm and ratio of local memory", 0.4)
+}
+
+fn experiments_for_replacement_policy(steps: &[u32], span_replacement_policy: SpanReplacementPolicy) -> Vec<Experiment> {
+    steps
+        .iter()
+        .map(|local_memory_percent| Experiment {
+            local_memory_percent: *local_memory_percent,
+            application: DemoApplicationType::LlmInference,
+            zipf_s: None,
+            span_replacement_policy: Some(span_replacement_policy.clone()),
+        })
+        .collect::<Vec<_>>()
 }
 
 fn throughput_distribution() -> Block {
