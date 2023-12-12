@@ -415,15 +415,18 @@ better performance compared to simple heurisitics used by existing approaches to
 
 fn throughput_replacement_policies() -> Block {
     // data
-    let results_random = vec![
-        (0.1, 13),
-        (0.5, 15),
-        (1.0, 120),
-    ];
-    let max_performance = results_random.iter().map(|(_, performance)| *performance).max().unwrap();
-    let results_random: Vec<_> = results_random.into_iter()
-        .map(|v| (v.0 as f64, v.1 as f64 / max_performance as f64))
-        .collect();
+    let evaluation_data = load_evaluation_data();
+    let steps = (10..=100).step_by(10).collect::<Vec<_>>();
+
+    let results_random = throughput_plot_for_experiments(&evaluation_data, &steps
+            .iter()
+            .map(|local_memory_percent| Experiment {
+                local_memory_percent: *local_memory_percent,
+                application: DemoApplicationType::LlmInference,
+                zipf_s: None,
+                span_replacement_policy: Some(SpanReplacementPolicy::Random),
+            })
+            .collect::<Vec<_>>());
 
     let results_ideal = vec![
         (0.1, 14),
