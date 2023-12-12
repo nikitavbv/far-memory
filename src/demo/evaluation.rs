@@ -102,13 +102,15 @@ impl SpanReplacementPolicy {
 pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
     info!("running evaluation");
 
+    let granularity: u32 = 5;
+
     let evaluation_data = load_evaluation_data();
 
     let mut experiments: Vec<Experiment> = vec![];
 
     // plot with throughput per application and memory usage.
     for application in [DemoApplicationType::LlmInference, DemoApplicationType::WebService, DemoApplicationType::Dataframe] {
-        for local_memory_percent in (10..=100).step_by(10) {
+        for local_memory_percent in (granularity..=100).step_by(granularity as usize) {
             experiments.push(Experiment {
                 local_memory_percent,
                 application: application.clone(),
@@ -119,7 +121,7 @@ pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
     }
 
     // plot different distributions
-    for zipf_s in (0..=100).step_by(10) {
+    for zipf_s in (0..=100).step_by(granularity as usize) {
         experiments.push(Experiment {
             local_memory_percent: 80,
             application: DemoApplicationType::WebService,
@@ -137,7 +139,7 @@ pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
         SpanReplacementPolicy::PreferRemoteLRU,
         SpanReplacementPolicy::PreferRemoteMRU,
     ] {
-        for local_memory_percent in (10..=100).step_by(10) {
+        for local_memory_percent in (granularity..=100).step_by(granularity as usize) {
             experiments.push(Experiment {
                 local_memory_percent,
                 application: DemoApplicationType::LlmInference,
