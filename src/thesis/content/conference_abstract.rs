@@ -206,30 +206,21 @@ implementation uses disk as storage backend, which is not optimal for many appli
         paragraph_without_after_space("These properties and problems of existing solutions create a need for an alternative method of providing far memory."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Designing a method and software for providing far memory.".into())),
-            " The method of providing far memory that is being discussed in this work operates on a similar principle: \
-far memory client is integrated into the software, chunks of data managed by it (called spans, represented as byte sequences) are moved to the memory of remote \
-nodes to free local memory. Spans are moved back to local memory (swap in) when access to data is requested. Only part of spans being present locally at \
-once allow to lower memory usage.".into(),
-        ])),
-        paragraph_without_after_space("Method dicussed in this work consists of the following components: compute nodes, storage nodes and manager node. \
-Compute node is a node that puts memory spans into the system for storage. \
-Spans are the central entity which far memory client operates on and are identified by an ID (64 bit number). Data associated with span may be located \
-in the local memory or on storage backend. Far memory software implementation in this work supports multiple storage backends: \
-local memory, file system, one or multiple remote nodes with the latter is the main mode of operation. \
-Storage nodes serve the function of storing spans data that were swapped out \
-and function as a key-value storage. Manager node allocates space on storage nodes \
+            " Method of providing far memory that is dicussed in this work consists of the following components: compute nodes, \
+storage nodes and manager node. \
+Far memory client is integrated into compute nodes and works with memory spans (byte sequences) that can be located in the local or remote memory. \
+Far memory client swaps out memory spans under memory pressure and swaps them back in when access is requested by the software. \
+Storage nodes store spans data that were swapped out and function as a key-value storage. Manager node allocates space on storage nodes \
 and assigns it for use by specific compute nodes. It also tracks health of all components and restores data on storage nodes that go down as well as provides means \
-for scheduled maintenance."),
+for scheduled maintenance.".into()])),
+
+        image_with_scale("./images/components.jpg", "Far memory components", 0.55),
 
         paragraph_without_after_space(TextSpan::Multiple(vec!["Integration of far memory into software is a complex problem because modern programming languages are built with an \
 assumption that all data is located in local RAM and there is no way to create a \
 pointer to a different storage device. While operating systems have a concept of virtual memory and memory mapping mechanisms, that cannot be used to provide \
 far memory without significant changes into the codebase while providing high performance. For these reasons, the method of providing of far memory discussed in this \
 work picks two approaches for far memory integration. The first".into()])),
-
-        end_section(2),
-        image_with_scale("./images/components.jpg", "Far memory components", 0.9),
-        end_section(1),
 
         paragraph_without_after_space(TextSpan::Multiple(vec!["one is application-level integration with a far memory client library. Client library works by \
 creating wrappers for data managed by far memory. Two nested smart pointers are used to track when software requests access to data being located in far memory and \
