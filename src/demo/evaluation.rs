@@ -15,16 +15,22 @@ use {
 };
 
 #[derive(Serialize, Deserialize)]
-struct EvaluationData {
+pub struct EvaluationData {
     values: HashMap<String, f32>,
 }
 
+impl EvaluationData {
+    pub fn get_experiment_result(&self, experiment: &Experiment) -> Option<f32> {
+        self.values.get(&experiment.get_key()).cloned()
+    }
+}
+
 #[derive(Debug)]
-struct Experiment {
-    local_memory_percent: u32,
-    application: DemoApplicationType,
-    zipf_s: Option<u32>, // 0..100
-    span_replacement_policy: Option<SpanReplacementPolicy>,
+pub struct Experiment {
+    pub local_memory_percent: u32,
+    pub application: DemoApplicationType,
+    pub zipf_s: Option<u32>, // 0..100
+    pub span_replacement_policy: Option<SpanReplacementPolicy>,
 }
 
 impl Experiment {
@@ -223,7 +229,7 @@ fn run_experiment(experiment: &Experiment, storage_endpoint: String, manager_end
     }
 }
 
-fn load_evaluation_data() -> EvaluationData {
+pub fn load_evaluation_data() -> EvaluationData {
     let path = "./evaluation.json";
     if !Path::new(&path).exists() {
         return EvaluationData {

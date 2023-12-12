@@ -2,10 +2,13 @@ use {
     docx_rs::{Docx, PageMargin, RunFonts, SectionType},
     itertools::Itertools,
     plotters::prelude::*,
-    crate::thesis::{
-        engine::{Block, ParagraphBlock, TextSpan, SectionHeaderBlock, SubsectionHeaderBlock, ImageBlock, Reference},
-        content::{classification_code, keywords, Language},
-        utils::mm_to_twentieth_of_a_point,
+    crate::{
+        thesis::{
+            engine::{Block, ParagraphBlock, TextSpan, SectionHeaderBlock, SubsectionHeaderBlock, ImageBlock, Reference},
+            content::{classification_code, keywords, Language},
+            utils::mm_to_twentieth_of_a_point,
+        },
+        demo::evaluation::{load_evaluation_data, Experiment, DemoApplicationType, SpanReplacementPolicy},
     },
 };
 
@@ -541,11 +544,20 @@ fn throughput_distribution() -> Block {
 
 fn demo_throughput() -> Block {
     // data
-    let llm_inference_results = vec![
-        (0.1, 14),
-        (0.5, 23),
-        (1.0, 122)
-    ];
+    let evaluation_data = load_evaluation_data();
+    let llm_inference_results: Vec<(f64, u32)> = (10..100).step_by(10)
+            .into_iter()
+            .map(|local_memory_percent| Experiment {
+                local_memory_percent,
+                application: DemoApplicationType::LlmInference,
+                zipf_s: None,
+                span_replacement_policy: None,
+            })
+            .map(|v| (v.local_memory_percent as f64 / 100.0, evaluation_data.get_experiment_result(&v)))
+            .filter(|(_, result)| result.is_some())
+            .map(|(percent, result)| (percent, result.unwrap() as u32))
+            .collect();
+
     let llm_inference_max_performance = llm_inference_results.iter().map(|v| v.1).max().unwrap();
     let llm_inference_results: Vec<_> = llm_inference_results.into_iter()
         .map(|v| (v.0 as f64, v.1 as f64 / llm_inference_max_performance as f64))
