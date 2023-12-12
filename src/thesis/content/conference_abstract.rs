@@ -241,12 +241,17 @@ for scheduled maintenance."),
 assumption that all data is located in local RAM and there is no way to create a \
 pointer to a different storage device. While operating systems have a concept of virtual memory and memory mapping mechanisms, that cannot be used to provide \
 far memory without significant changes into the codebase while providing high performance. For these reasons, the method of providing of far memory discussed in this \
-work picks two approaches for far memory integration. The first one is application-level integration with a far memory client library. In short, it works by \
+work picks two approaches for far memory integration. The first one is application-level integration with a far memory client library. Client library works by \
 creating wrappers for data managed by far memory. Two nested smart pointers are used to track when software requests access to data being located in far memory and \
-to identify when it is no longer needed and can be swapped out safely. Far memory client library is written in Rust and supports in-depth configuration of storage \
-backend, swap in and swap out processes. Given that providing higher level abstractions allows to make far memory more efficient due to additional information \
+to identify when it is no longer needed and can be swapped out safely. When the first pointer (FarMemory<T>) is dereferenced, far memory client checks if \
+span where the object is stored is located in local or remote memory. Far memory client swaps in the span to local memory if needed and returns another smart \
+pointer (FarMemoryLocal<T>). When this pointer is dereferenced, application receives reference to underlying object (&T) and proceeds to work with it as with any other object \
+in local RAM. For each span, a reference counter is maintained and increased on each dereference of the first smart pointer. When the second smart pointer goes \
+out of scope (implemented by Drop trait in Rust), reference counter is decreased. When it reaches zero, far memory client may swap it out in case of memory \
+pressure. When the first pointer goes out of scope, data is removed from local and remote memory because it cannot be accessed by software anymore at this point. \
+Client library also provides implementations of data structures designed for use with far memory because higher level abstractions allow to make far memory more efficient due to additional information \
 available during memory access event (for example, knowing which specific part of data structure is accessed allows to swap it in only partially, avoiding full \
-swap in that would happen otherwise) this library provides implementations of data structures optimized for use with far memory. These data structures include \
+swap in that would happen otherwise). These data structures include \
 byte buffer, vector, hash table and others. Another important aspect is conversion of objects into byte sequence and vice versa. The simplest approach is just \
 copying the whole area of memory where object is stored as is. While far memory client implements this approach, it is not optimal for a number of use cases. \
 Typically, data structures contain pointers to other nested data structures meaning that during swap out (and swap in as well) it may be desirable for client to \
