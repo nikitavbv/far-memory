@@ -135,7 +135,7 @@ to remain unused. ".into(),
             "For random access memory (RAM), operators of world's largest datacenters report average utilization of around ".into(),
             TextSpan::Reference(Box::new(TextSpan::Regular("60%".to_owned())), Reference::for_publication(
                 "Borg: the Next Generation".to_owned(),
-                "Muhammad Tirmazi, Adam Barker, Nan Deng, Md E. Haque, Zhijing Gene Qin, Steven Hand, Mor HarcholBalter, and John Wilkes".to_owned(),
+                "Muhammad Tirmazi, Adam Barker, Nan Deng, et al.".to_owned(),
                 2020,
                 "Proceedings of ACM EuroSys".to_owned(),
             )),
@@ -157,7 +157,7 @@ this configuration introduces. Far memory software should ensure high performanc
 recently. At the time of writing, ".into(),
             TextSpan::Reference(Box::new(TextSpan::Regular("Carbink".to_owned())), Reference::for_publication(
                 "Carbink: Fault-tolerant Far Memory".to_owned(),
-                "Yang Zhou, Hassan Wassel, Sihang Liu, Jiaqi Gao, James Mickens, Minlan Yu, Chris Kennelly, Paul Jack Turner, David E Culler, Hank Levy, Amin Vahdat".to_owned(),
+                "Yang Zhou, Hassan Wassel, Sihang Liu, et al.".to_owned(),
                 2022,
                 "Proceedings of the 16th USENIX Symposium on Operating Systems Design and Implementation".to_owned(),
             )),
@@ -169,7 +169,7 @@ Memory spans replacements and defragmentation are reduced based on simple heuris
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Reference(Box::new(TextSpan::Regular("AIFM: High-Performance, Application-Integrated Far Memory".to_owned())), Reference::for_publication(
                 "AIFM: High-Performance, Application-Integrated Far Memory".to_owned(),
-                "Ruan, Zhenyuan and Schwarzkopf, Malte and Aguilera, Marcos K. and Belay, Adam".to_owned(),
+                "Ruan, Zhenyuan and Schwarzkopf, et al.".to_owned(),
                 2020,
                 "Proceedings of the 14th USENIX Conference on Operating Systems Design and Implementation".to_owned(),
             )),
@@ -182,7 +182,7 @@ However, this implementation supports only one storage node and does not provide
 
             TextSpan::Reference(Box::new(TextSpan::Regular("Hydra".to_owned())), Reference::for_publication(
                 "Hydra : Resilient and Highly Available Remote Memory".to_owned(),
-                "Youngmoon Lee, Hasan Al Maruf, Mosharaf Chowdhury, Asaf Cidon, Kang G. Shin".to_owned(),
+                "Youngmoon Lee, Hasan Al Maruf, et al.".to_owned(),
                 2022,
                 "20th USENIX Conference on File and Storage Technologies (FAST 22)".to_owned(),
             )),
@@ -195,7 +195,7 @@ may not be desirable or achievable in most environments due to costs associated 
             "Other methods, like ".into(),
             TextSpan::Reference(Box::new(TextSpan::Regular("\"Software-Defined Far Memory in Warehouse-Scale Computers\"".to_owned())), Reference::for_publication(
                 "Software-defined far memory in warehouse-scale computers".to_owned(),
-                "Andres Lagar-Cavilla, Junwhan Ahn, Suleiman Souhlal, Neha Agarwal, Radoslaw Burny, Shakeel Butt, Jichuan Chang, Ashwin Chaugule, Nan Deng, Junaid Shahid, Greg Thelen, Kamil Adam Yurtsever, Yu Zhao and Parthasarathy Ranganathan".to_owned(),
+                "Andres Lagar-Cavilla, Junwhan Ahn, et al.".to_owned(),
                 2019,
                 "International Conference on Architectural Support for Programming Languages and Operating Systems".to_owned(),
             )),
@@ -233,12 +233,7 @@ byte buffer, vector, hash table and others. Another important aspect is conversi
 copying the whole area of memory where object is stored as is. While far memory client implements this approach, it is not optimal for a number of use cases. \
 Typically, data structures contain pointers to other nested data structures meaning that during swap out (and swap in as well) it may be desirable for client to \
 traverse the whole structure and send it to remote node along with nested objects. For this reason, far memory client provides FarMemorySerialized<T> which \
-relies on serialization (implemented using ".into(),
-            TextSpan::Reference(Box::new(TextSpan::Regular("serde".to_owned())), Reference::for_website(
-                "Serde".to_owned(),
-                "https://serde.rs".to_owned()
-            )),
-            ") to serialize and deserialize object with nested fields when performing swap out.".into()
+relies on serialization to serialize and deserialize object with nested fields when performing swap out.".into()
         ])),
         paragraph_without_after_space(TextSpan::Multiple(vec!["Given that scenarios when changing source code of software is not possible exist, this far memory implementation provides \
 a different method of integration for such cases. By implementing a virtual block device (based on ".into(),
@@ -272,7 +267,6 @@ time for data in far memory will always be higher compared to data stored in loc
 significantly higher than for RAM. In these conditions it is not possible to make far memory as fast as local RAM, however additional latency can be minimzed to \
 level that acceptable for real world applications. There is a balance between how actively far memory is used by the application and impact on its performance. \
 It is up to application developer how much performance they are willing to trade for lower local memory usage."),
-        image_with_scale("./images/latency.jpg", "Span access flow", 0.45),
         paragraph_without_after_space("To make far memory performant, the client uses hardware resources efficiently by avoiding unnecessary \
 copying of data and communicating with other nodes using lightweight network protocol that is based on TCP and uses the simplest form of request serialization \
 based on bincode. Compression is not used (but can be optionally enabled by the user) because modern compression algorithms are typically slower (6.4Gbps for lz4) \
