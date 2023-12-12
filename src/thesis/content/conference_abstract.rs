@@ -128,14 +128,10 @@ more efficient swapping between local and remote memory. This results in reducti
         ])),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Introduction.".into())),
-            " Modern datacenters rely on various approaches to improving resource efficiency. For instance, CPU oversubscription is frequently used to improve \
-CPU compute time utilization. Another resource is persistent storage for which resource disaggregation is applied in modern infrastructure. Instead of storage \
-devices being located on individual compute nodes (servers), it is separated into dedicated storage infrastructure which forms a pool of storage shared \
-between all compute nodes. In this configuration, access to data stored on drives is provided over the network. This allows to assign as much storage to compute \
-nodes as it is needed by the software running on them. This also avoids situation where storage space on individual nodes remains unused because tasks running \
-have lower storage requests than what is provided by hardware.".into(),
-        ])),
-        paragraph_without_after_space(TextSpan::Multiple(vec![
+            " Modern datacenters rely on various approaches to improving resource efficiency, one of which is resource disaggregation. Instead of resource (\
+storage devices) being located on individual servers, it is separated into dedicated storage infrastructure that forms a pool of storage shared \
+between all compute nodes. This allows to assign as much storage to individual nodes as needed and avoid extra disk space \
+to remain unused. ".into(),
             "For random access memory (RAM), operators of world's largest datacenters report average utilization of around ".into(),
             TextSpan::Reference(Box::new(TextSpan::Regular("60%".to_owned())), Reference::for_publication(
                 "Borg: the Next Generation".to_owned(),
@@ -143,20 +139,16 @@ have lower storage requests than what is provided by hardware.".into(),
                 2020,
                 "Proceedings of ACM EuroSys".to_owned(),
             )),
-            ". Just as with storage, \
-some compute nodes in the cluster may be running software that requires less memory than what the hardware provides. Efficiency of task scheduling is unrelated \
-to this problem, because compute nodes may be constrained by some other resource (for example, CPU compute time). Following the exact same approach with RAM as \
-with persistent storage is problematic due to more strict performance requirements set for this class of memory. Separating RAM into dedicated infrastructure \
-that is accessed over the network significantly affects latency and bandwidth numbers for memory access operations. This difference is enough for typical software \
-running on compute nodes to noticably degrade in peformance, breaching service level objectives (SLOs) defined for this software.".into()
+            " which is mainly caused by individual nodes in datacenters underutilizing RAM provided by hardware. Separating RAM into dedicated infrastructure \
+that is accessed over the network is not possible because it causes typical software to significantly degrade in performance, breaching service level objectives \
+(SLOs).".into()
         ])),
-        paragraph_without_after_space("One approach to solve this is software-defined far memory. The idea behind this method is that some chunks of data can be \
-moved from compute nodes with heavy RAM utilization to nodes with a lot of free RAM and access this data over the network in a way that is \
-transparent to the software (working with data in far memory should be similar to working with data in regular RAM). This results in higher memory utilization \
-overall while also allowing software to process datasets that are larger in size than RAM of a single compute node."),
-        paragraph("The goal of far memory is to move as many data as possible from local memory to remote nodes while solving challenges that \
+        paragraph_without_after_space("One approach to solve this is software-defined far memory. This method is based on moving some chunks of data \
+nodes with heavy RAM utilization to nodes underutilized RAM and access this data over the network in a way that is \
+transparent to the software. This results in higher memory utilization overall while also allowing software to process datasets that are larger in size than \
+RAM of a single compute node. The goal of far memory is to move as many data as possible from local memory to remote nodes while solving challenges that \
 this configuration introduces. Far memory software should ensure high performance of memory access operations, provide fault tolerance, \
- integrate without significant changes to the codebase while not relying on additional hardware."),
+ integrate without significant changes to the codebase while not relying on specialized hardware."),
         end_section(1),
 
         paragraph_without_after_space(TextSpan::Multiple(vec![
