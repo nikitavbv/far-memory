@@ -249,7 +249,8 @@ pointer (FarMemoryLocal<T>). When this pointer is dereferenced, application rece
 in local RAM. For each span, a reference counter is maintained and increased on each dereference of the first smart pointer. When the second smart pointer goes \
 out of scope (implemented by Drop trait in Rust), reference counter is decreased. When it reaches zero, far memory client may swap it out in case of memory \
 pressure. When the first pointer goes out of scope, data is removed from local and remote memory because it cannot be accessed by software anymore at this point. \
-Client library also provides implementations of data structures designed for use with far memory because higher level abstractions allow to make far memory more efficient due to additional information \
+Client library also provides implementations of data structures designed for use with far memory because higher level abstractions allow to make far memory more \
+efficient due to additional information \
 available during memory access event (for example, knowing which specific part of data structure is accessed allows to swap it in only partially, avoiding full \
 swap in that would happen otherwise). These data structures include \
 byte buffer, vector, hash table and others. Another important aspect is conversion of objects into byte sequence and vice versa. The simplest approach is just \
