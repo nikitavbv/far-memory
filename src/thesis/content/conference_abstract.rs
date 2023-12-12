@@ -545,7 +545,7 @@ fn throughput_distribution() -> Block {
 fn demo_throughput() -> Block {
     // data
     let evaluation_data = load_evaluation_data();
-    let llm_inference_results: Vec<(f64, u32)> = (10..100).step_by(10)
+    let llm_inference_results = normalize_throughput(&(10..=100).step_by(10)
             .into_iter()
             .map(|local_memory_percent| Experiment {
                 local_memory_percent,
@@ -556,32 +556,20 @@ fn demo_throughput() -> Block {
             .map(|v| (v.local_memory_percent as f64 / 100.0, evaluation_data.get_experiment_result(&v)))
             .filter(|(_, result)| result.is_some())
             .map(|(percent, result)| (percent, result.unwrap() as u32))
-            .collect();
+            .collect::<Vec<_>>());
 
-    let llm_inference_max_performance = llm_inference_results.iter().map(|v| v.1).max().unwrap();
-    let llm_inference_results: Vec<_> = llm_inference_results.into_iter()
-        .map(|v| (v.0 as f64, v.1 as f64 / llm_inference_max_performance as f64))
-        .collect();
-
-    let web_service_results = vec![
-        (0.1, 2528), // TODO: try after replacement policy update
-
-        // 0.5 is 4400
-        (0.5, 447911),
-
-        // 0.8 is 7039
-        (0.8, 1404928),
-
-        // 0.9 is 7919
-        (0.9, 2503741),
-
-        // 1.0 is 8799
-        (1.0, 9932828), // TODO: try after replacement policy update
-    ];
-    let web_service_results_max_performance = web_service_results.iter().map(|v| v.1).max().unwrap();
-    let web_service_results: Vec<_> = web_service_results.into_iter()
-        .map(|v| (v.0 as f64, v.1 as f64 / web_service_results_max_performance as f64))
-        .collect();
+    let web_service_results = normalize_throughput(&(10..=100).step_by(10)
+            .into_iter()
+            .map(|local_memory_percent| Experiment {
+                local_memory_percent,
+                application: DemoApplicationType::WebService,
+                zipf_s: None,
+                span_replacement_policy: None,
+            })
+            .map(|v| (v.local_memory_percent as f64 / 100.0, evaluation_data.get_experiment_result(&v)))
+            .filter(|(_, result)| result.is_some())
+            .map(|(percent, result)| (percent, result.unwrap() as u32))
+            .collect::<Vec<_>>());
 
     let dataframe_results = vec![
         (0.1, 6), // TODO: try after replacement policy update
@@ -642,6 +630,13 @@ fn demo_throughput() -> Block {
     root_area.present().unwrap();
 
     image_with_scale("./output/images/demo-throughput.png",  "Application throughput by type and ratio of local memory", 0.4)
+}
+
+fn normalize_throughput(data: &[(f64, u32)]) -> Vec<(f64, f64)> {
+    let max_performance = data.iter().map(|v| v.1).max().unwrap();
+    data.into_iter()
+        .map(|v| (v.0 as f64, v.1 as f64 / max_performance as f64))
+        .collect()
 }
 
 fn image(path: &str, description: &str) -> Block {
