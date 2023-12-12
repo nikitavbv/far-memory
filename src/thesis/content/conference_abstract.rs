@@ -153,7 +153,7 @@ this configuration introduces. Far memory software should ensure high performanc
 
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Overview of existing methods.".into())),
-            " There are not many existing works in this field because operators of the largest datacenters because interested in using far memory relatively \
+            " There are not many existing works in this field because operators of the largest datacenters became interested in using far memory relatively \
 recently. At the time of writing, ".into(),
             TextSpan::Reference(Box::new(TextSpan::Regular("Carbink".to_owned())), Reference::for_publication(
                 "Carbink: Fault-tolerant Far Memory".to_owned(),
@@ -164,9 +164,8 @@ recently. At the time of writing, ".into(),
             " is considered a state of the art far memory implementation along with multiple other notable works.".into(),
         ])),
         paragraph_without_after_space("While Carbink is an advanced far memory implementation, it is closed source, tied to the infrastructure and tooling of a \
-specific datacenter operator (Google) and is not available for external use. It relies on application-level integration and does not have a way to integrate \
-into software be other means. Memory spans replacements and defragmentation is optimized based on simple heuristics that do not rely on analyzing data access \
-patterns."),
+specific datacenter operator (Google) and is not available for external use. It relies on and supports only application-level integration. \
+Memory spans replacements and defragmentation are reduced based on simple heuristics."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Reference(Box::new(TextSpan::Regular("AIFM: High-Performance, Application-Integrated Far Memory".to_owned())), Reference::for_publication(
                 "AIFM: High-Performance, Application-Integrated Far Memory".to_owned(),
@@ -190,8 +189,7 @@ However, this implementation supports only one storage node and does not provide
 
             ", rely on specialized hardware, for example network interface cards \
 supporting Remote Direct Memory Access (RDMA) like InfiniBand. While it allows to transfer spans between nodes with low latency, installing or upgrading hardware \
-may not be desirable or achievable in most environments. Performing changes to the hardware configuration usually has costs associated with it that \
-may outweigh the benefits provided by far memory.".into(),
+may not be desirable or achievable in most environments due to costs associated with it that may outweigh the benefits provided by far memory.".into(),
         ])),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             "Other methods, like ".into(),
@@ -205,9 +203,7 @@ may outweigh the benefits provided by far memory.".into(),
 optimize far memory performance, including statistics collection across the fleet to build a model predicting optimal parameters for the system. However, this \
 implementation uses disk as storage backend, which is not optimal for many applications due to lower performance compared to storing data in RAM of remote nodes.".into()
         ])),
-        paragraph_without_after_space("These properties and problems of existing solutions create a need for far memory method and its software implementation that \
-would be open source, integrate into software with little changes to the codebase, while providing fault tolerance and high memory access operations \
-performance provided by more efficient span replacement algorithms."),
+        paragraph_without_after_space("These properties and problems of existing solutions create a need for an alternative method of providing far memory."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Designing a method and software for providing far memory.".into())),
             " The method of providing far memory that is being discussed in this work operates on a similar principle: \
@@ -224,16 +220,18 @@ Storage nodes serve the function of storing spans data that were swapped out \
 and function as a key-value storage. Manager node allocates space on storage nodes \
 and assigns it for use by specific compute nodes. It also tracks health of all components and restores data on storage nodes that go down as well as provides means \
 for scheduled maintenance."),
-        end_section(2),
-
-        image_with_scale("./images/components.jpg", "Far memory components", 0.9),
-        end_section(1),
 
         paragraph_without_after_space(TextSpan::Multiple(vec!["Integration of far memory into software is a complex problem because modern programming languages are built with an \
 assumption that all data is located in local RAM and there is no way to create a \
 pointer to a different storage device. While operating systems have a concept of virtual memory and memory mapping mechanisms, that cannot be used to provide \
 far memory without significant changes into the codebase while providing high performance. For these reasons, the method of providing of far memory discussed in this \
-work picks two approaches for far memory integration. The first one is application-level integration with a far memory client library. Client library works by \
+work picks two approaches for far memory integration. The first".into()])),
+
+        end_section(2),
+        image_with_scale("./images/components.jpg", "Far memory components", 0.9),
+        end_section(1),
+
+        paragraph_without_after_space(TextSpan::Multiple(vec!["one is application-level integration with a far memory client library. Client library works by \
 creating wrappers for data managed by far memory. Two nested smart pointers are used to track when software requests access to data being located in far memory and \
 to identify when it is no longer needed and can be swapped out safely. When the first pointer (FarMemory<T>) is dereferenced, far memory client checks if \
 span where the object is stored is located in local or remote memory. Far memory client swaps in the span to local memory if needed and returns another smart \
