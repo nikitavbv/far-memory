@@ -15,8 +15,8 @@ use {
 const FONT_SIZE: usize = 2 * 12;
 const INTERVAL: f32 = 1.15;
 
-pub fn conference_abstract() -> Block {
-    let body = conference_abstract_body();
+pub fn conference_abstract(language: &Language) -> Block {
+    let body = conference_abstract_body(language);
     let references = extract_references_text(&body);
 
     Block::Multiple(vec![
@@ -63,7 +63,7 @@ fn extract_references_text_span(references: &mut Vec<String>, text: &TextSpan) {
     }
 }
 
-fn conference_abstract_body() -> Block {
+fn conference_abstract_body(language: &Language) -> Block {
     Block::Multiple(vec![
         paragraph(TextSpan::Multiple(vec![
             format!("UDC {}", classification_code()).into(),
@@ -264,11 +264,10 @@ It is up to application developer how much performance they are willing to trade
 copying of data and communicating with other nodes using lightweight network protocol that is based on TCP. Far memory client implements partial span swap \
 out to move as much memory as \
 required to maintain enough free memory which is beneficial when dealing with large spans. To avoid blocking application threads with waiting for enough free \
-memory on swap in, a background thread is implemented to swap out proactively."),
+memory on swap in, a background thread is running in a loop swapping out spans with low probability of access."),
         paragraph_without_after_space("However, the key to making far memory performance more close to local RAM is always keeping data that application is about \
-to access local. To achieve this, the method of providing far memory swaps in spans in advance using a background thread. In ideal scenario, when this background thread \
-transfers correct spans to local memory quickly enough, application will never be blocked by waiting for far memory client to finish \
-swap in of spans."),
+to access local. To achieve this, a background thread is picking spans with high probability of access according to replacement algorithm and swap them in in advance. \
+In ideal scenario, correct spans are transferred to local memory quickly enough and application will never be blocked by waiting for swap in in main thread."),
         paragraph_without_after_space(TextSpan::Multiple(vec!["It is easy to notice that the method of choosing spans to swap out (and swap in in advance) plays significant role in far \
 memory performance. To maximize performance, each time when swap out is needed it is more optimal to pick spans that will be accessed last of all. At the same time, \
 for swap in in advance it is better to pick spans that are going to be accessed sooner than other spans. This creates a need for span replacement algorithm that \
@@ -353,7 +352,7 @@ better performance compared to simple heurisitics used by existing approaches to
 fn throughput_replacement_policies() -> Block {
     // data
     let evaluation_data = load_evaluation_data();
-    let steps = (10..=100).step_by(10).collect::<Vec<_>>();
+    let steps = (5..=100).step_by(5).collect::<Vec<_>>();
 
     fn plot(evaluation_data: &EvaluationData, experiments: &[Experiment]) -> Vec<(f64, u32)> {
         experiments.into_iter()
@@ -456,7 +455,7 @@ fn experiments_for_replacement_policy(steps: &[u32], span_replacement_policy: Sp
 fn throughput_distribution() -> Block {
     // data
     let evaluation_data = load_evaluation_data();
-    let experiments = (10..=100).step_by(10)
+    let experiments = (5..=100).step_by(5)
         .into_iter()
         .map(|zipf_s| Experiment {
             local_memory_percent: 80,
@@ -507,7 +506,8 @@ fn throughput_distribution() -> Block {
 fn demo_throughput() -> Block {
     // data
     let evaluation_data = load_evaluation_data();
-    let llm_inference_results = throughput_plot_for_experiments(&evaluation_data, &(10..=100).step_by(10)
+    let begin = 10;
+    let llm_inference_results = throughput_plot_for_experiments(&evaluation_data, &(begin..=100).step_by(5)
             .into_iter()
             .map(|local_memory_percent| Experiment {
                 local_memory_percent,
@@ -517,7 +517,7 @@ fn demo_throughput() -> Block {
             })
             .collect::<Vec<_>>());
 
-    let web_service_results = throughput_plot_for_experiments(&evaluation_data, &(10..=100).step_by(10)
+    let web_service_results = throughput_plot_for_experiments(&evaluation_data, &(begin..=100).step_by(5)
             .into_iter()
             .map(|local_memory_percent| Experiment {
                 local_memory_percent,
@@ -527,7 +527,7 @@ fn demo_throughput() -> Block {
             })
             .collect::<Vec<_>>());
 
-    let dataframe_results = throughput_plot_for_experiments(&evaluation_data, &(10..=100).step_by(10)
+    let dataframe_results = throughput_plot_for_experiments(&evaluation_data, &(begin..=100).step_by(5)
             .into_iter()
             .map(|local_memory_percent| Experiment {
                 local_memory_percent,

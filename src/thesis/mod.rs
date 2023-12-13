@@ -4,6 +4,7 @@ use {
     crate::thesis::{
         content::{
             Content,
+            Language,
             thesis_content,
             thesis_docx_template,
             topic_card_docx_template,
@@ -56,8 +57,14 @@ pub fn build_thesis(args: &Args) {
     }
 
     if args.conference_abstract {
+        let content = conference_abstract(&if args.ukrainian {
+            Language::Ukrainian
+        } else {
+            Language::English
+        });
+
         documents.push(
-            Document::new("methods_and_software_for_providing_software_defined_far_memory_in_distributed_systems", conference_abstract()).with_docx_template(conference_abstract_docx_template())
+            Document::new("methods_and_software_for_providing_software_defined_far_memory_in_distributed_systems", content).with_docx_template(conference_abstract_docx_template())
         );
     }
 

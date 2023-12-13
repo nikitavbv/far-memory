@@ -106,6 +106,9 @@ pub struct Args {
     conference_abstract: bool,
 
     #[arg(long)]
+    ukrainian: bool, // language for conference abstract (default is english)
+
+    #[arg(long)]
     docx: bool,
 
     #[arg(long)]
