@@ -391,12 +391,24 @@ impl FarMemoryClient {
         let mut total_memory = 0;
         let mut possible_swap_out_spans: Vec<SpanId> = self.spans.read().unwrap().keys().cloned().collect();
 
+        let mut skip_local_memory_size = 0;
+        let mut skip_in_use = 0;
+        let mut skip_swapping_out = 0;
+
         while !possible_swap_out_spans.is_empty() {
             if total_memory >= memory_to_swap_out {
                 break;
             }
 
-            let span_id = span!(Level::DEBUG, "picking span for eviction").in_scope(|| self.replacement_policy.pick_for_eviction(&possible_swap_out_spans).clone());
+            let span_id = span!(
+                Level::DEBUG,
+                "picking span for eviction",
+                total_memory,
+                memory_to_swap_out,
+                skip_local_memory_size,
+                skip_in_use,
+                skip_swapping_out
+            ).in_scope(|| self.replacement_policy.pick_for_eviction(&possible_swap_out_spans).clone());
             let index = possible_swap_out_spans.iter().position(|x| *x == span_id).unwrap();
             possible_swap_out_spans.remove(index);
 
@@ -409,6 +421,7 @@ impl FarMemoryClient {
                     SpanState::Free => {
                         let span_local_memory_size = span.local_memory_usage();
                         if span_local_memory_size == 0 {
+                            skip_local_memory_size += 1;
                             continue;
                         }
 
@@ -418,8 +431,16 @@ impl FarMemoryClient {
                         spans_to_swap_out.push((span_id.clone(), span_swap_out_len));
                         total_memory += span_swap_out_len as u64;
                     },
-                    SpanState::InUse(_) => continue, // cannot swap out span that is in use
-                    SpanState::SwappingOut => continue, // cannot swap out span that is already being swapped out
+                    SpanState::InUse(_) => {
+                        // cannot swap out span that is in use
+                        skip_in_use += 1;
+                        continue;
+                    },
+                    SpanState::SwappingOut => {
+                        // cannot swap out span that is already being swapped out
+                        skip_swapping_out += 1;
+                        continue;
+                    },
                 }
             }
         }
