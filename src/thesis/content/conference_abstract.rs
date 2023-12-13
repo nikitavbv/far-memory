@@ -253,23 +253,22 @@ providing far memory uses ".into(),
             " coding to compute parity shards for spans and place them on different storage nodes. In the event of node failure this allows to restore data \
 using shards from other nodes while keeping recovery time low.".into()
         ])),
+        paragraph_without_after_space("Performance is critical for far memory and defines types of software where it can be applied."),
 
         image_with_scale("./images/fault_tolerance.jpg", "Swapping spans to multiple nodes using Reed-Solomon coding", 0.55),
 
-        paragraph_without_after_space("Performance is critical for far memory and defines field of software and use-cases where far memory can be applied. Data access \
-time for data in far memory will always be higher compared to data stored in local RAM because latency and bandwidth numbers for remote storage devices is \
-significantly higher than for RAM. In these conditions it is not possible to make far memory as fast as local RAM, however additional latency can be minimzed to \
+        paragraph_without_after_space("It is not possible to make far memory as fast as local RAM, however additional latency can be minimzed to \
 level that acceptable for real world applications. There is a balance between how actively far memory is used by the application and impact on its performance. \
 It is up to application developer how much performance they are willing to trade for lower local memory usage."),
         paragraph_without_after_space("To make far memory performant, the client uses hardware resources efficiently by avoiding unnecessary \
-copying of data and communicating with other nodes using lightweight network protocol that is based on TCP and uses the simplest form of request serialization \
-based on bincode. Far memory client implements partial span swap out to move as much memory as \
+copying of data and communicating with other nodes using lightweight network protocol that is based on TCP. Far memory client implements partial span swap \
+out to move as much memory as \
 required to maintain enough free memory which is beneficial when dealing with large spans. To avoid blocking application threads with waiting for enough free \
-memory on swap in, a background thread is implemented to free memory (by swapping out) proactively."),
+memory on swap in, a background thread is implemented to swap out proactively."),
         paragraph_without_after_space("However, the key to making far memory performance more close to local RAM is always keeping data that application is about \
-to access local. One way to achieve this is to swap in spans in advance in a background thread. In ideal scenario, when this background thread chooses spans to \
-swap in accurately enough and transfers them to local memory quickly enough, application threads will never be blocked by waiting for far memory client to finish \
-swap in of spans. Far memory method that is discussed in this work includes such background thread."),
+to access local. To achieve this, the method of providing far memory swaps in spans in advance using a background thread. In ideal scenario, when this background thread \
+transfers correct spans to local memory quickly enough, application will never be blocked by waiting for far memory client to finish \
+swap in of spans."),
         paragraph_without_after_space(TextSpan::Multiple(vec!["It is easy to notice that the method of choosing spans to swap out (and swap in in advance) plays significant role in far \
 memory performance. To maximize performance, each time when swap out is needed it is more optimal to pick spans that will be accessed last of all. At the same time, \
 for swap in in advance it is better to pick spans that are going to be accessed sooner than other spans. This creates a need for span replacement algorithm that \
@@ -279,18 +278,16 @@ to ".into(),
             "Page Replacement Algorithm - Wikipedia.".to_owned(),
             "https://en.wikipedia.org/wiki/Page_replacement_algorithm".to_owned()
         )),
-        " in operating systems. There are various kinds of span replacement algorithms that can be used for far memory and in this work \
-multiple are implemented and can be choosed by user according to their needs. Software implementation of this method of providing far memory includes random \
-replacement algorithm, least recently used algorithm, most recently used algorithm. Most existing far memory methods rely on simple heurisitics \
-as their replacement algorithm (usually \"least recently used\" algorithm is used).".into()
+        " in operating systems. Software implementation of this method of providing far memory includes random \
+replacement algorithm, least recently used algorithm, most recently used algorithm.".into()
         ])),
         image_with_scale("./images/span_replacement.jpg", "Span replacement algorithm based on memory access statistics", 0.55),
         paragraph_without_after_space("However, real world software has different and complex memory access patterns which makes relying on simple heurisitic \
-inefficient. Imagine software that scans all of its working set sequently in cycle. LRU algorithm which is popular is actually the least efficient here: it will pick \
-exactly those spans for swap out that will be accessed soon. That's why this method of providing far memory takes a different approach. Given that there is relatively \
+inefficient. For example, LRU will not be efficient for software that scans all of its working set sequently in cycle. This method of providing far memory takes \
+a different approach. Given that there is relatively \
 low number of spans in the system, it is feasible to collect and track access statistics for all of them. These stats are sent from compute notes to manager node \
 that processes them by building models that can rely on complex span access patterns to better predict next span access events. \
-This model is later used by compute nodes used as a span replacement algorithm. This work includes an \"optimal model\" that picks spans for swap \
+This model is later used by compute nodes as a span replacement algorithm. This work includes an \"optimal model\" that picks spans for swap \
 operations perfectly given static memory access patterns. For software with dynamic memory access patterns, implementation based on recurrent neural network \
 is provided."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
@@ -300,28 +297,17 @@ is provided."),
         Block::OrderedList(vec![
            "What end-to-end performance does this method of providing far memory achieve for typical applications with different memory access patterns?".into(),
            "How span access distribution affects performance of far memory operations?".into(),
-           "What end-to-end performance is achieved with different span replacement policies?".into(),
+           "What end-to-end performance is achieved with different span replacement algorithms?".into(),
         ]),
         paragraph_without_after_space(TextSpan::Multiple(vec![
-            "To answer these questions a number of experiments were run on two nodes with AMD Ryzen 5 3600 6-core CPUs (3.6GHz), 64GB RAM and Intel 82599 10 \
-Gbit/s NIC (direct connectivity). Both nodes are running ArchLinux (with kernel version 6.5.8).".into(),
-        ])),
-        paragraph_without_after_space(TextSpan::Multiple(vec![
-            "To evaluate end-to-end peformance of this method of providing far memory it was integrated into three synthetic applications with different memory access \
+            "To answer these questions a number of experiments were run on two servers with 64GB RAM and 10 \
+Gbit/s NIC. To evaluate end-to-end peformance of far memory it was integrated into three synthetic applications with different memory access \
 patterns:".into()
         ])),
         Block::OrderedList(vec![
-           "Large language model inference application. Neural network weights are stored in far memory and are fully scanned in interations as text is being \
-generated. This software represents class of tasks where the whole working set is scanned in pre-defined order.".into(),
-           TextSpan::Multiple(vec!["Web service application that accepts requests with ".into(),
-
-                TextSpan::Reference(Box::new(TextSpan::Regular("zipf-distributed".to_owned())), Reference::for_website(
-                    "Zipf Distribution - Wolfram MathWorld".to_owned(),
-                    "https://mathworld.wolfram.com/ZipfDistribution.html".to_owned()
-                )),
-
-                " user IDs to compute an index (also zipf-distributed) to a collection of pictures \
-item from which is picked, encrypted with AES GCM, compressed with Snappy and sent back to the client. This software represents a class of software built around \
+           "Large language model inference application, where weights are stored in far memory. This software represents class of tasks where the whole working set is scanned in pre-defined order.".into(),
+           TextSpan::Multiple(vec!["Web service application that accepts zipf-distributed requests".into(),
+                " to compute an index to a collection of 8KB objects one of which is picked, encrypted, compressed and sent as response. This software represents a class of software built around \
 key-value data structures, where memory access is performed to a lot of small objects with a certain distribution.".into(),
            ]),
            TextSpan::Multiple(vec!["An application that performs queries over a dataframe with data from ".into(),
@@ -330,38 +316,28 @@ key-value data structures, where memory access is performed to a lot of small ob
                    "https://www.kaggle.com/datasets/robikscube/flight-delay-dataset-20182022/".to_owned()
                )),
                ". Dataframe is stored in far memory and is loaded \
-row by row as query is processed similarly to typical data processing system or a database. In this case, data access pattern is a bit different because \
-rows can be processed in any order in a stream which allows far memory client to rely on various optimizations when high level data structures are used.".into(),
+row by row as query is processed similarly to typical data processing system or a database. High level data structures provided by far memory client are used
+allowing more efficient processing of the stream.".into(),
            ]),
         ]),
         paragraph_without_after_space(TextSpan::Multiple(vec![
-            "In each case, far memory client is ran with default settings and system throughput is measured with different levels of spans swapped out to remote \
-node.".into(),
+            "In each case, far memory client is ran with default settings and system throughput is measured with different levels of local memory ratio.".into(),
         ])),
 
+        paragraph_without_after_space("Based on collected data, it can be noted that this far memory method works best for applications that can utilize high-level \
+data structures that are designed for use with far memory. When working with objects, far memory achieves"),
+
+        end_section(2),
         demo_throughput(),
-        paragraph_without_after_space("Based on measured performance, it can be noted that far memory works best for applications that can utilize high-level \
-data structures that are designed for use with far memory. When working with objects, far memory achieves better throughput with larger objects and predictable \
-access patterns. As share of local memory decreases, far memory leads to lower throughput as the result of being bottlenecked by network bandwidth."),
-
-        paragraph_without_after_space("When data in far memory is accessed in random order (as in the second demo application), distribution of span access \
-plays an important role. When distribution is skewed, far memory client should be able to make data access latency close to RAM access latency because hot \
-data should fit local memory. On the other hand, when distribution is more uniform, swap out and swap in performance defines end-to-end performance of the \
-system."),
-        paragraph_without_after_space("To evaluate that, web service application is run with different s parameters of zipf distribution and throughput is \
-measured."),
-
         throughput_distribution(),
-        paragraph_without_after_space("After running tests with different distribution skew, it can be noted that applications with high skew of requests \
-distribution can benefit from using far memory while having lower performance impact compared to applications with uniform distribution of requests."),
-
-        paragraph_without_after_space("Span replacement algorithm affects how frequently spans will be swapped in from memory of remote nodes blocking execution \
-of the application. To evaluate how well different replacement policies perform, throughput was measured for neural network inference application with different \
-replacement algorithms and levels of local memory."),
-
         throughput_replacement_policies(),
-        paragraph_without_after_space("After running the same application with different span replacement algorithms, an improvement to throughput can be \
-observed for span replacement algorithm that relies on span access statistics from previous software runs."),
+        end_section(3),
+
+        paragraph_without_after_space("better throughput with larger objects and predictable access patterns. By running web service application \
+with different distribution of requests, it can be confirmed that applications \
+with high skew of requests distribution can benefit from using far memory while having lower performance impact compared to applications with uniform \
+distribution of requests. After running the neural network inference application with different span replacement algorithms, an improvement to \
+throughput was observed for span replacement algorithm that relies on span access statistics from previous software runs."),
 
         end_section(2),
         paragraph_with_before_space(TextSpan::Multiple(vec![
@@ -439,7 +415,7 @@ fn throughput_replacement_policies() -> Block {
 
     root_area.present().unwrap();
 
-    image_with_scale("./output/images/replacement_policies.png",  "Throughput by replacement algorithm and ratio of local memory", 0.4)
+    image_with_scale("./output/images/replacement_policies.png",  "Throughput by replacement algorithm and ratio of local memory", 0.35)
 }
 
 fn experiments_for_replacement_policy(steps: &[u32], span_replacement_policy: SpanReplacementPolicy) -> Vec<Experiment> {
@@ -502,7 +478,7 @@ fn throughput_distribution() -> Block {
 
     root_area.present().unwrap();
 
-    image_with_scale("./output/images/throughput-distrubution.png",  "Web service throughput by skew of requests", 0.4)
+    image_with_scale("./output/images/throughput-distrubution.png",  "Web service throughput by skew of requests", 0.35)
 }
 
 fn demo_throughput() -> Block {
@@ -578,7 +554,7 @@ fn demo_throughput() -> Block {
 
     root_area.present().unwrap();
 
-    image_with_scale("./output/images/demo-throughput.png",  "Application throughput by type and ratio of local memory", 0.4)
+    image_with_scale("./output/images/demo-throughput.png",  "Application throughput by type and ratio of local memory", 0.35)
 }
 
 fn setup_chart_context<'a, 'b>(root_area: &'a DrawingArea<BitMapBackend<'b>, Shift>) -> ChartContext<'a, BitMapBackend<'b>, Cartesian2d<RangedCoordf64, RangedCoordf64>> {
