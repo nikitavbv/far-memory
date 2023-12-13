@@ -102,7 +102,7 @@ impl SpanReplacementPolicy {
 pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
     info!("running evaluation");
 
-    let granularity: u32 = 5;
+    let granularity: u32 = 2;
 
     let evaluation_data = load_evaluation_data();
 
