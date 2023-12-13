@@ -218,46 +218,40 @@ for scheduled maintenance.".into()])),
 
         paragraph_without_after_space(TextSpan::Multiple(vec!["To integrate far memory into the software, the method discussed in this work takes two approaches. \
 The first one is application-level integration with a far memory client library. Client library works by \
-creating wrappers for data managed by far memory. Two nested smart pointers are used to track when software requests access to data being located in far memory and \
-to identify when it is no longer needed and can be swapped out safely. When the first pointer (FarMemory<T>) is dereferenced, far memory client checks if \
-span where the object is stored is located in local or remote memory. Far memory client swaps in the span to local memory if needed and returns another smart \
-pointer (FarMemoryLocal<T>). When this pointer is dereferenced, application receives reference to underlying object (&T) and proceeds to work with it as with any other object \
-in local RAM. For each span, a reference counter is maintained and increased on each dereference of the first smart pointer. When the second smart pointer goes \
+wrapping data managed by far memory into two nested smart pointers. When the first pointer (FarMemory<T>) is dereferenced, far memory client checks if \
+relevant span is located in local or remote memory. Far memory client swaps it in if needed and returns another smart pointer (FarMemoryLocal<T>). When this \
+pointer is dereferenced, application receives reference to underlying object (&T) and proceeds to work with it as with any other object \
+in RAM. For each span, a reference counter is maintained and increased on each dereference of the first smart pointer. When the second smart pointer goes \
 out of scope (implemented by Drop trait in Rust), reference counter is decreased. When it reaches zero, far memory client may swap it out in case of memory \
 pressure. When the first pointer goes out of scope, data is removed from local and remote memory because it cannot be accessed by software anymore at this point. \
-Client library also provides implementations of data structures designed for use with far memory because higher level abstractions allow to make far memory more \
+Client library also provides implementations of data structures designed for use with far memory which are more \
 efficient due to additional information \
-available during memory access event (for example, knowing which specific part of data structure is accessed allows to swap it in only partially, avoiding full \
-swap in that would happen otherwise). These data structures include \
+available during memory access event (for example, knowing which specific part of data structure is accessed allows to swap it in only partially). These data \
+structures include \
 byte buffer, vector, hash table and others. Another important aspect is conversion of objects into byte sequence and vice versa. The simplest approach is just \
 copying the whole area of memory where object is stored as is. While far memory client implements this approach, it is not optimal for a number of use cases. \
-Typically, data structures contain pointers to other nested data structures meaning that during swap out (and swap in as well) it may be desirable for client to \
-traverse the whole structure and send it to remote node along with nested objects. For this reason, far memory client provides FarMemorySerialized<T> which \
-relies on serialization to serialize and deserialize object with nested fields when performing swap out.".into()
+Because typically data structures contain pointers to other objects that need to be traversed, far memory client provides a wrapper that \
+relies on serialization to encode object and nested fields when swapping out.".into()
         ])),
-        paragraph_without_after_space(TextSpan::Multiple(vec!["Given that scenarios when changing source code of software is not possible exist, this far memory implementation provides \
-a different method of integration for such cases. By implementing a virtual block device (based on ".into(),
+        paragraph_without_after_space(TextSpan::Multiple(vec!["A different method is used to integrate into software without any changes to the codebase. \
+Far memory client implements a virtual block device (based on ".into(),
             TextSpan::Reference(Box::new(TextSpan::Regular("NBD".to_owned())), Reference::for_website(
                 "Network Block Device - The Linux Kernel documentation".to_owned(),
                 "https://docs.kernel.org/admin-guide/blockdev/nbd.html".to_owned()
             )),
-            "), far memory client provides a way for the user to place \
-Linux swap partition on block device backed by far memory. This allows to move infrequently accessed memory pages (by utilizing existing swapping mechanisms \
+            ") that can be used to place \
+Linux swap partition on it. This allows to move infrequently accessed memory pages (by swapping mechanisms \
 in operating system) to far memory with performance higher than if swapping was performed to disk as it happens normally. This method also allows to use far \
-memory as a form of RAM disk which may be useful for some types of software.".into()
+memory as a form of RAM disk.".into()
         ])),
-        paragraph_without_after_space(TextSpan::Multiple(vec!["Another important aspect of far memory is providing fault tolerance. Moving data to other devices (including \
-remote nodes) expands failure domain of the system. It is not possible to make probability of data loss for far memory to be as low as it is for local RAM, but this \
-probability can be minimized. While storing a copy of data on disk is supported, it is not optimal due to high recovery time and increased \
-use of a different storage class (SSD disk space). Another option is data replication to multiple remote nodes, but it results in inefficient use remote nodes \
-memory. The most efficient approach is using ".into(),
+        paragraph_without_after_space(TextSpan::Multiple(vec!["To make the probability of data loss lower given expanded failure domain, this method of \
+providing far memory uses ".into(),
             TextSpan::Reference(Box::new(TextSpan::Regular("Reed-Solomon".to_owned())), Reference::for_website(
                 "An introduction to Reed-Solomon codes: principles, architecture and implementation".to_owned(),
                 "https://www.cs.cmu.edu/~guyb/realworld/reedsolomon/reed_solomon_codes.html".to_owned()
             )),
-            " coding which is frequently applied to this class of tasks. In short, when swapping out data is split \
-into N shards and additional M parity shards. These shards are stored on different nodes and in the event of node failure and loss of any M shards, data can \
-still be restored by performing a linear transformation from the existing shards.".into()
+            " coding to compute parity shards for spans and place them on different storage nodes. In the event of node failure this allows to restore data \
+using shards from other nodes while keeping recovery time low.".into()
         ])),
 
         image_with_scale("./images/fault_tolerance.jpg", "Swapping spans to multiple nodes using Reed-Solomon coding", 0.55),
@@ -269,8 +263,7 @@ level that acceptable for real world applications. There is a balance between ho
 It is up to application developer how much performance they are willing to trade for lower local memory usage."),
         paragraph_without_after_space("To make far memory performant, the client uses hardware resources efficiently by avoiding unnecessary \
 copying of data and communicating with other nodes using lightweight network protocol that is based on TCP and uses the simplest form of request serialization \
-based on bincode. Compression is not used (but can be optionally enabled by the user) because modern compression algorithms are typically slower (6.4Gbps for lz4) \
-than modern network transfer speed (10Gbps and more is typical for datacenter). Far memory client implements partial span swap out to move as much memory as \
+based on bincode. Far memory client implements partial span swap out to move as much memory as \
 required to maintain enough free memory which is beneficial when dealing with large spans. To avoid blocking application threads with waiting for enough free \
 memory on swap in, a background thread is implemented to free memory (by swapping out) proactively."),
         paragraph_without_after_space("However, the key to making far memory performance more close to local RAM is always keeping data that application is about \
