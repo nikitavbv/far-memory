@@ -134,10 +134,10 @@ pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
     for span_replacement_policy in [
         SpanReplacementPolicy::Replay,
         SpanReplacementPolicy::LRU,
-        SpanReplacementPolicy::MRU,
+        // SpanReplacementPolicy::MRU,
         SpanReplacementPolicy::Random,
-        SpanReplacementPolicy::PreferRemoteLRU,
-        SpanReplacementPolicy::PreferRemoteMRU,
+        // SpanReplacementPolicy::PreferRemoteLRU,
+        // SpanReplacementPolicy::PreferRemoteMRU,
     ] {
         for local_memory_percent in (granularity..=100).step_by(granularity as usize) {
             experiments.push(Experiment {
