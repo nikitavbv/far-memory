@@ -355,25 +355,48 @@ fn throughput_replacement_policies() -> Block {
     let evaluation_data = load_evaluation_data();
     let steps = (10..=100).step_by(10).collect::<Vec<_>>();
 
-    let results_random = throughput_plot_for_experiments(
+    fn plot(evaluation_data: &EvaluationData, experiments: &[Experiment]) -> Vec<(f64, u32)> {
+        experiments.into_iter()
+                .map(|v| (v.local_memory_percent as f64 / 100.0, evaluation_data.get_experiment_result(&v)))
+                .filter(|(_, result)| result.is_some())
+                .map(|(percent, result)| (percent, result.unwrap() as u32))
+                .collect::<Vec<_>>()
+    }
+
+    fn normalize(data: &[(f64, u32)], max: u32) -> Vec<(f64, f64)> {
+        if data.is_empty() {
+            vec![]
+        } else {
+            data.into_iter()
+                .map(|v| (v.0 as f64, v.1 as f64 / max as f64))
+                .collect()
+        }
+    }
+
+    let results_random = plot(
         &evaluation_data,
         &experiments_for_replacement_policy(&steps, SpanReplacementPolicy::Random)
     );
 
-    let results_optimal = throughput_plot_for_experiments(
+    let results_optimal = plot(
         &evaluation_data,
         &experiments_for_replacement_policy(&steps, SpanReplacementPolicy::Replay)
     );
 
-    let results_lru = vec![
-        (0.1, 13),
-        (0.5, 13),
-        (1.0, 122),
-    ];
-    let max_performance = results_lru.iter().map(|(_, performance)| *performance).max().unwrap();
-    let results_lru: Vec<_> = results_lru.into_iter()
-        .map(|v| (v.0 as f64, v.1 as f64 / max_performance as f64))
-        .collect();
+    let results_lru = plot(
+        &evaluation_data,
+        &experiments_for_replacement_policy(&steps, SpanReplacementPolicy::LRU)
+    );
+
+    let random_max = results_random.iter().map(|v| v.1).max().unwrap();
+    let optimal_max = results_optimal.iter().map(|v| v.1).max().unwrap();
+    let lru_max = results_lru.iter().map(|v| v.1).max().unwrap();
+
+    let max = random_max.max(optimal_max).max(lru_max);
+
+    let results_random = normalize(&results_random, max);
+    let results_optimal = normalize(&results_optimal, max);
+    let results_lru = normalize(&results_lru, max);
 
     // graph
     let k = 20;
