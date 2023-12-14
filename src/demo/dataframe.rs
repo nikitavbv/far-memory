@@ -179,7 +179,7 @@ pub fn run_dataframe_demo(metrics: Registry, run_id: String, token: &str, storag
     if let Some(manager) = manager_client {
         client.use_manager(manager);
     }
-    client.use_replacement_policy(Box::new(PreferRemoteSpansReplacementPolicy::new(Box::new(LeastRecentlyUsedReplacementPolicy::new()))));
+    client.use_replacement_policy(Box::new(LeastRecentlyUsedReplacementPolicy::new()));
     client.track_metrics(metrics.clone());
     client.start_swap_out_thread();
 
