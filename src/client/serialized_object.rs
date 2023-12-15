@@ -1,5 +1,6 @@
 use {
     std::{marker::PhantomData, ops::Deref},
+    tracing::{span, Level},
     serde::{Serialize, de::DeserializeOwned},
     super::{FarMemoryClient, object::ObjectId, span::SpanId},
 };
@@ -36,17 +37,19 @@ impl <T: Serialize> FarMemorySerialized<T> {
 
 impl <T: DeserializeOwned> FarMemorySerialized<T> {
     pub fn to_local(&self) -> T {
-        let location = self.client.get_object(&self.object);
-        let bytes = unsafe {
-            let ptr = self.client.span_ptr(&location.span_id).add(location.offset);
-            std::slice::from_raw_parts(ptr, location.len)
-        };
+        span!(Level::INFO, "serialized object to local").in_scope(|| {
+            let location = self.client.get_object(&self.object);
+            let bytes = unsafe {
+                let ptr = self.client.span_ptr(&location.span_id).add(location.offset);
+                std::slice::from_raw_parts(ptr, location.len)
+            };
 
-        let data = bincode::deserialize_from(bytes).unwrap();
-        self.client.decrease_refs_for_span(&location.span_id);
+            let data = bincode::deserialize_from(bytes).unwrap();
+            self.client.decrease_refs_for_span(&location.span_id);
 
-        // returning just data, because it is owned, and spans refs are already decreased
-        data
+            // returning just data, because it is owned, and spans refs are already decreased
+            data
+        })
     }
 }
 
