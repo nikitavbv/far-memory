@@ -395,55 +395,49 @@ impl FarMemoryClient {
         let mut skip_in_use = 0;
         let mut skip_swapping_out = 0;
 
-        while !possible_swap_out_spans.is_empty() {
-            if total_memory >= memory_to_swap_out {
-                break;
-            }
+        span!(Level::DEBUG, "picking spans for eviction").in_scope(|| {
+            while !possible_swap_out_spans.is_empty() {
+                if total_memory >= memory_to_swap_out {
+                    break;
+                }
 
-            let span_id = span!(
-                Level::DEBUG,
-                "picking span for eviction",
-                total_memory,
-                memory_to_swap_out,
-                skip_local_memory_size,
-                skip_in_use,
-                skip_swapping_out
-            ).in_scope(|| self.replacement_policy.pick_for_eviction(&possible_swap_out_spans).clone());
-            let index = possible_swap_out_spans.iter().position(|x| *x == span_id).unwrap();
-            possible_swap_out_spans.remove(index);
+                let span_id = self.replacement_policy.pick_for_eviction(&possible_swap_out_spans).clone();
+                let index = possible_swap_out_spans.iter().position(|x| *x == span_id).unwrap();
+                possible_swap_out_spans.remove(index);
 
-            let spans = self.spans.read().unwrap();
-            let span = spans.get(&span_id).unwrap();
-            {
-                let span_states = self.span_states.read().unwrap();
-                let mut span_state = span_states[&span_id].lock().unwrap();
-                match &*span_state {
-                    SpanState::Free => {
-                        let span_local_memory_size = span.local_memory_usage();
-                        if span_local_memory_size == 0 {
-                            skip_local_memory_size += 1;
+                let spans = self.spans.read().unwrap();
+                let span = spans.get(&span_id).unwrap();
+                {
+                    let span_states = self.span_states.read().unwrap();
+                    let mut span_state = span_states[&span_id].lock().unwrap();
+                    match &*span_state {
+                        SpanState::Free => {
+                            let span_local_memory_size = span.local_memory_usage();
+                            if span_local_memory_size == 0 {
+                                skip_local_memory_size += 1;
+                                continue;
+                            }
+
+                            *span_state = SpanState::SwappingOut;
+
+                            let span_swap_out_len = span_local_memory_size.min((memory_to_swap_out - total_memory) as usize);
+                            spans_to_swap_out.push((span_id.clone(), span_swap_out_len));
+                            total_memory += span_swap_out_len as u64;
+                        },
+                        SpanState::InUse(_) => {
+                            // cannot swap out span that is in use
+                            skip_in_use += 1;
                             continue;
-                        }
-
-                        *span_state = SpanState::SwappingOut;
-
-                        let span_swap_out_len = span_local_memory_size.min((memory_to_swap_out - total_memory) as usize);
-                        spans_to_swap_out.push((span_id.clone(), span_swap_out_len));
-                        total_memory += span_swap_out_len as u64;
-                    },
-                    SpanState::InUse(_) => {
-                        // cannot swap out span that is in use
-                        skip_in_use += 1;
-                        continue;
-                    },
-                    SpanState::SwappingOut => {
-                        // cannot swap out span that is already being swapped out
-                        skip_swapping_out += 1;
-                        continue;
-                    },
+                        },
+                        SpanState::SwappingOut => {
+                            // cannot swap out span that is already being swapped out
+                            skip_swapping_out += 1;
+                            continue;
+                        },
+                    }
                 }
             }
-        }
+        });
 
         let swap_in_span_data = span!(Level::DEBUG, "perform swapping", needed = memory_to_swap_out, swap_out_req_size = total_memory).in_scope(|| {
             self.swap_out_spans_and_swap_in(&spans_to_swap_out, swap_in)
