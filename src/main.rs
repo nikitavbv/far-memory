@@ -16,7 +16,10 @@ use {
             simple::run_simple_demo,
             block_device::run_block_device_demo,
         },
-        tools::evaluation::run_evaluation,
+        tools::{
+            evaluation::run_evaluation,
+            trace_analyzer::run_trace_analyzer,
+        },
     },
 };
 
@@ -89,6 +92,9 @@ pub struct Args {
 
     #[arg(long)]
     replacement_policies_demo: bool,
+
+    #[arg(long)]
+    analyze_trace: bool,
 
     // thesis
     #[arg(long)]
@@ -221,6 +227,8 @@ pub fn main() {
             args.storage_endpoint.clone().map(|v| v.split(",").map(|v| v.to_owned()).collect::<Vec<String>>()).unwrap_or(Vec::new()),
             args.memory_limit_mb.map(|v| v * 1024 * 1024)
         );
+    } else if args.analyze_trace {
+        run_trace_analyzer();
     } else if args.manager {
         run_manager_node(read_token());
     } else if args.replacement_policies_demo {
