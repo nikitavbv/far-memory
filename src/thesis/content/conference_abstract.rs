@@ -315,6 +315,9 @@ This model is later used by compute nodes as a span replacement algorithm. This 
         ") that picks spans for swap \
 operations perfectly given unchanging memory access patterns. For software with dynamic memory access patterns, implementation based on recurrent neural network \
 is provided.".into()])),
+        paragraph_without_after_space("Thus, the novelty of the proposed method of providing far memory lies in the fact that, unlike existing methods, \
+the problem of span replacement is solved statistically more efficiently through the implementation of span access model prediction parameters adaptation \
+based on statistics that are continously collected during software runtime."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Performance evaluation.".into())),
             " Evaluation of this method of providing far memory seeks to answer the following questions: ".into(),
