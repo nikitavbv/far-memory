@@ -6,6 +6,7 @@ use {
     },
     tracing::{info, error, span, Level},
     prometheus::{Registry, register_int_counter_vec_with_registry, IntCounterVec, IntGaugeVec, register_int_gauge_vec_with_registry},
+    thiserror::Error,
     self::protocol::{StorageRequest, StorageRequestBody, StorageResponse},
 };
 
@@ -18,6 +19,12 @@ const REQ_SIZE_LIMIT: u64 = 10 * 1024 * 1024 * 1024;
 
 mod client;
 mod protocol;
+
+#[derive(Error, Debug)]
+enum StorageServerError {
+    #[error("failed to read span data")]
+    FailedToReadSpanData,
+}
 
 pub fn run_storage_server(metrics: Registry, token: String, port: Option<u16>) {
     run_server(Some(metrics), "0.0.0.0".to_owned(), port, token, None, None);
@@ -94,7 +101,13 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
             };
 
             let request_id = req.request_id;
-            req.body = inline_span_data_into_request(req.body, &mut stream);
+            req.body = match inline_span_data_into_request(req.body, &mut stream) {
+                Ok(v) => v,
+                Err(err) => {
+                    error!("failed to inline span data into request: {:?}", err);
+                    break;
+                }
+            };
 
             let res = span!(Level::DEBUG, "handle request", request_id).in_scope(|| server.handle(req.body));
             let (res, span_data) = match res {
@@ -321,15 +334,17 @@ impl Server {
     }
 }
 
-fn inline_span_data_into_request(request: StorageRequestBody, stream: &mut TcpStream) -> StorageRequestBody {
-    match request {
+fn inline_span_data_into_request(request: StorageRequestBody, stream: &mut TcpStream) -> Result<StorageRequestBody, StorageServerError> {
+    Ok(match request {
         StorageRequestBody::SwapOut(swap_out_request) => {
             let data = match swap_out_request.data {
                 SpanData::Inline(data) => SpanData::Inline(data),
                 SpanData::Concat { data } => SpanData::Inline(data.concat()),
                 SpanData::External { len } => SpanData::Inline({
                     let mut data = vec![0; len as usize];
-                    stream.read_exact(&mut data).unwrap();
+                    if let Err(_err) = stream.read_exact(&mut data) {
+                        return Err(StorageServerError::FailedToReadSpanData)
+                    }
                     data
                 })
             };
@@ -339,9 +354,15 @@ fn inline_span_data_into_request(request: StorageRequestBody, stream: &mut TcpSt
                 ..swap_out_request
             })
         },
-        StorageRequestBody::Batch(reqs) => StorageRequestBody::Batch(reqs.into_iter().map(|v| inline_span_data_into_request(v, stream)).collect()),
+        StorageRequestBody::Batch(reqs) => {
+            let mut result = Vec::new();
+            for req in reqs {
+                result.push(inline_span_data_into_request(req, stream)?);
+            }
+            StorageRequestBody::Batch(result)
+        },
         other => other,
-    }
+    })
 }
 
 #[cfg(test)]

@@ -5,4 +5,5 @@ config.toml
 .idea
 /output
 /trace.json
+/trace-*.json
 config
