@@ -223,20 +223,18 @@ for scheduled maintenance.".into()])),
         image_with_scale("./images/components.jpg", "Far memory components", 0.55),
 
         paragraph_without_after_space(TextSpan::Multiple(vec!["To integrate far memory into the software, the method discussed in this work takes two approaches. \
-The first one (inspired by Carbink and AIFM) is application-level integration with a far memory client library. Client library works by \
-wrapping data managed by far memory into two nested smart pointers (similar to AIFM but second smart pointer is introduced instead of relying on dereference scopes). When the first pointer (FarMemory<T>) is dereferenced, far memory client checks if \
-relevant span is located in local or remote memory. Far memory client swaps it in if needed and returns another smart pointer (FarMemoryLocal<T>). When this \
-pointer is dereferenced, application receives reference to underlying object (&T) and proceeds to work with it as with any other object \
+The first one (inspired by Carbink and AIFM) is application-level integration with a client library that works by \
+wrapping data managed by far memory into two nested smart pointers (similar to AIFM but second smart pointer is introduced instead of relying on \
+dereference scopes). When the first pointer is dereferenced, far memory client checks if \
+relevant span is located in local or remote memory, swaps it in if needed and returns another smart pointer. When second \
+pointer is dereferenced, application receives reference to underlying object and proceeds to work with it as with any other object \
 in RAM. For each span, a reference counter is maintained and increased on each dereference of the first smart pointer. When the second smart pointer goes \
 out of scope (implemented by Drop trait in Rust), reference counter is decreased. When it reaches zero, far memory client may swap it out in case of memory \
-pressure. When the first pointer goes out of scope, data is removed from local and remote memory because it cannot be accessed by software anymore at this point. \
-Taking inspiration from AIFM, client library also provides implementations of data structures designed for use with far memory which are more \
+pressure. When the first pointer goes out of scope, data is removed from memory because it cannot be accessed by software anymore. \
+Taking inspiration from AIFM, client library also provides implementations of various data structures designed for use with far memory which are more \
 efficient due to additional information \
 available during memory access event (for example, knowing which specific part of data structure is accessed allows to swap it in only partially). Unlike AIFM, \
-no computation is shifted to storage nodes.
-These data \
-structures include \
-byte buffer, vector, hash table and others. Another important aspect is conversion of objects into byte sequence and vice versa. The simplest approach is just \
+no computation is shifted to storage nodes. Another important aspect is conversion of objects into bytes sequence and vice versa. The simplest approach is just \
 copying the whole area of memory where object is stored as is. While far memory client implements this approach, it is not optimal for a number of use cases. \
 Because typically data structures contain pointers to other objects that need to be traversed, far memory client provides a wrapper that \
 relies on serialization to encode object and nested fields when swapping out.".into()
@@ -259,8 +257,8 @@ Linux swap partition on it (similar to the approach used by ".into(),
 in operating system) to far memory with performance higher than if swapping was performed to disk as it happens normally. This method also allows to use far \
 memory as a form of RAM disk.".into()
         ])),
-        paragraph_without_after_space(TextSpan::Multiple(vec!["To make far memory more reliable given expanded failure domain, this method of \
-providing far memory follows the same approach to this problem as Carbink and uses ".into(),
+        paragraph_without_after_space(TextSpan::Multiple(vec!["To make far memory more reliable given expanded failure domain, this work \
+follows the same approach to this problem as Carbink and uses ".into(),
             TextSpan::Reference(Box::new(TextSpan::Regular("Reed-Solomon".to_owned())), Reference::for_website(
                 "An introduction to Reed-Solomon codes: principles, architecture and implementation".to_owned(),
                 "https://www.cs.cmu.edu/~guyb/realworld/reedsolomon/reed_solomon_codes.html".to_owned()
