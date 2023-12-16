@@ -316,7 +316,7 @@ This model is later used by compute nodes as a span replacement algorithm. This 
 operations perfectly given unchanging memory access patterns. For software with dynamic memory access patterns, implementation based on recurrent neural network \
 is provided.".into()])),
         paragraph_without_after_space("Thus, the novelty of the proposed method of providing far memory lies in the fact that, unlike existing methods, \
-the problem of span replacement is solved statistically more efficiently through the implementation of span access model prediction parameters adaptation \
+the problem of span replacement is solved statistically more efficiently through the implementation of span access prediction model parameters adaptation \
 based on statistics that are continously collected during software runtime."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Performance evaluation.".into())),
@@ -365,7 +365,7 @@ data structures that are designed for use with far memory. When working with obj
 with different distribution of requests, it can be confirmed that applications \
 with high skew of requests distribution can benefit from using far memory while having lower performance impact compared to applications with uniform \
 distribution of requests. After running the neural network inference application with different span replacement algorithms, an improvement to \
-throughput was observed for span replacement algorithm that relies on span access statistics from previous software runs."),
+throughput was observed for span replacement algorithm that dynamically relies on span access statistics from previous software runs."),
 
         end_section(2),
         paragraph_with_before_space(TextSpan::Multiple(vec![
