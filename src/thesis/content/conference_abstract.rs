@@ -302,11 +302,18 @@ heurisitics \
 inefficient. For example, LRU will not be efficient for software that scans all of its working set sequently in cycle. Unlike existing methods, that rely \
 on simple heuristics, this work offers to take a different approach. Specifically, given that there is relatively \
 low number of spans in the system, it is feasible to collect and track access statistics for all of them. These stats are sent from compute notes to manager node \
-that processes them by building models that can rely on complex span access patterns to better predict next span access events (this is inspired by ".into(),
+that processes them by building models that predict next span access events for complex span access patterns (this is inspired by ".into(),
         TextSpan::Reference(Box::new(TextSpan::Regular("".to_owned())), ref_far_memory_warehouse_scale),
         ", but instead of optimizing hyperparameters, collected statistics are used to build models that predict which spans will be accessed). \
-This model is later used by compute nodes as a span replacement algorithm. This work includes an \"optimal model\" that picks spans for swap \
-operations perfectly given static memory access patterns. For software with dynamic memory access patterns, implementation based on recurrent neural network \
+This model is later used by compute nodes as a span replacement algorithm. This work includes an \"optimal model\" (based on ".into(),
+
+        TextSpan::Reference(Box::new(TextSpan::Regular("Belady's algorithm".to_owned())), Reference::for_website(
+           "Page replacement (CS4410) - Cornell University".to_owned(),
+           "https://www.cs.cornell.edu/courses/cs4410/2015su/lectures/lec15-replacement.html".to_owned(),
+        )),
+
+        ") that picks spans for swap \
+operations perfectly given unchanging memory access patterns. For software with dynamic memory access patterns, implementation based on recurrent neural network \
 is provided.".into()])),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Performance evaluation.".into())),
