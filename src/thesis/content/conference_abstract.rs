@@ -172,7 +172,7 @@ recently. At the time of writing, ".into(),
                 2022,
                 "Proceedings of the 16th USENIX Symposium on Operating Systems Design and Implementation".to_owned(),
             )),
-            " is considered a state of the art far memory implementation along with multiple other notable works.".into(),
+            " is considered a state-of-the-art far memory implementation along with multiple other notable works.".into(),
         ])),
         paragraph_without_after_space("While Carbink is an advanced far memory implementation, it is closed source, tied to the infrastructure and tooling of a \
 specific datacenter operator (Google) and is not available for external use. It relies on and supports only application-level integration. \
@@ -212,7 +212,7 @@ implementation uses disk as storage backend, which is not optimal for many appli
         paragraph_without_after_space("These properties and problems of existing solutions create a need for an alternative method of providing far memory."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Designing a method and software for providing far memory.".into())),
-            " Method of providing far memory that is dicussed in this work, similarly to Carbink, uses following components: compute nodes, \
+            " Method of providing far memory that is discussed in this work, similarly to Carbink, uses following components: compute nodes, \
 storage nodes and manager node. \
 Far memory client is integrated into compute nodes and works with memory spans (sequences of bytes) that can be located in the local or remote memory. \
 Far memory client swaps out memory spans under memory pressure and swaps them back in when access is requested by the software. \
@@ -276,7 +276,7 @@ Ideally, correct spans are swapped in quickly enough and application will never 
         paragraph_without_after_space(TextSpan::Multiple(vec!["It is easy to notice that the algorithm of choosing spans to swap out (and swap in in advance) plays significant role in far \
 memory performance. To maximize performance, each time when swap out is needed it is more optimal to pick spans that will be accessed last of all. At the same time, \
 for swap in in advance it is better to pick spans that are going to be accessed sooner than other spans. This creates a need for span replacement algorithm that \
-takes span access history (including previous application runs) as an input and produces candidates for swap in and swap out. With this formulation, it it similar \
+takes span access history (including previous application runs) as an input and produces candidates for swap in and swap out. With this formulation, it is similar \
 to ".into(),
         TextSpan::Reference(Box::new(TextSpan::Regular("page replacement algorithms".to_owned())), Reference::for_website(
             "Page Replacement Algorithm - Wikipedia.".to_owned(),
@@ -286,8 +286,8 @@ to ".into(),
 replacement algorithm, least recently used algorithm, most recently used algorithm.".into()
         ])),
         image_with_scale("./images/span_replacement.jpg", "Span replacement algorithm based on memory access statistics", 0.55),
-        paragraph_without_after_space(TextSpan::Multiple(vec!["Real world software has different and complex memory access patterns which makes relying on simple \
-heurisitics \
+        paragraph_without_after_space(TextSpan::Multiple(vec!["Real-world software has different and complex memory access patterns which makes relying on simple \
+heuristics \
 inefficient. For example, LRU will not be efficient for software that scans all of its working set sequently in cycle. Unlike existing methods, that rely \
 on simple heuristics, this work offers to take a different approach. Specifically, given that there is relatively \
 low number of spans in the system, it is feasible to collect and track access statistics for all of them. These stats are sent from compute notes to manager node \
@@ -306,7 +306,7 @@ operations perfectly given unchanging memory access patterns. For software with 
 is provided.".into()])),
         paragraph_without_after_space("Thus, the novelty of the proposed method of providing far memory lies in the fact that, unlike existing methods, \
 the problem of span replacement is solved statistically more efficiently through the implementation of span access prediction model parameters adaptation \
-based on statistics that are continously collected during software runtime."),
+based on statistics that are continuously collected during software runtime."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Performance evaluation.".into())),
             " Evaluation of this method of providing far memory seeks to answer the following questions: ".into(),
@@ -353,9 +353,9 @@ throughput was observed for span replacement algorithm that dynamically relies o
         paragraph_with_before_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Conclusion.".into())),
             " This work proposes a method of providing software-defined far memory in distributed systems. Method and software that was designed ensures \
-integration simplicity, fault tolerance and high data access performance without relying on specializied hardware. Span replacement algorithm choice was \
+integration simplicity, fault tolerance and high data access performance without relying on specialized hardware. Span replacement algorithm choice was \
 analyzed as a factor of far memory performance. Relying on recoding and analyzing span access statistics to build a model for span replacement has shown \
-better performance compared to simple heurisitics used by existing approaches to providing far memory.".into(),
+better performance compared to simple heuristics used by existing approaches to providing far memory.".into(),
         ])),
     ])
 }
