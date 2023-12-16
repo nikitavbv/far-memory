@@ -22,7 +22,7 @@ pub fn conference_abstract(language: &Language) -> Block {
     Block::Multiple(vec![
         body,
         Block::SubsectionHeader(
-            SubsectionHeaderBlock::without_numbering("References.".to_owned())
+            SubsectionHeaderBlock::without_numbering("References".to_owned())
                 .without_tab()
                 .center()
                 .bold()
