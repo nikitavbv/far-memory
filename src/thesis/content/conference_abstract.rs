@@ -206,9 +206,9 @@ implementation uses disk as storage backend, which is not optimal for many appli
         paragraph_without_after_space("These properties and problems of existing solutions create a need for an alternative method of providing far memory."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Designing a method and software for providing far memory.".into())),
-            " Method of providing far memory that is dicussed in this work consists of the following components: compute nodes, \
+            " Method of providing far memory that is dicussed in this work uses following components: compute nodes, \
 storage nodes and manager node. \
-Far memory client is integrated into compute nodes and works with memory spans (byte sequences) that can be located in the local or remote memory. \
+Far memory client is integrated into compute nodes and works with memory spans (sequences of bytes) that can be located in the local or remote memory. \
 Far memory client swaps out memory spans under memory pressure and swaps them back in when access is requested by the software. \
 Storage nodes store spans data that were swapped out and function as a key-value storage. Manager node allocates space on storage nodes \
 and assigns it for use by specific compute nodes. It also tracks health of all components and restores data on storage nodes that go down as well as provides means \
