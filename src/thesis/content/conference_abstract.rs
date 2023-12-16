@@ -266,13 +266,9 @@ follows the same approach to this problem as Carbink and uses ".into(),
             " coding to compute parity shards for spans and place them on different storage nodes. In the event of node failure this allows to restore data \
 using shards from other nodes while keeping recovery time low and using less additional memory compared to replication.".into()
         ])),
-        paragraph_without_after_space("Performance is critical for far memory and defines types of software where it can be applied."),
-
         image_with_scale("./images/fault_tolerance.jpg", "Swapping spans to multiple nodes using Reed-Solomon coding", 0.55),
-
-        paragraph_without_after_space("It is not possible to make far memory as fast as local RAM, however additional latency can be minimzed to \
-level that acceptable for real world applications. There is a balance between how actively far memory is used by the application and impact on its performance. \
-It is up to application developer how much performance they are willing to trade for lower local memory usage."),
+        paragraph_without_after_space("Performance is critical for far memory and defines types of software where it can be applied. It is not possible to make far memory as fast as local RAM, however additional latency can be minimzed to \
+level that acceptable for real world applications."),
         paragraph_without_after_space("To make far memory performant, the client uses hardware resources efficiently by avoiding unnecessary \
 copying of data and communicating with other nodes using lightweight network protocol that is based on TCP. Far memory client implements partial span swap \
 out (unlike Carbink) to move as much memory as \
@@ -280,7 +276,7 @@ required to maintain enough free memory which is beneficial when dealing with la
 memory on swap in, a background thread is running in a loop swapping out spans with low probability of access (similar to Carbink and AIFM that shift various \
 operations to background threads to reduce blocking of the application)."),
         paragraph_without_after_space("However, the key to making far memory performance more close to local RAM is always keeping data that application is about \
-to access local. To achieve this, a background thread is picking spans with high probability of access according to replacement algorithm and swap them in in advance. \
+to access local. To achieve this, a background thread is picking spans with high probability of access according to replacement algorithm and swaps them in in advance. \
 In ideal scenario, correct spans are transferred to local memory quickly enough and application will never be blocked by waiting for swap in in main thread."),
         paragraph_without_after_space(TextSpan::Multiple(vec!["It is easy to notice that the algorithm of choosing spans to swap out (and swap in in advance) plays significant role in far \
 memory performance. To maximize performance, each time when swap out is needed it is more optimal to pick spans that will be accessed last of all. At the same time, \
@@ -327,23 +323,17 @@ based on statistics that are continously collected during software runtime."),
         ]),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             "To answer these questions a number of experiments were run on two servers with 64GB RAM and 10 \
-Gbit/s NIC. To evaluate end-to-end peformance of far memory it was integrated into three synthetic applications with different memory access \
+Gbit/s NIC. Far memory was integrated into three synthetic applications with different memory access \
 patterns:".into()
         ])),
         Block::OrderedList(vec![
            "Large language model inference application, where weights are stored in far memory. This software represents class of tasks where the whole working set is scanned in pre-defined order.".into(),
            TextSpan::Multiple(vec!["Web service application that accepts zipf-distributed requests".into(),
-                " to compute an index to a collection of 8KB objects one of which is picked, encrypted, compressed and sent as response. This software represents a class of software built around \
+                " to compute an index to a collection of objects one of which is picked, encrypted, compressed and sent as response. This software represents a class of software built around \
 key-value data structures, where memory access is performed to a lot of small objects with a certain distribution.".into(),
            ]),
-           TextSpan::Multiple(vec!["An application that performs queries over a dataframe with data from ".into(),
-               TextSpan::Reference(Box::new(TextSpan::Regular("Kaggle delayed flights dataset".to_owned())), Reference::for_website(
-                   "Flight Status Prediction - Kaggle".to_owned(),
-                   "https://www.kaggle.com/datasets/robikscube/flight-delay-dataset-20182022/".to_owned()
-               )),
-               ". Dataframe is stored in far memory and is loaded \
-row by row as query is processed similarly to typical data processing system or a database. High level data structures provided by far memory client are used
-allowing more efficient processing of the stream.".into(),
+           TextSpan::Multiple(vec!["An application that performs queries over a dataframe that is stored in far memory and is processed similarly to a \
+typical data processing system or a database. High level data structures provided by far memory client are used allowing more efficient processing of the stream.".into(),
            ]),
         ]),
         paragraph_without_after_space(TextSpan::Multiple(vec![
