@@ -254,6 +254,7 @@ Linux swap partition on it (similar to the approach used by ".into(),
             "). This allows to move infrequently accessed memory pages (by swapping mechanisms \
 in operating system) to far memory with performance higher than if swapping was performed to disk.".into()
         ])),
+        image_with_scale("./images/fault_tolerance.jpg", "Swapping spans to multiple nodes", 0.55),
         paragraph_without_after_space(TextSpan::Multiple(vec!["To make far memory more reliable given expanded failure domain, this work \
 follows the same approach as Carbink and uses ".into(),
             TextSpan::Reference(Box::new(TextSpan::Regular("Reed-Solomon".to_owned())), Reference::for_website(
@@ -263,9 +264,7 @@ follows the same approach as Carbink and uses ".into(),
             " coding to compute parity shards for spans and place them on different storage nodes. In the event of node failure this allows to restore data \
 using shards from other nodes while keeping recovery time low and using less additional memory compared to replication.".into()
         ])),
-        paragraph_without_after_space("Performance is critical for far memory and defines types of software where it can be applied. It is not possible to make far memory as fast as local RAM, however additional latency can however additional latency can be reduced to an acceptable level."),
-        image_with_scale("./images/fault_tolerance.jpg", "Swapping spans to multiple nodes using Reed-Solomon coding", 0.55),
-        paragraph_without_after_space("To make far memory performant, the client uses hardware resources efficiently by avoiding unnecessary \
+        paragraph_without_after_space("Performance is critical for far memory and defines types of software where it can be applied. It is not possible to make far memory as fast as local RAM, however additional latency can however additional latency can be reduced to an acceptable level. To make far memory performant, the client uses hardware resources efficiently by avoiding unnecessary \
 copying of data and communicating with other nodes using lightweight network protocol that is based on TCP. Far memory client implements partial span swap \
 out (unlike Carbink) to move as much memory as \
 required to maintain enough free memory which is beneficial when dealing with large spans. To avoid blocking application threads with waiting for free \
@@ -341,9 +340,9 @@ Better throughput is achieved with larger objects \
 and predictable access patterns."),
 
         end_section(2),
-        demo_throughput(),
-        throughput_distribution(),
-        throughput_replacement_policies(),
+        demo_throughput(0.32),
+        throughput_distribution(0.32),
+        throughput_replacement_policies(0.32),
         end_section(3),
 
         paragraph_without_after_space("Applications with high skew of requests distribution can benefit from using far memory while having lower performance impact compared to applications with uniform \
@@ -361,7 +360,7 @@ better performance compared to simple heurisitics used by existing approaches to
     ])
 }
 
-fn throughput_replacement_policies() -> Block {
+fn throughput_replacement_policies(scaling: f32) -> Block {
     // data
     let evaluation_data = load_evaluation_data();
     let steps = (5..=100).step_by(5).collect::<Vec<_>>();
@@ -449,7 +448,7 @@ fn throughput_replacement_policies() -> Block {
 
     root_area.present().unwrap();
 
-    image_with_scale("./output/images/replacement_policies.png",  "Throughput by replacement algorithm and ratio of local memory", 0.35)
+    image_with_scale("./output/images/replacement_policies.png",  "Throughput by replacement algorithm and ratio of local memory", scaling)
 }
 
 fn experiments_for_replacement_policy(steps: &[u32], span_replacement_policy: SpanReplacementPolicy) -> Vec<Experiment> {
@@ -464,7 +463,7 @@ fn experiments_for_replacement_policy(steps: &[u32], span_replacement_policy: Sp
         .collect::<Vec<_>>()
 }
 
-fn throughput_distribution() -> Block {
+fn throughput_distribution(scaling: f32) -> Block {
     // data
     let evaluation_data = load_evaluation_data();
     let experiments = (5..=100).step_by(5)
@@ -512,10 +511,10 @@ fn throughput_distribution() -> Block {
 
     root_area.present().unwrap();
 
-    image_with_scale("./output/images/throughput-distrubution.png",  "Web service throughput by skew of requests", 0.35)
+    image_with_scale("./output/images/throughput-distrubution.png",  "Web service throughput by skew of requests", scaling)
 }
 
-fn demo_throughput() -> Block {
+fn demo_throughput(scaling: f32) -> Block {
     // data
     let evaluation_data = load_evaluation_data();
     let begin = 10;
@@ -589,7 +588,7 @@ fn demo_throughput() -> Block {
 
     root_area.present().unwrap();
 
-    image_with_scale("./output/images/demo-throughput.png",  "Throughput by application and local memory ratio", 0.35)
+    image_with_scale("./output/images/demo-throughput.png",  "Throughput by application and local memory ratio", scaling)
 }
 
 fn setup_chart_context<'a, 'b>(root_area: &'a DrawingArea<BitMapBackend<'b>, Shift>) -> ChartContext<'a, BitMapBackend<'b>, Cartesian2d<RangedCoordf64, RangedCoordf64>> {
