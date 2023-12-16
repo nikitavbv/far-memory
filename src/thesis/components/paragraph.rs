@@ -26,7 +26,7 @@ pub fn runs_for_text_span(context: &mut Context, text: TextSpan, run: Run) -> Ve
         TextSpan::Link { .. } => unimplemented!(),
         TextSpan::Regular(text) => vec![run.add_text(text)],
         TextSpan::Reference(text, reference) => {
-            let id = context.next_reference_id();
+            let id = context.reference_id_for(&reference);
             runs_for_text_span(context, TextSpan::Multiple(vec![*text, TextSpan::Regular(format!(" [{}]", id))]), run)
         },
         TextSpan::Multiple(texts) => texts.into_iter().flat_map(|text| runs_for_text_span(context, text, run.clone()).into_iter()).collect(),

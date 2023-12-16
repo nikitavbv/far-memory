@@ -57,7 +57,11 @@ fn extract_references_text_span(references: &mut Vec<String>, text: &TextSpan) {
         TextSpan::Link { .. } => (),
         TextSpan::Reference(inner, reference) => {
             extract_references_text_span(references, inner);
-            references.push(reference.text().to_owned());
+
+            let ref_text = reference.text();
+            if !references.contains(&ref_text.to_owned()) {
+                references.push(ref_text.to_owned());
+            }
         },
         TextSpan::Break => (),
     }
@@ -298,7 +302,7 @@ inefficient. For example, LRU will not be efficient for software that scans all 
 on simple heuristics, this method of providing far memory takes \
 a different approach. Inspired by an approach used in ".into(),
         TextSpan::Reference(Box::new(TextSpan::Regular("".to_owned())), ref_far_memory_warehouse_scale),
-        "to optimize hyperparameters of the system, this method collects statistics from compute nodes to make span replacement more efficient). Given that there is relatively \
+        " to optimize hyperparameters of the system, this method collects statistics from compute nodes to make span replacement more efficient). Given that there is relatively \
 low number of spans in the system, it is feasible to collect and track access statistics for all of them. These stats are sent from compute notes to manager node \
 that processes them by building models that can rely on complex span access patterns to better predict next span access events. \
 This model is later used by compute nodes as a span replacement algorithm. This work includes an \"optimal model\" that picks spans for swap \

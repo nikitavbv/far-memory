@@ -1,7 +1,12 @@
+use {
+    std::collections::HashMap,
+    crate::thesis::engine::Reference,
+};
+
 pub struct Context {
     numbering_id_counter: usize,
     sections: Vec<SectionContext>,
-    references_counter: usize,
+    references: HashMap<String, u32>,
 }
 
 impl Context {
@@ -9,7 +14,7 @@ impl Context {
         Self {
             numbering_id_counter: 0,
             sections: Vec::new(),
-            references_counter: 0,
+            references: HashMap::new(),
         }
     }
 
@@ -51,9 +56,15 @@ impl Context {
         self.section(section_index).next_image_index()
     }
 
-    pub fn next_reference_id(&mut self) -> usize {
-        self.references_counter += 1;
-        self.references_counter
+    pub fn reference_id_for(&mut self, reference: &Reference) -> u32 {
+        let reference_text = reference.text();
+        if let Some(id) = self.references.get(reference_text) {
+            return *id;
+        } else {
+            let next_id = (self.references.len() + 1) as u32;
+            self.references.insert(reference_text.to_owned(), next_id);
+            next_id
+        }
     }
 }
 
