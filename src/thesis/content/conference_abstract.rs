@@ -64,6 +64,13 @@ fn extract_references_text_span(references: &mut Vec<String>, text: &TextSpan) {
 }
 
 fn conference_abstract_body(language: &Language) -> Block {
+    let ref_far_memory_warehouse_scale = Reference::for_publication(
+        "Software-defined far memory in warehouse-scale computers".to_owned(),
+        "Andres Lagar-Cavilla, Junwhan Ahn, et al.".to_owned(),
+        2019,
+        "International Conference on Architectural Support for Programming Languages and Operating Systems".to_owned(),
+    );
+
     Block::Multiple(vec![
         paragraph(TextSpan::Multiple(vec![
             format!("UDC {}", classification_code()).into(),
@@ -193,12 +200,7 @@ may not be desirable or achievable in most environments due to costs associated 
         ])),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             "Other methods, like ".into(),
-            TextSpan::Reference(Box::new(TextSpan::Regular("\"Software-Defined Far Memory in Warehouse-Scale Computers\"".to_owned())), Reference::for_publication(
-                "Software-defined far memory in warehouse-scale computers".to_owned(),
-                "Andres Lagar-Cavilla, Junwhan Ahn, et al.".to_owned(),
-                2019,
-                "International Conference on Architectural Support for Programming Languages and Operating Systems".to_owned(),
-            )),
+            TextSpan::Reference(Box::new(TextSpan::Regular("\"Software-Defined Far Memory in Warehouse-Scale Computers\"".to_owned())), ref_far_memory_warehouse_scale.clone()),
             ", use more advanced approaches to \
 optimize far memory performance, including statistics collection across the fleet to build a model predicting optimal parameters for the system. However, this \
 implementation uses disk as storage backend, which is not optimal for many applications due to lower performance compared to storing data in RAM of remote nodes.".into()
@@ -242,12 +244,19 @@ Far memory client implements a virtual block device (based on ".into(),
                 "https://docs.kernel.org/admin-guide/blockdev/nbd.html".to_owned()
             )),
             ") that can be used to place \
-Linux swap partition on it. This allows to move infrequently accessed memory pages (by swapping mechanisms \
+Linux swap partition on it (similar to the approach used by ".into(),
+            TextSpan::Reference(Box::new(TextSpan::Regular("InfiniSwap".to_owned())), Reference::for_publication(
+                "Efficient Memory Disaggregation with Infiniswap".to_owned(),
+                "Juncheng Gu, Youngmoon Lee, et al.".to_owned(),
+                2017,
+                "14th USENIX Symposium on Networked Systems Design and Implementation (NSDI 17)".to_owned(),
+            )),
+            "). This allows to move infrequently accessed memory pages (by swapping mechanisms \
 in operating system) to far memory with performance higher than if swapping was performed to disk as it happens normally. This method also allows to use far \
 memory as a form of RAM disk.".into()
         ])),
         paragraph_without_after_space(TextSpan::Multiple(vec!["To make the probability of data loss lower given expanded failure domain, this method of \
-providing far memory uses ".into(),
+providing far memory follows the same approach to this problem as Carbink and uses ".into(),
             TextSpan::Reference(Box::new(TextSpan::Regular("Reed-Solomon".to_owned())), Reference::for_website(
                 "An introduction to Reed-Solomon codes: principles, architecture and implementation".to_owned(),
                 "https://www.cs.cmu.edu/~guyb/realworld/reedsolomon/reed_solomon_codes.html".to_owned()
@@ -264,9 +273,10 @@ level that acceptable for real world applications. There is a balance between ho
 It is up to application developer how much performance they are willing to trade for lower local memory usage."),
         paragraph_without_after_space("To make far memory performant, the client uses hardware resources efficiently by avoiding unnecessary \
 copying of data and communicating with other nodes using lightweight network protocol that is based on TCP. Far memory client implements partial span swap \
-out to move as much memory as \
+out (unlike Carbink) to move as much memory as \
 required to maintain enough free memory which is beneficial when dealing with large spans. To avoid blocking application threads with waiting for enough free \
-memory on swap in, a background thread is running in a loop swapping out spans with low probability of access."),
+memory on swap in, a background thread is running in a loop swapping out spans with low probability of access (similar to Carbink and AIFM that shift various \
+operations to background threads to reduce blocking of the application)."),
         paragraph_without_after_space("However, the key to making far memory performance more close to local RAM is always keeping data that application is about \
 to access local. To achieve this, a background thread is picking spans with high probability of access according to replacement algorithm and swap them in in advance. \
 In ideal scenario, correct spans are transferred to local memory quickly enough and application will never be blocked by waiting for swap in in main thread."),
@@ -283,14 +293,17 @@ to ".into(),
 replacement algorithm, least recently used algorithm, most recently used algorithm.".into()
         ])),
         image_with_scale("./images/span_replacement.jpg", "Span replacement algorithm based on memory access statistics", 0.55),
-        paragraph_without_after_space("However, real world software has different and complex memory access patterns which makes relying on simple heurisitic \
-inefficient. For example, LRU will not be efficient for software that scans all of its working set sequently in cycle. This method of providing far memory takes \
-a different approach. Given that there is relatively \
+        paragraph_without_after_space(TextSpan::Multiple(vec!["Real world software has different and complex memory access patterns which makes relying on simple heurisitic \
+inefficient. For example, LRU will not be efficient for software that scans all of its working set sequently in cycle. Unlike existing methods, that rely \
+on simple heuristics, this method of providing far memory takes \
+a different approach. Inspired by an approach used in ".into(),
+        TextSpan::Reference(Box::new(TextSpan::Regular("".to_owned())), ref_far_memory_warehouse_scale),
+        "to optimize hyperparameters of the system, this method collects statistics from compute nodes to make span replacement more efficient). Given that there is relatively \
 low number of spans in the system, it is feasible to collect and track access statistics for all of them. These stats are sent from compute notes to manager node \
 that processes them by building models that can rely on complex span access patterns to better predict next span access events. \
 This model is later used by compute nodes as a span replacement algorithm. This work includes an \"optimal model\" that picks spans for swap \
 operations perfectly given static memory access patterns. For software with dynamic memory access patterns, implementation based on recurrent neural network \
-is provided."),
+is provided.".into()])),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Performance evaluation.".into())),
             " Evaluation of this method of providing far memory seeks to answer the following questions: ".into(),
