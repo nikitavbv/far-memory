@@ -3,6 +3,7 @@ use {
     tracing::info,
     serde::Deserialize,
     human_bytes::human_bytes,
+    indicatif::ProgressBar,
 };
 
 #[derive(Deserialize, Debug)]
@@ -14,13 +15,17 @@ pub fn run_trace_analyzer() {
     info!("running trace analyzer");
 
     let trace_file = File::open("./trace.json").unwrap();
+    let trace_file_size = trace_file.metadata().unwrap().len();
 
     let mut size_by_event_name = HashMap::new();
+
+    let progress_bar = ProgressBar::new(trace_file_size);
 
     let reader = BufReader::new(trace_file);
     for line in reader.lines() {
         let line = line.unwrap();
         let line_len = line.as_bytes().len();
+        progress_bar.inc(line_len as u64);
 
         if line == "[" {
             continue;
@@ -42,6 +47,7 @@ pub fn run_trace_analyzer() {
         }
         *size_by_event_name.get_mut(&event.name).unwrap() += line_len as i64;
     }
+    progress_bar.finish();
 
     let mut size_by_event_name: Vec<_> = size_by_event_name.into_iter().collect();
     size_by_event_name.sort_by_key(|v| -v.1);
