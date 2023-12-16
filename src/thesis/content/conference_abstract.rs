@@ -259,14 +259,14 @@ Linux swap partition on it (similar to the approach used by ".into(),
 in operating system) to far memory with performance higher than if swapping was performed to disk as it happens normally. This method also allows to use far \
 memory as a form of RAM disk.".into()
         ])),
-        paragraph_without_after_space(TextSpan::Multiple(vec!["To make the probability of data loss lower given expanded failure domain, this method of \
+        paragraph_without_after_space(TextSpan::Multiple(vec!["To make far memory more reliable given expanded failure domain, this method of \
 providing far memory follows the same approach to this problem as Carbink and uses ".into(),
             TextSpan::Reference(Box::new(TextSpan::Regular("Reed-Solomon".to_owned())), Reference::for_website(
                 "An introduction to Reed-Solomon codes: principles, architecture and implementation".to_owned(),
                 "https://www.cs.cmu.edu/~guyb/realworld/reedsolomon/reed_solomon_codes.html".to_owned()
             )),
             " coding to compute parity shards for spans and place them on different storage nodes. In the event of node failure this allows to restore data \
-using shards from other nodes while keeping recovery time low.".into()
+using shards from other nodes while keeping recovery time low and using less additional memory compared to replication.".into()
         ])),
         paragraph_without_after_space("Performance is critical for far memory and defines types of software where it can be applied."),
 
@@ -284,7 +284,7 @@ operations to background threads to reduce blocking of the application)."),
         paragraph_without_after_space("However, the key to making far memory performance more close to local RAM is always keeping data that application is about \
 to access local. To achieve this, a background thread is picking spans with high probability of access according to replacement algorithm and swap them in in advance. \
 In ideal scenario, correct spans are transferred to local memory quickly enough and application will never be blocked by waiting for swap in in main thread."),
-        paragraph_without_after_space(TextSpan::Multiple(vec!["It is easy to notice that the method of choosing spans to swap out (and swap in in advance) plays significant role in far \
+        paragraph_without_after_space(TextSpan::Multiple(vec!["It is easy to notice that the algorithm of choosing spans to swap out (and swap in in advance) plays significant role in far \
 memory performance. To maximize performance, each time when swap out is needed it is more optimal to pick spans that will be accessed last of all. At the same time, \
 for swap in in advance it is better to pick spans that are going to be accessed sooner than other spans. This creates a need for span replacement algorithm that \
 takes span access history (including previous application runs) as an input and produces candidates for swap in and swap out. With this formulation, it it similar \
@@ -297,14 +297,14 @@ to ".into(),
 replacement algorithm, least recently used algorithm, most recently used algorithm.".into()
         ])),
         image_with_scale("./images/span_replacement.jpg", "Span replacement algorithm based on memory access statistics", 0.55),
-        paragraph_without_after_space(TextSpan::Multiple(vec!["Real world software has different and complex memory access patterns which makes relying on simple heurisitic \
+        paragraph_without_after_space(TextSpan::Multiple(vec!["Real world software has different and complex memory access patterns which makes relying on simple \
+heurisitics \
 inefficient. For example, LRU will not be efficient for software that scans all of its working set sequently in cycle. Unlike existing methods, that rely \
-on simple heuristics, this method of providing far memory takes \
-a different approach. Inspired by an approach used in ".into(),
-        TextSpan::Reference(Box::new(TextSpan::Regular("".to_owned())), ref_far_memory_warehouse_scale),
-        " to optimize hyperparameters of the system, this method collects statistics from compute nodes to make span replacement more efficient). Given that there is relatively \
+on simple heuristics, this work offers to take a different approach. Specifically, given that there is relatively \
 low number of spans in the system, it is feasible to collect and track access statistics for all of them. These stats are sent from compute notes to manager node \
-that processes them by building models that can rely on complex span access patterns to better predict next span access events. \
+that processes them by building models that can rely on complex span access patterns to better predict next span access events (this is inspired by ".into(),
+        TextSpan::Reference(Box::new(TextSpan::Regular("".to_owned())), ref_far_memory_warehouse_scale),
+        ", but instead of optimizing hyperparameters, collected statistics are used to build models that predict which spans will be accessed). \
 This model is later used by compute nodes as a span replacement algorithm. This work includes an \"optimal model\" that picks spans for swap \
 operations perfectly given static memory access patterns. For software with dynamic memory access patterns, implementation based on recurrent neural network \
 is provided.".into()])),
