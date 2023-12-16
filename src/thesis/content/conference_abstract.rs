@@ -264,7 +264,7 @@ follows the same approach as Carbink and uses ".into(),
             " coding to compute parity shards for spans and place them on different storage nodes. In the event of node failure this allows to restore data \
 using shards from other nodes while keeping recovery time low and using less additional memory compared to replication.".into()
         ])),
-        paragraph_without_after_space("Performance is critical for far memory and defines types of software where it can be applied. It is not possible to make far memory as fast as local RAM, however additional latency can however additional latency can be reduced to an acceptable level. To make far memory performant, the client uses hardware resources efficiently by avoiding unnecessary \
+        paragraph_without_after_space("Performance is critical for far memory and defines types of software where it can be applied. It is not possible to make far memory as fast as local RAM, however additional latency can be reduced to an acceptable level. To make far memory performant, the client uses hardware resources efficiently by avoiding unnecessary \
 copying of data and communicating with other nodes using lightweight network protocol that is based on TCP. Far memory client implements partial span swap \
 out (unlike Carbink) to move as much memory as \
 required to maintain enough free memory which is beneficial when dealing with large spans. To avoid blocking application threads with waiting for free \
