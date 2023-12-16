@@ -6,11 +6,11 @@ use {
     crate::{
         utils::{metrics::init_metrics, generate_run_id},
         client::{ReplacementPolicy, RandomReplacementPolicy, LeastRecentlyUsedReplacementPolicy, MostRecentlyUsedReplacementPolicy, PreferRemoteSpansReplacementPolicy},
-    },
-    super::{
-        llm_inference::run_llm_inference_demo,
-        web_service::run_web_service_demo,
-        dataframe::run_dataframe_demo,
+        demo::{
+            llm_inference::run_llm_inference_demo,
+            web_service::run_web_service_demo,
+            dataframe::run_dataframe_demo,
+        },
     },
 };
 

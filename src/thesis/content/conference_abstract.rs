@@ -8,7 +8,7 @@ use {
             content::{classification_code, keywords, Language},
             utils::mm_to_twentieth_of_a_point,
         },
-        demo::evaluation::{load_evaluation_data, Experiment, DemoApplicationType, SpanReplacementPolicy, EvaluationData},
+        tools::evaluation::{load_evaluation_data, Experiment, DemoApplicationType, SpanReplacementPolicy, EvaluationData},
     },
 };
 

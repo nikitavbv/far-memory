@@ -15,8 +15,8 @@ use {
             benchmark::run_benchmark,
             simple::run_simple_demo,
             block_device::run_block_device_demo,
-            evaluation::run_evaluation,
         },
+        tools::evaluation::run_evaluation,
     },
 };
 
@@ -25,6 +25,7 @@ mod demo;
 mod manager;
 mod storage;
 mod thesis;
+mod tools;
 
 mod utils;
 
