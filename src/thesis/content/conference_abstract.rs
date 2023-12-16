@@ -216,9 +216,7 @@ implementation uses disk as storage backend, which is not optimal for many appli
 storage nodes and manager node. \
 Far memory client is integrated into compute nodes and works with memory spans (sequences of bytes) that can be located in the local or remote memory. \
 Far memory client swaps out memory spans under memory pressure and swaps them back in when access is requested by the software. \
-Storage nodes store spans data that were swapped out and function as a key-value storage. Manager node allocates space on storage nodes \
-and assigns it for use by specific compute nodes. It also tracks health of all components and restores data on storage nodes that go down as well as provides means \
-for scheduled maintenance.".into()])),
+Storage nodes store spans data that were swapped out. Manager node assigns space on storage nodes for use by specific compute nodes, tracks health of all components and restores data on storage nodes that go down.".into()])),
 
         image_with_scale("./images/components.jpg", "Far memory components", 0.55),
 
@@ -234,7 +232,7 @@ pressure. When the first pointer goes out of scope, data is removed from memory 
 Taking inspiration from AIFM, client library also provides implementations of various data structures designed for use with far memory which are more \
 efficient due to additional information \
 available during memory access event (for example, knowing which specific part of data structure is accessed allows to swap it in only partially). Unlike AIFM, \
-no computation is shifted to storage nodes. Another important aspect is conversion of objects into bytes sequence and vice versa. The simplest approach is just \
+no computation is shifted to storage nodes. Another important aspect is conversion of objects into bytes sequence and vice versa. The simplest approach is \
 copying the whole area of memory where object is stored as is. While far memory client implements this approach, it is not optimal for a number of use cases. \
 Because typically data structures contain pointers to other objects that need to be traversed, far memory client provides a wrapper that \
 relies on serialization to encode object and nested fields when swapping out.".into()
@@ -254,11 +252,10 @@ Linux swap partition on it (similar to the approach used by ".into(),
                 "14th USENIX Symposium on Networked Systems Design and Implementation (NSDI 17)".to_owned(),
             )),
             "). This allows to move infrequently accessed memory pages (by swapping mechanisms \
-in operating system) to far memory with performance higher than if swapping was performed to disk as it happens normally. This method also allows to use far \
-memory as a form of RAM disk.".into()
+in operating system) to far memory with performance higher than if swapping was performed to disk.".into()
         ])),
         paragraph_without_after_space(TextSpan::Multiple(vec!["To make far memory more reliable given expanded failure domain, this work \
-follows the same approach to this problem as Carbink and uses ".into(),
+follows the same approach as Carbink and uses ".into(),
             TextSpan::Reference(Box::new(TextSpan::Regular("Reed-Solomon".to_owned())), Reference::for_website(
                 "An introduction to Reed-Solomon codes: principles, architecture and implementation".to_owned(),
                 "https://www.cs.cmu.edu/~guyb/realworld/reedsolomon/reed_solomon_codes.html".to_owned()
@@ -266,9 +263,8 @@ follows the same approach to this problem as Carbink and uses ".into(),
             " coding to compute parity shards for spans and place them on different storage nodes. In the event of node failure this allows to restore data \
 using shards from other nodes while keeping recovery time low and using less additional memory compared to replication.".into()
         ])),
+        paragraph_without_after_space("Performance is critical for far memory and defines types of software where it can be applied. It is not possible to make far memory as fast as local RAM, however additional latency can however additional latency can be reduced to an acceptable level."),
         image_with_scale("./images/fault_tolerance.jpg", "Swapping spans to multiple nodes using Reed-Solomon coding", 0.55),
-        paragraph_without_after_space("Performance is critical for far memory and defines types of software where it can be applied. It is not possible to make far memory as fast as local RAM, however additional latency can be minimzed to \
-level that acceptable for real world applications."),
         paragraph_without_after_space("To make far memory performant, the client uses hardware resources efficiently by avoiding unnecessary \
 copying of data and communicating with other nodes using lightweight network protocol that is based on TCP. Far memory client implements partial span swap \
 out (unlike Carbink) to move as much memory as \
@@ -276,8 +272,8 @@ required to maintain enough free memory which is beneficial when dealing with la
 memory on swap in, a background thread is swapping out spans with low probability of access (similar to Carbink and AIFM that shift various \
 operations to background threads)."),
         paragraph_without_after_space("However, the key to making far memory performance more close to local RAM is always keeping data that application is about \
-to access local. To achieve this, a background thread is picking spans with high probability of access according to replacement algorithm and swaps them in in advance. \
-In ideal scenario, correct spans are transferred to local memory quickly enough and application will never be blocked by waiting for swap in in main thread."),
+to access local. To achieve this, a background thread swaps in spans in advance that have high probability of access according to replacement algorithm. \
+Ideally, correct spans are swapped in quickly enough and application will never be blocked by waiting for swap in in main thread."),
         paragraph_without_after_space(TextSpan::Multiple(vec!["It is easy to notice that the algorithm of choosing spans to swap out (and swap in in advance) plays significant role in far \
 memory performance. To maximize performance, each time when swap out is needed it is more optimal to pick spans that will be accessed last of all. At the same time, \
 for swap in in advance it is better to pick spans that are going to be accessed sooner than other spans. This creates a need for span replacement algorithm that \
@@ -332,7 +328,7 @@ patterns:".into()
                 " to a collection of objects one of which is picked, encrypted, compressed and sent as response. This represents a class of software built around \
 key-value data structures, where a lot of small objects are accessed with a certain distribution.".into(),
            ]),
-           TextSpan::Multiple(vec!["An application that queries a dataframe stored stored in far memory, processing it similarly to a \
+           TextSpan::Multiple(vec!["An application that queries a dataframe processing it similarly to a \
 typical data processing system or a database. High level data structures provided by far memory client allow more efficient processing of the stream.".into(),
            ]),
         ]),
@@ -340,8 +336,8 @@ typical data processing system or a database. High level data structures provide
             "In each case, system throughput is measured with different levels of local memory ratio.".into(),
         ])),
         paragraph_without_after_space("Based on collected data, it can be noted that this far memory method \
-works best for applications that can utilize high-level data structures that are designed for use with far memory. \
-Far memory achieves better throughput with larger objects \
+works best for applications that can utilize high-level data structures designed for use with far memory. \
+Better throughput is achieved with larger objects \
 and predictable access patterns."),
 
         end_section(2),
@@ -593,7 +589,7 @@ fn demo_throughput() -> Block {
 
     root_area.present().unwrap();
 
-    image_with_scale("./output/images/demo-throughput.png",  "Application throughput by type and ratio of local memory", 0.35)
+    image_with_scale("./output/images/demo-throughput.png",  "Throughput by application and local memory ratio", 0.35)
 }
 
 fn setup_chart_context<'a, 'b>(root_area: &'a DrawingArea<BitMapBackend<'b>, Shift>) -> ChartContext<'a, BitMapBackend<'b>, Cartesian2d<RangedCoordf64, RangedCoordf64>> {
