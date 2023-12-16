@@ -272,9 +272,9 @@ level that acceptable for real world applications."),
         paragraph_without_after_space("To make far memory performant, the client uses hardware resources efficiently by avoiding unnecessary \
 copying of data and communicating with other nodes using lightweight network protocol that is based on TCP. Far memory client implements partial span swap \
 out (unlike Carbink) to move as much memory as \
-required to maintain enough free memory which is beneficial when dealing with large spans. To avoid blocking application threads with waiting for enough free \
-memory on swap in, a background thread is running in a loop swapping out spans with low probability of access (similar to Carbink and AIFM that shift various \
-operations to background threads to reduce blocking of the application)."),
+required to maintain enough free memory which is beneficial when dealing with large spans. To avoid blocking application threads with waiting for free \
+memory on swap in, a background thread is swapping out spans with low probability of access (similar to Carbink and AIFM that shift various \
+operations to background threads)."),
         paragraph_without_after_space("However, the key to making far memory performance more close to local RAM is always keeping data that application is about \
 to access local. To achieve this, a background thread is picking spans with high probability of access according to replacement algorithm and swaps them in in advance. \
 In ideal scenario, correct spans are transferred to local memory quickly enough and application will never be blocked by waiting for swap in in main thread."),
@@ -327,21 +327,22 @@ Gbit/s NIC. Far memory was integrated into three synthetic applications with dif
 patterns:".into()
         ])),
         Block::OrderedList(vec![
-           "Large language model inference application, where weights are stored in far memory. This software represents class of tasks where the whole working set is scanned in pre-defined order.".into(),
+           "Large language model inference application, where weights are stored in far memory. This software represents class of tasks where working set is scanned in unchanging order.".into(),
            TextSpan::Multiple(vec!["Web service application that accepts zipf-distributed requests".into(),
-                " to compute an index to a collection of objects one of which is picked, encrypted, compressed and sent as response. This software represents a class of software built around \
-key-value data structures, where memory access is performed to a lot of small objects with a certain distribution.".into(),
+                " to a collection of objects one of which is picked, encrypted, compressed and sent as response. This represents a class of software built around \
+key-value data structures, where a lot of small objects are accessed with a certain distribution.".into(),
            ]),
-           TextSpan::Multiple(vec!["An application that performs queries over a dataframe that is stored in far memory and is processed similarly to a \
-typical data processing system or a database. High level data structures provided by far memory client are used allowing more efficient processing of the stream.".into(),
+           TextSpan::Multiple(vec!["An application that queries a dataframe stored stored in far memory, processing it similarly to a \
+typical data processing system or a database. High level data structures provided by far memory client allow more efficient processing of the stream.".into(),
            ]),
         ]),
         paragraph_without_after_space(TextSpan::Multiple(vec![
-            "In each case, far memory client is ran with default settings and system throughput is measured with different levels of local memory ratio.".into(),
+            "In each case, system throughput is measured with different levels of local memory ratio.".into(),
         ])),
-
-        paragraph_without_after_space("Based on collected data, it can be noted that this far memory method works best for applications that can utilize high-level \
-data structures that are designed for use with far memory. When working with objects, far memory achieves"),
+        paragraph_without_after_space("Based on collected data, it can be noted that this far memory method \
+works best for applications that can utilize high-level data structures that are designed for use with far memory. \
+Far memory achieves better throughput with larger objects \
+and predictable access patterns."),
 
         end_section(2),
         demo_throughput(),
@@ -349,9 +350,7 @@ data structures that are designed for use with far memory. When working with obj
         throughput_replacement_policies(),
         end_section(3),
 
-        paragraph_without_after_space("better throughput with larger objects and predictable access patterns. By running web service application \
-with different distribution of requests, it can be confirmed that applications \
-with high skew of requests distribution can benefit from using far memory while having lower performance impact compared to applications with uniform \
+        paragraph_without_after_space("Applications with high skew of requests distribution can benefit from using far memory while having lower performance impact compared to applications with uniform \
 distribution of requests. After running the neural network inference application with different span replacement algorithms, an improvement to \
 throughput was observed for span replacement algorithm that dynamically relies on span access statistics from previous software runs."),
 

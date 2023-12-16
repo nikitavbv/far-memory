@@ -65,7 +65,7 @@ fn paragraph(tab: bool, line_spacing: i32, before_spacing: Option<u32>, after_sp
     let section_property = columns.map(|columns| {
         let mut section = SectionProperty::new();
         section.columns = columns;
-        section.space = 425;
+        section.space = 420;
         // TODO: do not hardcode page margin
         section.page_margin = PageMargin::new()
             .top(mm_to_twentieth_of_a_point(15.0))
