@@ -206,7 +206,7 @@ implementation uses disk as storage backend, which is not optimal for many appli
         paragraph_without_after_space("These properties and problems of existing solutions create a need for an alternative method of providing far memory."),
         paragraph_without_after_space(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new("Designing a method and software for providing far memory.".into())),
-            " Method of providing far memory that is dicussed in this work uses following components: compute nodes, \
+            " Method of providing far memory that is dicussed in this work, similarly to Carbink, uses following components: compute nodes, \
 storage nodes and manager node. \
 Far memory client is integrated into compute nodes and works with memory spans (sequences of bytes) that can be located in the local or remote memory. \
 Far memory client swaps out memory spans under memory pressure and swaps them back in when access is requested by the software. \
@@ -217,16 +217,18 @@ for scheduled maintenance.".into()])),
         image_with_scale("./images/components.jpg", "Far memory components", 0.55),
 
         paragraph_without_after_space(TextSpan::Multiple(vec!["To integrate far memory into the software, the method discussed in this work takes two approaches. \
-The first one is application-level integration with a far memory client library. Client library works by \
-wrapping data managed by far memory into two nested smart pointers. When the first pointer (FarMemory<T>) is dereferenced, far memory client checks if \
+The first one (inspired by Carbink and AIFM) is application-level integration with a far memory client library. Client library works by \
+wrapping data managed by far memory into two nested smart pointers (similar to AIFM but second smart pointer is introduced instead of relying on dereference scopes). When the first pointer (FarMemory<T>) is dereferenced, far memory client checks if \
 relevant span is located in local or remote memory. Far memory client swaps it in if needed and returns another smart pointer (FarMemoryLocal<T>). When this \
 pointer is dereferenced, application receives reference to underlying object (&T) and proceeds to work with it as with any other object \
 in RAM. For each span, a reference counter is maintained and increased on each dereference of the first smart pointer. When the second smart pointer goes \
 out of scope (implemented by Drop trait in Rust), reference counter is decreased. When it reaches zero, far memory client may swap it out in case of memory \
 pressure. When the first pointer goes out of scope, data is removed from local and remote memory because it cannot be accessed by software anymore at this point. \
-Client library also provides implementations of data structures designed for use with far memory which are more \
+Taking inspiration from AIFM, client library also provides implementations of data structures designed for use with far memory which are more \
 efficient due to additional information \
-available during memory access event (for example, knowing which specific part of data structure is accessed allows to swap it in only partially). These data \
+available during memory access event (for example, knowing which specific part of data structure is accessed allows to swap it in only partially). Unlike AIFM, \
+no computation is shifted to storage nodes.
+These data \
 structures include \
 byte buffer, vector, hash table and others. Another important aspect is conversion of objects into byte sequence and vice versa. The simplest approach is just \
 copying the whole area of memory where object is stored as is. While far memory client implements this approach, it is not optimal for a number of use cases. \
