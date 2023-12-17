@@ -23,14 +23,12 @@ pub struct Content {
 
 impl Content {
     pub fn new() -> Self {
-        let aim_of_study_short_ua = "Розробити архітектуру програмного засобу та її відкриту реалізацію, яка надає віддалену памʼять у розподіленій системі з багатьох вузлів, є простою у розгортанні та інтеграції у нове та існуюче програмне забезпечення. Архітектура реалізації віддаленої памʼяті повинна передбачати відмовостійкість (дані не втрачаються при виході з ладу вузлів) та достатній рівень швидкодії (вищий за показник для файлу підкачки на локальному диску).".to_owned();
+        let aim_of_study_short_ua = "Підвищення ефективності надання віддаленої памʼяті в інформаційному забезпеченні сучасних центрів обробки даних за рахунок \
+розробки оригінальної архітектури програмного засобу що реалізує запропоновані модифіковані методи надання віддаленої памʼяті.".to_owned();
         let aim_of_study = MultiLanguageString::new(
-            "The main target is to develop a software architecture and its open implementation that provides far memory in a multi-node distributed system, is easy to deploy and integrate into new and existing software. The architecture of the implementation of remote memory should provide fault tolerance (no data is lost when nodes fail) and a sufficient level of performance (higher than the performance of swap file on the local disk).",
-            format!(
-                "Основною метою є {}{}",
-                aim_of_study_short_ua.chars().nth(0).unwrap().to_lowercase(),
-                aim_of_study_short_ua.chars().skip(1).collect::<String>()
-            ),
+            "Improving the efficiency of providing far memory to the information software of modern datacenters through the development of an original \
+software architecture implementing proposed modified methods of providing far memory.".to_owned(),
+            aim_of_study_short_ua.clone()
         );
 
         Self {
@@ -39,10 +37,12 @@ impl Content {
             mentor_title: "д.т.н., проф., засл.діяч".to_owned(),
             aim_of_study_short_ua,
             aim_of_study,
-            research_object: MultiLanguageString::new("far memory in distributed systems", "віддалена памʼять у розподілених системах"),
+            research_object: MultiLanguageString::new("far memory in distributed information systems", "віддалена памʼять у розподілених інформаційних системах"),
             research_subject: MultiLanguageString::new(
-                "methods of ensuring fast access to data blocks in far memory, their replication, far memory deployment and integration into software",
-                "методи забезпечення швидкого доступу до блоків даних у віддаленій памʼяті, їх реплікація, розгортання та інтеграція віддаленої памʼяті у програмне забезпечення"
+                "the process of creation of the architecture of software tools that implement methods for providing fast access to span in far memory, their replication, \
+deployment and integration of far memory into the software",
+                "процес створення архітектури програмних засобів що реалізують методи забезпечення швидкого доступу до блоків даних у віддаленій памʼяті, їх \
+реплікація, розгортання та інтеграція віддаленої памʼяті у програмне забезпечення"
             ),
             scientific_novelty: MultiLanguageString::new(
                 "a software architecture for far memory that is proposed. Unlike other implementations, each of which has features that limit its use, this \

@@ -75,16 +75,16 @@ impl AbstractSection for Docx {
         };
 
         let text_topicality_description = match language {
-            &Language::English => "Increasing resource utilization efficiency (random access memory in particular) is an important problem which arises in modern data 
-centers. Memory utilization is uneven between nodes in a computing cluster even with modern schedulers and virtualization. Far memory allows using random-access memory 
-more efficiently and evenly, while also allowing to access more memory than available on a compute node. At the same time, existing implementations and methods of 
-providing far memory have a limited application scope end efficiency, which are defined by their implementation details. Further improvement of far memory methods is 
-an important problem because of that.",
-            &Language::Ukrainian => "У сучасних центрах обробки даних актуальним є збільшення ефективності використання ресурсів, зокрема оперативної памʼяті серверів. 
-Навіть при наяві сучасних планувальників задач та віртуалізації, використання памʼяті є неріномірним між вузлами у обчислювальному кластері. Застосування 
-віддаленої памʼяті дозволяє використовувати оперативну памʼять більш оптимально, знижуючи нерівномірність використання цього ресурсу, а також мати доступ до більшого 
-обʼєму памʼяті ніж є доступним на одному вузлі. При цьому, існуючі реалізації та методи надання віддаленої памʼяті мають обмежену область застосування та ефективність, 
-зумовлену їх особливостями. Через це, удосконалення методів надання віддаленої памʼяті є актуальним.",
+            &Language::English => "Increasing resource utilization efficiency (random access memory in particular) is an important problem which arises in modern data \
+centers. Memory utilization is uneven between nodes in a computing cluster even with modern schedulers and virtualization. Far memory allows using random-access memory \
+more efficiently and evenly, while also allowing to access more memory than available on a compute node. At the same time, existing implementations and methods of \
+providing far memory have a limited application scope and low efficiency, which are defined by the specifics of the task. Because of that, increasing efficiency by \
+modifying existing methods of providing far memory is relevant.",
+            &Language::Ukrainian => "У сучасних центрах обробки даних актуальним є збільшення ефективності використання ресурсів, зокрема оперативної памʼяті серверів. \
+Навіть при наяві сучасних планувальників задач та віртуалізації, використання памʼяті є неріномірним між вузлами у обчислювальному кластері. Застосування \
+віддаленої памʼяті дозволяє використовувати оперативну памʼять більш оптимально, знижуючи нерівномірність використання цього ресурсу, а також мати доступ до більшого \
+обʼєму памʼяті ніж є доступним на одному вузлі. При цьому, існуючі реалізації та методи надання віддаленої памʼяті мають обмежену область застосування та невисоку ефективність, \
+зумовлену особливостями задачі. Через це, підвищення ефективності за рахунок модифікації існуючих методів надання віддаленої памʼяті є актуальним.",
         };
 
         let text_aim_of_study = match language {
@@ -123,10 +123,11 @@ an important problem because of that.",
                 .add_run(Run::new().add_text(content.aim_of_study.for_language(language)))
             )
             .add_paragraph_with_abstract_style_component(Paragraph::new()
-                .add_run(Run::new().add_tab().add_text(format!("{}: ", text_object_of_research)).add_text(content.research_object.for_language(language)).add_text("."))
+                .add_run(Run::new().add_tab().bold().add_text(format!("{}: ", text_object_of_research)))
+                .add_run(Run::new().add_text(format!("{}.", content.research_object.for_language(language))))
             )
             .add_paragraph_with_abstract_style_component(Paragraph::new()
-                .add_run(Run::new().add_tab().add_text(format!("{}: ", MultiLanguageString::new(
+                .add_run(Run::new().add_tab().bold().add_text(format!("{}: ", MultiLanguageString::new(
                     "Subject of research",
                     "Предмет дослідження"
                 ).for_language(language))))
@@ -165,13 +166,13 @@ an important problem because of that.",
                 .add_run(Run::new().add_tab().bold().add_text(MultiLanguageString::new("The practical value", "Практичне значення").for_language(language)))
                 .add_text_component(" ")
                 .add_text_component(MultiLanguageString::new(
-                    "of the obtained results is that far memory methods and software are simple to deploy and do not require any significant changes to the 
-software where far memory is integrated to. Far memory reduces the usage of RAM on a computing node without affecting performance and fault tolerance of the software 
-above the acceptable level. This system can be used to optimize the utilization of the data center resources by being integrated into the software that has data access 
+                    "of the obtained results is that far memory methods and software are simple to deploy and do not require any significant changes to the \
+software where far memory is integrated to. Far memory reduces the usage of RAM on a computing node without affecting performance and fault tolerance of the software \
+above the acceptable level. This system can be used to optimize the utilization of the data center resources by being integrated into the software that has data access \
 patterns that allow the usage of such a class of memory as far memory.",
-                    "отриманих результатів полягає в тому, що методи та програмне забезпечення для надання віддаленої памʼяті є простими для розгортання, не 
-вимагає значних змін у програмне забезпечення при інтеграції. Віддалена памʼять знижує використання оперативної памʼяті на обчислювальному вузлі при цьому не перевищуючи 
-допустимий рівень впливу на швидкодію та відмовостійкість програмного забезпечення. Дана система може бути використана для оптимізації використання ресурсів центру 
+                    "отриманих результатів полягає в тому, що методи та програмне забезпечення для надання віддаленої памʼяті є простими для розгортання, не \
+вимагає значних змін у програмне забезпечення при інтеграції. Віддалена памʼять знижує використання оперативної памʼяті на обчислювальному вузлі при цьому не перевищуючи \
+допустимий рівень впливу на швидкодію та відмовостійкість програмного забезпечення. Дана система може бути використана для оптимізації використання ресурсів центру \
 обробки даних у програмному забезпченні параметри роботи якого дозволяють використання такого класу памʼяті як віддалена памʼять."
                 ).for_language(language))
             )
