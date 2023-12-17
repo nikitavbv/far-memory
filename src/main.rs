@@ -18,6 +18,7 @@ use {
         },
         tools::{
             evaluation::run_evaluation,
+            plots::generate_plots,
             trace_analyzer::run_trace_analyzer,
         },
     },
@@ -95,6 +96,9 @@ pub struct Args {
 
     #[arg(long)]
     analyze_trace: bool,
+
+    #[arg(long)]
+    plots: bool,
 
     // thesis
     #[arg(long)]
@@ -234,6 +238,8 @@ pub fn main() {
         );
     } else if args.analyze_trace {
         run_trace_analyzer();
+    } else if args.plots {
+        generate_plots();
     } else if args.manager {
         run_manager_node(read_token());
     } else if args.replacement_policies_demo {
