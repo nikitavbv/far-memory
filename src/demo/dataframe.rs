@@ -106,15 +106,15 @@ impl DemoDataFramePipeline {
         }
     }
 
-    pub fn pick_random(&self, zipf_s: f32) -> FlightData {
+    pub fn pick_random(&self, zipf_s: f32, trace: bool) -> FlightData {
         let index = rand::thread_rng().sample(Zipf::new(self.dataframe.len() as u64 - 1, zipf_s).unwrap()).floor() as u64 - 1; // -1 because zipf returns [1; n]. Not clear why -2 is needed though.
-        self.dataframe.get(index as usize).expect(&format!("failed to get entry for index {} with dataframe len {}", index, self.dataframe.len()))
+        self.dataframe.get(index as usize, trace).expect(&format!("failed to get entry for index {} with dataframe len {}", index, self.dataframe.len()))
     }
 
     /* get average delay based on arr_delay */
-    pub fn get_average_delay_with_criteria(&self, query: FlightsQuery) -> Option<f32> {
+    pub fn get_average_delay_with_criteria(&self, query: FlightsQuery, trace: bool) -> Option<f32> {
         let (total_delay, total_objects) = self.dataframe
-            .iter()
+            .iter(trace)
             .filter(|v| query.after_date.is_none() || query.after_date.unwrap() > v.flight_date)
             .filter(|v| query.airline_code.is_none() || query.airline_code.unwrap() == v.dot_id_operating_airline)
             .filter(|v| query.origin_airport_id.is_none() || query.origin_airport_id.unwrap() == v.origin_airport_id)
@@ -282,10 +282,12 @@ pub fn run_dataframe_demo(metrics: Registry, run_id: String, token: &str, storag
             break;
         }
 
-        let flight = black_box(dataframe.pick_random(zipf_s));
+        let trace = total_queries > 0 && total_queries % 2 == 0;
+
+        let flight = black_box(dataframe.pick_random(zipf_s, trace));
         let query = random_query_for_similar_flights(flight);
 
-        let _avg = black_box(dataframe.get_average_delay_with_criteria(black_box(query)));
+        let _avg = black_box(dataframe.get_average_delay_with_criteria(black_box(query), trace));
 
         total_queries += 1;
 

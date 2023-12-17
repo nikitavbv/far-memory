@@ -36,20 +36,25 @@ impl <T: Serialize> FarMemorySerialized<T> {
 }
 
 impl <T: DeserializeOwned> FarMemorySerialized<T> {
-    pub fn to_local(&self) -> T {
-        span!(Level::INFO, "serialized object to local").in_scope(|| {
-            let location = self.client.get_object(&self.object);
-            let bytes = unsafe {
-                let ptr = self.client.span_ptr(&location.span_id).add(location.offset);
-                std::slice::from_raw_parts(ptr, location.len)
-            };
+    pub fn to_local(&self, trace: bool) -> T {
+        let span = span!(Level::INFO, "serialized object to local");
+        let _span = if trace {
+            Some(span.enter())
+        } else {
+            None
+        };
 
-            let data = bincode::deserialize_from(bytes).unwrap();
-            self.client.decrease_refs_for_span(&location.span_id);
+        let location = self.client.get_object(&self.object);
+        let bytes = unsafe {
+            let ptr = self.client.span_ptr(&location.span_id).add(location.offset);
+            std::slice::from_raw_parts(ptr, location.len)
+        };
 
-            // returning just data, because it is owned, and spans refs are already decreased
-            data
-        })
+        let data = bincode::deserialize_from(bytes).unwrap();
+        self.client.decrease_refs_for_span(&location.span_id);
+
+        // returning just data, because it is owned, and spans refs are already decreased
+        data
     }
 }
 

@@ -1,6 +1,7 @@
 use {
     std::collections::HashMap,
     serde::{Serialize, de::DeserializeOwned},
+    rand::Rng,
     super::{
         serialized_object::FarMemorySerialized,
         client::FarMemoryClient,
@@ -32,25 +33,27 @@ impl<T: Serialize> FarMemorySerializedObjectVec<T> {
 }
 
 impl<T: DeserializeOwned> FarMemorySerializedObjectVec<T> {
-    pub fn get(&self, index: usize) -> Option<T> {
-        self.objects.get(index).map(|v| v.to_local())
+    pub fn get(&self, index: usize, trace: bool) -> Option<T> {
+        self.objects.get(index).map(|v| v.to_local(trace))
     }
 
-    pub fn iter(&self) -> FarMemorySerializedObjectVecIterator<T> {
-        FarMemorySerializedObjectVecIterator::new(self.objects.clone())
+    pub fn iter(&self, trace: bool) -> FarMemorySerializedObjectVecIterator<T> {
+        FarMemorySerializedObjectVecIterator::new(self.objects.clone(), trace)
     }
 }
 
 pub struct FarMemorySerializedObjectVecIterator<T> {
     objects: Vec<FarMemorySerialized<T>>,
     remote_objects_by_span: HashMap<u64, Vec<FarMemorySerialized<T>>>,
+    trace: bool,
 }
 
 impl<T> FarMemorySerializedObjectVecIterator<T> {
-    pub fn new(objects: Vec<FarMemorySerialized<T>>) -> Self {
+    pub fn new(objects: Vec<FarMemorySerialized<T>>, trace: bool) -> Self {
         Self {
             objects,
             remote_objects_by_span: HashMap::new(),
+            trace,
         }
     }
 }
@@ -62,7 +65,7 @@ impl<T: DeserializeOwned> Iterator for FarMemorySerializedObjectVecIterator<T> {
         if let Some(object) = self.objects.pop() {
             // we have objects that are not sorted yet
             if object.is_local() {
-                return Some(object.to_local());
+                return Some(object.to_local(self.trace));
             }
 
             // save remote object to remote objects by span
@@ -84,7 +87,7 @@ impl<T: DeserializeOwned> Iterator for FarMemorySerializedObjectVecIterator<T> {
             let objects_in_span = self.remote_objects_by_span.get_mut(&span).unwrap();
             // found local span, lets return objects from it
             if objects_in_span.last().unwrap().is_local() {
-                return Some(objects_in_span.pop().unwrap().to_local());
+                return Some(objects_in_span.pop().unwrap().to_local(self.trace));
             }
         }
 
@@ -98,7 +101,7 @@ impl<T: DeserializeOwned> Iterator for FarMemorySerializedObjectVecIterator<T> {
             }
 
             // swap in happens here
-            return Some(objects_in_span.pop().unwrap().to_local());
+            return Some(objects_in_span.pop().unwrap().to_local(self.trace));
         }
 
         // no objects left
