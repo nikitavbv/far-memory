@@ -128,6 +128,11 @@ pub struct Args {
 pub fn main() {
     let args = Args::parse();
 
+    if args.trace && args.analyze_trace {
+        eprintln!("--trace and --analyze-trace cannot be used at the same time.");
+        return;
+    }
+
     let trace_guard = if args.trace {
         Some(init_tracing())
     } else {
