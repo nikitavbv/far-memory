@@ -7,6 +7,8 @@ use {
     },
 };
 
+mod evaluation;
+mod marketing;
 mod method;
 mod research;
 mod software;
@@ -16,12 +18,7 @@ pub fn main_section() -> Block {
         research(),
         far_memory_method(),
         software(),
-
-        section_header("Оцінка ефективності"), // todo: how to name it correctly?
-        Block::Placeholder(Box::new(paragraph("some text here")), "add some text here".to_owned()),
-        // in third section explain that a demo app was implemented to measure how well everything works and the hardware of the test environment.
-
-        section_header("Маркетинговий аналіз стартап-проекту"),
-        Block::Placeholder(Box::new(paragraph("some text here")), "add some text here".to_owned()),
+        evaluation::evaluation(),
+        marketing::marketing(),
     ])
 }
