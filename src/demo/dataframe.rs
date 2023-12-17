@@ -282,10 +282,12 @@ pub fn run_dataframe_demo(metrics: Registry, run_id: String, token: &str, storag
             break;
         }
 
+        let trace = total_queries > 0 && total_queries % 2 == 0;
+
         let flight = span!(Level::DEBUG, "picking random flight").in_scope(|| black_box(dataframe.pick_random(zipf_s, false)));
         let query = random_query_for_similar_flights(flight);
 
-        let _avg = span!(Level::DEBUG, "calculating average delay").in_scope(|| black_box(dataframe.get_average_delay_with_criteria(black_box(query), false)));
+        let _avg = span!(Level::DEBUG, "calculating average delay").in_scope(|| black_box(dataframe.get_average_delay_with_criteria(black_box(query), trace)));
 
         total_queries += 1;
 
