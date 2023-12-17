@@ -155,25 +155,19 @@ modifying existing methods of providing far memory is relevant.",
             )
             .add_tasks_component(context, &content.tasks, language)
             .add_paragraph_with_abstract_style_component(Paragraph::new()
-                .add_run(Run::new().add_tab().bold().add_text(MultiLanguageString::new("The scientific novelty", "Наукова новизна").for_language(language)))
+                .add_run(Run::new().add_tab().bold().add_text(MultiLanguageString::new("The scientific novelty", "Наукова новизна:").for_language(language)))
                 .add_text_component(" ")
-                .add_text_component(MultiLanguageString::new(
-                    "of the results of the master's dissertation is ",
-                    "результатів магістерської дисертації полягає в тому, що "
-                ).for_language(language))
                 .add_text_component(content.scientific_novelty.for_language(language))
             )
             .add_paragraph_with_abstract_style_component(Paragraph::new()
                 .add_run(Run::new().add_tab().bold().add_text(MultiLanguageString::new("The practical value", "Практичне значення").for_language(language)))
                 .add_text_component(" ")
                 .add_text_component(MultiLanguageString::new(
-                    "of the obtained results is that far memory methods and software are simple to deploy and do not require any significant changes to the \
-software where far memory is integrated to. Far memory reduces the usage of RAM on a computing node without affecting performance and fault tolerance of the software \
-above the acceptable level. This system can be used to optimize the utilization of the data center resources by being integrated into the software that has data access \
-patterns that allow the usage of such a class of memory as far memory.",
-                    "отриманих результатів полягає в тому, що методи та програмне забезпечення для надання віддаленої памʼяті є простими для розгортання, не \
-вимагає значних змін у програмне забезпечення при інтеграції. Віддалена памʼять знижує використання оперативної памʼяті на обчислювальному вузлі при цьому не перевищуючи \
-допустимий рівень впливу на швидкодію та відмовостійкість програмного забезпечення. Дана система може бути використана для оптимізації використання ресурсів центру \
+                    "of the obtained results lies in the fact that the developed software for providing far memory is easy to deploy and does not require significant \
+changes to the software during integration. This software can be used to enhance the efficiency of resource utilization in datacenter for software which operating parameters \
+allow using such memory class as far memory.",
+                    "отриманих результатів полягає в тому, що розроблене програмне забезпечення для надання віддаленої памʼяті є простим для розгортання, не \
+вимагає значних змін у програмне забезпечення при інтеграції. Дане програмне забезпечення може бути використане для підвищення ефективності використання ресурсів центру \
 обробки даних у програмному забезпченні параметри роботи якого дозволяють використання такого класу памʼяті як віддалена памʼять."
                 ).for_language(language))
             )
@@ -194,10 +188,10 @@ patterns that allow the usage of such a class of memory as far memory.",
                     "Наукові положення дисертації пройшли апробацію на"
                 ).for_language(language))
                 .add_text_component(" ")
-                .add_placeholder_component(MultiLanguageString::new(
-                    "Fifth All-Ukrainian Scientific and Practical Conference of Young Scientists and Students \"Information Systems and Management Technologies\" (ISTU- 2020) - Kyiv",
-                    "V всеукраїнській науково-практичній конференції молодих вчених та студентів «Інформаційні системи та технології управління» (ІСТУ-2020) – м. Київ"
-                ).for_language(language), "update practical value to a real one")
+                .add_text_component(MultiLanguageString::new(
+                    "V International Scientific and Practical Conference for Young Scientists and Students \"Software Engineering and Advanced Information Technologies SoftTech-2023\"",
+                    "V Міжнародній науково-практичній конференції молодих вчених та студентів «Інженерія програмного забезпечення і передові інформаційні технології SoftTech-2023»"
+                ).for_language(language))
                 .add_text_component(".")
             )
             .add_paragraph_with_abstract_style_component(Paragraph::new()
@@ -211,8 +205,8 @@ patterns that allow the usage of such a class of memory as far memory.",
             )
             .add_publications_component(context, &[
                 MultiLanguageString::new(
-                    "Yasenova A.V. The application of clustering methods on the foreign exchange market / A.V. Yasenova, O.A. Khalus // Proceedings of the Fifth All-Ukrainian Scientific and Practical Conference of Young Scientists and Students \"Information Systems and Management Technologies\" (ISTU- 2020) - Kyiv: NTUU “KPI them. Igor Sikorsky”, November 26-27, 2020.",
-                    "Ясенова А.В. Застосування алгоритмів кластеризації на ринку іноземних валют/ А.В.Ясенова, О.А. Халус // Матеріали V всеукраїнської науковопрактичної конференції молодих вчених та студентів «Інформаційні системи та технології управління» (ІСТУ-2020) – м. Київ: НТУУ «КПІ ім. Ігоря Сікорського», 26-27 листопада 2020 р."
+                    "Volobuev N.O. Methods and software for providing software-defined far memory in distributed systems/ N.O. Volobuev, O.A. Pavlov, M.M. Holovchenko // Proceedings of the V International Scientific and Practical Conference for Young Scientists and Students \"Software Engineering and Advanced Information Technologies SoftTech-2023\" - Kyiv: National Technical University of Ukraine «Igor Sikorsky Kyiv Polytechnic Institute», December 19-21, 2023.",
+                    "Волобуєв Н.О. Methods and software for providing software-defined far memory in distributed systems/ Н.О. Волобуєв, О.А. Павлов, М.М. Головченко // Матеріали V Міжнародної науково-практичної конференції молодих вчених та студентів «Інженерія програмного забезпечення і передові інформаційні технології SoftTech-2023» – м. Київ: НТУУ «КПІ ім. Ігоря Сікорського», 12-21 грудня 2023 р."
                 )
             ], language)
     }
@@ -289,7 +283,7 @@ impl PublicationsComponent for Docx {
             .fold(document, |document, publication|
                 document.add_paragraph_with_abstract_style_component(Paragraph::new()
                     .numbering(NumberingId::new(numbering), IndentLevel::new(0))
-                    .add_placeholder_component(publication.for_language(language), "replace with correct publication list")
+                    .add_text_component(publication.for_language(language))
                 )
             )
     }

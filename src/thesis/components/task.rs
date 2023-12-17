@@ -1,20 +1,20 @@
 use {
     docx_rs::{
-        Docx, 
-        Paragraph, 
-        Run, 
-        BreakType, 
-        LineSpacing, 
-        AlignmentType, 
-        Table, 
-        TableRow, 
-        TableCell, 
-        WidthType, 
-        TableBorders, 
-        NumberingId, 
-        IndentLevel, 
-        VAlignType, 
-        VMergeType, 
+        Docx,
+        Paragraph,
+        Run,
+        BreakType,
+        LineSpacing,
+        AlignmentType,
+        Table,
+        TableRow,
+        TableCell,
+        WidthType,
+        TableBorders,
+        NumberingId,
+        IndentLevel,
+        VAlignType,
+        VMergeType,
         TableCellMargins,
         AbstractNumbering,
         Level,
@@ -124,9 +124,9 @@ impl TaskSection for Docx {
                 .align(AlignmentType::Both)
                 .add_run(Run::new()
                     .add_text(format!(
-                        "Тема дисертації «{}», науковий керівник дисертації {} {}, затверджені наказом по університету від ", 
-                        content.topic, 
-                        content.mentor.full_name(), 
+                        "Тема дисертації «{}», науковий керівник дисертації {} {}, затверджені наказом по університету від ",
+                        content.topic,
+                        content.mentor.full_name(),
                         content.mentor_title
                     )))
                 .add_placeholder_component("«27» жовтня 2021 р. № 3587-с", "update with correct date and number after it is issued")
@@ -173,7 +173,7 @@ impl TaskSection for Docx {
                 .line_spacing(LineSpacing::new().before(150))
                 .numbering(NumberingId::new(numbering), IndentLevel::new(0))
                 .align(AlignmentType::Both)
-                .add_run(Run::new().add_break(BreakType::Page).add_text("Консультанти розділів дисертації"))
+                .add_run(Run::new().add_text("Консультанти розділів дисертації"))
             )
             .add_table(Table::new(vec![
                 TableRow::new(vec![

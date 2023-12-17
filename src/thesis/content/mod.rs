@@ -45,13 +45,13 @@ deployment and integration of far memory into the software",
 реплікація, розгортання та інтеграція віддаленої памʼяті у програмне забезпечення"
             ),
             scientific_novelty: MultiLanguageString::new(
-                "a software architecture for far memory that is proposed. Unlike other implementations, each of which has features that limit its use, this \
-solution uses only openly-available software and hardware components, integrates into new and existing software, provides fault tolreance and low latency of data access. \
-The result was achieved by developing a method of an online optimization of far memory parameters.".to_owned(),
-                "запропоновано архітектурне рішення для побудови програмного забезпечення для надання віддаленої памʼяті. На відміну від інших реалізацій, \
-кожне з яких має особливості що обмежують використання, це рішення використовує тільки загальнодоступні програмні та апаратні компоненти, інтегрується у нове та існуюче \
-програмне забезпечення, забезпечує відмовостійкість та низький рівень затримки доступу до даних. Результат досягнутий шляхом розробки методу онлайн-оптимізації параметрів \
-роботи віддаленої памʼяті.".to_owned(),
+                "for the first time, software architectural solution is proposed that implements the autor's modified methods of providing far memory to enhance fault \
+                tolerance and speed of the implementation of software that operates with data located in far memory. Unlike other approached, the proposed solution utilizes \
+only openly available software and hardware components, integrates into both new and existing software, ensures fault tolerance and low data access latency.".to_owned(),
+                "впреше запропоновано архітектурне рішення програмного забезпечення, що реалізує розроблені автором модифіковані методи надання віддаленої памʼяті \
+для підвищення відмовостійкості та швидкості реалізації програмного забезпечення, що працює з даними, які знаходяться у віддаленій памʼяті. На відміну від інших підходів, \
+запропоноване рішення використовує тільки загальнодоступні програмні та апаратні компоненти, інтегрується у нове та існуюче програмне забезпечення, забезпечує відмовостійкість \
+та низький рівень затримки доступу до даних.".to_owned(),
             ),
             keywords: keywords(),
             tasks: thesis_tasks(),
@@ -197,8 +197,8 @@ pub fn thesis_tasks() -> Vec<MultiLanguageString> {
             "розробити архітектуру, структуру та взаємодію компонентів віддаленої памʼяті".to_owned(),
         ),
         MultiLanguageString::new(
-            "optimize far memory spans access latency".to_owned(),
-            "оптимізувати затримку доступу до блоків у віддаленій памʼяті".to_owned(),
+            "decrease average latency of far memory spans access".to_owned(),
+            "знизити в середьному затримку доступу до блоків у віддаленій памʼяті".to_owned(),
         ),
         MultiLanguageString::new(
             "develop methods to ensure far memory resiliency".to_owned(),
