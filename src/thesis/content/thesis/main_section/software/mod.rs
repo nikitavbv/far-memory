@@ -1,4 +1,4 @@
-use crate::thesis::engine::{Block, subsection_header, section_header, paragraph, SubsectionHeaderBlock};
+use crate::thesis::engine::{Block, subsection_header, paragraph, SubsectionHeaderBlock};
 
 mod requirements;
 mod tools;
@@ -9,12 +9,22 @@ pub fn software() -> Block {
         tools::tools(),
 
         subsection_header("Архітектура програмного забезпечення"),
-        Block::Placeholder(Box::new(paragraph("some text here")), "add some text here".to_owned()),
-        // архітектура програмного забезпечення
-        // - схема структура розгортання
-        // - діаграма класів (for far memory client. For far memory manager and storage?)
-        // - діаграма послідовностей (data structure access flow, background swap out/swap in flow).
-        // - діаграма компонентів (how services communicate).
+        // - Компоненти програмного забезпечення що надає віддалену памʼять - deployment diagram - show components and how they communicate
+        paragraph("Як було зазначено раніше, цей метод надання віддаленої памʼяті використовує три компоненти: інтеграція у програмне забезпечення на \
+стороні вузлів обчислення, вузли зберігання та вузел керування. "),
+
+        // - Взаємодія компонентів - component diagram - show which data is passed where
+        // TODO: add some description here
+
+        // - Структура компоненту клієнта віддаленої памʼяті - class diagram - (add for far memory manager and storage later if I will need more pages.)
+        // TODO: brief description here
+
+        // - Послідовність доступу до даних у віддаленій памʼяті - sequence diagram
+        // TODO: brief description here
+
+        // - Послідовність роботи фонового потоку клієнта віддаленої памʼяті - sequence diagram
+        // TODO: brief description here
+
         // - специфікація функцій (only add if I need some more pages, lol).
 
         subsection_header("Інструкція користувача"),
