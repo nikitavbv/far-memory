@@ -105,6 +105,7 @@ impl SectionHeaderBlock {
 #[derive(Debug, Clone)]
 pub struct SubsectionHeaderBlock {
     title: String,
+    level: u32, // default level is 1
     has_numbering: bool, // will be added to document as "{subsection_number} {title}"
     with_tab: bool,
     center: bool,
@@ -113,9 +114,22 @@ pub struct SubsectionHeaderBlock {
 }
 
 impl SubsectionHeaderBlock {
+    pub fn new(title: String) -> Self {
+        Self {
+            title,
+            level: 1,
+            has_numbering: true,
+            with_tab: true,
+            center: false,
+            bold: false,
+            line_spacing: 24 * 15,
+        }
+    }
+
     pub fn without_numbering(title: String) -> Self {
         Self {
             title,
+            level: 1,
             has_numbering: false,
             with_tab: true,
             center: false,
@@ -148,6 +162,13 @@ impl SubsectionHeaderBlock {
     pub fn with_line_spacing(self, font_size: usize, interval: f32) -> Self {
         Self {
             line_spacing: (font_size as f32 * interval * 10.0) as i32,
+            ..self
+        }
+    }
+
+    pub fn with_level(self, level: u32) -> Self {
+        Self {
+            level,
             ..self
         }
     }
@@ -313,8 +334,8 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
         },
         Block::SubsectionHeader(header) => {
             let text = if header.has_numbering {
-                let subsection_index = context.next_subsection_index(context.last_section_index());
-                format!("{}.{}   {}", context.last_section_index(), subsection_index, header.title)
+                let subsection_index = context.next_subsection_index(context.last_section_index(), header.level);
+                format!("{}.{}   {}", context.last_section_index(), subsection_index.to_string(), header.title)
             } else {
                 header.title.clone()
             };
@@ -826,6 +847,7 @@ impl Into<SubsectionHeaderBlock> for &str {
     fn into(self) -> SubsectionHeaderBlock {
         SubsectionHeaderBlock {
             title: self.to_owned(),
+            level: 1,
             has_numbering: true,
             with_tab: true,
             center: false,
@@ -839,6 +861,7 @@ impl Into<SubsectionHeaderBlock> for String {
     fn into(self) -> SubsectionHeaderBlock {
         SubsectionHeaderBlock {
             title: self,
+            level: 1,
             has_numbering: true,
             with_tab: true,
             center: false,

@@ -48,8 +48,8 @@ impl Context {
         self.sections.get_mut(section_index).unwrap()
     }
 
-    pub fn next_subsection_index(&mut self, section_index: usize) -> usize {
-        self.section(section_index).next_subsection_index()
+    pub fn next_subsection_index(&mut self, section_index: usize, level: u32) -> SectionIndex {
+        self.section(section_index).next_subsection_index(level)
     }
 
     pub fn next_image_index(&mut self, section_index: usize) -> usize {
@@ -69,25 +69,96 @@ impl Context {
 }
 
 struct SectionContext {
-    subsection_counter: usize,
+    subsection_counter: SectionIndex,
     image_counter: usize,
 }
 
 impl SectionContext {
     pub fn new() -> Self {
         Self {
-            subsection_counter: 0,
+            subsection_counter: SectionIndex::new(),
             image_counter: 0,
         }
     }
 
-    pub fn next_subsection_index(&mut self) -> usize {
-        self.subsection_counter += 1;
-        self.subsection_counter
+    pub fn next_subsection_index(&mut self, level: u32) -> SectionIndex {
+        self.subsection_counter = self.subsection_counter.clone().next_at_level(level);
+        self.subsection_counter.clone()
     }
 
     pub fn next_image_index(&mut self) -> usize {
         self.image_counter += 1;
         self.image_counter
+    }
+}
+
+#[derive(Clone)]
+pub struct SectionIndex {
+    index: Vec<usize>,
+}
+
+impl SectionIndex {
+    pub fn new() -> Self {
+        Self {
+            index: Vec::new(),
+        }
+    }
+
+    pub fn to_string(&self) -> String {
+        let mut result = "".to_owned();
+
+        for i in 0..self.index.len() {
+            if i == 0 {
+               result = self.index[i].to_string();
+            } else {
+                result = format!("{}.{}", result, self.index[i]);
+            }
+        }
+
+        result
+    }
+
+    pub fn next_at_level(self, level: u32) -> Self {
+        let mut index = self.index;
+
+        while index.len() < level as usize {
+            index.push(if index.len() == level as usize - 1 { 0 } else { 1 });
+        }
+
+        index[level as usize - 1] += 1;
+        while index.len() > level as usize {
+            index.pop();
+        }
+
+        Self {
+            index,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn section_index_simple() {
+        let index = SectionIndex::new();
+        let index = index.next_at_level(1);
+        assert_eq!("1".to_owned(), index.to_string());
+
+        let index = index.next_at_level(1);
+        assert_eq!("2".to_owned(), index.to_string());
+
+        let index = index.next_at_level(2);
+        assert_eq!("2.1".to_owned(), index.to_string());
+
+        let index = index.next_at_level(2);
+        assert_eq!("2.2".to_owned(), index.to_string());
+
+        let index = index.next_at_level(1);
+        assert_eq!("3".to_owned(), index.to_string());
+
+        let index = index.next_at_level(2);
+        assert_eq!("3.1".to_owned(), index.to_string());
     }
 }

@@ -9,20 +9,25 @@ pub fn software() -> Block {
         tools::tools(),
 
         subsection_header("Архітектура програмного забезпечення"),
-        // - Компоненти програмного забезпечення що надає віддалену памʼять - deployment diagram - show components and how they communicate
+        subsection_header(SubsectionHeaderBlock::new("Компоненти програмного забезпечення що надає віддалену памʼять".to_owned()).with_level(2)),
+        // - deployment diagram - show components and how they communicate
         paragraph("Як було зазначено раніше, цей метод надання віддаленої памʼяті використовує три компоненти: інтеграція у програмне забезпечення на \
 стороні вузлів обчислення, вузли зберігання та вузел керування. "),
 
-        // - Взаємодія компонентів - component diagram - show which data is passed where
+        subsection_header(SubsectionHeaderBlock::new("Взаємодія компонентів".to_owned()).with_level(2)),
+        // - component diagram - show which data is passed where
         // TODO: add some description here
 
-        // - Структура компоненту клієнта віддаленої памʼяті - class diagram - (add for far memory manager and storage later if I will need more pages.)
+        subsection_header(SubsectionHeaderBlock::new("Структура клієнта віддаленої памʼяті".to_owned()).with_level(2)),
+        // - class diagram - (add for far memory manager and storage later if I will need more pages.)
         // TODO: brief description here
 
-        // - Послідовність доступу до даних у віддаленій памʼяті - sequence diagram
+        subsection_header(SubsectionHeaderBlock::new("Послідовність доступу до даних у віддаленій памʼяті".to_owned()).with_level(2)),
+        // - sequence diagram
         // TODO: brief description here
 
-        // - Послідовність роботи фонового потоку клієнта віддаленої памʼяті - sequence diagram
+        subsection_header(SubsectionHeaderBlock::new("Послідовність роботи фонового потоку клієнта віддаленої памʼяті".to_owned()).with_level(2)),
+        // - sequence diagram
         // TODO: brief description here
 
         // - специфікація функцій (only add if I need some more pages, lol).
