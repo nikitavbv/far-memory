@@ -13,6 +13,8 @@ pub fn abstract_section(language: &Language) -> Block {
     }
 
     Block::Multiple(vec![
+        // TODO: convert publications from `abstract_section` component to blocks.
+        // Block::OrderedList(vec!["Ясенова А.В. Застосування алгоритмів кластеризації на ринку іноземних валют/ А.В.Ясенова, О.А. Халус // Матеріали V всеукраїнської науковопрактичної конференції молодих вчених та студентів «Інформаційні системи та технології управління» (ІСТУ-2020) – м. Київ: НТУУ «КПІ ім. Ігоря Сікорського», 26-27 листопада 2020 р.".into()]),
         paragraph(TextSpan::Multiple(vec![
             TextSpan::Bold(Box::new(TextSpan::Multiple(vec![
                 TextSpan::Regular(MultiLanguageString::new("Keywords", "Ключові слова").for_language(language)),
