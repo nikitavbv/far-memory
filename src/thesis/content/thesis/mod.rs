@@ -6,10 +6,15 @@ use {
         content::{Language, AbstractContent, Content},
         utils::mm_to_twentieth_of_a_point,
     },
-    self::main_section::main_section,
+    self::{
+        main_section::main_section,
+        abstract_section::abstract_section,
+    },
 };
 
 mod main_section;
+
+mod abstract_section;
 
 pub fn thesis_content(content: &Content) -> Block {
     let main = main_section();
@@ -55,7 +60,9 @@ fn thesis_content_inner(abstract_content: AbstractContent, front_page: bool) -> 
 
         // abstract
         Block::AbstractSection(Language::Ukrainian, abstract_content.clone()),
+        abstract_section(&Language::Ukrainian),
         Block::AbstractSection(Language::English, abstract_content),
+        abstract_section(&Language::English),
 
         // table of contents
         Block::SectionHeader(SectionHeaderBlock::without_numbering("Зміст".to_uppercase()).do_not_include_in_table_of_contents()),

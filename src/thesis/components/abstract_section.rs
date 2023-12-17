@@ -100,6 +100,7 @@ modifying existing methods of providing far memory is relevant.",
         self
             .add_paragraph(Paragraph::new()
                 .align(AlignmentType::Center)
+                .page_break_before(true)
                 .add_run(Run::new()
                     .size(2 * 14)
                     .bold()
@@ -214,8 +215,6 @@ patterns that allow the usage of such a class of memory as far memory.",
                     "Ясенова А.В. Застосування алгоритмів кластеризації на ринку іноземних валют/ А.В.Ясенова, О.А. Халус // Матеріали V всеукраїнської науковопрактичної конференції молодих вчених та студентів «Інформаційні системи та технології управління» (ІСТУ-2020) – м. Київ: НТУУ «КПІ ім. Ігоря Сікорського», 26-27 листопада 2020 р."
                 )
             ], language)
-            .add_keywords_component(&content.keywords, language)
-            .add_page_break_component()
     }
 }
 
@@ -303,30 +302,5 @@ trait ParagraphWithAbstractStyleComponent {
 impl ParagraphWithAbstractStyleComponent for Docx {
     fn add_paragraph_with_abstract_style_component(self, paragraph: Paragraph) -> Self {
         self.add_paragraph(paragraph.add_tab(Tab::new().pos(710)).line_spacing(LineSpacing::new().line(24 * 15)).align(AlignmentType::Both))
-    }
-}
-
-trait KeywordsComponent {
-    fn add_keywords_component(self, keywords: &[MultiLanguageString], language: &Language) -> Self;
-}
-
-impl KeywordsComponent for Docx {
-    fn add_keywords_component(self, keywords: &[MultiLanguageString], language: &Language) -> Self {
-        let mut paragraph = Paragraph::new()
-            .add_run(Run::new().add_tab().bold().add_text(MultiLanguageString::new("Keywords", "Ключові слова").for_language(language)).add_text(":"))
-            .add_run(Run::new().add_text(" "));
-
-        for i in 0..keywords.len() {
-            let keyword = keywords.get(i).unwrap();
-
-            paragraph = paragraph.add_text_component(keyword.for_language(language).to_uppercase());
-
-            if i < keywords.len() - 1 {
-                paragraph = paragraph.add_text_component(", ");
-            }
-        }
-
-
-        self.add_paragraph_with_abstract_style_component(paragraph.add_text_component("."))
     }
 }
