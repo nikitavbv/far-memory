@@ -1,7 +1,7 @@
 use {
     std::{collections::HashMap, io::Write, time::Instant, hint::black_box},
-    tracing::{info, warn},
-    rand::{RngCore, Rng, rngs::OsRng, prelude::SliceRandom},
+    tracing::{info, warn, span, Level},
+    rand::{RngCore, Rng, rngs::OsRng, prelude::SliceRandom, thread_rng},
     rand_distr::Zipf,
     aes_gcm::{aead::{KeyInit, Aead, AeadCore}, Aes256Gcm},
     prometheus::Registry,
@@ -44,7 +44,7 @@ impl DemoWebService {
         }
     }
 
-    pub fn handle_request(&self, request: WebServiceRequest) -> WebServiceResponse {
+    pub fn handle_request(&self, request: WebServiceRequest, trace: bool) -> WebServiceResponse {
         let picture_to_get: u64 = *request.user_ids.iter()
             .map(|id| self.users.get(id).unwrap().picture_id)
             .collect::<Vec<_>>()
@@ -53,7 +53,7 @@ impl DemoWebService {
             .choose(&mut rand::thread_rng())
             .unwrap();
 
-        let picture = &self.pictures.get(picture_to_get as usize).unwrap().to_local(true).picture_data;
+        let picture = &self.pictures.get(picture_to_get as usize).unwrap().to_local(trace).picture_data;
         let encrypted_picture = self.encrypt_picture(picture);
 
         // yes, encrpyted data cannot be compressed, but it still a good way to simulate CPU load. AIFM does the same for their evaluation.
@@ -237,8 +237,19 @@ pub fn run_web_service_demo(metrics: Registry, run_id: String, token: &str, stor
             break;
         }
 
+        let trace = thread_rng().gen_bool(0.2);
+
         let request = random_request(total_users, zipf_s);
-        let _res = black_box(web_service.handle_request(black_box(request)));
+        let _res = {
+            let span = span!(Level::DEBUG, "handling request");
+            let _span = if trace {
+                Some(span.enter())
+            } else {
+                None
+            };
+
+            black_box(web_service.handle_request(black_box(request), trace))
+        };
         total_requests += 1;
 
         if (now - checkpoint).as_secs() > 60 {
