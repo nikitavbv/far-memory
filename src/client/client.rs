@@ -47,6 +47,10 @@ struct SwapOutResult {
 }
 
 impl FarMemoryClient {
+    pub fn connect_to(manager_endpoint: &str) -> Result<Self, String> {
+        unimplemented!()
+    }
+
     pub fn new(backend: Box<dyn FarMemoryBackend>, local_memory_max_threshold: u64) -> Self {
         Self {
             span_id_counter: Arc::new(AtomicU64::new(0)),

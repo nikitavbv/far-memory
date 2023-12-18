@@ -1,5 +1,5 @@
 use {
-    crate::thesis::engine::{Block, subsection_header, paragraph, SubsectionHeaderBlock, TextSpan},
+    crate::thesis::engine::{Block, subsection_header, paragraph, SubsectionHeaderBlock, TextSpan, ImageBlock},
     super::super::applications::{DEPLOYMENT_DIAGRAM, COMPONENT_DIAGRAM, CLASS_DIAGRAM, ACCESS_SEQUENCE, BACKGROUND_THREAD_SEQUENCE},
 };
 
@@ -90,8 +90,24 @@ pub fn software() -> Block {
         subsection_header("Інструкція користувача"),
         paragraph("Користувачем програмного забезпечення що надає віддалену памʼять є розробник інформаціної системи у яку віддалена памʼять інтегрується. \
 Рекомендованим методом інтеграції віддаленої памʼяті у програмне забезпечення є використання клієнтської бібліотеки. Саме цей спосіб розглядається далі \
-в цій інструкції"),
-        paragraph("Першим кроком є розгортання вузла керування. Для цього, користувач повинен ..."),
+в цій інструкції."),
+        paragraph("Першим кроком є розгортання вузла керування. Для цього, користувач повинен на сервері де буде розгорнуто цей компонент виконати команду \
+git clone https://github.com/nikitavbv/far-memory.git для завантаження вихідного коду програмного забезпечення для надання віддаленої памʼяті після чого ʼ
+наступні дії виконуються у папці far-memory. Користувач повинен самостійно створити токен \
+(будь-яка послідовність символів, викорстовується як пароль) та зберегти у файл config/.token . Після цього, вузел керування запускається командою \
+cargo run --release -- --manager. Після цього, вузел керування є готовим для роботи з іншими компонентами системи."),
+        paragraph("Наступним кроком є розгортання вузлів зберігання. На кожному з серверів, де розгортаються вузли зберігання користувач повинен виконати \
+дії що описані далі. Так само як і для вузла керування, вихідний код завантажується командою git clone https://github.com/nikitavbv/far-memory.git . Токен \
+що було використано під час налаштування вузла керування, потрібно так само зберегти (використати існуючий токен, не створювати нові) у файл config/.token . \
+Вузел зберігання після цього запускається командою cargo run --release -- --storage --manager-endpoint 'MANAGER_ENDPOINT' --endpoint 'LOCAL_ENDPOINT', де \
+MANAGER_ENDPOINT - адреса та порт (наприклад: 192.168.254.30:14000) на якому працює вузел керування, а LOCAL_ENDPOINT - це адреса та порт вузла зберігання \
+що розгортається. Адреса що вказується для вузла зберігання повинна бути доступною для зʼєднання з інших вузлів. Після виконання цієї команди, вузел \
+зберігання є готовим до роботи."),
+        paragraph("Інтеграція клієнтської бібліотеки у програмний код інформаційної системи що написано на мові програмування Rust відбувається шляхом \
+додавання біліотеки у список залежностей. Для цього в Cargo.toml потрібно додати рядок far-memory = { git = \"https://github.com/nikitavbv/far-memory.git\" }. \
+Після цього, клієнт віддаленої памʼяті створюється викликом FarMemoryClient::new (приклад на зображенні нижче)."),
+        Block::Image(ImageBlock::new("./images/client_init.png".to_owned(), "Ініціалізація клієнта віддаленої памʼяті".to_owned())),
+
         // tell how users are expected to install and operate far memory. tell a bit about deployment as well. tell about options to use Kubernetes.
 
         Block::SubsectionHeader(SubsectionHeaderBlock::without_numbering("Висновки до розділу".to_owned())),
