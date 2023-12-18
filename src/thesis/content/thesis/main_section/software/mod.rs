@@ -106,7 +106,11 @@ MANAGER_ENDPOINT - адреса та порт (наприклад: 192.168.254.3
         paragraph("Інтеграція клієнтської бібліотеки у програмний код інформаційної системи що написано на мові програмування Rust відбувається шляхом \
 додавання біліотеки у список залежностей. Для цього в Cargo.toml потрібно додати рядок far-memory = { git = \"https://github.com/nikitavbv/far-memory.git\" }. \
 Після цього, клієнт віддаленої памʼяті створюється викликом FarMemoryClient::new (приклад на зображенні нижче)."),
+
+        // TODO: image does not contain token
         Block::Image(ImageBlock::new("./images/client_init.png".to_owned(), "Ініціалізація клієнта віддаленої памʼяті".to_owned())),
+
+        // TODO: describe how to storage an object and get it back.
 
         // tell how users are expected to install and operate far memory. tell a bit about deployment as well. tell about options to use Kubernetes.
 
