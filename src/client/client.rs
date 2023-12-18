@@ -405,7 +405,7 @@ impl FarMemoryClient {
                     break;
                 }
 
-                let span_id = self.replacement_policy.pick_for_eviction(&possible_swap_out_spans).clone();
+                let span_id = span!(Level::DEBUG, "querying replacement policy").in_scope(|| self.replacement_policy.pick_for_eviction(&possible_swap_out_spans).clone());
                 let index = possible_swap_out_spans.iter().position(|x| *x == span_id).unwrap();
                 possible_swap_out_spans.remove(index);
 
