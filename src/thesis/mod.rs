@@ -135,6 +135,6 @@ fn copy_images_to_output(path: &str, block: &Block) {
         Block::TopicCard => (),
         Block::Note(_) => (),
         Block::Table { columns: _, rows: _ } => (),
-        Block::Application => (),
+        Block::Application(_) => (),
     }
 }

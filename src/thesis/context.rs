@@ -7,6 +7,7 @@ pub struct Context {
     numbering_id_counter: usize,
     sections: Vec<SectionContext>,
     references: HashMap<String, u32>,
+    application_index: u32,
 }
 
 impl Context {
@@ -15,6 +16,7 @@ impl Context {
             numbering_id_counter: 0,
             sections: Vec::new(),
             references: HashMap::new(),
+            application_index: 0,
         }
     }
 
@@ -65,6 +67,12 @@ impl Context {
             self.references.insert(reference_text.to_owned(), next_id);
             next_id
         }
+    }
+
+    pub fn next_application_index(&mut self) -> u32 {
+        let index = self.application_index;
+        self.application_index += 1;
+        index
     }
 }
 

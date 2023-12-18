@@ -9,24 +9,27 @@ use {
     self::{
         main_section::main_section,
         abstract_section::abstract_section,
+        applications::applications,
     },
 };
 
 mod main_section;
 
 mod abstract_section;
+mod applications;
 
 pub fn thesis_content(content: &Content) -> Block {
+    let applications = applications();
     let main = main_section();
 
     let abstract_placeholder_content = AbstractContent {
         total_pages: 42,
         total_images: count_images(&main),
         total_tables: count_tables(&main),
-        total_applications: 42,
+        total_applications: count_applications(&applications),
         total_references: 42,
     };
-    let content_with_placeholders = thesis_content_inner(abstract_placeholder_content.clone(), true);
+    let content_with_placeholders = thesis_content_inner(abstract_placeholder_content.clone(), true, None);
 
     let true_total_pages = match count_pages(thesis_docx_template(), content, &content_with_placeholders) {
         Ok(v) => v - 1, // front page does not count
@@ -43,10 +46,10 @@ pub fn thesis_content(content: &Content) -> Block {
         total_applications: count_applications(&content_with_placeholders),
         total_references: count_references(&content_with_placeholders),
         ..abstract_placeholder_content
-    }, true)
+    }, true, Some(applications))
 }
 
-fn thesis_content_inner(abstract_content: AbstractContent, front_page: bool) -> Block {
+fn thesis_content_inner(abstract_content: AbstractContent, front_page: bool, applications: Option<Block>) -> Block {
     /*
     requirements: https://ela.kpi.ua/bitstream/123456789/49978/1/Mahisterska_dysertatsiia.pdf
     examples: https://ela.kpi.ua/handle/123456789/21930
@@ -117,7 +120,10 @@ fn thesis_content_inner(abstract_content: AbstractContent, front_page: bool) -> 
             "AIFM: High-Performance, Application-Integrated Far Memory [Електронний ресурс] // Zhenyuan Ruan, MIT CSAIL; Malte Schwarzkopf, Brown University; Marcos K. Aguilera, VMware Research; Adam Belay, MIT CSAIL - 14th USENIX Symposium on Operating Systems Design and Implementation (OSDI 20) - 2020. Режим доступу до ресурсу: https://www.usenix.org/conference/osdi20/presentation/ruan".to_owned(),
             "Block Device Driver [Електорнний ресурс] // Linux Kernel Teaching. Режим доступу до ресурсу: https://linux-kernel-labs.github.io/refs/heads/master/index.html".to_owned(),
             "Understanding InfiniBand and RDMA [Електронний ресурс] // Red Hat Customer Portal. Режим доступу до ресурсу: https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/configuring_infiniband_and_rdma_networks/understanding-infiniband-and-rdma_configuring-infiniband-and-rdma-networks".to_owned(),
-        ])
+        ]),
+
+        // applications
+        applications.unwrap_or(Block::Multiple(vec![]))
     ])
 }
 
@@ -139,6 +145,7 @@ pub fn thesis_docx_template() -> Docx {
 }
 
 pub fn practice_report_content(content: &Content) -> Block {
+    let applications = applications();
     let main = main_section();
 
     let abstract_placeholder_content = AbstractContent {
@@ -148,7 +155,7 @@ pub fn practice_report_content(content: &Content) -> Block {
         total_applications: 42,
         total_references: 42,
     };
-    let content_with_placeholders = thesis_content_inner(abstract_placeholder_content.clone(), true);
+    let content_with_placeholders = thesis_content_inner(abstract_placeholder_content.clone(), true, None);
 
     let true_total_pages = match count_pages(thesis_docx_template(), content, &content_with_placeholders) {
         Ok(v) => v - 1, // front page does not count
@@ -165,5 +172,5 @@ pub fn practice_report_content(content: &Content) -> Block {
         total_applications: count_applications(&content_with_placeholders),
         total_references: count_references(&content_with_placeholders),
         ..abstract_placeholder_content
-    }, false)
+    }, false, None)
 }

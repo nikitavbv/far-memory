@@ -66,7 +66,7 @@ pub enum Block {
         columns: Vec<String>,
         rows: Vec<Vec<String>>,
     },
-    Application,
+    Application(ApplicationBlock),
 }
 
 #[derive(Debug, Clone)]
@@ -314,6 +314,19 @@ impl ImageBlock {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct ApplicationBlock {
+    id: &'static str,
+}
+
+impl ApplicationBlock {
+    pub fn new(id: &'static str) -> Self {
+        Self {
+            id,
+        }
+    }
+}
+
 pub fn render_block_to_docx(document: Docx, context: &mut Context, content: &Content, block: Block) -> Docx {
     render_block_to_docx_with_params(document, context, content, None, block)
 }
@@ -455,7 +468,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
         Block::TopicCard => document.add_topic_card_document(context, content),
         Block::Note(_) => panic!("note block is not supported in docx"),
         Block::Table { columns: _, rows: _ } => unimplemented!(),
-        Block::Application => unimplemented!(),
+        Block::Application(_) => document.add_paragraph(Paragraph::new().page_break_before(true).add_run(Run::new().add_text(format!("Додаток {}", application_letter_for_index(context.next_application_index()))))),
     }
 }
 
@@ -707,7 +720,7 @@ pub fn print_placeholders(block: &Block) {
         Block::TopicCard => (),
         Block::Note(_) => (),
         Block::Table { columns: _, rows: _ } => (),
-        Block::Application => (),
+        Block::Application(_) => (),
     }
 }
 
@@ -751,7 +764,7 @@ pub fn count_images(block: &Block) -> u32 {
         Block::TopicCard => 0,
         Block::Note(_) => 0,
         Block::Table { columns: _, rows: _ } => 0,
-        Block::Application => 0,
+        Block::Application(_) => 0,
     }
 }
 
@@ -773,7 +786,7 @@ pub fn count_tables(block: &Block) -> u32 {
         Block::TopicCard => 0,
         Block::Note(_) => 0,
         Block::Table { columns: _, rows: _ } => 1,
-        Block::Application => 0,
+        Block::Application(_) => 0,
     }
 }
 
@@ -795,7 +808,7 @@ pub fn count_applications(block: &Block) -> u32 {
         Block::TopicCard => 0,
         Block::Note(_) => 0,
         Block::Table { columns: _, rows: _ } => 0,
-        Block::Application => 1,
+        Block::Application(_) => 1,
     }
 }
 
@@ -817,7 +830,7 @@ pub fn count_references(block: &Block) -> u32 {
         Block::TopicCard => 0,
         Block::Note(_) => 0,
         Block::Table { columns: _, rows: _ } => 0,
-        Block::Application => 0,
+        Block::Application(_) => 0,
     }
 }
 
@@ -905,4 +918,42 @@ impl Into<TextSpan> for Vec<TextSpan> {
 
 pub fn bold(text: &str) -> TextSpan {
     TextSpan::Bold(Box::new(TextSpan::Regular(text.to_owned())))
+}
+
+pub fn application_letter_for_index(index: u32) -> String {
+    vec![
+        "А",
+        "Б",
+        "В",
+        "Г",
+        "Ґ",
+        "Д",
+        "Е",
+        "Є",
+        "Ж",
+        "З",
+        "И",
+        "І",
+        "Ї",
+        "Й",
+        "К",
+        "Л",
+        "М",
+        "Н",
+        "О",
+        "П",
+        "Р",
+        "С",
+        "Т",
+        "У",
+        "Ф",
+        "Х",
+        "Ц",
+        "Ч",
+        "Ш",
+        "Щ",
+        "Ь",
+        "Ю",
+        "Я",
+    ][index as usize].to_owned()
 }
