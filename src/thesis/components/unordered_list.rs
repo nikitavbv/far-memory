@@ -1,14 +1,14 @@
 use {
     docx_rs::{
-        Docx, 
-        Paragraph, 
-        AbstractNumbering, 
-        Level, 
-        Start, 
-        NumberFormat, 
-        LevelText, 
-        LevelJc, 
-        SpecialIndentType, 
+        Docx,
+        Paragraph,
+        AbstractNumbering,
+        Level,
+        Start,
+        NumberFormat,
+        LevelText,
+        LevelJc,
+        SpecialIndentType,
         Numbering,
         Tab,
         LineSpacing,
@@ -40,7 +40,7 @@ impl UnorderedListComponent for Docx {
                     ).indent(None, Some(SpecialIndentType::FirstLine(725)), None, None))
             )
             .add_numbering(Numbering::new(numbering_id, numbering_id));
-        
+
         for i in 0..list.len() {
             let text = list.get(i).unwrap().clone();
             let text = if !text.ends_with("?") {
@@ -48,7 +48,7 @@ impl UnorderedListComponent for Docx {
             } else {
                 text
             };
-            
+
             document = document.add_paragraph(
                 Paragraph::new()
                     .add_tab(Tab::new().pos(710))
@@ -56,7 +56,7 @@ impl UnorderedListComponent for Docx {
                     .align(AlignmentType::Both)
                     .numbering(NumberingId::new(numbering_id), IndentLevel::new(0))
                     .add_run(Run::new().add_text(text))
-            ); 
+            );
         }
 
         document
