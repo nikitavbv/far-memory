@@ -46,7 +46,7 @@ impl DemoWebService {
 
     pub fn handle_request(&self, request: WebServiceRequest, trace: bool) -> WebServiceResponse {
         let picture_to_get: u64 = *request.user_ids.iter()
-            .map(|id| self.users.get(id).unwrap().picture_id)
+            .map(|id| self.users.get(id, trace).unwrap().picture_id)
             .collect::<Vec<_>>()
             // if sum and modulo is used here (looks like that is what AIFM does. I am not sure, though), then distribution will become uniform.
             // that's why here a random item is picked and zipf distribution (well, something close to it) is kept.
