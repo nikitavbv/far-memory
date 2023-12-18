@@ -1,6 +1,6 @@
 use {
     crate::thesis::engine::{Block, subsection_header, paragraph, SubsectionHeaderBlock, TextSpan},
-    super::super::applications::COMPONENT_DIAGRAM_SYSTEM,
+    super::super::applications::{DEPLOYMENT_DIAGRAM, COMPONENT_DIAGRAM},
 };
 
 mod requirements;
@@ -13,18 +13,31 @@ pub fn software() -> Block {
 
         subsection_header("Архітектура програмного забезпечення"),
         subsection_header(SubsectionHeaderBlock::new("Компоненти програмного забезпечення що надає віддалену памʼять".to_owned()).with_level(2)),
-        // - deployment diagram - show components and how they communicate
         paragraph("Як було зазначено раніше, цей метод надання віддаленої памʼяті використовує три компоненти: інтеграція у програмне забезпечення на \
 стороні вузлів обчислення, вузли зберігання та вузел керування. "),
         paragraph(TextSpan::Multiple(vec![
             "Схема структурна розгортання цих компонентів наведена у додатку ".into(),
-            TextSpan::ApplicationReference(COMPONENT_DIAGRAM_SYSTEM),
+            TextSpan::ApplicationReference(DEPLOYMENT_DIAGRAM),
             ".".into(),
         ])),
+        paragraph("Інтеграція у програмне забезпечення представлена клієнтською бібліотекою або віртуальним блоковим присторєм. Інтеграція налаштовується \
+розробником інформаційної системи яка використовує віддалену памʼять. У разі використання бібліотеки, цей компонент розгортається у кількості екземплярів \
+рівній кількості екземплярів програмного забезпечення інформаційної системи. При використанні блокового пристроя - в залежності від кількості серверів \
+на яких розміщена інформаційна система та кількості блокових пристроїв на кожному з них. Очікується що під час роботи інформаційної системи кількість \
+вузлів обчислень може змінюватись."),
+        paragraph("Вузел керування та вузли зберігання розгортаються на інших серверах. Вузел керування завжди один, а кількість вузлів зберігання \
+може змінюватись адміністратором інформаційної системи або планувальником задач, що використовується, в залежності від обсягу вільних ресурсів. На \
+одному сервері може одночасно бути розгорнуто декілька вузлів зберігання."),
 
         subsection_header(SubsectionHeaderBlock::new("Взаємодія компонентів".to_owned()).with_level(2)),
-        // - component diagram - show which data is passed where
-        // TODO: add some description here
+        paragraph(TextSpan::Multiple(vec![
+            "Схема структурна компонентів програмного забезпечення що надає віддалену памʼять наведено у додатку ".into(),
+            TextSpan::ApplicationReference(COMPONENT_DIAGRAM),
+            ". Ця схема окрім компонентів також показує звʼязки між ними, а саме:".into(),
+        ])),
+        Block::UnorderedList(vec![
+            "вузли зберігання передають ...".to_owned(),
+        ]),
 
         subsection_header(SubsectionHeaderBlock::new("Структура клієнта віддаленої памʼяті".to_owned()).with_level(2)),
         // - class diagram - (add for far memory manager and storage later if I will need more pages.)
