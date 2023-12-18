@@ -1,4 +1,7 @@
-use crate::thesis::engine::{Block, subsection_header, paragraph, SubsectionHeaderBlock};
+use {
+    crate::thesis::engine::{Block, subsection_header, paragraph, SubsectionHeaderBlock, TextSpan},
+    super::super::applications::COMPONENT_DIAGRAM_SYSTEM,
+};
 
 mod requirements;
 mod tools;
@@ -13,7 +16,11 @@ pub fn software() -> Block {
         // - deployment diagram - show components and how they communicate
         paragraph("Як було зазначено раніше, цей метод надання віддаленої памʼяті використовує три компоненти: інтеграція у програмне забезпечення на \
 стороні вузлів обчислення, вузли зберігання та вузел керування. "),
-        paragraph("Схема структурна розгортання цих компонентів наведена у додатку А."),
+        paragraph(TextSpan::Multiple(vec![
+            "Схема структурна розгортання цих компонентів наведена у додатку ".into(),
+            TextSpan::ApplicationReference(COMPONENT_DIAGRAM_SYSTEM),
+            ".".into(),
+        ])),
 
         subsection_header(SubsectionHeaderBlock::new("Взаємодія компонентів".to_owned()).with_level(2)),
         // - component diagram - show which data is passed where

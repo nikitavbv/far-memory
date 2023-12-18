@@ -64,6 +64,7 @@ fn extract_references_text_span(references: &mut Vec<String>, text: &TextSpan) {
             }
         },
         TextSpan::Break => (),
+        TextSpan::ApplicationReference(_) => (),
     }
 }
 

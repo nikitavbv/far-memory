@@ -247,6 +247,7 @@ pub enum TextSpan {
         url: String,
     },
     Reference(Box<TextSpan>, Reference),
+    ApplicationReference(&'static str),
     Break,
 }
 
@@ -332,6 +333,8 @@ pub fn render_block_to_docx(document: Docx, context: &mut Context, content: &Con
 }
 
 fn render_block_to_docx_with_params(document: Docx, context: &mut Context, content: &Content, placeholder: Option<String>, block: Block) -> Docx {
+    assign_index_to_applications(context, &block);
+
     match block {
         Block::SectionHeader(header) => {
             let text = if header.has_numbering {
@@ -468,7 +471,11 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
         Block::TopicCard => document.add_topic_card_document(context, content),
         Block::Note(_) => panic!("note block is not supported in docx"),
         Block::Table { columns: _, rows: _ } => unimplemented!(),
-        Block::Application(_) => document.add_paragraph(Paragraph::new().page_break_before(true).add_run(Run::new().add_text(format!("Додаток {}", application_letter_for_index(context.next_application_index()))))),
+        Block::Application(application) => document.add_paragraph(
+            Paragraph::new()
+                .page_break_before(true)
+                .add_run(Run::new().add_text(format!("Додаток {}", application_letter_for_index(context.index_for_application_id(application.id).unwrap()))))
+        ),
     }
 }
 
@@ -616,6 +623,7 @@ fn render_text_span_to_html(span: TextSpan) -> String {
         TextSpan::Link { text, url } => format!("<a href=\"{}\">{}</a>", url, html_escape::encode_text(&text)),
         TextSpan::Reference(_text, _reference) => unimplemented!(),
         TextSpan::Break => "<br />".to_owned(),
+        TextSpan::ApplicationReference(_) => unimplemented!(),
     }
 }
 
@@ -894,6 +902,7 @@ impl TextSpan {
             TextSpan::Link { text, url: _ } => text.to_owned(),
             TextSpan::Reference(text, _) => text.to_plaintext(),
             TextSpan::Break => "\n".to_owned(),
+            TextSpan::ApplicationReference(_) => unimplemented!(),
         }
     }
 }
@@ -956,4 +965,26 @@ pub fn application_letter_for_index(index: u32) -> String {
         "Ю",
         "Я",
     ][index as usize].to_owned()
+}
+
+fn assign_index_to_applications(context: &mut Context, text: &Block) {
+    match text {
+        Block::Multiple(inner) => inner.iter().for_each(|v| assign_index_to_applications(context, v)),
+        Block::Application(application) => context.add_application(application.id),
+        Block::FrontPage => (),
+        Block::TaskSection => (),
+        Block::AbstractSection(..) => (),
+        Block::Paragraph(_) => (),
+        Block::SectionHeader(_) => (),
+        Block::TableOfContents => (),
+        Block::UnorderedList(_) => (),
+        Block::SubsectionHeader(_) => (),
+        Block::Image(_) => (),
+        Block::Placeholder(inner, _) => assign_index_to_applications(context, inner),
+        Block::ReferencesList(_) => (),
+        Block::OrderedList(_) => (),
+        Block::TopicCard => (),
+        Block::Note(..) => (),
+        Block::Table{..} => (),
+    }
 }

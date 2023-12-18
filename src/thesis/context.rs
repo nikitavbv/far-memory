@@ -7,7 +7,7 @@ pub struct Context {
     numbering_id_counter: usize,
     sections: Vec<SectionContext>,
     references: HashMap<String, u32>,
-    application_index: u32,
+    applications: HashMap<&'static str, u32>, // index by application id
 }
 
 impl Context {
@@ -16,7 +16,7 @@ impl Context {
             numbering_id_counter: 0,
             sections: Vec::new(),
             references: HashMap::new(),
-            application_index: 0,
+            applications: HashMap::new(),
         }
     }
 
@@ -69,10 +69,14 @@ impl Context {
         }
     }
 
-    pub fn next_application_index(&mut self) -> u32 {
-        let index = self.application_index;
-        self.application_index += 1;
-        index
+    pub fn add_application(&mut self, application_id: &'static str) {
+        if !self.applications.contains_key(application_id) {
+            self.applications.insert(application_id, self.applications.len() as u32);
+        }
+    }
+
+    pub fn index_for_application_id(&self, application_id: &'static str) -> Option<u32> {
+        self.applications.get(application_id).cloned()
     }
 }
 
