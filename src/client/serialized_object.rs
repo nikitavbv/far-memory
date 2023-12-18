@@ -25,7 +25,7 @@ impl <T: Serialize> FarMemorySerialized<T> {
     pub fn from_value(client: FarMemoryClient, value: T) -> Self {
         // TODO: use rkyv instead for better performance?
         let serialized = bincode::serialize(&value).unwrap();
-        let object = client.put_object(serialized);
+        let object = client.put_object(serialized, true);
 
         Self {
             client,
@@ -46,7 +46,7 @@ impl <T: DeserializeOwned> FarMemorySerialized<T> {
 
         let location = self.client.get_object(&self.object);
         let bytes = unsafe {
-            let ptr = self.client.span_ptr(&location.span_id).add(location.offset);
+            let ptr = self.client.span_ptr(&location.span_id, trace).add(location.offset);
             std::slice::from_raw_parts(ptr, location.len)
         };
 

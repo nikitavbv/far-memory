@@ -30,7 +30,7 @@ impl FarMemoryBuffer {
         buffer.append(bytes);
         buffer
     }
-    
+
     pub fn zeros(client: FarMemoryClient, len: u64) -> Self {
         Self::zeros_with_span_size(client, len, DEFAULT_SPAN_SIZE)
     }
@@ -44,14 +44,14 @@ impl FarMemoryBuffer {
         }
         buffer
     }
-    
+
     pub fn swap_out(&self) {
         self.client.swap_out_spans_fully(&self.spans);
     }
 
     pub fn append(&mut self, bytes: Vec<u8>) {
         let mut i = 0;
-    
+
         while i < bytes.len() {
             let free_space = self.total_capacity() - self.len;
             let len_to_add = free_space.min(bytes.len());
@@ -65,7 +65,7 @@ impl FarMemoryBuffer {
     }
 
     fn grow(&mut self) {
-        self.spans.push(self.client.allocate_span(self.span_size))
+        self.spans.push(self.client.allocate_span(self.span_size, true))
     }
 
     fn append_to_last_span(&mut self, bytes: &[u8]) {
@@ -74,7 +74,7 @@ impl FarMemoryBuffer {
         }
 
         let span_id = &self.spans[self.spans.len() - 1];
-        let ptr = self.client.span_ptr(span_id);
+        let ptr = self.client.span_ptr(span_id, true);
         let offset = self.len % self.span_size;
 
         unsafe {
@@ -82,7 +82,7 @@ impl FarMemoryBuffer {
             let dst = ptr.offset(offset as isize);
             std::ptr::copy(src, dst, bytes.len());
         }
-        
+
         self.client.decrease_refs_for_span(span_id);
 
         self.len += bytes.len();
@@ -105,36 +105,36 @@ impl FarMemoryBuffer {
             let span_offset = i % self.span_size;
 
             let span_id = &self.spans[span_index];
-            let ptr = self.client.span_ptr(span_id);
+            let ptr = self.client.span_ptr(span_id, true);
             let bytes_to_read = (self.span_size - span_offset).min(range.end - i);
 
             unsafe {
                 std::ptr::copy(ptr.offset(span_offset as isize), result.as_mut_ptr().offset((i - range.start) as isize), bytes_to_read);
             }
             self.client.decrease_refs_for_span(span_id);
-            
-            i += bytes_to_read;            
+
+            i += bytes_to_read;
         }
 
         result
     }
-    
+
     pub fn write_range(&self, start_at: usize, range: &[u8]) {
         let mut i = start_at;
         let range_end = start_at + range.len();
-        
+
         while i < range_end {
             let span_index = i / self.span_size;
             let span_offset = i % self.span_size;
 
             let span_id = &self.spans[span_index];
-            let ptr = self.client.span_ptr(span_id);
+            let ptr = self.client.span_ptr(span_id, true);
             let bytes_to_write = (self.span_size - span_offset).min(range_end - i);
             unsafe {
                 std::ptr::copy(range.as_ptr().offset((i - start_at) as isize), ptr.offset(span_offset as isize), bytes_to_write);
             }
             self.client.decrease_refs_for_span(span_id);
-            
+
             i += bytes_to_write;
         }
     }
@@ -147,8 +147,8 @@ impl Index<usize> for FarMemoryBuffer {
         let span_index = index / self.span_size;
         let span_offset = index % self.span_size;
 
-        let ptr = self.client.span_ptr(&self.spans[span_index]);
-        
+        let ptr = self.client.span_ptr(&self.spans[span_index], true);
+
         // todo: lock it somehow to prevent swap out? Probably can lock using smart pointers.
         unsafe {
             let ptr = ptr.offset(span_offset as isize);
@@ -190,16 +190,16 @@ mod tests {
 
         assert_eq!(vec![7, 6, 5], buffer.slice(3..6));
     }
-    
+
     #[test]
     fn write_range() {
         let client = FarMemoryClient::new(Box::new(InMemoryBackend::new()), 1000 * 1024 * 1024);
         let buffer = FarMemoryBuffer::from_bytes(client, vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
 
         assert_eq!(vec![7, 6, 5], buffer.slice(3..6));
-        
+
         buffer.write_range(3, &[1, 2, 3]);
-        
+
         assert_eq!(vec![1, 2, 3], buffer.slice(3..6));
     }
 

@@ -114,11 +114,11 @@ impl FarMemoryClient {
         self.is_running.load(Ordering::Relaxed)
     }
 
-    pub fn allocate_span(&self, span_size: usize) -> SpanId {
+    pub fn allocate_span(&self, span_size: usize, trace: bool) -> SpanId {
         let _guard = span!(Level::DEBUG, "waiting for lock").in_scope(|| self.swap_in_out_lock.lock().unwrap());
 
         span!(Level::DEBUG, "allocate_span - ensure local memory limit").in_scope(|| {
-            self.ensure_local_memory_under_limit(self.local_memory_max_threshold - span_size as u64);
+            self.ensure_local_memory_under_limit(self.local_memory_max_threshold - span_size as u64, trace);
         });
 
         let id = SpanId::from_id(self.span_id_counter.fetch_add(1, Ordering::Relaxed));
@@ -127,7 +127,7 @@ impl FarMemoryClient {
         id
     }
 
-    pub fn span_ptr(&self, id: &SpanId) -> *mut u8 {
+    pub fn span_ptr(&self, id: &SpanId, trace: bool) -> *mut u8 {
         let started_at = Instant::now();
 
         self.replacement_policy.on_span_access(id);
@@ -172,7 +172,7 @@ impl FarMemoryClient {
 
         let data = span!(Level::DEBUG, "swap out and swap in").in_scope(|| {
             // only need to free as much memory as remote part will take. There is already memory for local part of span
-            let result = self.ensure_local_memory_under_limit_and_swap_in(self.local_memory_max_threshold - span_remote_size as u64, Some(id));
+            let result = self.ensure_local_memory_under_limit_and_swap_in(self.local_memory_max_threshold - span_remote_size as u64, Some(id), trace);
             if let Some(metrics) = &self.metrics {
                 metrics.span_swap_out_on_access_ops.inc_by(result.spans as u64);
             }
@@ -375,11 +375,11 @@ impl FarMemoryClient {
         self.spans.read().unwrap().iter().map(|v| v.1.remote_memory_usage()).sum()
     }
 
-    fn ensure_local_memory_under_limit(&self, limit: u64) -> SwapOutResult {
-        self.ensure_local_memory_under_limit_and_swap_in(limit, None)
+    fn ensure_local_memory_under_limit(&self, limit: u64, trace: bool) -> SwapOutResult {
+        self.ensure_local_memory_under_limit_and_swap_in(limit, None, trace)
     }
 
-    fn ensure_local_memory_under_limit_and_swap_in(&self, limit: u64, swap_in: Option<&SpanId>) -> SwapOutResult {
+    fn ensure_local_memory_under_limit_and_swap_in(&self, limit: u64, swap_in: Option<&SpanId>, trace: bool) -> SwapOutResult {
         let current_local_memory = self.total_local_memory() as u64;
         if current_local_memory < limit {
             return SwapOutResult {
@@ -399,13 +399,28 @@ impl FarMemoryClient {
         let mut skip_in_use = 0;
         let mut skip_swapping_out = 0;
 
-        span!(Level::DEBUG, "picking spans for eviction").in_scope(|| {
+        {
+            let span = span!(Level::DEBUG, "picking spans for eviction");
+            let _span = if trace {
+                Some(span.enter())
+            } else {
+                None
+            };
+
             while !possible_swap_out_spans.is_empty() {
                 if total_memory >= memory_to_swap_out {
                     break;
                 }
 
-                let span_id = span!(Level::DEBUG, "querying replacement policy").in_scope(|| self.replacement_policy.pick_for_eviction(&possible_swap_out_spans).clone());
+                let span_id = {
+                    let span = span!(Level::DEBUG, "querying replacement policy");
+                    let _span = if trace {
+                        Some(span.enter())
+                    } else {
+                        None
+                    };
+                    self.replacement_policy.pick_for_eviction(&possible_swap_out_spans).clone()
+                };
                 let index = possible_swap_out_spans.iter().position(|x| *x == span_id).unwrap();
                 possible_swap_out_spans.remove(index);
 
@@ -441,7 +456,7 @@ impl FarMemoryClient {
                     }
                 }
             }
-        });
+        }
 
         let swap_in_span_data = span!(Level::DEBUG, "perform swapping", needed = memory_to_swap_out, swap_out_req_size = total_memory).in_scope(|| {
             self.swap_out_spans_and_swap_in(&spans_to_swap_out, swap_in)
@@ -469,7 +484,7 @@ impl FarMemoryClient {
     }
 
     // objects
-    pub fn put_object(&self, object: Vec<u8>) -> ObjectId {
+    pub fn put_object(&self, object: Vec<u8>, trace: bool) -> ObjectId {
         let object_id = self.object_registry.next_object_id();
         let object_location = self.object_registry.put_object(object_id.clone(), object.len());
         let object_location = if let Some(object_location) = object_location {
@@ -480,11 +495,11 @@ impl FarMemoryClient {
             let size_class = self.object_registry.size_class_for_object(object.len());
             let span_size = 2 * 1024 * 1024;
             let span_size = span_size + (size_class - span_size % size_class);
-            let span = self.allocate_span(span_size);
+            let span = self.allocate_span(span_size, trace);
             self.object_registry.add_span_for_object(span.clone(), span_size, object_id.clone(), object.len())
         };
 
-        let span_ptr = self.span_ptr(&object_location.span_id);
+        let span_ptr = self.span_ptr(&object_location.span_id, trace);
         unsafe {
             std::ptr::copy_nonoverlapping(object.as_ptr(), span_ptr.add(object_location.offset), object.len());
         }
@@ -627,7 +642,7 @@ fn swap_out_thread(client: FarMemoryClient, target_memory_usage: u64) -> impl Fn
 
                 let swap_out_result = span!(Level::DEBUG, "swap out iteration").in_scope(|| {
                     let _guard = span!(Level::DEBUG, "waiting for lock").in_scope(|| client.swap_in_out_lock.lock().unwrap());
-                    client.ensure_local_memory_under_limit(target_memory_usage)
+                    client.ensure_local_memory_under_limit(target_memory_usage, true)
                 });
 
                 if let Some(metrics) = client.metrics.as_ref() {

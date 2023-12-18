@@ -154,7 +154,7 @@ impl<T> FarMemory<T> {
                 (&value as *const _) as *const u8,
                 std::mem::size_of::<T>()
             ).to_vec()
-        });
+        }, true);
 
         Self {
             client,
@@ -184,7 +184,7 @@ impl<T> Deref for FarMemoryLocal<T> {
     fn deref(&self) -> &Self::Target {
         let location = self.client.get_object(&self.object);
         unsafe {
-            &*(self.client.span_ptr(&location.span_id).add(location.offset) as *const T)
+            &*(self.client.span_ptr(&location.span_id, false).add(location.offset) as *const T)
         }
     }
 }
