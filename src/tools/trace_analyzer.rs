@@ -70,10 +70,11 @@ pub fn run_trace_analyzer() {
             let line = line.unwrap();
 
             size += line.as_bytes().len();
-            output.write_all(line.as_bytes()).unwrap();
+            output.write(line.as_bytes()).unwrap();
             if size as u64 >= size_limit {
                 break;
             }
         }
+        output.flush().unwrap();
     }
 }
