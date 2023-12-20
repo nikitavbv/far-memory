@@ -395,10 +395,6 @@ impl FarMemoryClient {
         let mut total_memory = 0;
         let mut possible_swap_out_spans: Vec<SpanId> = self.spans.read().unwrap().keys().cloned().collect();
 
-        let mut skip_local_memory_size = 0;
-        let mut skip_in_use = 0;
-        let mut skip_swapping_out = 0;
-
         {
             let span = span!(Level::DEBUG, "picking spans for eviction");
             let _span = if trace {
@@ -412,15 +408,7 @@ impl FarMemoryClient {
                     break;
                 }
 
-                let span_id = {
-                    let span = span!(Level::DEBUG, "querying replacement policy");
-                    let _span = if trace {
-                        Some(span.enter())
-                    } else {
-                        None
-                    };
-                    self.replacement_policy.pick_for_eviction(&possible_swap_out_spans).clone()
-                };
+                let span_id = self.replacement_policy.pick_for_eviction(&possible_swap_out_spans).clone();
                 let index = possible_swap_out_spans.iter().position(|x| *x == span_id).unwrap();
                 possible_swap_out_spans.remove(index);
 
@@ -433,7 +421,6 @@ impl FarMemoryClient {
                         SpanState::Free => {
                             let span_local_memory_size = span.local_memory_usage();
                             if span_local_memory_size == 0 {
-                                skip_local_memory_size += 1;
                                 continue;
                             }
 
@@ -445,12 +432,10 @@ impl FarMemoryClient {
                         },
                         SpanState::InUse(_) => {
                             // cannot swap out span that is in use
-                            skip_in_use += 1;
                             continue;
                         },
                         SpanState::SwappingOut => {
                             // cannot swap out span that is already being swapped out
-                            skip_swapping_out += 1;
                             continue;
                         },
                     }
