@@ -1,5 +1,7 @@
+use std::io::Write;
+
 use {
-    std::{fs::File, io::{BufReader, BufRead}, collections::HashMap},
+    std::{fs::File, io::{BufReader, BufRead, LineWriter}, collections::HashMap},
     tracing::info,
     serde::Deserialize,
     human_bytes::human_bytes,
@@ -21,7 +23,7 @@ pub fn run_trace_analyzer() {
 
     let progress_bar = ProgressBar::new(trace_file_size);
 
-    let reader = BufReader::new(trace_file);
+    let reader = BufReader::new(&trace_file);
     for line in reader.lines() {
         let line = line.unwrap();
         let line_len = line.as_bytes().len();
@@ -56,4 +58,22 @@ pub fn run_trace_analyzer() {
     size_by_event_name.into_iter()
         .take(10)
         .for_each(|v| println!("{}: {}", v.0, human_bytes(v.1 as f64)));
+
+    let size_limit = 1 * 1024 * 1024 * 1024; // gigabyte
+    if trace_file_size > size_limit {
+        println!("truncating trace file");
+        let mut output = LineWriter::new(File::create("./trace-truncated.json").unwrap());
+        let mut size = 0;
+
+        let reader = BufReader::new(trace_file);
+        for line in reader.lines() {
+            let line = line.unwrap();
+
+            size += line.as_bytes().len();
+            output.write_all(line.as_bytes()).unwrap();
+            if size as u64 >= size_limit {
+                break;
+            }
+        }
+    }
 }
