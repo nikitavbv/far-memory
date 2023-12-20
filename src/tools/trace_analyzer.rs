@@ -23,7 +23,7 @@ pub fn run_trace_analyzer() {
 
     let progress_bar = ProgressBar::new(trace_file_size);
 
-    let reader = BufReader::new(&trace_file);
+    let reader = BufReader::new(trace_file);
     for line in reader.lines() {
         let line = line.unwrap();
         let line_len = line.as_bytes().len();
@@ -65,6 +65,7 @@ pub fn run_trace_analyzer() {
         let mut output = LineWriter::new(File::create("./trace-truncated.json").unwrap());
         let mut size = 0;
 
+        let trace_file = File::open("./trace.json").unwrap();
         let reader = BufReader::new(trace_file);
         for line in reader.lines() {
             let line = line.unwrap();
@@ -75,6 +76,5 @@ pub fn run_trace_analyzer() {
                 break;
             }
         }
-        output.flush().unwrap();
     }
 }
