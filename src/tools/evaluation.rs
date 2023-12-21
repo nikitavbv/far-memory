@@ -70,8 +70,8 @@ impl DemoApplicationType {
     pub fn get_key(&self) -> String {
         match self {
             Self::LlmInference => "llm_inference",
-            Self::WebService => "web_service",
-            Self::Dataframe => "dataframe",
+            Self::WebService => "web_service_v2",
+            Self::Dataframe => "dataframe_v2",
         }.to_owned()
     }
 }
@@ -90,7 +90,7 @@ impl SpanReplacementPolicy {
     pub fn get_key(&self) -> String {
         match self {
             Self::Replay => "replay",
-            Self::LRU => "lru",
+            Self::LRU => "lru_v2",
             Self::MRU => "mru",
             Self::Random => "random",
             Self::PreferRemoteLRU => "prefer_remote_lru",
