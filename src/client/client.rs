@@ -297,7 +297,7 @@ impl FarMemoryClient {
                         panic!("expected span to be in swapping out state when actually swapping out");
                     }
                     *span_state = SpanState::Free;
-                    self.replacement_policy.on_span_swap_out(&op.span_id);
+                    self.replacement_policy.on_span_swap_out(&op.span_id, !op.full_swap_out);
 
                     if let Some(metrics) = self.metrics.as_ref() {
                         metrics.span_swap_out_ops.inc();
@@ -352,7 +352,7 @@ impl FarMemoryClient {
             panic!("expected span to be in swapping out state when actually swapping out");
         }
         *span_state = SpanState::Free;
-        self.replacement_policy.on_span_swap_out(span_id);
+        self.replacement_policy.on_span_swap_out(span_id, !full_swap_out);
 
         if let Some(metrics) = self.metrics.as_ref() {
             metrics.span_swap_out_ops.inc();

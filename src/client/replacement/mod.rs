@@ -5,11 +5,13 @@ use {
 };
 
 pub use {
+    lru::LeastRecentlyUsedReplacementPolicy,
     replay::RemoteReplayReplacementPolicy,
     rnn::RnnReplacementPolicy,
     tracking::TrackingReplacementPolicy,
 };
 
+mod lru;
 mod replay;
 mod rnn;
 mod tracking;
@@ -18,7 +20,7 @@ pub trait ReplacementPolicy: Send + Sync {
     fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId;
 
     fn on_span_access(&self, span_id: &SpanId) {}
-    fn on_span_swap_out(&self, span_id: &SpanId) {}
+    fn on_span_swap_out(&self, span_id: &SpanId, partial: bool) {}
     fn on_span_swap_in(&self, span_id: &SpanId) {}
     fn on_stop(&self) {}
 }
@@ -37,32 +39,6 @@ impl RandomReplacementPolicy {
 impl ReplacementPolicy for RandomReplacementPolicy {
     fn pick_for_eviction<'a>(&self, spans: &'a [SpanId]) -> &'a SpanId {
         spans.choose(&mut rand::thread_rng()).unwrap()
-    }
-}
-
-// 108.3 per token (for 25700)
-pub struct LeastRecentlyUsedReplacementPolicy {
-    counter: AtomicU64,
-    history: RwLock<HashMap<SpanId, u64>>,
-}
-
-impl LeastRecentlyUsedReplacementPolicy {
-    pub fn new() -> Self {
-        Self {
-            counter: AtomicU64::new(0),
-            history: RwLock::new(HashMap::new()),
-        }
-    }
-}
-
-impl ReplacementPolicy for LeastRecentlyUsedReplacementPolicy {
-    fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId {
-        let history = self.history.read().unwrap();
-        spans.iter().map(|v| (v, history.get(v).unwrap_or(&0))).reduce(|a, b| if a.1 < b.1 { a } else { b }).map(|a| a.0).unwrap()
-    }
-
-    fn on_span_access(&self, span_id: &SpanId) {
-        self.history.write().unwrap().insert(span_id.clone(), self.counter.fetch_add(1, Ordering::Relaxed));;
     }
 }
 
@@ -137,8 +113,8 @@ impl ReplacementPolicy for PreferRemoteSpansReplacementPolicy {
         self.remote_spans.write().unwrap().remove(span_id);
     }
 
-    fn on_span_swap_out(&self, span_id: &SpanId) {
-        self.inner.on_span_swap_out(span_id);
+    fn on_span_swap_out(&self, span_id: &SpanId, partial: bool) {
+        self.inner.on_span_swap_out(span_id, partial);
         self.remote_spans.write().unwrap().insert(span_id.clone());
     }
 }
@@ -216,8 +192,8 @@ impl ReplacementPolicy for ReplayReplacementPolicy {
         self.fallback.on_span_access(span_id)
     }
 
-    fn on_span_swap_out(&self, span_id: &SpanId) {
-        self.fallback.on_span_swap_out(span_id)
+    fn on_span_swap_out(&self, span_id: &SpanId, partial: bool) {
+        self.fallback.on_span_swap_out(span_id, partial)
     }
 
     fn on_span_swap_in(&self, span_id: &SpanId) {

@@ -69,8 +69,8 @@ impl ReplacementPolicy for RemoteReplayReplacementPolicy {
         self.fallback.on_span_access(span_id)
     }
 
-    fn on_span_swap_out(&self, span_id: &SpanId) {
-        self.fallback.on_span_swap_out(span_id)
+    fn on_span_swap_out(&self, span_id: &SpanId, partial: bool) {
+        self.fallback.on_span_swap_out(span_id, partial)
     }
 
     fn on_span_swap_in(&self, span_id: &SpanId) {
