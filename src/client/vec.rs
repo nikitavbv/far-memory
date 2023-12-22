@@ -21,7 +21,7 @@ pub struct FarMemoryLocalVec<T> {
 impl <T> FarMemoryVec<T> {
     pub fn from_vec(client: FarMemoryClient, vec: Vec<T>) -> Self {
         let size = std::mem::size_of::<T>() * vec.len();
-        let span = client.allocate_span(size, true);
+        let span = client.allocate_span(size);
         let ptr = client.span_ptr(&span, true);
         // this can probably be optimized by taking ptr and giving it to client, instead of
         // allocation and copy

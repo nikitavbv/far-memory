@@ -65,7 +65,7 @@ impl FarMemoryBuffer {
     }
 
     fn grow(&mut self) {
-        self.spans.push(self.client.allocate_span(self.span_size, true))
+        self.spans.push(self.client.allocate_span(self.span_size))
     }
 
     fn append_to_last_span(&mut self, bytes: &[u8]) {
