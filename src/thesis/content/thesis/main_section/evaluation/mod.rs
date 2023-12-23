@@ -1,4 +1,4 @@
-use crate::thesis::engine::{Block, section_header, paragraph, SubsectionHeaderBlock, subsection_header};
+use crate::thesis::engine::{Block, section_header, paragraph, SubsectionHeaderBlock, subsection_header, ImageBlock};
 
 pub fn evaluation() -> Block {
     Block::Multiple(vec![
@@ -41,9 +41,22 @@ AES GCM, стискається алгоритмом Snappy, після чого
 згенеровані випадковим чином для фільтрації по даті, аеропорту та авіакомпанії. Для кожного запиту з набору даних обираються 10000 рейсів що \
 відповідають критеріям та рахується середня звтримка прибуття літака у аеропорт призначення. Значення затримки повертається як відповідь на запит. \
 Ця інформаційна система належить до класу програм що використовує структури даних адаптовані для роботи з віддаленою памʼяттю, обробляє дані у потоковому \
-режимі ..."), // todo: tell that data can be processed in any order.
-        // todo: describe third app
-        // todo: explain that performance is throughput
+режимі та може обробляти дані (у цьому випадку - рядки) в будь-якому порядку."),
+
+        subsection_header("Пропускна здатність різних класів програмного забезпечення"),
+        paragraph("Для усіх трьох інформаційних систем що розглядаються було проведено вимірювання пропускної здатності в залежності від частки локальної \
+памʼяті. Іншими словами, розмір набору даних, з яким працює програмне забезпечення є однаковим для усіх запусків програми одного типу, але розмір \
+простору відведений для зберігання даних у локальній памʼяті обмежується певним процентом від розміру набору даних, інша частина зберігається у \
+памʼяті віддалених вузлів. Значення пропускної здатності нормалізуються максимальною пропускною здатністю отриманою для типу програмного забезпечення \
+з усіх проведених вимірювань."),
+        paragraph("Результати вимірювання пропускної здатності наведено на графіку нижче."),
+
+        Block::Image(ImageBlock::new(
+            "./images/plot_demo_throughput.png".to_owned(),
+            "Пропускна здатність програмного забезпечення в залежності від його типу та обсягу локальної памʼяті".to_owned()
+        ).with_scaling(0.5)),
+        paragraph("З цього графіку помітно, що зі зменшенням частки локальної памʼяті ..."), // tell how less local memory affects different types of software
+
         // todo: explain that 0.2 is because of network/CPU throughput.
         // todo: tell that I also was able to verify that integration is simple enough with llm inference application.
 
