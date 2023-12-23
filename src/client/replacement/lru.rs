@@ -1,18 +1,20 @@
 use {
-    std::sync::RwLock,
+    std::{sync::{atomic::{AtomicU64, Ordering}, RwLock}, collections::{HashMap, HashSet}},
     tracing::{span, Level},
     crate::client::{SpanId, ReplacementPolicy},
 };
 
 // 108.3 per token (for 25700)
 pub struct LeastRecentlyUsedReplacementPolicy {
-    history: RwLock<Vec<SpanId>>,
+    counter: AtomicU64,
+    history: RwLock<HashMap<SpanId, u64>>,
 }
 
 impl LeastRecentlyUsedReplacementPolicy {
     pub fn new() -> Self {
         Self {
-            history: RwLock::new(Vec::new()),
+            counter: AtomicU64::new(0),
+            history: RwLock::new(HashMap::new()),
         }
     }
 }
@@ -20,14 +22,11 @@ impl LeastRecentlyUsedReplacementPolicy {
 impl ReplacementPolicy for LeastRecentlyUsedReplacementPolicy {
     fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId {
         let history = span!(Level::DEBUG, "acquiring history lock").in_scope(|| self.history.read().unwrap());
-        span!(Level::DEBUG, "filtering spans").in_scope(|| {
-            for i in 0..history.len() {
-                if let Some(index) = spans.iter().position(|v| v == &history[i]) {
-                    return &spans[index];
-                }
-            }
-            &spans[0]
-        })
+        span!(Level::DEBUG, "filtering spans").in_scope(|| spans.iter()
+            .map(|v| (v, history.get(v)))
+            .filter(|v| v.1.is_some())
+            .map(|v| (v.0, v.1.unwrap()))
+            .reduce(|a, b| if a.1 < b.1 { a } else { b }).map(|a| a.0).unwrap())
     }
 
     fn on_new_span(&self, span_id: &SpanId) {
@@ -35,19 +34,12 @@ impl ReplacementPolicy for LeastRecentlyUsedReplacementPolicy {
     }
 
     fn on_span_access(&self, span_id: &SpanId) {
-        let mut history = self.history.write().unwrap();
-        if let Some(index) = history.iter().position(|v| v == span_id) {
-            history.remove(index);
-        }
-        history.push(span_id.clone());
+        self.history.write().unwrap().insert(span_id.clone(), self.counter.fetch_add(1, Ordering::Relaxed));
     }
 
     fn on_span_swap_out(&self, span_id: &SpanId, partial: bool) {
         if !partial {
-            let mut history = self.history.write().unwrap();
-            if let Some(index) = history.iter().position(|v| v == span_id) {
-                history.remove(index);
-            }
+            self.history.write().unwrap().remove(&span_id);
         }
     }
 
