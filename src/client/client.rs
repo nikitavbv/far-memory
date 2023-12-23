@@ -1,6 +1,6 @@
 use {
     std::{sync::{Arc, atomic::{AtomicU64, Ordering, AtomicBool}, RwLock, Mutex}, collections::HashMap, thread, time::{Instant, Duration}},
-    tracing::{Level, span, info},
+    tracing::{Level, span, info, debug},
     crossbeam::utils::Backoff,
     prometheus::{Registry, register_int_gauge_with_registry, IntGauge, IntCounter, register_int_counter_with_registry},
     crate::manager::ManagerClient,
@@ -414,6 +414,7 @@ impl FarMemoryClient {
                         SpanState::Free => {
                             let span_local_memory_size = span.local_memory_usage();
                             if span_local_memory_size == 0 {
+                                debug!("skipping span that does not have local memory");
                                 continue;
                             }
 
@@ -425,10 +426,12 @@ impl FarMemoryClient {
                         },
                         SpanState::InUse(_) => {
                             // cannot swap out span that is in use
+                            debug!("skipping span that is in use");
                             continue;
                         },
                         SpanState::SwappingOut => {
                             // cannot swap out span that is already being swapped out
+                            debug!("skipping span that is being swapped out");
                             continue;
                         },
                     }
