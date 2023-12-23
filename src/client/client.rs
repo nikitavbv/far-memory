@@ -8,7 +8,7 @@ use {
         backend::{FarMemoryBackend, SwapOutOperation, SwapOutOperationData},
         replacement::{ReplacementPolicy, MostRecentlyUsedReplacementPolicy, PreferRemoteSpansReplacementPolicy, ReplayReplacementPolicy},
         span::{SpanId, FarMemorySpan, LocalSpanData},
-        object::{ObjectId, ObjectRegistry, ObjectLocation},
+        object::{ObjectId, ObjectRegistry, ObjectLocation, FarMemory},
     },
 };
 
@@ -47,7 +47,7 @@ struct SwapOutResult {
 }
 
 impl FarMemoryClient {
-    pub fn connect_to(manager_endpoint: &str) -> Result<Self, String> {
+    pub fn connect_to(manager_endpoint: &str, token: &str) -> Result<Self, String> {
         unimplemented!()
     }
 
@@ -71,6 +71,12 @@ impl FarMemoryClient {
         }
     }
 
+    // higher level API
+    pub fn object<T>(&self, object: T) -> FarMemory<T> {
+        unimplemented!()
+    }
+
+    // lower level API
     pub fn use_manager(&mut self, manager: ManagerClient) {
         self.manager = Arc::new(Some(manager));
     }

@@ -173,6 +173,14 @@ impl<T> FarMemory<T> {
     }
 }
 
+impl<T> Deref for FarMemory<T> {
+    type Target = FarMemoryLocal<T>;
+
+    fn deref(&self) -> &Self::Target {
+        unimplemented!()
+    }
+}
+
 pub struct FarMemoryLocal<T> {
     client: FarMemoryClient,
     object: ObjectId,

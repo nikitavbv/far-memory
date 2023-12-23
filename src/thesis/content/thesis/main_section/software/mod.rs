@@ -107,12 +107,16 @@ MANAGER_ENDPOINT - адреса та порт (наприклад: 192.168.254.3
 додавання біліотеки у список залежностей. Для цього в Cargo.toml потрібно додати рядок far-memory = { git = \"https://github.com/nikitavbv/far-memory.git\" }. \
 Після цього, клієнт віддаленої памʼяті створюється викликом FarMemoryClient::new (приклад на зображенні нижче)."),
 
-        // TODO: image does not contain token
         Block::Image(ImageBlock::new("./images/client_init.png".to_owned(), "Ініціалізація клієнта віддаленої памʼяті".to_owned())),
 
-        // TODO: describe how to storage an object and get it back.
+        paragraph("Після цьго клієнт віддаленої памʼяті використовується програмним забезпеченням для зберігання даних у цьому класі памʼяті та \
+автоматичного переміщення даних між локальною та віддаленою памʼяттю. Наприклад, для переміщення обʼєкта у віддалену памʼять, розробник може використати \
+функцію FarMemoryClient::object<T>, яка повертає розумний показчик з яким можна взаємодіяти так само як і з самим обʼєктом, без внесення значних змін \
+у вихідний код програмного забезпечення (приклад на зображенні нижче)."),
 
-        // tell how users are expected to install and operate far memory. tell a bit about deployment as well. tell about options to use Kubernetes.
+        Block::Image(ImageBlock::new("./images/client_object.png".to_owned(), "Використання обʼєктів у віддаленій памʼяті".to_owned())),
+
+        // TODO: tell about using custom data structure implementations.
 
         Block::SubsectionHeader(SubsectionHeaderBlock::without_numbering("Висновки до розділу".to_owned())),
         Block::Placeholder(Box::new(paragraph("some text here")), "add some text here".to_owned()),
