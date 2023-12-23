@@ -1,5 +1,5 @@
 use {
-    crate::thesis::engine::{Block, subsection_header, paragraph, SubsectionHeaderBlock, TextSpan, ImageBlock},
+    crate::thesis::engine::{Block, subsection_header, paragraph, SubsectionHeaderBlock, TextSpan, ImageBlock, section_header},
     super::super::applications::{DEPLOYMENT_DIAGRAM, COMPONENT_DIAGRAM, CLASS_DIAGRAM, ACCESS_SEQUENCE, BACKGROUND_THREAD_SEQUENCE},
 };
 
@@ -8,6 +8,8 @@ mod tools;
 
 pub fn software() -> Block {
     Block::Multiple(vec![
+        section_header("Опис програмного забезпечення"),
+
         requirements::requirements(),
         tools::tools(),
 
@@ -116,9 +118,21 @@ MANAGER_ENDPOINT - адреса та порт (наприклад: 192.168.254.3
 
         Block::Image(ImageBlock::new("./images/client_object.png".to_owned(), "Використання обʼєктів у віддаленій памʼяті".to_owned())),
 
-        // TODO: tell about using custom data structure implementations.
+        paragraph("Використання структур даних адаптованих для роботи з віддаленою памʼяттю вібувається схожим чином. Наприклад, для переміщення списку \
+з елементів у віддалену памʼять з використанням серіалізації (FarMemorySerializedObjectVec<T>), розробник повинен використати функцію \
+FarMemoryClient::serialized_object_vec<T>, яка повертає розумний показчик на структуру даних типу вектор адаптовану для роботи з віддаленою памʼяттю (\
+приклад на зображенні нижче)."),
+        Block::Image(ImageBlock::new(
+            "./images/client_serialized_object_vec.png".to_owned(),
+            "Використання структури даних адаптованої для роботи з віддаленою памʼяттю".to_owned()
+        )),
+        // I can also add more notes about other functions.
+        // I can also describe how virtual block device works.
 
         Block::SubsectionHeader(SubsectionHeaderBlock::without_numbering("Висновки до розділу".to_owned())),
-        Block::Placeholder(Box::new(paragraph("some text here")), "add some text here".to_owned()),
+        paragraph("В даному розділі було розглянуто реалізацію програмного продукту що надає віддалену памʼять у розподіленій системі."),
+        paragraph("Описано вимоги до програмного продукту що розглядається. До цих вимог входять набір фунціоналу, що є необхідним для використання клієнту \
+віддаленої памʼяті у типовому програмному забезпеченні інформаційної системи."), // TODO: hardware expectations
+        // TODO: finish conclusions
     ])
 }

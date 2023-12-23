@@ -30,11 +30,21 @@ pub fn run_simple_demo() {
     // create a client when software is initilized:
     let client = FarMemoryClient::connect_to("192.168.254.30:14000", token).unwrap();
 
+    // objects
     let object = SomeApplicationData::new();
     object.do_something();
 
     let object = client.object(object);
     object.do_something();
+
+    // using custom data structure implementation
+
+    let data = vec![1, 2, 3, 4, 5];
+
+    let data = client.serialized_object_vec(data);
+    for entry in data.iter() {
+        println!("entry: {:?}", entry);
+    }
 
     client.stop();
 }

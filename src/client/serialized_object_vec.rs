@@ -34,27 +34,25 @@ impl<T: Serialize> FarMemorySerializedObjectVec<T> {
 }
 
 impl<T: DeserializeOwned> FarMemorySerializedObjectVec<T> {
-    pub fn get(&self, index: usize, trace: bool) -> Option<T> {
-        self.objects.get(index).map(|v| v.to_local(trace))
+    pub fn get(&self, index: usize) -> Option<T> {
+        self.objects.get(index).map(|v| v.to_local())
     }
 
-    pub fn iter(&self, trace: bool) -> FarMemorySerializedObjectVecIterator<T> {
-        FarMemorySerializedObjectVecIterator::new(self.objects.clone(), trace)
+    pub fn iter(&self) -> FarMemorySerializedObjectVecIterator<T> {
+        FarMemorySerializedObjectVecIterator::new(self.objects.clone())
     }
 }
 
 pub struct FarMemorySerializedObjectVecIterator<T> {
     objects: Vec<FarMemorySerialized<T>>,
     remote_objects_by_span: HashMap<u64, Vec<FarMemorySerialized<T>>>,
-    trace: bool,
 }
 
 impl<T> FarMemorySerializedObjectVecIterator<T> {
-    pub fn new(objects: Vec<FarMemorySerialized<T>>, trace: bool) -> Self {
+    pub fn new(objects: Vec<FarMemorySerialized<T>>) -> Self {
         Self {
             objects,
             remote_objects_by_span: HashMap::new(),
-            trace,
         }
     }
 }
@@ -64,17 +62,12 @@ impl<T: DeserializeOwned> Iterator for FarMemorySerializedObjectVecIterator<T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let span = span!(Level::DEBUG, "serialized object iterator - next");
-
-        let _span = if self.trace {
-            Some(span.enter())
-        } else {
-            None
-        };
+        let _span = span.enter();
 
         if let Some(object) = self.objects.pop() {
             // we have objects that are not sorted yet
             if object.is_local() {
-                return Some(object.to_local(self.trace));
+                return Some(object.to_local());
             }
 
             // save remote object to remote objects by span
@@ -96,7 +89,7 @@ impl<T: DeserializeOwned> Iterator for FarMemorySerializedObjectVecIterator<T> {
             let objects_in_span = self.remote_objects_by_span.get_mut(&span).unwrap();
             // found local span, lets return objects from it
             if objects_in_span.last().unwrap().is_local() {
-                return Some(objects_in_span.pop().unwrap().to_local(self.trace));
+                return Some(objects_in_span.pop().unwrap().to_local());
             }
         }
 
@@ -110,7 +103,7 @@ impl<T: DeserializeOwned> Iterator for FarMemorySerializedObjectVecIterator<T> {
             }
 
             // swap in happens here
-            return Some(objects_in_span.pop().unwrap().to_local(self.trace));
+            return Some(objects_in_span.pop().unwrap().to_local());
         }
 
         // no objects left

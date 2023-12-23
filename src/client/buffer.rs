@@ -74,7 +74,7 @@ impl FarMemoryBuffer {
         }
 
         let span_id = &self.spans[self.spans.len() - 1];
-        let ptr = self.client.span_ptr(span_id, true);
+        let ptr = self.client.span_ptr(span_id);
         let offset = self.len % self.span_size;
 
         unsafe {
@@ -105,7 +105,7 @@ impl FarMemoryBuffer {
             let span_offset = i % self.span_size;
 
             let span_id = &self.spans[span_index];
-            let ptr = self.client.span_ptr(span_id, true);
+            let ptr = self.client.span_ptr(span_id);
             let bytes_to_read = (self.span_size - span_offset).min(range.end - i);
 
             unsafe {
@@ -128,7 +128,7 @@ impl FarMemoryBuffer {
             let span_offset = i % self.span_size;
 
             let span_id = &self.spans[span_index];
-            let ptr = self.client.span_ptr(span_id, true);
+            let ptr = self.client.span_ptr(span_id);
             let bytes_to_write = (self.span_size - span_offset).min(range_end - i);
             unsafe {
                 std::ptr::copy(range.as_ptr().offset((i - start_at) as isize), ptr.offset(span_offset as isize), bytes_to_write);
@@ -147,7 +147,7 @@ impl Index<usize> for FarMemoryBuffer {
         let span_index = index / self.span_size;
         let span_offset = index % self.span_size;
 
-        let ptr = self.client.span_ptr(&self.spans[span_index], true);
+        let ptr = self.client.span_ptr(&self.spans[span_index]);
 
         // todo: lock it somehow to prevent swap out? Probably can lock using smart pointers.
         unsafe {

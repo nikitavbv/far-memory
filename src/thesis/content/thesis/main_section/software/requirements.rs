@@ -2,7 +2,6 @@ use crate::thesis::engine::{Block, paragraph, section_header, subsection_header}
 
 pub fn requirements() -> Block {
     Block::Multiple(vec![
-        section_header("Опис програмного забезпечення"),
         subsection_header("Вимоги до програмного забезпечення"),
         paragraph("Як було зазначено в попередніх розділах, до реалізації віддаленої памʼяті, що розглядається в цій роботі, висуваються \
 вимоги які визначені розглянутими особливостями середовища та програмного забезпечення, у яке вона інтегрується."),

@@ -22,7 +22,7 @@ impl <T> FarMemoryVec<T> {
     pub fn from_vec(client: FarMemoryClient, vec: Vec<T>) -> Self {
         let size = std::mem::size_of::<T>() * vec.len();
         let span = client.allocate_span(size);
-        let ptr = client.span_ptr(&span, true);
+        let ptr = client.span_ptr(&span);
         // this can probably be optimized by taking ptr and giving it to client, instead of
         // allocation and copy
         unsafe {
@@ -41,7 +41,7 @@ impl <T> FarMemoryVec<T> {
 
     pub fn to_local_vec(&self) -> FarMemoryLocalVec<T> {
         span!(Level::DEBUG, "FarMemoryVec::to_local_vec", span_id=self.span.id()).in_scope(|| {
-            let ptr = self.client.span_ptr(&self.span, true) as *const T;
+            let ptr = self.client.span_ptr(&self.span) as *const T;
             if self.len * std::mem::size_of::<T>() != self.client.span_local_memory_usage(&self.span) {
                 panic!("memory needed for mem does not match size of memory allocated");
             }

@@ -9,6 +9,7 @@ use {
         replacement::{ReplacementPolicy, MostRecentlyUsedReplacementPolicy, PreferRemoteSpansReplacementPolicy, ReplayReplacementPolicy},
         span::{SpanId, FarMemorySpan, LocalSpanData},
         object::{ObjectId, ObjectRegistry, ObjectLocation, FarMemory},
+        serialized_object_vec::FarMemorySerializedObjectVec,
     },
 };
 
@@ -47,10 +48,20 @@ struct SwapOutResult {
 }
 
 impl FarMemoryClient {
+    // higher level API
     pub fn connect_to(manager_endpoint: &str, token: &str) -> Result<Self, String> {
         unimplemented!()
     }
 
+    pub fn object<T>(&self, object: T) -> FarMemory<T> {
+        unimplemented!()
+    }
+
+    pub fn serialized_object_vec<T>(&self, objects: Vec<T>) -> FarMemorySerializedObjectVec<T> {
+        unimplemented!()
+    }
+
+    // lower level API
     pub fn new(backend: Box<dyn FarMemoryBackend>, local_memory_max_threshold: u64) -> Self {
         Self {
             span_id_counter: Arc::new(AtomicU64::new(0)),
@@ -71,12 +82,6 @@ impl FarMemoryClient {
         }
     }
 
-    // higher level API
-    pub fn object<T>(&self, object: T) -> FarMemory<T> {
-        unimplemented!()
-    }
-
-    // lower level API
     pub fn use_manager(&mut self, manager: ManagerClient) {
         self.manager = Arc::new(Some(manager));
     }
@@ -133,7 +138,7 @@ impl FarMemoryClient {
         id
     }
 
-    pub fn span_ptr(&self, id: &SpanId, trace: bool) -> *mut u8 {
+    pub fn span_ptr(&self, id: &SpanId) -> *mut u8 {
         let started_at = Instant::now();
 
         self.replacement_policy.on_span_access(id);
@@ -471,7 +476,7 @@ impl FarMemoryClient {
     }
 
     // objects
-    pub fn put_object(&self, object: Vec<u8>, trace: bool) -> ObjectId {
+    pub fn put_object(&self, object: Vec<u8>) -> ObjectId {
         let object_id = self.object_registry.next_object_id();
         let object_location = self.object_registry.put_object(object_id.clone(), object.len());
         let object_location = if let Some(object_location) = object_location {
@@ -486,7 +491,7 @@ impl FarMemoryClient {
             self.object_registry.add_span_for_object(span.clone(), span_size, object_id.clone(), object.len())
         };
 
-        let span_ptr = self.span_ptr(&object_location.span_id, trace);
+        let span_ptr = self.span_ptr(&object_location.span_id);
         unsafe {
             std::ptr::copy_nonoverlapping(object.as_ptr(), span_ptr.add(object_location.offset), object.len());
         }
