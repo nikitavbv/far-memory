@@ -29,6 +29,10 @@ impl ReplacementPolicy for LeastRecentlyUsedReplacementPolicy {
             .reduce(|a, b| if a.1 < b.1 { a } else { b }).map(|a| a.0).unwrap())
     }
 
+    fn on_new_span(&self, span_id: &SpanId) {
+        self.on_span_access(span_id);
+    }
+
     fn on_span_access(&self, span_id: &SpanId) {
         self.history.write().unwrap().insert(span_id.clone(), self.counter.fetch_add(1, Ordering::Relaxed));
     }

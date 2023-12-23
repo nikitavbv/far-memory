@@ -19,6 +19,7 @@ mod tracking;
 pub trait ReplacementPolicy: Send + Sync {
     fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId;
 
+    fn on_new_span(&self, span_id: &SpanId) {}
     fn on_span_access(&self, span_id: &SpanId) {}
     fn on_span_swap_out(&self, span_id: &SpanId, partial: bool) {}
     fn on_span_swap_in(&self, span_id: &SpanId) {}

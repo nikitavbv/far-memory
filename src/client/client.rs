@@ -133,6 +133,7 @@ impl FarMemoryClient {
         });
 
         let id = SpanId::from_id(self.span_id_counter.fetch_add(1, Ordering::Relaxed));
+        self.replacement_policy.on_new_span(&id);
         self.spans.write().unwrap().insert(id.clone(), FarMemorySpan::new_local(span_size));
         self.span_states.write().unwrap().insert(id.clone(), Mutex::new(SpanState::Free));
         id
