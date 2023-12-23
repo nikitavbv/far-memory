@@ -679,7 +679,7 @@ mod tests {
         assert_eq!(15, client.total_local_memory());
         assert_eq!(5, client.total_remote_memory());
 
-        let _ptr = client.span_ptr(&span, true);
+        let _ptr = client.span_ptr(&span);
         assert_eq!(20, client.total_local_memory());
         assert_eq!(0, client.total_remote_memory());
     }
@@ -697,7 +697,7 @@ mod tests {
         assert_eq!(10, client.total_local_memory());
         assert_eq!(10, client.total_remote_memory());
 
-        let _ptr = client.span_ptr(&span, true);
+        let _ptr = client.span_ptr(&span);
         assert_eq!(20, client.total_local_memory()); // first part (5) and second (5) were both swapped, so +10.
         assert_eq!(0, client.total_remote_memory());
     }
