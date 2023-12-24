@@ -22,7 +22,7 @@ impl ReplacementPolicy for LeastRecentlyUsedReplacementPolicy {
     fn pick_for_eviction(&self, spans: &[SpanId]) -> SpanId {
         let cache = span!(Level::DEBUG, "acquiring cache lock").in_scope(|| self.cache.read().unwrap());
         span!(Level::DEBUG, "filtering spans").in_scope(|| {
-            for (span, _) in cache.iter() {
+            for (span, _) in cache.iter().rev() {
                 if spans.contains(span) {
                     return span.clone();
                 }
