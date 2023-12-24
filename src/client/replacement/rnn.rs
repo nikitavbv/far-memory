@@ -40,7 +40,7 @@ impl RnnReplacementPolicy {
 }
 
 impl ReplacementPolicy for RnnReplacementPolicy {
-    fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId {
+    fn pick_for_eviction(&self, spans: &[SpanId]) -> SpanId {
         if let Some(model) = &self.model {
             // if all spans are within bounds of the model.
             if spans.iter().map(|span| span.id()).find(|id| *id >= model.total_spans).is_none() {

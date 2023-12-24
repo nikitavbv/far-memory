@@ -20,13 +20,13 @@ impl LeastRecentlyUsedReplacementPolicy {
 }
 
 impl ReplacementPolicy for LeastRecentlyUsedReplacementPolicy {
-    fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId {
+    fn pick_for_eviction(&self, spans: &[SpanId]) -> SpanId {
         let history = span!(Level::DEBUG, "acquiring history lock").in_scope(|| self.history.read().unwrap());
         span!(Level::DEBUG, "filtering spans").in_scope(|| spans.iter()
             .map(|v| (v, history.get(v)))
             .filter(|v| v.1.is_some())
             .map(|v| (v.0, v.1.unwrap()))
-            .reduce(|a, b| if a.1 < b.1 { a } else { b }).map(|a| a.0).unwrap())
+            .reduce(|a, b| if a.1 < b.1 { a } else { b }).map(|a| a.0).unwrap().clone())
     }
 
     fn on_new_span(&self, span_id: &SpanId) {

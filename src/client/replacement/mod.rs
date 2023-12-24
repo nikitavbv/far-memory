@@ -17,7 +17,7 @@ mod rnn;
 mod tracking;
 
 pub trait ReplacementPolicy: Send + Sync {
-    fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId;
+    fn pick_for_eviction<'a>(&self, spans: &[SpanId]) -> SpanId;
 
     fn on_new_span(&self, span_id: &SpanId) {}
     fn on_span_access(&self, span_id: &SpanId) {}
@@ -38,8 +38,8 @@ impl RandomReplacementPolicy {
 }
 
 impl ReplacementPolicy for RandomReplacementPolicy {
-    fn pick_for_eviction<'a>(&self, spans: &'a [SpanId]) -> &'a SpanId {
-        spans.choose(&mut rand::thread_rng()).unwrap()
+    fn pick_for_eviction<'a>(&self, spans: &[SpanId]) -> SpanId {
+        spans.choose(&mut rand::thread_rng()).unwrap().clone()
     }
 }
 
@@ -60,13 +60,14 @@ impl MostRecentlyUsedReplacementPolicy {
 }
 
 impl ReplacementPolicy for MostRecentlyUsedReplacementPolicy {
-    fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId {
+    fn pick_for_eviction(&self, spans: &[SpanId]) -> SpanId {
         let history = self.history.read().unwrap();
         spans.iter()
             .map(|v| (v, history.get(v).unwrap_or(&0)))
             .reduce(|a, b| if a.1 > b.1 { a } else { b })
             .map(|a| a.0)
             .unwrap()
+            .clone()
     }
 
     fn on_span_access(&self, span_id: &SpanId) {
@@ -91,15 +92,14 @@ impl PreferRemoteSpansReplacementPolicy {
 }
 
 impl ReplacementPolicy for PreferRemoteSpansReplacementPolicy {
-    fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId {
+    fn pick_for_eviction(&self, spans: &[SpanId]) -> SpanId {
         let remote_spans: Vec<_> = {
             let remote_spans = self.remote_spans.try_read().unwrap();
             spans.iter().filter(|s| remote_spans.contains(s)).cloned().collect()
         };
 
         if !remote_spans.is_empty() {
-            let span = self.inner.pick_for_eviction(&remote_spans);
-            spans.iter().find(|v| *v == span).unwrap()
+            self.inner.pick_for_eviction(&remote_spans)
         } else {
             self.inner.pick_for_eviction(spans)
         }
@@ -152,7 +152,7 @@ impl ReplayReplacementPolicy {
 }
 
 impl ReplacementPolicy for ReplayReplacementPolicy {
-    fn pick_for_eviction<'a>(&self, spans: &'a[SpanId]) -> &'a SpanId {
+    fn pick_for_eviction(&self, spans: &[SpanId]) -> SpanId {
         if self.record_mode {
             return self.fallback.pick_for_eviction(spans);
         }
@@ -180,7 +180,7 @@ impl ReplacementPolicy for ReplayReplacementPolicy {
             .map(|(index, _)| index)
             .unwrap();
 
-        &spans[max_pos]
+        spans[max_pos].clone()
     }
 
     fn on_span_access(&self, span_id: &SpanId) {
