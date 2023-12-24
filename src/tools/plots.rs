@@ -135,7 +135,7 @@ fn throughput_distribution() {
 
     // graph
     let k = 20;
-    let root_area = BitMapBackend::new("./images/plot_throughput_distrubution.png", (k * 55, k * 45)).into_drawing_area();
+    let root_area = BitMapBackend::new("./images/plot_throughput_distribution.png", (k * 55, k * 45)).into_drawing_area();
     root_area.fill(&WHITE).unwrap();
 
     let mut cc = setup_chart_context(&root_area);

@@ -486,7 +486,7 @@ fn throughput_distribution(scaling: f32) -> Block {
 
     // graph
     let k = 20;
-    let root_area = BitMapBackend::new("./output/images/throughput-distrubution.png", (k * 55, k * 45)).into_drawing_area();
+    let root_area = BitMapBackend::new("./output/images/throughput-distribution.png", (k * 55, k * 45)).into_drawing_area();
     root_area.fill(&WHITE).unwrap();
 
     let mut cc = setup_chart_context(&root_area);
@@ -512,7 +512,7 @@ fn throughput_distribution(scaling: f32) -> Block {
 
     root_area.present().unwrap();
 
-    image_with_scale("./output/images/throughput-distrubution.png",  "Web service throughput by skew of requests", scaling)
+    image_with_scale("./output/images/throughput-distribution.png",  "Web service throughput by skew of requests", scaling)
 }
 
 fn demo_throughput(scaling: f32) -> Block {
