@@ -44,9 +44,9 @@ impl DemoWebService {
         }
     }
 
-    pub fn handle_request(&self, request: WebServiceRequest, trace: bool) -> WebServiceResponse {
+    pub fn handle_request(&self, request: WebServiceRequest) -> WebServiceResponse {
         let picture_to_get: u64 = *request.user_ids.iter()
-            .map(|id| self.users.get(id, trace).unwrap().picture_id)
+            .map(|id| self.users.get(id).unwrap().picture_id)
             .collect::<Vec<_>>()
             // if sum and modulo is used here (looks like that is what AIFM does. I am not sure, though), then distribution will become uniform.
             // that's why here a random item is picked and zipf distribution (well, something close to it) is kept.
@@ -237,19 +237,10 @@ pub fn run_web_service_demo(metrics: Registry, run_id: String, token: &str, stor
             break;
         }
 
-        let trace = thread_rng().gen_bool(0.2);
-
         let request = random_request(total_users, zipf_s);
-        let _res = {
-            let span = span!(Level::DEBUG, "handling request");
-            let _span = if trace {
-                Some(span.enter())
-            } else {
-                None
-            };
-
-            black_box(web_service.handle_request(black_box(request), trace))
-        };
+        let _res = span!(Level::DEBUG, "handling request").in_scope(|| {
+            black_box(web_service.handle_request(black_box(request)))
+        });
         total_requests += 1;
 
         if (now - checkpoint).as_secs() > 60 {

@@ -36,16 +36,16 @@ impl<K: Hash + PartialEq, V> FarMemoryHashMap<K, V> {
         }
     }
 
-    pub fn get(&self, key: &K, trace: bool) -> Option<FarMemoryLocal<V>> {
+    pub fn get(&self, key: &K) -> Option<FarMemoryLocal<V>> {
         let index = self.index_for_key(&key);
 
         let slot = self.index.get(index).unwrap();
         if let Some(node) = slot {
-            let node_key = node.key.to_local(trace);
+            let node_key = node.key.to_local();
             if *node_key == *key {
-                Some(node.value.to_local(trace))
+                Some(node.value.to_local())
             } else {
-                node.get(key, trace)
+                node.get(key)
             }
         } else {
             None
@@ -86,13 +86,13 @@ impl<K: PartialEq, V> FarMemoryHashMapNode<K, V> {
         }
     }
 
-    pub fn get(&self, key: &K, trace: bool) -> Option<FarMemoryLocal<V>> {
+    pub fn get(&self, key: &K) -> Option<FarMemoryLocal<V>> {
         if let Some(node) = &self.next {
-            let node_key = node.key.to_local(trace);
+            let node_key = node.key.to_local();
             if *node_key == *key {
-                Some(node.value.to_local(trace))
+                Some(node.value.to_local())
             } else {
-                node.get(key, trace)
+                node.get(key)
             }
         } else {
             None

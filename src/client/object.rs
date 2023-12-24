@@ -163,11 +163,10 @@ impl<T> FarMemory<T> {
         }
     }
 
-    pub fn to_local(&self, trace: bool) -> FarMemoryLocal<T> {
+    pub fn to_local(&self) -> FarMemoryLocal<T> {
         FarMemoryLocal {
             client: self.client.clone(),
             object: self.object.clone(),
-            trace,
             _phantom: PhantomData,
         }
     }
@@ -184,7 +183,6 @@ impl<T> Deref for FarMemory<T> {
 pub struct FarMemoryLocal<T> {
     client: FarMemoryClient,
     object: ObjectId,
-    trace: bool,
     _phantom: PhantomData<T>,
 }
 
@@ -221,6 +219,6 @@ mod tests {
         let client = FarMemoryClient::new(Box::new(InMemoryBackend::new()), 10 * 1024 * 1024);
         let object = FarMemory::from_value(client, TestValue { v: 42 });
 
-        assert_eq!(42, object.to_local(true).v);
+        assert_eq!(42, object.to_local().v);
     }
 }
