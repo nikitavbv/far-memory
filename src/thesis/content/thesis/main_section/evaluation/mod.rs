@@ -137,8 +137,6 @@ AES GCM, стискається алгоритмом Snappy, після чого
 невелика частина структур даних мають великий розмір. Саме такі структури можна розглядати для перенесення у віддалену памʼять, перенесення усіх даних що \
 використовується програмним забезпеченням не є виправданим."),
 
-        // todo: tell that I also was able to verify that integration is simple enough with llm inference application.
-
         Block::SubsectionHeader(SubsectionHeaderBlock::without_numbering("Висновки до розділу".to_owned())),
         Block::Placeholder(Box::new(paragraph("some text here")), "add some text here".to_owned()),
     ])
