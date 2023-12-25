@@ -24,7 +24,7 @@ impl TrackingReplacementPolicy {
 }
 
 impl ReplacementPolicy for TrackingReplacementPolicy {
-    fn pick_for_eviction(&self, spans: &[SpanId]) -> SpanId {
+    fn pick_for_eviction(&self, spans: &[SpanId]) -> Box<dyn Iterator<Item = SpanId>> {
         self.inner.pick_for_eviction(spans)
     }
 

@@ -30,7 +30,7 @@ impl RemoteReplayReplacementPolicy {
 }
 
 impl ReplacementPolicy for RemoteReplayReplacementPolicy {
-    fn pick_for_eviction(&self, spans: &[SpanId]) -> SpanId {
+    fn pick_for_eviction(&self, spans: &[SpanId]) -> Box<dyn Iterator<Item = SpanId>> {
         {
             let span_access_events = self.span_access_events.read().unwrap();
             if !span_access_events.is_empty() {
@@ -51,7 +51,7 @@ impl ReplacementPolicy for RemoteReplayReplacementPolicy {
                     .map(|(index, _)| index)
                     .unwrap();
 
-                return spans[max_pos].clone();
+                return Box::new(vec![spans[max_pos].clone()].into_iter()); // TODO: return full iterator
             }
         }
         self.fallback.pick_for_eviction(spans)
