@@ -10,6 +10,7 @@ use {
         span::{SpanId, FarMemorySpan, LocalSpanData},
         object::{ObjectId, ObjectRegistry, ObjectLocation, FarMemory},
         serialized_object_vec::FarMemorySerializedObjectVec,
+        vec::FarMemoryVec,
     },
 };
 
@@ -54,6 +55,10 @@ impl FarMemoryClient {
     }
 
     pub fn object<T>(&self, object: T) -> FarMemory<T> {
+        unimplemented!()
+    }
+
+    pub fn vec<T>(&self, data: Vec<T>) -> FarMemoryVec<T> {
         unimplemented!()
     }
 
