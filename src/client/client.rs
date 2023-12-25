@@ -215,6 +215,8 @@ impl FarMemoryClient {
                 FarMemorySpan::Remote { local_part, total_size: _ } => local_part,
             };
 
+            drop(swap_ops_lock_guard);
+
             let local_data = span!(Level::DEBUG, "creating local data").in_scope(|| if let Some(local_data) = local_data {
                 span!(Level::DEBUG, "extending local data").in_scope(|| local_data.extend_with_vec(data))
             } else {
@@ -225,8 +227,6 @@ impl FarMemoryClient {
             self.spans.write().unwrap().insert(id.clone(), FarMemorySpan::Local {
                 data: local_data,
             });
-
-            drop(swap_ops_lock_guard);
 
             let span_states = self.span_states.read().unwrap();
             let mut span_state = span_states[id].lock().unwrap();
