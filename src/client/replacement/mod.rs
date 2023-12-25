@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use {
     std::{sync::{atomic::{AtomicU64, Ordering}, RwLock}, collections::{HashMap, HashSet}, path::Path, fs},
     rand::seq::SliceRandom,
@@ -17,7 +19,7 @@ mod rnn;
 mod tracking;
 
 pub trait ReplacementPolicy: Send + Sync {
-    fn pick_for_eviction<'a>(&self, spans: &[SpanId]) -> SpanId;
+    fn pick_for_eviction(&self, spans: &[SpanId]) -> Box<dyn Iterator<Item = SpanId>>;
 
     fn on_new_span(&self, span_id: &SpanId) {}
     fn on_span_access(&self, span_id: &SpanId) {}
@@ -38,8 +40,10 @@ impl RandomReplacementPolicy {
 }
 
 impl ReplacementPolicy for RandomReplacementPolicy {
-    fn pick_for_eviction<'a>(&self, spans: &[SpanId]) -> SpanId {
-        spans.choose(&mut rand::thread_rng()).unwrap().clone()
+    fn pick_for_eviction<'a>(&self, spans: &[SpanId]) -> Box<dyn Iterator<Item = SpanId>> {
+        let mut spans = spans.to_vec();
+        spans.shuffle(&mut rand::thread_rng());
+        Box::new(spans.into_iter())
     }
 }
 
@@ -60,14 +64,14 @@ impl MostRecentlyUsedReplacementPolicy {
 }
 
 impl ReplacementPolicy for MostRecentlyUsedReplacementPolicy {
-    fn pick_for_eviction(&self, spans: &[SpanId]) -> SpanId {
+    fn pick_for_eviction(&self, spans: &[SpanId]) -> Box<dyn Iterator<Item = SpanId>> {
         let history = self.history.read().unwrap();
-        spans.iter()
+        let spans: Vec<_> = spans.iter()
             .map(|v| (v, history.get(v).unwrap_or(&0)))
-            .reduce(|a, b| if a.1 > b.1 { a } else { b })
-            .map(|a| a.0)
-            .unwrap()
-            .clone()
+            .sorted_by_key(|v| 0 - v.1)
+            .map(|a| a.0.clone())
+            .collect();
+        Box::new(spans.into_iter())
     }
 
     fn on_span_access(&self, span_id: &SpanId) {
@@ -92,7 +96,7 @@ impl PreferRemoteSpansReplacementPolicy {
 }
 
 impl ReplacementPolicy for PreferRemoteSpansReplacementPolicy {
-    fn pick_for_eviction(&self, spans: &[SpanId]) -> SpanId {
+    fn pick_for_eviction(&self, spans: &[SpanId]) -> Box<dyn Iterator<Item = SpanId>> {
         let remote_spans: Vec<_> = {
             let remote_spans = self.remote_spans.try_read().unwrap();
             spans.iter().filter(|s| remote_spans.contains(s)).cloned().collect()
@@ -152,7 +156,7 @@ impl ReplayReplacementPolicy {
 }
 
 impl ReplacementPolicy for ReplayReplacementPolicy {
-    fn pick_for_eviction(&self, spans: &[SpanId]) -> SpanId {
+    fn pick_for_eviction(&self, spans: &[SpanId]) -> Box<dyn Iterator<Item = SpanId>> {
         if self.record_mode {
             return self.fallback.pick_for_eviction(spans);
         }
@@ -180,7 +184,7 @@ impl ReplacementPolicy for ReplayReplacementPolicy {
             .map(|(index, _)| index)
             .unwrap();
 
-        spans[max_pos].clone()
+        Box::new(vec![spans[max_pos].clone()].into_iter()) // todo: replace with proper iterator
     }
 
     fn on_span_access(&self, span_id: &SpanId) {

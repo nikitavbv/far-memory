@@ -19,17 +19,10 @@ impl LeastRecentlyUsedReplacementPolicy {
 }
 
 impl ReplacementPolicy for LeastRecentlyUsedReplacementPolicy {
-    fn pick_for_eviction(&self, spans: &[SpanId]) -> SpanId {
+    fn pick_for_eviction(&self, _spans: &[SpanId]) -> Box<dyn Iterator<Item = SpanId>> {
         let cache = span!(Level::DEBUG, "acquiring cache lock").in_scope(|| self.cache.read().unwrap());
-        span!(Level::DEBUG, "filtering spans").in_scope(|| {
-            for (span, _) in cache.iter().rev() {
-                if spans.contains(span) {
-                    return span.clone();
-                }
-            }
-
-            spans[0].clone()
-        })
+        let items: Vec<_> = cache.iter().rev().map(|v| v.0.clone()).collect();
+        Box::new(span!(Level::DEBUG, "filtering spans").in_scope(|| items.into_iter()))
     }
 
     fn on_new_span(&self, span_id: &SpanId) {
