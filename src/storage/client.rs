@@ -97,7 +97,7 @@ impl Client {
         match data {
             SpanData::Inline(data) => data,
             SpanData::Concat { data } => data.concat(),
-            SpanData::External { len } => span!(Level::DEBUG, "reading span body").in_scope(|| {
+            SpanData::External { len } => span!(Level::DEBUG, "reading span body", len).in_scope(|| {
                 let mut data = vec![0u8; len as usize];
                 self.stream.read_exact(&mut data).unwrap();
                 data
