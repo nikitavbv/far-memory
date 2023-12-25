@@ -228,13 +228,15 @@ impl FarMemoryClient {
                 data: local_data,
             });
 
-            let span_states = self.span_states.read().unwrap();
-            let mut span_state = span_states[id].lock().unwrap();
-            match &*span_state {
-                SpanState::Free => panic!("did not expect span state to be free when finishing swapping in"),
-                SpanState::InUse(_) => panic!("did not expect span state to be in use when finishing swapping in"),
-                SpanState::Swapping => *span_state = SpanState::InUse(1),
-            };
+            {
+                let span_states = self.span_states.read().unwrap();
+                let mut span_state = span_states[id].lock().unwrap();
+                match &*span_state {
+                    SpanState::Free => panic!("did not expect span state to be free when finishing swapping in"),
+                    SpanState::InUse(_) => panic!("did not expect span state to be in use when finishing swapping in"),
+                    SpanState::Swapping => *span_state = SpanState::InUse(1),
+                };
+            }
 
             self.replacement_policy.on_span_swap_in(id);
             if let Some(metrics) = self.metrics.as_ref() {
