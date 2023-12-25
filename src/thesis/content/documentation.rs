@@ -1,4 +1,4 @@
-use crate::thesis::engine::{Block, subsection_header, section_header, paragraph, ImageBlock, TextSpan, bold};
+use crate::thesis::engine::{Block, subsection_header, section_header, paragraph, ImageBlock, TextSpan, bold, TableBlock};
 
 pub fn documentation() -> Block {
     Block::Multiple(vec![
@@ -146,22 +146,6 @@ ML моделі (у тому числі RNN) та ін."#.into(),
           bold("- far memory in warehouse scale computers"),
           " - використовує zswap для зберігання памʼяті на диску, а не у оперативній памʼяті віддалених вузлів.".into(),
         ]),
-
-        section_header("Результати"),
-        paragraph("Результати інтеграції віддаленої памʼяті у демонстраційне програмне забезпечення (llm inference)."),
-        Block::Table {
-          columns: vec![
-            "реалізація".to_owned(),
-            "час обробки запиту, c".to_owned(),
-            "використання памʼяті, МБ".to_owned(),
-          ],
-          rows: vec![
-            vec!["baseline".to_owned(), "4.95".to_owned(), "27755".to_owned()],
-            vec!["far memory for vocab without swapout".to_owned(), "4.9".to_owned(), "27757".to_owned()],
-            vec!["far memory for embeddings weights".to_owned(), "5.46".to_owned(), "27258".to_owned()],
-            vec!["swap out threshold".to_owned(), "5.3".to_owned(), "27654".to_owned()],
-          ],
-        },
 
         section_header("Посилання"),
         paragraph(vec![

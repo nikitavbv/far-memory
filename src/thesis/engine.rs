@@ -20,6 +20,10 @@ use {
         IndentLevel,
         TableOfContents,
         TabLeaderType,
+        Table as DocxTable,
+        TableRow as DocxTableRow,
+        TableCell as DocxTableCell,
+        VMergeType,
     },
     thiserror::Error,
     crate::thesis::{
@@ -62,10 +66,7 @@ pub enum Block {
     FrontPage,
     TopicCard,
     Note(String),
-    Table {
-        columns: Vec<String>,
-        rows: Vec<Vec<String>>,
-    },
+    Table(TableBlock),
     Application(ApplicationBlock),
 }
 
@@ -316,6 +317,38 @@ impl ImageBlock {
 }
 
 #[derive(Debug, Clone)]
+pub struct TableBlock {
+    columns: Vec<TableCell>,
+    rows: Vec<Vec<TableCell>>,
+}
+
+impl TableBlock {
+    pub fn empty() -> Self {
+        Self::new(Vec::new(), Vec::new())
+    }
+
+    pub fn new(columns: Vec<TableCell>, rows: Vec<Vec<TableCell>>) -> Self {
+        Self {
+            columns,
+            rows,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct TableCell {
+    text: TextSpan,
+}
+
+impl TableCell {
+    pub fn new(text: TextSpan) -> Self {
+        Self {
+            text,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct ApplicationBlock {
     id: &'static str,
 }
@@ -470,7 +503,32 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
         Block::FrontPage => document.add_front_page_section(content),
         Block::TopicCard => document.add_topic_card_document(context, content),
         Block::Note(_) => panic!("note block is not supported in docx"),
-        Block::Table { columns: _, rows: _ } => unimplemented!(),
+        Block::Table(table) => document.add_table(DocxTable::new(vec![
+            DocxTableRow::new(vec![
+                DocxTableCell::new()
+                    .vertical_merge(VMergeType::Continue)
+                    .add_paragraph(Paragraph::new().add_run(Run::new().add_text("1"))),
+                DocxTableCell::new()
+                    .add_paragraph(Paragraph::new().add_run(Run::new().add_text("2"))),
+                DocxTableCell::new()
+                    .add_paragraph(Paragraph::new().add_run(Run::new().add_text("3"))),
+            ]),
+            DocxTableRow::new(vec![
+                DocxTableCell::new()
+                    .vertical_merge(VMergeType::Continue),
+                DocxTableCell::new()
+                    .add_paragraph(Paragraph::new().add_run(Run::new().add_text("2")))
+                    .grid_span(2),
+            ]),
+            DocxTableRow::new(vec![
+                DocxTableCell::new()
+                    .add_paragraph(Paragraph::new().add_run(Run::new().add_text("1"))),
+                DocxTableCell::new()
+                    .add_paragraph(Paragraph::new().add_run(Run::new().add_text("2"))),
+                DocxTableCell::new()
+                    .add_paragraph(Paragraph::new().add_run(Run::new().add_text("3"))),
+            ]),
+        ])),
         Block::Application(application) => document.add_paragraph(
             Paragraph::new()
                 .page_break_before(true)
@@ -584,33 +642,33 @@ fn render_block_to_html_inner(block: Block) -> String {
         Block::Placeholder(inner, _text) => format!("<div style=\"background-color: yellow;\">{}</div>", render_block_to_html_inner(*inner)),
         Block::Multiple(blocks) => blocks.into_iter().map(render_block_to_html_inner).collect::<String>(),
         Block::Note(text) => format!("<div class=\"note\">{}</div>", html_escape::encode_text(&text)),
-        Block::Table { columns, rows } => format!(
+        Block::Table(table) => format!(
             "<table class=\"pure-table\"><thead><tr>{}</tr></thead><tbody>{}</tbody></table>",
-            render_table_header_to_html(&columns),
-            render_table_rows_to_html(&rows),
+            render_table_header_to_html(&table.columns),
+            render_table_rows_to_html(&table.rows),
         ),
         other => format!("<div>block of this type is not supported: {:?}</div>", other),
     }
 }
 
-fn render_table_header_to_html(columns: &[String]) -> String {
+fn render_table_header_to_html(columns: &[TableCell]) -> String {
     columns
         .iter()
-        .map(|v| format!("<th>{}</th>", html_escape::encode_text(v)))
+        .map(|v| format!("<th>{}</th>", html_escape::encode_text(&v.text.to_plaintext())))
         .collect()
 }
 
-fn render_table_rows_to_html(rows: &[Vec<String>]) -> String {
+fn render_table_rows_to_html(rows: &[Vec<TableCell>]) -> String {
     rows
         .iter()
-        .map(|v| format!("<tr>{}</tr>", render_table_row_to_html(&v)))
+        .map(|v| format!("<tr>{}</tr>", render_table_row_to_html(v.as_slice())))
         .collect()
 }
 
-fn render_table_row_to_html(row: &[String]) -> String {
+fn render_table_row_to_html(row: &[TableCell]) -> String {
     row
         .iter()
-        .map(|v| format!("<td>{}</td>", html_escape::encode_text(v)))
+        .map(|v| format!("<td>{}</td>", html_escape::encode_text(&v.text.to_plaintext())))
         .collect()
 }
 
@@ -727,7 +785,7 @@ pub fn print_placeholders(block: &Block) {
         Block::FrontPage => (),
         Block::TopicCard => (),
         Block::Note(_) => (),
-        Block::Table { columns: _, rows: _ } => (),
+        Block::Table(_) => (),
         Block::Application(_) => (),
     }
 }
@@ -771,7 +829,7 @@ pub fn count_images(block: &Block) -> u32 {
         Block::FrontPage => 0,
         Block::TopicCard => 0,
         Block::Note(_) => 0,
-        Block::Table { columns: _, rows: _ } => 0,
+        Block::Table(_) => 0,
         Block::Application(_) => 0,
     }
 }
@@ -793,7 +851,7 @@ pub fn count_tables(block: &Block) -> u32 {
         Block::FrontPage => 0,
         Block::TopicCard => 0,
         Block::Note(_) => 0,
-        Block::Table { columns: _, rows: _ } => 1,
+        Block::Table(_) => 1,
         Block::Application(_) => 0,
     }
 }
@@ -815,7 +873,7 @@ pub fn count_applications(block: &Block) -> u32 {
         Block::FrontPage => 0,
         Block::TopicCard => 0,
         Block::Note(_) => 0,
-        Block::Table { columns: _, rows: _ } => 0,
+        Block::Table(_) => 0,
         Block::Application(_) => 1,
     }
 }
@@ -837,7 +895,7 @@ pub fn count_references(block: &Block) -> u32 {
         Block::FrontPage => 0,
         Block::TopicCard => 0,
         Block::Note(_) => 0,
-        Block::Table { columns: _, rows: _ } => 0,
+        Block::Table(_) => 0,
         Block::Application(_) => 0,
     }
 }
