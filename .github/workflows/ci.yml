@@ -7,12 +7,6 @@ jobs:
     name: build
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
     - uses: actions/checkout@v2
     - uses: actions-rs/toolchain@v1
@@ -55,6 +49,17 @@ jobs:
     - uses: actions/upload-pages-artifact@v2
       with:
         path: output/documentation
-    - uses: actions/configure-pages@v3
-    - id: deployment
-      uses: actions/deploy-pages@v2
+  deploy-pages:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v3
+      - id: deployment
+        uses: actions/deploy-pages@v2
