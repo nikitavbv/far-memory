@@ -36,9 +36,9 @@ pub struct FarMemoryClient {
 
 #[derive(Eq, PartialEq)]
 enum SpanState {
-    Free,
-    InUse(usize),
-    SwappingOut,
+    Free, // can be local or remote
+    InUse(usize), // span is in use, it is local
+    Swapping, // swapping in or swapping out
 }
 
 struct SwapOutResult {
@@ -166,8 +166,9 @@ impl FarMemoryClient {
                         *span_state = SpanState::InUse(refs + 1);
                         break;
                     },
-                    SpanState::SwappingOut => {
+                    SpanState::Swapping => {
                         // waiting for swap out to finish to swap back in again
+                        // or waiting for it to finish swapping in
                         backoff.spin();
                     },
                 };
@@ -175,13 +176,14 @@ impl FarMemoryClient {
 
             let span = &self.spans.read().unwrap()[id];
             if span.is_local() {
+                // span is local already, so no need to swap it in
                 if let Some(metrics) = &self.metrics {
                     metrics.access_latency_micros_local.inc_by((Instant::now() - started_at).as_micros() as u64);
                 }
                 return span.ptr();
             }
 
-            // will need to swap in
+            // span is not local, so will need to swap it in
             span.remote_memory_usage()
         };
 
@@ -310,8 +312,8 @@ impl FarMemoryClient {
 
                     let span_states = self.span_states.read().unwrap();
                     let mut span_state = span_states[&op.span_id].lock().unwrap();
-                    if *span_state != SpanState::SwappingOut {
-                        panic!("expected span to be in swapping out state when actually swapping out");
+                    if *span_state != SpanState::Swapping {
+                        panic!("expected span to be in swapping state when actually swapping out");
                     }
                     *span_state = SpanState::Free;
                     self.replacement_policy.on_span_swap_out(&op.span_id, !op.full_swap_out);
@@ -365,7 +367,7 @@ impl FarMemoryClient {
 
         let span_states = self.span_states.read().unwrap();
         let mut span_state = span_states[&span_id].lock().unwrap();
-        if *span_state != SpanState::SwappingOut {
+        if *span_state != SpanState::Swapping {
             panic!("expected span to be in swapping out state when actually swapping out");
         }
         *span_state = SpanState::Free;
@@ -445,7 +447,8 @@ impl FarMemoryClient {
                                 continue;
                             }
 
-                            *span_state = SpanState::SwappingOut;
+                            // marking swap as in swapping state so anyone else who needs it has to wait until it is fully swapped out.
+                            *span_state = SpanState::Swapping;
 
                             let span_swap_out_len = span_local_memory_size.min((memory_to_swap_out - total_memory) as usize);
                             spans_to_swap_out.push((span_id.clone(), span_swap_out_len));
@@ -456,9 +459,9 @@ impl FarMemoryClient {
                             debug!("skipping span that is in use");
                             continue;
                         },
-                        SpanState::SwappingOut => {
-                            // cannot swap out span that is already being swapped out
-                            debug!("skipping span that is being swapped out");
+                        SpanState::Swapping => {
+                            // cannot swap out span that is already being swapped out or is in progress of being swapped in
+                            debug!("skipping span that is in process of swapping");
                             continue;
                         },
                     }
@@ -487,7 +490,7 @@ impl FarMemoryClient {
             } else {
                 SpanState::InUse(refs - 1)
             },
-            SpanState::SwappingOut => panic!("cannot decrease refs for span that is being swapped out")
+            SpanState::Swapping => panic!("cannot decrease refs for span that is being swapped out or swapped in")
         }
     }
 
