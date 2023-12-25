@@ -159,12 +159,31 @@ impl FarMemoryClient {
                 let mut span_state = span_states[id].lock().unwrap();
                 match &*span_state {
                     SpanState::Free => {
-                        *span_state = SpanState::InUse(1);
-                        break;
+                        let span = &self.spans.read().unwrap()[id];
+                        if span.is_local() {
+                            // span is local already, so no need to swap it in
+                            // marking it as in use:
+                            *span_state = SpanState::InUse(1);
+
+                            if let Some(metrics) = &self.metrics {
+                                metrics.access_latency_micros_local.inc_by((Instant::now() - started_at).as_micros() as u64);
+                            }
+                            return span.ptr();
+                        } else {
+                            // span is not local, so will need to swap it in
+                            // marking it as in swapping state
+                            *span_state = SpanState::Swapping;
+                            break span.remote_memory_usage();
+                        };
                     },
                     SpanState::InUse(refs) => {
                         *span_state = SpanState::InUse(refs + 1);
-                        break;
+
+                        let span = &self.spans.read().unwrap()[id];
+                        if let Some(metrics) = &self.metrics {
+                            metrics.access_latency_micros_local.inc_by((Instant::now() - started_at).as_micros() as u64);
+                        }
+                        return span.ptr();
                     },
                     SpanState::Swapping => {
                         // waiting for swap out to finish to swap back in again
@@ -173,18 +192,6 @@ impl FarMemoryClient {
                     },
                 };
             }
-
-            let span = &self.spans.read().unwrap()[id];
-            if span.is_local() {
-                // span is local already, so no need to swap it in
-                if let Some(metrics) = &self.metrics {
-                    metrics.access_latency_micros_local.inc_by((Instant::now() - started_at).as_micros() as u64);
-                }
-                return span.ptr();
-            }
-
-            // span is not local, so will need to swap it in
-            span.remote_memory_usage()
         };
 
         let swap_ops_lock_guard = span!(Level::DEBUG, "waiting for lock").in_scope(|| self.swap_in_out_lock.lock().unwrap());
@@ -220,6 +227,14 @@ impl FarMemoryClient {
             });
 
             drop(swap_ops_lock_guard);
+
+            let span_states = self.span_states.read().unwrap();
+            let mut span_state = span_states[id].lock().unwrap();
+            match &*span_state {
+                SpanState::Free => panic!("did not expect span state to be free when finishing swapping in"),
+                SpanState::InUse(_) => panic!("did not expect span state to be in use when finishing swapping in"),
+                SpanState::Swapping => *span_state = SpanState::InUse(1),
+            };
 
             self.replacement_policy.on_span_swap_in(id);
             if let Some(metrics) = self.metrics.as_ref() {
