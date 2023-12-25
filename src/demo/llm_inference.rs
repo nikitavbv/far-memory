@@ -112,30 +112,30 @@ impl Vocab {
 struct LlamaWeights<Layer> {
     /// (vocab_size, dim)
     // embeddings: Emb,
-    embeddings_far: FarMemoryVec<Ty>,
+    embeddings_far: Vec<Ty>,
 
     layers: Vec<Layer>,
     /// (dim,)
-    rms_final: FarMemoryVec<Ty>,
+    rms_final: Vec<Ty>,
     /// (seq_len, head_size/2)
-    rope_real: FarMemoryVec<Ty>,
+    rope_real: Vec<Ty>,
     /// (seq_len, head_size/2)
-    rope_imag: FarMemoryVec<Ty>,
-    wcls: Option<FarMemoryVec<Ty>>,
+    rope_imag: Vec<Ty>,
+    wcls: Option<Vec<Ty>>,
 }
 
 struct LayerWeights<Buf> {
     // rms_attn: Rms,
-    rms_attn: FarMemoryVec<Ty>,
+    rms_attn: Vec<Ty>,
 
-    rms_ffn: FarMemoryVec<Ty>,
-    wq: FarMemoryVec<Ty>,
-    wk: FarMemoryVec<Ty>,
-    wv: FarMemoryVec<Ty>,
-    wo: FarMemoryVec<Ty>,
-    w1: FarMemoryVec<Ty>,
-    w2: FarMemoryVec<Ty>,
-    w3: FarMemoryVec<Ty>,
+    rms_ffn: Vec<Ty>,
+    wq: Vec<Ty>,
+    wk: Vec<Ty>,
+    wv: Vec<Ty>,
+    wo: Vec<Ty>,
+    w1: Vec<Ty>,
+    w2: Vec<Ty>,
+    w3: Vec<Ty>,
     /// (seq_len, dim)
     k_cache: Buf,
     /// (seq_len, dim)
@@ -147,7 +147,7 @@ type CPULayerFloat = LayerWeights<Vec<Ty>>;
 type Llama2CPUFloat = LlamaWeights<CPULayerFloat>;
 
 impl Llama2CPUFloat {
-    fn load_weights(client: FarMemoryClient, cfg: &Config, path: &str) -> Self {
+    fn load_weights(cfg: &Config, path: &str) -> Self {
         let (weights, wcls) = load_raw_karpathy(cfg, path);
         let embeddings = weights[0].clone();
 
@@ -162,32 +162,32 @@ impl Llama2CPUFloat {
 
         let layers = (0..cfg.n_layers)
             .map(|l| LayerWeights::<Vec<Ty>> {
-                rms_attn: FarMemoryVec::from_vec(client.clone(), w_layer_iters[0].next().unwrap()),
-                wq: FarMemoryVec::from_vec(client.clone(), w_layer_iters[1].next().unwrap()),
-                wk: FarMemoryVec::from_vec(client.clone(), w_layer_iters[2].next().unwrap()),
-                wv: FarMemoryVec::from_vec(client.clone(), w_layer_iters[3].next().unwrap()),
-                wo: FarMemoryVec::from_vec(client.clone(), w_layer_iters[4].next().unwrap()),
-                rms_ffn: FarMemoryVec::from_vec(client.clone(), w_layer_iters[5].next().unwrap()),
-                w1: FarMemoryVec::from_vec(client.clone(), w_layer_iters[6].next().unwrap()),
-                w2: FarMemoryVec::from_vec(client.clone(), w_layer_iters[7].next().unwrap()),
-                w3: FarMemoryVec::from_vec(client.clone(), w_layer_iters[8].next().unwrap()),
+                rms_attn: w_layer_iters[0].next().unwrap(),
+                wq: w_layer_iters[1].next().unwrap(),
+                wk: w_layer_iters[2].next().unwrap(),
+                wv: w_layer_iters[3].next().unwrap(),
+                wo: w_layer_iters[4].next().unwrap(),
+                rms_ffn: w_layer_iters[5].next().unwrap(),
+                w1: w_layer_iters[6].next().unwrap(),
+                w2: w_layer_iters[7].next().unwrap(),
+                w3: w_layer_iters[8].next().unwrap(),
                 k_cache: vec![0 as Ty; cfg.seq_len * cfg.dim],
                 v_cache: vec![0 as Ty; cfg.seq_len * cfg.dim],
             })
             .collect();
 
-        let rms_final = FarMemoryVec::from_vec(client.clone(), weights[10].clone());
-        let rope_real = FarMemoryVec::from_vec(client.clone(), weights[11].clone());
-        let rope_imag = FarMemoryVec::from_vec(client.clone(), weights[12].clone());
+        let rms_final = weights[10].clone();
+        let rope_real =  weights[11].clone();
+        let rope_imag = weights[12].clone();
 
         Self {
-            embeddings_far: FarMemoryVec::from_vec(client.clone(), embeddings.clone()),
+            embeddings_far: embeddings.clone(),
 
             layers,
             rms_final,
             rope_real,
             rope_imag,
-            wcls: wcls.map(|v| FarMemoryVec::from_vec(client.clone(), v)),
+            wcls,
         }
     }
 }
