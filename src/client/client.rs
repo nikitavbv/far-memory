@@ -194,7 +194,9 @@ impl FarMemoryClient {
                     SpanState::Swapping => {
                         // waiting for swap out to finish to swap back in again
                         // or waiting for it to finish swapping in
-                        waiting_for_span_lock_guard = Some(waiting_for_span_lock.enter());
+                        if waiting_for_span_lock_guard.is_none() {
+                            waiting_for_span_lock_guard = Some(waiting_for_span_lock.enter());
+                        }
                         backoff.spin();
                     },
                 };
