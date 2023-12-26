@@ -59,7 +59,7 @@ impl FarMemoryClient {
     }
 
     pub fn vec<T>(&self, data: Vec<T>) -> FarMemoryVec<T> {
-        unimplemented!()
+        FarMemoryVec::from_vec(self.clone(), data)
     }
 
     pub fn serialized_object_vec<T>(&self, objects: Vec<T>) -> FarMemorySerializedObjectVec<T> {
