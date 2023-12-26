@@ -1,3 +1,5 @@
+use docx_rs::TableCellMargins;
+
 use {
     std::{process::Command, fs::File, io::ErrorKind},
     tracing::warn,
@@ -24,6 +26,8 @@ use {
         TableRow as DocxTableRow,
         TableCell as DocxTableCell,
         VMergeType,
+        TableLayoutType,
+        TableAlignmentType,
     },
     thiserror::Error,
     crate::thesis::{
@@ -503,32 +507,31 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
         Block::FrontPage => document.add_front_page_section(content),
         Block::TopicCard => document.add_topic_card_document(context, content),
         Block::Note(_) => panic!("note block is not supported in docx"),
-        Block::Table(table) => document.add_table(DocxTable::new(vec![
-            DocxTableRow::new(vec![
+        Block::Table(table) => {
+            let mut rows: Vec<_> = table.rows.into_iter()
+                .map(|row|
+                    DocxTableRow::new(
+                        row.into_iter()
+                            .map(|cell| {
+                                let paragraph = runs_for_text_span(context, cell.text, Run::new()).into_iter()
+                                    .fold(Paragraph::new(), |p, r| p.add_run(r));
+
+                                DocxTableCell::new()
+                                    .add_paragraph(paragraph)
+                            }).collect()
+                    )
+                ).collect();
+
+            rows.insert(0, DocxTableRow::new(table.columns.into_iter().map(|cell| {
+                let paragraph = runs_for_text_span(context, cell.text, Run::new().bold()).into_iter()
+                    .fold(Paragraph::new(), |p, r| p.add_run(r));
+
                 DocxTableCell::new()
-                    .vertical_merge(VMergeType::Continue)
-                    .add_paragraph(Paragraph::new().add_run(Run::new().add_text("1"))),
-                DocxTableCell::new()
-                    .add_paragraph(Paragraph::new().add_run(Run::new().add_text("2"))),
-                DocxTableCell::new()
-                    .add_paragraph(Paragraph::new().add_run(Run::new().add_text("3"))),
-            ]),
-            DocxTableRow::new(vec![
-                DocxTableCell::new()
-                    .vertical_merge(VMergeType::Continue),
-                DocxTableCell::new()
-                    .add_paragraph(Paragraph::new().add_run(Run::new().add_text("2")))
-                    .grid_span(2),
-            ]),
-            DocxTableRow::new(vec![
-                DocxTableCell::new()
-                    .add_paragraph(Paragraph::new().add_run(Run::new().add_text("1"))),
-                DocxTableCell::new()
-                    .add_paragraph(Paragraph::new().add_run(Run::new().add_text("2"))),
-                DocxTableCell::new()
-                    .add_paragraph(Paragraph::new().add_run(Run::new().add_text("3"))),
-            ]),
-        ])),
+                    .add_paragraph(paragraph)
+            }).collect()));
+
+            document.add_table(DocxTable::new(rows).layout(TableLayoutType::Autofit).align(TableAlignmentType::Center))
+        },
         Block::Application(application) => document.add_paragraph(
             Paragraph::new()
                 .page_break_before(true)
