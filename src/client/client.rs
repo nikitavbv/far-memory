@@ -194,11 +194,12 @@ impl FarMemoryClient {
             }
         };
 
-        let swap_ops_lock_guard = span!(Level::DEBUG, "waiting for lock").in_scope(|| self.swap_in_out_lock.lock().unwrap());
-
         let data = span!(Level::DEBUG, "swap out and swap in").in_scope(|| {
             // only need to free as much memory as remote part will take. There is already memory for local part of span
-            let result = self.ensure_local_memory_under_limit_and_swap_in(self.local_memory_max_threshold - span_remote_size as u64, Some(id));
+            let result = {
+                let _swap_ops_lock_guard = span!(Level::DEBUG, "waiting for lock").in_scope(|| self.swap_in_out_lock.lock().unwrap());
+                self.ensure_local_memory_under_limit_and_swap_in(self.local_memory_max_threshold - span_remote_size as u64, Some(id))
+            };
             if let Some(metrics) = &self.metrics {
                 metrics.span_swap_out_on_access_ops.inc_by(result.spans as u64);
             }
@@ -214,8 +215,6 @@ impl FarMemoryClient {
                 FarMemorySpan::Local { .. } => panic!("didn't expect span that is being swapped in to be marked as local"),
                 FarMemorySpan::Remote { local_part, total_size: _ } => local_part,
             };
-
-            drop(swap_ops_lock_guard);
 
             let local_data = span!(Level::DEBUG, "creating local data").in_scope(|| if let Some(local_data) = local_data {
                 span!(Level::DEBUG, "extending local data").in_scope(|| local_data.extend_with_vec(data))
