@@ -154,11 +154,15 @@ impl FarMemoryClient {
 
         let span_remote_size = {
             let backoff = Backoff::new();
+            let waiting_for_span_lock = span!(Level::DEBUG, "waiting for span lock");
+            let mut waiting_for_span_lock_guard = None;
             loop {
                 let span_states = self.span_states.read().unwrap();
                 let mut span_state = span_states[id].lock().unwrap();
                 match &*span_state {
                     SpanState::Free => {
+                        drop(waiting_for_span_lock_guard);
+
                         let span = &self.spans.read().unwrap()[id];
                         if span.is_local() {
                             // span is local already, so no need to swap it in
@@ -177,6 +181,8 @@ impl FarMemoryClient {
                         };
                     },
                     SpanState::InUse(refs) => {
+                        drop(waiting_for_span_lock_guard);
+
                         *span_state = SpanState::InUse(refs + 1);
 
                         let span = &self.spans.read().unwrap()[id];
@@ -188,6 +194,7 @@ impl FarMemoryClient {
                     SpanState::Swapping => {
                         // waiting for swap out to finish to swap back in again
                         // or waiting for it to finish swapping in
+                        waiting_for_span_lock_guard = Some(waiting_for_span_lock.enter());
                         backoff.spin();
                     },
                 };
