@@ -1,5 +1,3 @@
-use docx_rs::TableCellMargins;
-
 use {
     std::{process::Command, fs::File, io::ErrorKind},
     tracing::warn,
@@ -28,6 +26,7 @@ use {
         VMergeType,
         TableLayoutType,
         TableAlignmentType,
+        TableCellMargins,
     },
     thiserror::Error,
     crate::thesis::{
@@ -324,17 +323,19 @@ impl ImageBlock {
 pub struct TableBlock {
     columns: Vec<TableCell>,
     rows: Vec<Vec<TableCell>>,
+    description: String,
 }
 
 impl TableBlock {
     pub fn empty() -> Self {
-        Self::new(Vec::new(), Vec::new())
+        Self::new(Vec::new(), Vec::new(), "".to_owned())
     }
 
-    pub fn new(columns: Vec<TableCell>, rows: Vec<Vec<TableCell>>) -> Self {
+    pub fn new(columns: Vec<TableCell>, rows: Vec<Vec<TableCell>>, description: String) -> Self {
         Self {
             columns,
             rows,
+            description,
         }
     }
 }
@@ -524,13 +525,21 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
 
             rows.insert(0, DocxTableRow::new(table.columns.into_iter().map(|cell| {
                 let paragraph = runs_for_text_span(context, cell.text, Run::new().bold()).into_iter()
-                    .fold(Paragraph::new(), |p, r| p.add_run(r));
+                    .fold(Paragraph::new().align(AlignmentType::Center), |p, r| p.add_run(r));
 
                 DocxTableCell::new()
                     .add_paragraph(paragraph)
             }).collect()));
 
-            document.add_table(DocxTable::new(rows).layout(TableLayoutType::Autofit).align(TableAlignmentType::Center))
+            let section_index = context.last_section_index();
+            let table_index = context.next_table_index(section_index);
+
+            document
+                .add_paragraph(Paragraph::new()
+                    .add_tab(Tab::new().pos(710))
+                    .line_spacing(LineSpacing::new().line(24 * 15))
+                    .add_run(Run::new().add_tab().add_text(format!("Таблиця {}.{} - {}.", section_index, table_index, table.description))))
+                .add_table(DocxTable::new(rows).layout(TableLayoutType::Autofit).align(TableAlignmentType::Center).margins(TableCellMargins::new().margin(80, 80, 80, 80)))
         },
         Block::Application(application) => document.add_paragraph(
             Paragraph::new()

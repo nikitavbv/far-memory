@@ -58,6 +58,10 @@ impl Context {
         self.section(section_index).next_image_index()
     }
 
+    pub fn next_table_index(&mut self, section_index: usize) -> usize {
+        self.section(section_index).next_table_index()
+    }
+
     pub fn reference_id_for(&mut self, reference: &Reference) -> u32 {
         let reference_text = reference.text();
         if let Some(id) = self.references.get(reference_text) {
@@ -83,6 +87,7 @@ impl Context {
 struct SectionContext {
     subsection_counter: SectionIndex,
     image_counter: usize,
+    table_counter: usize,
 }
 
 impl SectionContext {
@@ -90,6 +95,7 @@ impl SectionContext {
         Self {
             subsection_counter: SectionIndex::new(),
             image_counter: 0,
+            table_counter: 0,
         }
     }
 
@@ -101,6 +107,11 @@ impl SectionContext {
     pub fn next_image_index(&mut self) -> usize {
         self.image_counter += 1;
         self.image_counter
+    }
+
+    pub fn next_table_index(&mut self) -> usize {
+        self.table_counter += 1;
+        self.table_counter
     }
 }
 
