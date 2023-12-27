@@ -205,10 +205,7 @@ impl FarMemoryClient {
 
         let data = span!(Level::DEBUG, "swap out and swap in").in_scope(|| {
             // only need to free as much memory as remote part will take. There is already memory for local part of span
-            let result = {
-                let _swap_ops_lock_guard = span!(Level::DEBUG, "waiting for lock").in_scope(|| self.swap_in_out_lock.lock().unwrap());
-                self.ensure_local_memory_under_limit_and_swap_in(self.local_memory_max_threshold - span_remote_size as u64, Some(id))
-            };
+            let result = self.ensure_local_memory_under_limit_and_swap_in(self.local_memory_max_threshold - span_remote_size as u64, Some(id));
             if let Some(metrics) = &self.metrics {
                 metrics.span_swap_out_on_access_ops.inc_by(result.spans as u64);
             }
@@ -424,6 +421,8 @@ impl FarMemoryClient {
     }
 
     fn ensure_local_memory_under_limit_and_swap_in(&self, limit: u64, swap_in: Option<&SpanId>) -> SwapOutResult {
+        let _swap_ops_lock_guard = span!(Level::DEBUG, "waiting for lock").in_scope(|| self.swap_in_out_lock.lock().unwrap());
+
         let current_local_memory = self.total_local_memory() as u64;
         if current_local_memory < limit {
             return SwapOutResult {
@@ -497,6 +496,8 @@ impl FarMemoryClient {
         let swap_in_span_data = span!(Level::DEBUG, "perform swapping", needed = memory_to_swap_out, swap_out_req_size = total_memory).in_scope(|| {
             self.swap_out_spans_and_swap_in(&spans_to_swap_out, swap_in)
         });
+
+        drop(_swap_ops_lock_guard);
 
         SwapOutResult {
             spans: spans_to_swap_out.len(),
@@ -677,7 +678,6 @@ fn swap_out_thread(client: FarMemoryClient, target_memory_usage: u64) -> impl Fn
                 thread::sleep(Duration::from_millis(125));
 
                 let swap_out_result = span!(Level::DEBUG, "swap out iteration").in_scope(|| {
-                    let _guard = span!(Level::DEBUG, "waiting for lock").in_scope(|| client.swap_in_out_lock.lock().unwrap());
                     client.ensure_local_memory_under_limit(target_memory_usage)
                 });
 
