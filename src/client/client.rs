@@ -131,12 +131,11 @@ impl FarMemoryClient {
     }
 
     pub fn allocate_span(&self, span_size: usize) -> SpanId {
-        let _guard = span!(Level::DEBUG, "waiting for lock").in_scope(|| self.swap_in_out_lock.lock().unwrap());
-
         span!(Level::DEBUG, "allocate_span - ensure local memory limit").in_scope(|| {
             self.ensure_local_memory_under_limit(self.local_memory_max_threshold - span_size as u64);
         });
 
+        let _guard = span!(Level::DEBUG, "waiting for lock").in_scope(|| self.swap_in_out_lock.lock().unwrap());
         let id = SpanId::from_id(self.span_id_counter.fetch_add(1, Ordering::Relaxed));
         self.replacement_policy.on_new_span(&id);
         self.spans.write().unwrap().insert(id.clone(), FarMemorySpan::new_local(span_size));
