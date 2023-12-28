@@ -420,9 +420,10 @@ impl FarMemoryClient {
     }
 
     fn ensure_local_memory_under_limit_and_swap_in(&self, limit: u64, swap_in: Option<&SpanId>) -> SwapOutResult {
+        let current_local_memory = self.total_local_memory() as u64;
+
         let _swap_ops_lock_guard = span!(Level::DEBUG, "waiting for lock").in_scope(|| self.swap_in_out_lock.lock().unwrap());
 
-        let current_local_memory = self.total_local_memory() as u64;
         if current_local_memory < limit {
             return SwapOutResult {
                 spans: 0,
