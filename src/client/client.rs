@@ -434,7 +434,7 @@ impl FarMemoryClient {
         let mut spans_to_swap_out = Vec::new(); // (span, how much memory to swap out - can be partial or full swap out)
 
         let mut total_memory = 0;
-        let mut possible_swap_out_spans: Vec<SpanId> = self.spans.read().unwrap().keys().cloned().collect();
+        let possible_swap_out_spans: Vec<SpanId> = self.spans.read().unwrap().keys().cloned().collect();
 
         let mut spans_for_eviction = span!(Level::DEBUG, "querying replacement policy").in_scope(|| self.replacement_policy.pick_for_eviction(&possible_swap_out_spans));
 
@@ -444,7 +444,7 @@ impl FarMemoryClient {
                     break;
                 }
 
-                let mut span_id = loop {
+                let span_id = loop {
                     if let Some(span_id) = span!(Level::DEBUG, "replacement iterator -> next").in_scope(|| spans_for_eviction.next()) {
                         break span_id;
                     } else {
@@ -452,9 +452,6 @@ impl FarMemoryClient {
                         continue;
                     }
                 };
-
-                let index = possible_swap_out_spans.iter().position(|x| *x == span_id).unwrap();
-                possible_swap_out_spans.remove(index);
 
                 let spans = self.spans.read().unwrap();
                 let span = spans.get(&span_id).unwrap();
