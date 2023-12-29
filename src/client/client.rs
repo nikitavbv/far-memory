@@ -434,7 +434,7 @@ impl FarMemoryClient {
         let mut spans_to_swap_out = Vec::new(); // (span, how much memory to swap out - can be partial or full swap out)
 
         let mut total_memory = 0;
-        let possible_swap_out_spans: Vec<SpanId> = self.spans.read().unwrap().keys().cloned().collect();
+        let possible_swap_out_spans: Vec<SpanId> = self.spans.read().unwrap().keys().cloned().collect(); // TODO: remove this completely
 
         let mut spans_for_eviction = span!(Level::DEBUG, "querying replacement policy").in_scope(|| self.replacement_policy.pick_for_eviction(&possible_swap_out_spans));
 
