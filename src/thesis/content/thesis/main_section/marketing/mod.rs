@@ -6,7 +6,7 @@ pub fn marketing() -> Block {
 
         subsection_header("Опис ідеї проекту"),
         paragraph("Для опису ідеї проекту проаналізуємо зміст ідеї що пропонується, можливі напрямки застосування, та основні вигоди що може отримати \
-користувач цього програмного продукту. Результати аналізу наведено у наступній таблиці."),
+користувач цього програмного продукту. Результати аналізу наведено у таблиці 5.1."), // todo: it would be cool to set this number automatically somehow.
         Block::Table(TableBlock::new(
             vec![
                 TableCell::new("Зміст ідеї".into()).width(3000),
@@ -26,6 +26,10 @@ pub fn marketing() -> Block {
                 ],
             ],
         "Опис ідеї стартап-проекту".to_owned())),
+
+        paragraph("Аналіз техніко-економічних переваг ідеї наведено в таблиці 5.2, де властивості програмного продукту що розглядається порівнюється з \
+конкурентами: Carbink та AIFM (але слід зазначити, що це програмне забезпечення для надання віддаленої памʼяті не є програмним продуктом що пропонується \
+для використання ???)"), // todo: choose the right word given that Carbink and AIFM are not products that you can purchase and use in your datacenter.
 
         // TODO: finish this section
 
