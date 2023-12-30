@@ -27,6 +27,7 @@ use {
         TableLayoutType,
         TableAlignmentType,
         TableCellMargins,
+        WidthType,
     },
     thiserror::Error,
     crate::thesis::{
@@ -344,6 +345,7 @@ impl TableBlock {
 pub struct TableCell {
     text: TextSpan,
     merge_continue: bool,
+    width: Option<usize>,
 }
 
 impl TableCell {
@@ -351,12 +353,20 @@ impl TableCell {
         Self {
             text,
             merge_continue: false,
+            width: None,
         }
     }
 
     pub fn merge_continue(self) -> Self {
         Self {
             merge_continue: true,
+            ..self
+        }
+    }
+
+    pub fn width(self, width: usize) -> Self {
+        Self {
+            width: Some(width),
             ..self
         }
     }
@@ -535,6 +545,12 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
                                     docx_cell
                                 };
 
+                                let docx_cell = if let Some(width) = cell.width {
+                                    docx_cell.width(width, WidthType::Dxa)
+                                } else {
+                                    docx_cell
+                                };
+
                                 docx_cell
                             }).collect()
                     )
@@ -544,8 +560,16 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
                 let paragraph = runs_for_text_span(context, cell.text, Run::new().bold()).into_iter()
                     .fold(Paragraph::new().align(AlignmentType::Center), |p, r| p.add_run(r));
 
-                DocxTableCell::new()
-                    .add_paragraph(paragraph)
+                let docx_cell = DocxTableCell::new()
+                    .add_paragraph(paragraph);
+
+                let docx_cell = if let Some(width) = cell.width {
+                    docx_cell.width(width, WidthType::Dxa)
+                } else {
+                    docx_cell
+                };
+
+                docx_cell
             }).collect()));
 
             let section_index = context.last_section_index();
