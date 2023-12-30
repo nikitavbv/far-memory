@@ -346,6 +346,8 @@ pub struct TableCell {
     text: TextSpan,
     merge_continue: bool,
     width: Option<usize>,
+    columns: Option<usize>,
+    alignment: Option<Alignment>,
 }
 
 impl TableCell {
@@ -354,6 +356,8 @@ impl TableCell {
             text,
             merge_continue: false,
             width: None,
+            columns: None,
+            alignment: None,
         }
     }
 
@@ -370,6 +374,25 @@ impl TableCell {
             ..self
         }
     }
+
+    pub fn columns(self, columns: usize) -> Self {
+        Self {
+            columns: Some(columns),
+            ..self
+        }
+    }
+
+    pub fn alignment(self, alignment: Alignment) -> Self {
+        Self {
+            alignment: Some(alignment),
+            ..self
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum Alignment {
+    Center,
 }
 
 #[derive(Debug, Clone)]
@@ -536,6 +559,14 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
                                 let paragraph = runs_for_text_span(context, cell.text, Run::new()).into_iter()
                                     .fold(Paragraph::new(), |p, r| p.add_run(r));
 
+                                let paragraph = if let Some(alignment) = cell.alignment {
+                                    match alignment {
+                                        Alignment::Center => paragraph.align(AlignmentType::Center),
+                                    }
+                                } else {
+                                    paragraph
+                                };
+
                                 let docx_cell = DocxTableCell::new()
                                     .add_paragraph(paragraph);
 
@@ -563,8 +594,20 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
                 let docx_cell = DocxTableCell::new()
                     .add_paragraph(paragraph);
 
+                let docx_cell = if cell.merge_continue {
+                    docx_cell.vertical_merge(VMergeType::Continue)
+                } else {
+                    docx_cell
+                };
+
                 let docx_cell = if let Some(width) = cell.width {
                     docx_cell.width(width, WidthType::Dxa)
+                } else {
+                    docx_cell
+                };
+
+                let docx_cell = if let Some(columns) = cell.columns {
+                    docx_cell.grid_span(columns)
                 } else {
                     docx_cell
                 };

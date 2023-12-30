@@ -1,4 +1,4 @@
-use crate::thesis::engine::{Block, section_header, paragraph, SubsectionHeaderBlock, subsection_header, TableBlock, TableCell};
+use crate::thesis::engine::{Block, section_header, paragraph, SubsectionHeaderBlock, subsection_header, TableBlock, TableCell, Alignment};
 
 pub fn marketing() -> Block {
     Block::Multiple(vec![
@@ -28,8 +28,41 @@ pub fn marketing() -> Block {
         "Опис ідеї стартап-проекту".to_owned())),
 
         paragraph("Аналіз техніко-економічних переваг ідеї наведено в таблиці 5.2, де властивості програмного продукту що розглядається порівнюється з \
-конкурентами: Carbink та AIFM (але слід зазначити, що це програмне забезпечення для надання віддаленої памʼяті не є програмним продуктом що пропонується \
-для використання ???)"), // todo: choose the right word given that Carbink and AIFM are not products that you can purchase and use in your datacenter.
+конкурентами: Carbink та AIFM. Ці програмні продукти є найбільш близькими з технічного боку, але жоден з них не призначений для широкого використання \
+у зовнішних центрах обробки даних і не пропонується як продукт чи послуга."),
+        Block::Table(TableBlock::new(
+            vec![
+                TableCell::new("№".into()).merge_continue(),
+                TableCell::new("Техніко-економічні характеристики ідеї".into()).merge_continue(),
+                TableCell::new("Продукція конкурентів".into()).columns(3),
+                TableCell::new("W (слабка сторона)".into()).merge_continue(),
+                TableCell::new("N (нейральна сторона)".into()).merge_continue(),
+                TableCell::new("S (сильна сторона)".into()).merge_continue(),
+            ],
+            vec![
+                vec![
+                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("Проект".into()),
+                    TableCell::new("Carbink".into()),
+                    TableCell::new("AIFM".into()),
+                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("".into()).merge_continue(),
+                ],
+                vec![
+                    TableCell::new("1".into()),
+                    TableCell::new("Відкритий вихідниий код та доступність для зовнішнього використання".into()),
+                    TableCell::new("+".into()).alignment(Alignment::Center),
+                    TableCell::new("-".into()).alignment(Alignment::Center),
+                    TableCell::new("+".into()).alignment(Alignment::Center),
+                    TableCell::new("".into()).alignment(Alignment::Center),
+                    TableCell::new("+".into()).alignment(Alignment::Center),
+                    TableCell::new("".into()).alignment(Alignment::Center),
+                ],
+            ],
+            "Аналіз сильних, слабких та нейтральних сторін запропонованої ідеї".to_owned()
+        )),
 
         // TODO: finish this section
 
