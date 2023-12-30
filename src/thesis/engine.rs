@@ -343,12 +343,21 @@ impl TableBlock {
 #[derive(Debug, Clone)]
 pub struct TableCell {
     text: TextSpan,
+    merge_continue: bool,
 }
 
 impl TableCell {
     pub fn new(text: TextSpan) -> Self {
         Self {
             text,
+            merge_continue: false,
+        }
+    }
+
+    pub fn merge_continue(self) -> Self {
+        Self {
+            merge_continue: true,
+            ..self
         }
     }
 }
@@ -517,8 +526,16 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
                                 let paragraph = runs_for_text_span(context, cell.text, Run::new()).into_iter()
                                     .fold(Paragraph::new(), |p, r| p.add_run(r));
 
-                                DocxTableCell::new()
-                                    .add_paragraph(paragraph)
+                                let docx_cell = DocxTableCell::new()
+                                    .add_paragraph(paragraph);
+
+                                let docx_cell = if cell.merge_continue {
+                                    docx_cell.vertical_merge(VMergeType::Continue)
+                                } else {
+                                    docx_cell
+                                };
+
+                                docx_cell
                             }).collect()
                     )
                 ).collect();
