@@ -575,7 +575,15 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
                     DocxTableRow::new(
                         row.into_iter()
                             .map(|cell| {
-                                let paragraph = runs_for_text_span(context, cell.text, Run::new()).into_iter()
+                                let run = Run::new();
+
+                                let run = if let Some(font_size) = cell.font_size {
+                                    run.size(font_size * 2)
+                                } else {
+                                    run
+                                };
+
+                                let paragraph = runs_for_text_span(context, cell.text, run).into_iter()
                                     .fold(Paragraph::new(), |p, r| p.add_run(r));
 
                                 let paragraph = if let Some(alignment) = cell.alignment {
@@ -652,7 +660,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
 
             while !rows.is_empty() {
                 let rows_to_add = if let Some(index) = split.pop() {
-                    rows.drain(0..(index as usize + 1)).collect::<Vec<_>>()
+                    rows.drain(0..(index as usize)).collect::<Vec<_>>()
                 } else {
                     rows.drain(0..rows.len()).collect::<Vec<_>>()
                 };
@@ -677,7 +685,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
                         .add_tab(Tab::new().pos(710))
                         .line_spacing(LineSpacing::new().line(24 * 15))
                         .add_run(table_title))
-                    .add_table(DocxTable::new(rows_to_add).layout(TableLayoutType::Autofit).align(TableAlignmentType::Center).margins(TableCellMargins::new().margin(80, 80, 80, 80)));
+                    .add_table(DocxTable::new(rows_to_add).align(TableAlignmentType::Center).margins(TableCellMargins::new().margin(80, 80, 80, 80)));
 
                 table_first_part = false;
             }
