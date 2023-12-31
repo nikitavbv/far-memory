@@ -107,9 +107,24 @@ pub fn marketing() -> Block {
             "Аналіз сильних, слабких та нейтральних сторін запропонованої ідеї".to_owned()
         ).with_split(vec![3])),
 
-        // TODO: finish this section
+        paragraph("Згідно з наведеною таблицею, програмний продукт що розглядається має переваги перед потенційними конкурентами, а саме: відкритий \
+програмний код та доступність для зовнішнього використання, легка інтеграція у програмне забезпечення та зниження затримки доступу за рахунок більш \
+ефективного алгоритму заміщення проміжків."),
+
+        subsection_header("Технологійчний аудит ідеї проекту"),
+        // TODO: add this subsection
+
+        subsection_header("Аналіз ринкових можливостей запуску стартап-проекту"),
+        // TODO: add this subsection
+
+        subsection_header("Розроблення ринкової стратегії проекту"),
+        // TODO: add this subsection
+
+        subsection_header("Розроблення маркетингової програми стартап-проєкту"),
+        // TODO: add this subsection
 
         Block::SubsectionHeader(SubsectionHeaderBlock::without_numbering("Висновки до розділу".to_owned())),
+        // TODO: add conclusions
         Block::Placeholder(Box::new(paragraph("some text here")), "add some text here".to_owned()),
     ])
 }
