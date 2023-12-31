@@ -112,7 +112,40 @@ pub fn marketing() -> Block {
 ефективного алгоритму заміщення проміжків."),
 
         subsection_header("Технологійчний аудит ідеї проекту"),
-        // TODO: add this subsection
+        paragraph("Для проведення технологічного аудиту ідеї проекту було проаналізовано які технології є необхідними для реалізації ідеї цього проекту. \
+У таблиці 5.3. проведено аналіз технологійчної здійсненності ідеї проекту."),
+        Block::Table(TableBlock::new(
+            vec![
+                TableCell::new("№".into()),
+                TableCell::new("Ідея проекту".into()),
+                TableCell::new("Технології її реалізації".into()),
+                TableCell::new("Наявність технологій".into()),
+                TableCell::new("Доступність технологій".into()),
+            ],
+            vec![
+                vec![
+                    TableCell::new("1".into()),
+                    TableCell::new("Передача даних між вузлами без використання спеціалізованого апаратного забезпечення".into()),
+                    TableCell::new("Бінарний протокол на основі TCP".into()),
+                    table_cell_plus(),
+                    table_cell_plus(),
+                ],
+                vec![
+                    TableCell::new("2".into()),
+                    TableCell::new("Відстеження доступу до даних за допомогою розумних показчиків та лічильника посилань".into()),
+                    TableCell::new("Властивності AsRef, Drop у мові програмування Rust, а також структура AtomicU64".into()),
+                    table_cell_plus(),
+                    table_cell_plus(),
+                ],
+                vec![
+                    TableCell::new("3".into()),
+                    // TODO: virtual block device
+                ],
+                // TODO: erasure coding
+                // TODO: stats analysis
+            ],
+            "Технологічна здійсненність ідеї проекту".to_owned(),
+        )),
 
         subsection_header("Аналіз ринкових можливостей запуску стартап-проекту"),
         // TODO: add this subsection
