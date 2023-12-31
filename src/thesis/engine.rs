@@ -609,6 +609,12 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
                                     docx_cell
                                 };
 
+                                let docx_cell = if let Some(columns) = cell.columns {
+                                    docx_cell.grid_span(columns)
+                                } else {
+                                    docx_cell
+                                };
+
                                 docx_cell
                             }).collect()
                     )
@@ -685,7 +691,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
                         .add_tab(Tab::new().pos(710))
                         .line_spacing(LineSpacing::new().line(24 * 15))
                         .add_run(table_title))
-                    .add_table(DocxTable::new(rows_to_add).align(TableAlignmentType::Center).margins(TableCellMargins::new().margin(80, 80, 80, 80)));
+                    .add_table(DocxTable::new(rows_to_add).align(TableAlignmentType::Center).layout(TableLayoutType::Autofit).margins(TableCellMargins::new().margin(80, 80, 80, 80)));
 
                 table_first_part = false;
             }

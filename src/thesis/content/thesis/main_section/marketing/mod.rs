@@ -1,8 +1,12 @@
-use crate::thesis::engine::{Block, section_header, paragraph, SubsectionHeaderBlock, subsection_header, TableBlock, TableCell, Alignment};
+use crate::thesis::engine::{Block, section_header, paragraph, SubsectionHeaderBlock, subsection_header, TableBlock, TableCell, Alignment, TextSpan};
 
 pub fn marketing() -> Block {
     let comparison_table_sign_width = 5000;
     let comparison_table_property_width = 500;
+
+    let technology_table_number_width = 100;
+    let technology_table_description_width = 2700;
+    let technology_table_proprerty_width = 2000;
 
     Block::Multiple(vec![
         section_header("Маркетинговий аналіз стартап-проекту"),
@@ -116,38 +120,67 @@ pub fn marketing() -> Block {
 У таблиці 5.3. проведено аналіз технологійчної здійсненності ідеї проекту."),
         Block::Table(TableBlock::new(
             vec![
-                TableCell::new("№".into()),
-                TableCell::new("Ідея проекту".into()),
-                TableCell::new("Технології її реалізації".into()),
-                TableCell::new("Наявність технологій".into()),
-                TableCell::new("Доступність технологій".into()),
+                TableCell::new("№".into()).width(technology_table_number_width),
+                TableCell::new("Ідея проекту".into()).width(technology_table_description_width),
+                TableCell::new("Технології її реалізації".into()).width(technology_table_description_width),
+                TableCell::new("Наявність технологій".into()).width(technology_table_proprerty_width),
+                TableCell::new("Доступність технологій".into()).width(technology_table_proprerty_width),
             ],
             vec![
                 vec![
-                    TableCell::new("1".into()),
-                    TableCell::new("Передача даних між вузлами без використання спеціалізованого апаратного забезпечення".into()),
-                    TableCell::new("Бінарний протокол на основі TCP".into()),
-                    table_cell_plus(),
-                    table_cell_plus(),
+                    TableCell::new("1".into()).width(technology_table_number_width),
+                    TableCell::new("Передача даних між вузлами без використання спеціалізованого апаратного забезпечення".into()).width(technology_table_description_width),
+                    TableCell::new("Бінарний протокол на основі TCP".into()).width(technology_table_description_width),
+                    table_cell_plus().width(technology_table_proprerty_width),
+                    table_cell_plus().width(technology_table_proprerty_width),
                 ],
                 vec![
-                    TableCell::new("2".into()),
-                    TableCell::new("Відстеження доступу до даних за допомогою розумних показчиків та лічильника посилань".into()),
-                    TableCell::new("Властивності AsRef, Drop у мові програмування Rust, а також структура AtomicU64".into()),
-                    table_cell_plus(),
-                    table_cell_plus(),
+                    TableCell::new("2".into()).width(technology_table_number_width),
+                    TableCell::new("Відстеження доступу до даних за допомогою розумних показчиків та лічильника посилань".into()).width(technology_table_description_width),
+                    TableCell::new("Властивності AsRef, Drop у мові програмування Rust, а також структура AtomicU64".into()).width(technology_table_description_width),
+                    table_cell_plus().width(technology_table_proprerty_width),
+                    table_cell_plus().width(technology_table_proprerty_width),
                 ],
                 vec![
-                    TableCell::new("3".into()),
-                    // TODO: virtual block device
+                    TableCell::new("3".into()).width(technology_table_number_width),
+                    TableCell::new("Надання віддаленої памʼяті за допомогою віртуального блокового пристрою".into()).width(technology_table_description_width),
+                    TableCell::new("Модуль Network Block Device ядра операційної системи Linux".into()).width(technology_table_description_width),
+                    table_cell_plus().width(technology_table_proprerty_width),
+                    table_cell_plus().width(technology_table_proprerty_width),
                 ],
-                // TODO: erasure coding
-                // TODO: stats analysis
+                vec![
+                    TableCell::new("4".into()).width(technology_table_number_width),
+                    TableCell::new("Кодування стиранням проміжків у віддаленій памʼяті".into()).width(technology_table_description_width),
+                    TableCell::new("Бібліотека reed-solomon-erasure у мові програмування Rust".into()).width(technology_table_description_width),
+                    table_cell_plus().width(technology_table_proprerty_width),
+                    table_cell_plus().width(technology_table_proprerty_width),
+                ],
+                vec![
+                    TableCell::new("5".into()).width(technology_table_number_width),
+                    TableCell::new("Прогнозування доступу до проміжків даних за допомогою рекурентної нейнронної мережі".into()).width(technology_table_description_width),
+                    TableCell::new("Бібліотека машинного навчання candle у мові програмування Rust".into()).width(technology_table_description_width),
+                    table_cell_plus().width(technology_table_proprerty_width),
+                    table_cell_plus().width(technology_table_proprerty_width),
+                ],
+                vec![
+                    TableCell::new(TextSpan::Italic(Box::new(TextSpan::Regular("Обрані технології для реалізації ідеї проекту: 1, 2, 3, 4, 5.".into())))).columns(5),
+                ],
             ],
             "Технологічна здійсненність ідеї проекту".to_owned(),
-        )),
+        ).with_split(vec![2])),
+        paragraph("Виходячи з проведеного аналізу, технологічна здійсненість проєкту можлива, найбільш прийнятні технології, що було обрані, є наявними та \
+доступними."),
 
         subsection_header("Аналіз ринкових можливостей запуску стартап-проекту"),
+        // TODO: tell something about client analysis
+        // TODO: table to analyze clients
+
+        // TODO: tell something about risks
+        // TODO: table to analyze risks
+
+        // TODO: tell something about opportunities
+        // TODO: table to analyze opportunities
+
         // TODO: add this subsection
 
         subsection_header("Розроблення ринкової стратегії проекту"),
