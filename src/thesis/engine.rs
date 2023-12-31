@@ -348,6 +348,7 @@ pub struct TableCell {
     width: Option<usize>,
     columns: Option<usize>,
     alignment: Option<Alignment>,
+    font_size: Option<usize>,
 }
 
 impl TableCell {
@@ -358,6 +359,7 @@ impl TableCell {
             width: None,
             columns: None,
             alignment: None,
+            font_size: None,
         }
     }
 
@@ -385,6 +387,13 @@ impl TableCell {
     pub fn alignment(self, alignment: Alignment) -> Self {
         Self {
             alignment: Some(alignment),
+            ..self
+        }
+    }
+
+    pub fn font_size(self, font_size: usize) -> Self {
+        Self {
+            font_size: Some(font_size),
             ..self
         }
     }
@@ -588,7 +597,15 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
                 ).collect();
 
             rows.insert(0, DocxTableRow::new(table.columns.into_iter().map(|cell| {
-                let paragraph = runs_for_text_span(context, cell.text, Run::new().bold()).into_iter()
+                let run =  Run::new().bold();
+
+                let run = if let Some(font_size) = cell.font_size {
+                    run.size(font_size * 2)
+                } else {
+                    run
+                };
+
+                let paragraph = runs_for_text_span(context, cell.text, run).into_iter()
                     .fold(Paragraph::new().align(AlignmentType::Center), |p, r| p.add_run(r));
 
                 let docx_cell = DocxTableCell::new()

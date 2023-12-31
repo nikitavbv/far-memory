@@ -32,20 +32,20 @@ pub fn marketing() -> Block {
 у зовнішних центрах обробки даних і не пропонується як продукт чи послуга."),
         Block::Table(TableBlock::new(
             vec![
-                TableCell::new("№".into()).merge_continue(),
-                TableCell::new("Техніко-економічні характеристики ідеї".into()).merge_continue(),
-                TableCell::new("Продукція конкурентів".into()).columns(3),
-                TableCell::new("W (слабка сторона)".into()).merge_continue(),
-                TableCell::new("N (нейральна сторона)".into()).merge_continue(),
-                TableCell::new("S (сильна сторона)".into()).merge_continue(),
+                TableCell::new("№".into()).merge_continue().font_size(12),
+                TableCell::new("Техніко-економічні характеристики ідеї".into()).merge_continue().font_size(12),
+                TableCell::new("Продукція конкурентів".into()).columns(3).font_size(12),
+                TableCell::new("W (слабка сторона)".into()).merge_continue().font_size(12),
+                TableCell::new("N (нейральна сторона)".into()).merge_continue().font_size(12),
+                TableCell::new("S (сильна сторона)".into()).merge_continue().font_size(12),
             ],
             vec![
                 vec![
                     TableCell::new("".into()).merge_continue(),
                     TableCell::new("".into()).merge_continue(),
-                    TableCell::new("Проект".into()),
-                    TableCell::new("Carbink".into()),
-                    TableCell::new("AIFM".into()),
+                    TableCell::new("Проект".into()).font_size(12),
+                    TableCell::new("Carbink".into()).font_size(12),
+                    TableCell::new("AIFM".into()).font_size(12),
                     TableCell::new("".into()).merge_continue(),
                     TableCell::new("".into()).merge_continue(),
                     TableCell::new("".into()).merge_continue(),
@@ -57,8 +57,48 @@ pub fn marketing() -> Block {
                     TableCell::new("-".into()).alignment(Alignment::Center),
                     TableCell::new("+".into()).alignment(Alignment::Center),
                     TableCell::new("".into()).alignment(Alignment::Center),
-                    TableCell::new("+".into()).alignment(Alignment::Center),
-                    TableCell::new("".into()).alignment(Alignment::Center),
+                    table_cell_empty(),
+                    table_cell_plus(),
+                ],
+                vec![
+                    TableCell::new("2".into()),
+                    TableCell::new("Не залежить від спеціалізованого апаратного забезпечення".into()),
+                    table_cell_plus(),
+                    table_cell_plus(),
+                    table_cell_minus(),
+                    table_cell_empty(),
+                    table_cell_plus(),
+                    table_cell_empty(),
+                ],
+                vec![
+                    TableCell::new("3".into()),
+                    TableCell::new("Зберігання даних на багатьох віддалених вузлах".into()),
+                    table_cell_plus(),
+                    table_cell_plus(),
+                    table_cell_minus(),
+                    table_cell_empty(),
+                    table_cell_plus(),
+                    table_cell_empty(),
+                ],
+                vec![
+                    TableCell::new("4".into()),
+                    TableCell::new("Підтримка інтеграції без зміни коду".into()),
+                    table_cell_plus(),
+                    table_cell_minus(),
+                    table_cell_minus(),
+                    table_cell_empty(),
+                    table_cell_empty(),
+                    table_cell_plus(),
+                ],
+                vec![
+                    TableCell::new("5".into()),
+                    TableCell::new("Зниження затримки за рахунок керування заміщенням сторінок".into()),
+                    table_cell_plus(),
+                    table_cell_plus(),
+                    table_cell_plus(),
+                    table_cell_empty(),
+                    table_cell_empty(),
+                    table_cell_plus(),
                 ],
             ],
             "Аналіз сильних, слабких та нейтральних сторін запропонованої ідеї".to_owned()
@@ -69,4 +109,16 @@ pub fn marketing() -> Block {
         Block::SubsectionHeader(SubsectionHeaderBlock::without_numbering("Висновки до розділу".to_owned())),
         Block::Placeholder(Box::new(paragraph("some text here")), "add some text here".to_owned()),
     ])
+}
+
+fn table_cell_plus() -> TableCell {
+    TableCell::new("+".into()).alignment(Alignment::Center)
+}
+
+fn table_cell_minus() -> TableCell {
+    TableCell::new("-".into()).alignment(Alignment::Center)
+}
+
+fn table_cell_empty() -> TableCell {
+    TableCell::new("".into()).alignment(Alignment::Center)
 }
