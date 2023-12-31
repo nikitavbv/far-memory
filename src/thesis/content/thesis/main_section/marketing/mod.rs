@@ -16,6 +16,10 @@ pub fn marketing() -> Block {
     let opportunities_table_number_width = 500;
     let opportunities_table_text_width = 3000;
 
+    let competition_table_number_width = 500;
+    let competition_table_property_width = 2000;
+    let competition_table_description_width = 3500;
+
     Block::Multiple(vec![
         section_header("Маркетинговий аналіз стартап-проекту"),
 
@@ -332,52 +336,105 @@ pub fn marketing() -> Block {
             "Фактори можливостей".to_owned(),
         ).with_split(vec![2])),
 
-        paragraph("Для більш ефективного розвитку програмного продукту на ринку необхідно провести аналіз рис конкуренції на ринку. Ступеневий аналіз \
-конкуренції на ринку розглянуто у таблиці 5.8."),
+        paragraph(vec![
+            "Для більш ефективного розвитку програмного продукту на ринку необхідно провести аналіз рис конкуренції на ринку. Ступеневий аналіз \
+конкуренції на ринку розглянуто у таблиці 5.8.".into(),
+            TextSpan::PageBreak,
+        ]),
         Block::Table(TableBlock::new(
             vec![
-                TableCell::new("№".into()),
-                TableCell::new("Особливості конкурентного середовища".into()),
-                TableCell::new("В чому проявляється дана характеритстика".into()),
-                TableCell::new("Вплив на діяльність підприємства (можливі дії компанії, щоб бути конкурентноспроможною)".into()),
+                TableCell::new("№".into()).width(competition_table_number_width),
+                TableCell::new("Особливості конкурентного середовища".into()).width(competition_table_property_width),
+                TableCell::new("В чому проявляється дана характеритстика".into()).width(competition_table_description_width),
+                TableCell::new("Вплив на діяльність підприємства (можливі дії компанії, щоб бути конкурентноспроможною)".into()).width(competition_table_description_width),
             ],
             vec![
                 vec![
-                    TableCell::new("1".into()),
-                    TableCell::new("Тип конкуренції: чиста".into()),
+                    TableCell::new("1".into()).width(competition_table_number_width),
+                    TableCell::new("Тип конкуренції: чиста".into()).width(competition_table_property_width),
                     TableCell::new("Програмний продукт для забезпечення віддаленої памʼяті не може повністю замінити інше програмне забезпечення для \
 надання віддаленої памʼяті, можуть співіснувати навіть у межах одного центру обробки даних; Ринок має умови для входу і виходу; Ціна відрізняється між \
-конкурентами.".into()),
+конкурентами.".into()).width(competition_table_description_width),
                     TableCell::new("Розробка програмного продукту з властивостями, яких немає у конкурентів. Встановлення ціни що відображає рівень переваг \
-над інишими програмними продуктами.".into()),
+над інишими програмними продуктами.".into()).width(competition_table_description_width),
                 ],
                 vec![
-                    TableCell::new("2".into()),
-                    TableCell::new("За рівнем конкурентної боротьби: мультинаціональний бізнес".into()),
-                    TableCell::new("Програмний продукт не потребує значних змін для використання у закордонних центрах обробки даних.".into()),
+                    TableCell::new("2".into()).width(competition_table_number_width),
+                    TableCell::new("За рівнем конкурентної боротьби: мультинаціональний бізнес".into()).width(competition_table_property_width),
+                    TableCell::new("Програмний продукт не потребує значних змін для використання у закордонних центрах обробки даних.".into()).width(competition_table_description_width),
                     TableCell::new("Використання великої кількості програмного забезпечення для інтеграції з усього світу. Орієнтація на інтеграцію у \
-найбільші світові інформаційні системи та центри обробки даних та використання цього для подальшого розвитку продукту.".into()),
+найбільші світові інформаційні системи та центри обробки даних та використання цього для подальшого розвитку продукту.".into()).width(competition_table_description_width),
                 ],
                 vec![
-                    TableCell::new("3".into()),
-                    TableCell::new("За галузевою ознакою: міжгалузева".into()),
+                    TableCell::new("3".into()).width(competition_table_number_width),
+                    TableCell::new("За галузевою ознакою: міжгалузева".into()).width(competition_table_property_width),
                     TableCell::new("Конкуренція з іншими типами рішень: на рівні інфраструктури чи апаратних компонентів які також могли б вирішувати \
-проблему більш ефективного використання оперативної памʼяті".into()),
+проблему більш ефективного використання оперативної памʼяті".into()).width(competition_table_description_width),
                     TableCell::new("Адаптація програмного забезпечення під зміни у інфрастуктури та компоненти інформаціних систем. Підвищення ефективності \
 надання віддаленої памʼяті за рахунок використання покращень інших продуктів та технологій (наприклад, нові можливості апартної платформи які можна використати \
-для більш ефективного переміщення даних між вузлами).".into()),
+для більш ефективного переміщення даних між вузлами).".into()).width(competition_table_description_width),
                 ],
                 vec![
-                    TableCell::new("4".into()),
-                    TableCell::new("Конкуренція за видами товарів: товарно-родова".into()),
+                    TableCell::new("4".into()).width(competition_table_number_width),
+                    TableCell::new("Конкуренція за видами товарів: товарно-родова".into()).width(competition_table_property_width),
                     TableCell::new("Програмні продукти що конкурують спираються на різні підходи для надання віддаленої памʼяті. Конкурентну перевагу надає \
-не більш ефективна реалізація підходу, а використання більш ефеткивних підходів.".into()),
+не більш ефективна реалізація підходу, а використання більш ефеткивних підходів.".into()).width(competition_table_description_width),
                     TableCell::new("Постійний аналіз впливу різних факторів на рівень швидкодії віддаленої памʼяті, внесення значних змін у методи її надання \
-якщо це необхідно для покращення швидкодії.".into()),
+якщо це необхідно для покращення швидкодії.".into()).width(competition_table_description_width),
                 ],
-                // TODO: add two more rows.
+                vec![
+                    TableCell::new("5".into()).width(competition_table_number_width),
+                    TableCell::new("За характером конкурентних переваг: нецінова".into()).width(competition_table_property_width),
+                    TableCell::new("Найбільшим фактором є кількість оперативної памʼяті що було перерозподілено для більш ефективного використання у \
+інформаційній системі у порівнянні з затратами на інтеграцію віддаленої памʼяті у програмне забезпечення.".into()).width(competition_table_description_width),
+                    TableCell::new("Постійний моніторинг ефективності віддаленої памʼяті для різних типів програмного забзепечення, пошук шляхів зменшення \
+затримки доступу до даних та збільшення відношення обсягу даних у віддаленій памʼяті до обсягу даних у локальній памʼяті".into()).width(competition_table_description_width),
+                ],
+                vec![
+                    TableCell::new("6".into()).width(competition_table_number_width),
+                    TableCell::new("За інтенсивністю: марочна".into()).width(competition_table_property_width),
+                    TableCell::new("Створення бренду програмного продукту що підвищує ефективність використання ресурсів у центрі обробки даних".into()).width(competition_table_description_width),
+                    TableCell::new("Робота над розвитком бренду".into()).width(competition_table_description_width),
+                ],
             ],
             "Ступеневий аналіз конкуренції на ринку".to_owned()
+        ).with_split(vec![3])),
+
+        paragraph("Для більш детального аналізу умов конкуренції в галузі використовується модель М. Портера. Детальний аналіз умов конкуренції на ринку \
+наведено у таблиці 5.9."),
+        Block::Table(TableBlock::new(
+            vec![
+                TableCell::new("Складові аналізу".into()).columns(2),
+                TableCell::new("Висновки".into()),
+            ],
+            vec![
+                vec![
+                    TableCell::new("Прямі конкуренти в галузі".into()),
+                    TableCell::new("Відсутні".into()),
+                    TableCell::new("".into()), // TODO no commerical product or service
+                ],
+                vec![
+                    TableCell::new("Потенційні конкуренти в галузі".into()),
+                    TableCell::new("".into()), // TODO
+                    TableCell::new("".into()), // TODO
+                ],
+                vec![
+                    TableCell::new("Постачальники".into()),
+                    TableCell::new("".into()), // TODO
+                    TableCell::new("".into()), // TODO
+                ],
+                vec![
+                    TableCell::new("Клієнти".into()),
+                    TableCell::new("".into()), // TODO
+                    TableCell::new("".into()), // TODO
+                ],
+                vec![
+                    TableCell::new("Товари-замінники".into()),
+                    TableCell::new("".into()), // TODO
+                    TableCell::new("".into()), // TODO
+                ],
+            ],
+            "Аналіз конкуренції в галузі за М. Портером".to_owned(),
         )),
 
         // TODO: add this subsection
