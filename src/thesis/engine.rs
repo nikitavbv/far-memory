@@ -28,6 +28,7 @@ use {
         TableAlignmentType,
         TableCellMargins,
         WidthType,
+        BreakType,
     },
     thiserror::Error,
     crate::thesis::{
@@ -325,6 +326,7 @@ pub struct TableBlock {
     columns: Vec<TableCell>,
     rows: Vec<Vec<TableCell>>,
     description: String,
+    split: Option<Vec<u32>>,
 }
 
 impl TableBlock {
@@ -337,6 +339,14 @@ impl TableBlock {
             columns,
             rows,
             description,
+            split: None,
+        }
+    }
+
+    pub fn with_split(self, split: Vec<u32>) -> Self {
+        Self {
+            split: Some(split),
+            ..self
         }
     }
 }
@@ -635,12 +645,44 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
             let section_index = context.last_section_index();
             let table_index = context.next_table_index(section_index);
 
+            let mut document = document;
+            let mut rows = rows;
+            let mut split = table.split.unwrap_or(Vec::new());
+            let mut table_first_part = true;
+
+            while !rows.is_empty() {
+                let rows_to_add = if let Some(index) = split.pop() {
+                    rows.drain(0..(index as usize + 1)).collect::<Vec<_>>()
+                } else {
+                    rows.drain(0..rows.len()).collect::<Vec<_>>()
+                };
+
+                let table_title_text = if table_first_part {
+                    format!("Таблиця {}.{} - {}.", section_index, table_index, table.description)
+                } else {
+                    format!("Продовження таблиці {}.{}", section_index, table_index)
+                };
+                let table_title = Run::new();
+
+                let table_title = if !table_first_part {
+                    table_title.add_break(BreakType::Page)
+                } else {
+                    table_title
+                };
+
+                let table_title = table_title.add_tab().add_text(table_title_text);
+
+                document = document
+                    .add_paragraph(Paragraph::new()
+                        .add_tab(Tab::new().pos(710))
+                        .line_spacing(LineSpacing::new().line(24 * 15))
+                        .add_run(table_title))
+                    .add_table(DocxTable::new(rows_to_add).layout(TableLayoutType::Autofit).align(TableAlignmentType::Center).margins(TableCellMargins::new().margin(80, 80, 80, 80)));
+
+                table_first_part = false;
+            }
+
             document
-                .add_paragraph(Paragraph::new()
-                    .add_tab(Tab::new().pos(710))
-                    .line_spacing(LineSpacing::new().line(24 * 15))
-                    .add_run(Run::new().add_tab().add_text(format!("Таблиця {}.{} - {}.", section_index, table_index, table.description))))
-                .add_table(DocxTable::new(rows).layout(TableLayoutType::Autofit).align(TableAlignmentType::Center).margins(TableCellMargins::new().margin(80, 80, 80, 80)))
         },
         Block::Application(application) => document.add_paragraph(
             Paragraph::new()

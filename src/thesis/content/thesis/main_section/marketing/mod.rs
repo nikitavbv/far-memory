@@ -36,7 +36,7 @@ pub fn marketing() -> Block {
                 TableCell::new("Техніко-економічні характеристики ідеї".into()).merge_continue().font_size(12),
                 TableCell::new("Продукція конкурентів".into()).columns(3).font_size(12),
                 TableCell::new("W (слабка сторона)".into()).merge_continue().font_size(12),
-                TableCell::new("N (нейральна сторона)".into()).merge_continue().font_size(12),
+                TableCell::new("N (нейтральна сторона)".into()).merge_continue().font_size(12),
                 TableCell::new("S (сильна сторона)".into()).merge_continue().font_size(12),
             ],
             vec![
@@ -102,7 +102,7 @@ pub fn marketing() -> Block {
                 ],
             ],
             "Аналіз сильних, слабких та нейтральних сторін запропонованої ідеї".to_owned()
-        )),
+        ).with_split(vec![2])),
 
         // TODO: finish this section
 
