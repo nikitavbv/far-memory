@@ -8,6 +8,11 @@ pub fn marketing() -> Block {
     let technology_table_description_width = 2700;
     let technology_table_proprerty_width = 2000;
 
+    let risks_table_number_width = 500;
+    let risks_table_factor_width = 2500;
+    let risks_table_description_width = 3000;
+    let risks_table_solution_width = 3500;
+
     Block::Multiple(vec![
         section_header("Маркетинговий аналіз стартап-проекту"),
 
@@ -257,39 +262,41 @@ pub fn marketing() -> Block {
         paragraph("Важливо розглянути фактори що можуть перешкоджати ринковому впровадженню проекту. Такі фактори розглянуто у таблиці 5.6."),
         Block::Table(TableBlock::new(
             vec![
-                TableCell::new("№".into()),
-                TableCell::new("Фактор".into()),
-                TableCell::new("Зміст загрози".into()),
-                TableCell::new("Можлива реакція компанії".into()),
+                TableCell::new("№".into()).width(risks_table_number_width),
+                TableCell::new("Фактор".into()).width(risks_table_factor_width),
+                TableCell::new("Зміст загрози".into()).width(risks_table_description_width),
+                TableCell::new("Можлива реакція компанії".into()).width(risks_table_solution_width),
             ],
             vec![
                 vec![
-                    TableCell::new("1".into()),
-                    TableCell::new("Конкурентне середовище".into()),
+                    TableCell::new("1".into()).width(risks_table_number_width),
+                    TableCell::new("Конкурентне середовище".into()).width(risks_table_factor_width),
                     TableCell::new("Вирішення задачі збільшення ефективності використання оперативної памʼяті на рівні віртуалізації або інших компонентів \
-хмарної інфраструктури.".into()),
+хмарної інфраструктури.".into()).width(risks_table_description_width),
                     TableCell::new("Підвищення ефективності програмного продукту (рівня швидкодії), оскільки інтеграція на рівні програмного забезпечення \
-повинна бути більш ефективною через більшу кількість наявної інформації.".into()),
+повинна бути більш ефективною через більшу кількість наявної інформації.".into()).width(risks_table_solution_width),
                 ],
                 vec![
-                    TableCell::new("2".into()),
-                    TableCell::new("Незацікавленість клієнтів у використанні програмного продукту".into()),
-                    TableCell::new("".into()), // TODO
-                    TableCell::new("".into()), // TODO
+                    TableCell::new("2".into()).width(risks_table_number_width),
+                    TableCell::new("Незацікавленість клієнтів у використанні програмного продукту".into()).width(risks_table_factor_width),
+                    TableCell::new("Клієнти зацікавлені у використанні інших підходів до підвищення ефективності використання ресурсів та вважають \
+використання віддаленої памʼяті недоцільним.".into()).width(risks_table_description_width),
+                    TableCell::new("Спрощення розгортання компонентів віддаленої памʼяті, вдосконалення методу інтеграції у програмне забезпечення, \
+покращення рівня швидкодії що збільшить область застосування.".into()).width(risks_table_solution_width),
                 ],
                 vec![
-                    TableCell::new("3".into()),
-                    TableCell::new("Відповідність продукту очікванням та потребам сегменту".into()),
-                    TableCell::new("".into()), // TODO
-                    TableCell::new("".into()), // TODO
+                    TableCell::new("3".into()).width(risks_table_number_width),
+                    TableCell::new("Відповідність продукту очікванням та потребам сегменту".into()).width(risks_table_factor_width),
+                    TableCell::new("Рівень швидкодії віддаленої памʼяті не дозволяє інформаціним системам, в які віддалена памʼять інтегрується, дотримуватись \
+цільового рівня обслуговування (SLO)".into()).width(risks_table_description_width),
+                    TableCell::new("Зниження затримки доступу до даних у віддаленій памʼяті за рахунок збільшення ефективності клієнта віддаленої памʼяті, \
+використання більш ефективних алгоритмів заміщення проміжків, і т.д.".into()).width(risks_table_solution_width),
                 ],
             ],
             "Фактори загроз".to_owned(),
-        )),
+        ).with_split(vec![2])),
 
-        // TODO: tell something about risks (TODO: verify)
-        // TODO: table to analyze risks (TODO: verify)
-
+        paragraph("..."),
         // TODO: tell something about opportunities (TODO: verify)
         // TODO: table to analyze opportunities (TODO: verify)
 
