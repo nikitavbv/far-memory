@@ -13,6 +13,9 @@ pub fn marketing() -> Block {
     let risks_table_description_width = 3000;
     let risks_table_solution_width = 3500;
 
+    let opportunities_table_number_width = 500;
+    let opportunities_table_text_width = 3000;
+
     Block::Multiple(vec![
         section_header("Маркетинговий аналіз стартап-проекту"),
 
@@ -296,9 +299,42 @@ pub fn marketing() -> Block {
             "Фактори загроз".to_owned(),
         ).with_split(vec![2])),
 
-        paragraph("..."),
-        // TODO: tell something about opportunities (TODO: verify)
-        // TODO: table to analyze opportunities (TODO: verify)
+        paragraph("Крім цього, існують фактори що сприяють ринковому впровадженню проекту. Ці фактори розглянуто у таблиці 5.7."),
+        Block::Table(TableBlock::new(
+            vec![
+                TableCell::new("№".into()).width(opportunities_table_number_width),
+                TableCell::new("Фактор".into()).width(opportunities_table_text_width),
+                TableCell::new("Зміст можливості".into()).width(opportunities_table_text_width),
+                TableCell::new("Можлива реакція компанії".into()).width(opportunities_table_text_width),
+            ],
+            vec![
+                vec![
+                    TableCell::new("1".into()).width(opportunities_table_number_width),
+                    TableCell::new("Підвищення цін на серверне обладнання, виникнення складнощів з його покупкою у операторів центрів обробки даних".into()).width(opportunities_table_text_width),
+                    TableCell::new("Необхідність оптимізації використання ресурсів стає більш критичною для клієнтів".into()).width(opportunities_table_text_width),
+                    TableCell::new("Рекламна компанія спрямована на ознайомлення клієнтів з можливістю використання віддаленої памʼятті.".into()).width(opportunities_table_text_width),
+                ],
+                vec![
+                    TableCell::new("2".into()).width(opportunities_table_number_width),
+                    TableCell::new("Значні зміни на ринку віртуалізації/хмарних обчислень".into()).width(opportunities_table_text_width),
+                    TableCell::new("Умови в яких розробники інформаційних систем переглядають архітектуру програмного забезпечення, інтеграція віддаленої \
+памʼяті може бути однією зі змін що виконуються одночасно.".into()).width(opportunities_table_text_width),
+                    TableCell::new("Надання послуг консультування для таких міграцій".into()).width(opportunities_table_text_width),
+                ],
+                vec![
+                    TableCell::new("3".into()).width(opportunities_table_number_width),
+                    TableCell::new("Можливості демонстрації програмного продукту".into()).width(opportunities_table_text_width),
+                    TableCell::new("Популярне програмне забезпечення використовує багато оперативної памʼяті (наприклад, бази даних)".into()).width(opportunities_table_text_width),
+                    TableCell::new("Для програмного забезпечення з відкритим кодом створювати версії в які інтегрована віддалена памʼять та яке є простим \
+у розгортанні. Виконати вимірювання швидкодії для демонстрації привабливості використання віддаленої памʼяті.".into()).width(opportunities_table_text_width),
+                ],
+            ],
+            "Фактори можливостей".to_owned(),
+        ).with_split(vec![2])),
+
+        paragraph("Для більш ефективного розвитку програмного продукту на ринку необхідно провести аналіз рис конкуренції на ринку. Ступеневий аналіз \
+конкуренції на ринку розглянуто у таблиці 5.8."),
+        // TODO: add table.
 
         // TODO: add this subsection
 
