@@ -117,7 +117,7 @@ pub fn marketing() -> Block {
 
         subsection_header("Технологійчний аудит ідеї проекту"),
         paragraph("Для проведення технологічного аудиту ідеї проекту було проаналізовано які технології є необхідними для реалізації ідеї цього проекту. \
-У таблиці 5.3. проведено аналіз технологійчної здійсненності ідеї проекту."),
+У таблиці 5.3 проведено аналіз технологійчної здійсненності ідеї проекту."),
         Block::Table(TableBlock::new(
             vec![
                 TableCell::new("№".into()).width(technology_table_number_width),
@@ -172,14 +172,61 @@ pub fn marketing() -> Block {
 доступними."),
 
         subsection_header("Аналіз ринкових можливостей запуску стартап-проекту"),
-        // TODO: tell something about client analysis
-        // TODO: table to analyze clients
+        paragraph(vec![
+            "Першим кроком визначення ринкових можливостей, які можна використати під час ринкового впровадження проекту, є аналіз попиту. \
+У таблиці 5.4 проведено попередню характеристику потенційного ринку стратап-проекту.".into(),
+            TextSpan::PageBreak,
+        ]),
+        Block::Table(TableBlock::new(
+            vec![
+                TableCell::new("№".into()),
+                TableCell::new("Показники стану ринку".into()),
+                TableCell::new("Характеристика".into()),
+            ],
+            vec![
+                vec![
+                    TableCell::new("1".into()),
+                    TableCell::new("Кількість головних гравців, од.".into()),
+                    TableCell::new("0".into()),
+                ],
+                vec![
+                    TableCell::new("2".into()),
+                    TableCell::new("Загальний обсяг продаж, грн/ум.од".into()),
+                    TableCell::new("Точна статистика відсутня. Розмір ринку програмного забезпечення для надання віддаленої памʼяті може приблизно \
+дорівнювати розміру ринку віртуалізації ($86 мільядрів), оскільки потреба в використанні віддаленої памʼяті виникає у схожих середовищах.".into()),
+                ],
+                vec![
+                    TableCell::new("3".into()),
+                    TableCell::new("Динаміка ринку (якісна оцінка)".into()),
+                    TableCell::new("Зростає".into()),
+                ],
+                vec![
+                    TableCell::new("4".into()),
+                    TableCell::new("Наявність обмежень для входу (вказати характер обмежень)".into()),
+                    TableCell::new("Немає".into()),
+                ],
+                vec![
+                    TableCell::new("5".into()),
+                    TableCell::new("Специфічні вимоги до стандартизації та сертифікації".into()),
+                    TableCell::new("Немає".into()),
+                ],
+                vec![
+                    TableCell::new("6".into()),
+                    TableCell::new("Середня норма рентабельності в галузлі (або по ринку), %".into()),
+                    TableCell::new("Невідома".into()),
+                ],
+            ],
+            "Попередня характеристика потенційного ринку стратап-проекту".to_owned(),
+        )),
+        paragraph("Незважаючи на відсутність повної інформації про потенційний ринок (зумовлену відсутністю існуючих комерційних програмних продуктів у \
+цій сфері), можна зробити висновок що цей ринок є привабливим через велику кількість клієнтів (розмір ринку) які зацікавлені в збільшенні ефективності \
+використання ресурсів у центрі обробки даних, відсутність конкурентів у цій сфері та відсутність обмежень для входу."),
 
-        // TODO: tell something about risks
-        // TODO: table to analyze risks
+        // TODO: tell something about risks (TODO: verify)
+        // TODO: table to analyze risks (TODO: verify)
 
-        // TODO: tell something about opportunities
-        // TODO: table to analyze opportunities
+        // TODO: tell something about opportunities (TODO: verify)
+        // TODO: table to analyze opportunities (TODO: verify)
 
         // TODO: add this subsection
 

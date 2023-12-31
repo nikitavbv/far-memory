@@ -31,6 +31,7 @@ pub fn runs_for_text_span(context: &mut Context, text: TextSpan, run: Run) -> Ve
         },
         TextSpan::Multiple(texts) => texts.into_iter().flat_map(|text| runs_for_text_span(context, text, run.clone()).into_iter()).collect(),
         TextSpan::Break => vec![run.add_break(BreakType::TextWrapping)],
+        TextSpan::PageBreak => vec![run.add_break(BreakType::Page)],
         TextSpan::ApplicationReference(application_id) => vec![run.add_text(context.index_for_application_id(application_id).map(application_letter_for_index).unwrap_or("?".to_owned()))],
     }
 }

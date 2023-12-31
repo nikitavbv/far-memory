@@ -255,6 +255,7 @@ pub enum TextSpan {
     Reference(Box<TextSpan>, Reference),
     ApplicationReference(&'static str),
     Break,
+    PageBreak,
 }
 
 #[derive(Debug, Clone)]
@@ -849,7 +850,7 @@ fn render_text_span_to_html(span: TextSpan) -> String {
         TextSpan::Multiple(texts) => texts.into_iter().map(render_text_span_to_html).collect::<String>(),
         TextSpan::Link { text, url } => format!("<a href=\"{}\">{}</a>", url, html_escape::encode_text(&text)),
         TextSpan::Reference(_text, _reference) => unimplemented!(),
-        TextSpan::Break => "<br />".to_owned(),
+        TextSpan::Break | TextSpan::PageBreak => "<br />".to_owned(),
         TextSpan::ApplicationReference(_) => unimplemented!(),
     }
 }
@@ -1128,7 +1129,7 @@ impl TextSpan {
             TextSpan::Multiple(texts) => texts.iter().map(|v| v.to_plaintext()).collect::<String>(),
             TextSpan::Link { text, url: _ } => text.to_owned(),
             TextSpan::Reference(text, _) => text.to_plaintext(),
-            TextSpan::Break => "\n".to_owned(),
+            TextSpan::Break | TextSpan::PageBreak => "\n".to_owned(),
             TextSpan::ApplicationReference(_) => unimplemented!(),
         }
     }
