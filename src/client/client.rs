@@ -20,7 +20,7 @@ pub struct FarMemoryClient {
     spans: Arc<RwLock<HashMap<SpanId, FarMemorySpan>>>,
     is_running: Arc<AtomicBool>,
 
-    backend: Arc<Mutex<Box<dyn FarMemoryBackend>>>,
+    backend: Arc<Box<dyn FarMemoryBackend>>,
     replacement_policy: Arc<Box<dyn ReplacementPolicy>>,
     manager: Arc<Option<ManagerClient>>,
 
@@ -73,7 +73,7 @@ impl FarMemoryClient {
             spans: Arc::new(RwLock::new(HashMap::new())),
             is_running: Arc::new(AtomicBool::new(true)),
 
-            backend: Arc::new(Mutex::new(backend)),
+            backend: Arc::new(backend),
             replacement_policy: Arc::new(Box::new(ReplayReplacementPolicy::new(Box::new(PreferRemoteSpansReplacementPolicy::new(Box::new(MostRecentlyUsedReplacementPolicy::new())))))),
             manager: Arc::new(None),
             local_memory_max_threshold,
@@ -117,7 +117,7 @@ impl FarMemoryClient {
     pub fn stop(&self) {
         self.is_running.store(false, Ordering::Relaxed);
         self.replacement_policy.on_stop();
-        self.backend.lock().unwrap().on_stop();
+        self.backend.on_stop();
         if let Some(metrics) = self.metrics.as_ref() {
             metrics.unregister();
         }
@@ -313,7 +313,7 @@ impl FarMemoryClient {
         }
 
         let swap_in_data = span!(Level::DEBUG, "backend batch swap").in_scope(|| {
-            span!(Level::DEBUG, "waiting for backend lock").in_scope(|| self.backend.lock().unwrap()).batch(swap_out_ops, swap_in)
+            self.backend.batch(swap_out_ops, swap_in)
         });
 
         span!(Level::DEBUG, "swap out finalize ops").in_scope(|| {
@@ -376,7 +376,7 @@ impl FarMemoryClient {
         };
 
         span!(Level::DEBUG, "backend swap out", size = data.len()).in_scope(|| {
-            span!(Level::DEBUG, "waiting for backend lock").in_scope(|| self.backend.lock().unwrap()).swap_out(span_id.clone(), data, prepend_to_backend);
+            self.backend.swap_out(span_id.clone(), data, prepend_to_backend);
         });
 
         if full_swap_out {
@@ -425,7 +425,7 @@ impl FarMemoryClient {
             return SwapOutResult {
                 spans: 0,
                 bytes: 0,
-                swap_in_span_data: swap_in.map(|v| span!(Level::DEBUG, "waiting for backend lock").in_scope(|| self.backend.lock().unwrap()).swap_in(v)),
+                swap_in_span_data: swap_in.map(|v| self.backend.swap_in(v)),
             };
         }
 

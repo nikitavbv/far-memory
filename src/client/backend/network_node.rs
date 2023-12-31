@@ -1,5 +1,6 @@
 use {
     std::sync::Mutex,
+    tracing::debug_span,
     crate::{
         storage::{Client, SwapOutRequest, SpanData, BatchSwapOutOperation, LocalSpanData},
         client::span::SpanId,
@@ -25,11 +26,11 @@ impl NetworkNodeBackend {
 
 impl FarMemoryBackend for NetworkNodeBackend {
     fn swap_out(&self, id: SpanId, span: &[u8], prepend: bool) {
-        self.client.lock().unwrap().swap_out(id.id(), span.to_vec(), prepend);
+        debug_span!("waiting for network client lock for swap out").in_scope(|| self.client.lock().unwrap()).swap_out(id.id(), span.to_vec(), prepend);
     }
 
     fn swap_in(&self, id: &SpanId) -> Vec<u8> {
-        self.client.lock().unwrap().swap_in(id.id())
+        debug_span!("waiting for network client lock for swap in").in_scope(|| self.client.lock().unwrap()).swap_in(id.id())
     }
 
     fn batch_swap_out(&self, swap_out_operations: Vec<SwapOutOperation>) {
@@ -37,7 +38,7 @@ impl FarMemoryBackend for NetworkNodeBackend {
     }
 
     fn batch(&self, swap_out_operations: Vec<SwapOutOperation>, swap_in: Option<&SpanId>) -> Option<Vec<u8>> {
-        self.client.lock().unwrap().batch(swap_out_operations.into_iter().map(|v| BatchSwapOutOperation {
+        debug_span!("waiting for network client lock for batch operation").in_scope(|| self.client.lock().unwrap()).batch(swap_out_operations.into_iter().map(|v| BatchSwapOutOperation {
             span_id: v.id.id(),
             data: match v.data {
                 SwapOutOperationData::Owned(v) => LocalSpanData::Owned(v),
