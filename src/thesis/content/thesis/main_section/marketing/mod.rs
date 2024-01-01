@@ -830,10 +830,69 @@ pub fn marketing() -> Block {
 шляхом розвитку технологічних властивостей програмного продукту. Оскільки програмний продукт є «першопрохідцем» на ринку, то стратегією конкурентної \
 поведінки обрано стратегію лідера."),
 
-        // TODO: finish this subsection
+        subsection_header("Розроблення маркетингової програми стартап-проекту"),
+        paragraph(vec![
+            "Першим кроком розроблення маркетингової програми стартап-проекту є формування маркетингової концепції товару. У таблиці 5.18 \
+визначено ключові переваги концепції потенційного товару.".into(),
+            TextSpan::PageBreak,
+        ]),
+        Block::Table(TableBlock::new(
+            vec![
+                TableCell::new("Потреба".into()),
+                TableCell::new("Вигода, яку пропонує товар".into()),
+                TableCell::new("Ключові переваги перед конкурентами (існуючі або такі, що потрібно створити)".into()),
+            ],
+            vec![
+                vec![
+                    TableCell::new("Збільшення ефективності використання ресурсів центру обробки даних".into()),
+                    TableCell::new("Зниження витрат на додаткові сервери або розширення оперативної памʼяті в існуючому обладнанні за рахунок \
+перенесення частин даних з памʼяті більш завантажених серверів у памʼять менш завантажених (тобто, за рахунок використання віддаленої памʼяті)".into()),
+                    TableCell::new("Більш легке розгортання, більш легка інтеграція у програмне забезпечення інформаційної системи, \
+більш високий рівень швидкодії (нижча затримка доступу до даних у віддаленій памʼяті).".into()),
+                ],
+            ],
+            "Визначення ключових переваг концепції потенційного товару".to_owned(),
+        )),
 
-        subsection_header("Розроблення маркетингової програми стартап-проєкту"),
-        // TODO: add this subsection
+        paragraph("Наступним кроком є розробка трирівневої маркетингової моделі товару. Опис трьох рівнів моделі товару наведено у таблиці 5.19."),
+        Block::Table(TableBlock::new(
+            vec![
+                TableCell::new("Рівні товару".into()),
+                TableCell::new("Сутність та складові".into()).columns(3),
+            ],
+            vec![
+                vec![
+                    TableCell::new("1. Товар за задумом".into()),
+                    TableCell::new("...".into()).columns(3), // TODO
+                ],
+                vec![
+                    TableCell::new("2. Товар у реальному виконанні".into()).merge_continue(),
+                    TableCell::new("Властивості/характеристики".into()),
+                    TableCell::new("М/Нм".into()),
+                    TableCell::new("Вр/Тх/Тл/Е/Ор".into()),
+                ],
+                vec![
+                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("...".into()), // TODO
+                    TableCell::new("...".into()), // TODO
+                    TableCell::new("...".into()), // TODO
+                ],
+                vec![
+                    TableCell::new("3. Товар із підкріпленням".into()).merge_continue(),
+                    TableCell::new("До продажу: ...".into()).columns(3), // TODO
+                ],
+                vec![
+                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("Після продажу: ...".into()).columns(3), // TODO
+                ],
+                vec![
+                    TableCell::new("За рахунок чого потенційний товар буде захищено від копіювання: ...".into()).columns(4), // TODO
+                ]
+            ],
+            "Опис трьох рівнів моделі товару".to_owned(),
+        )),
+
+        // TODO: finish this subsection
 
         Block::SubsectionHeader(SubsectionHeaderBlock::without_numbering("Висновки до розділу".to_owned())),
         // TODO: add conclusions
