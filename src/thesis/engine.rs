@@ -666,8 +666,8 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
             let mut table_first_part = true;
 
             while !rows.is_empty() {
-                let rows_to_add = if let Some(index) = split.pop() {
-                    rows.drain(0..(index as usize)).collect::<Vec<_>>()
+                let rows_to_add = if !split.is_empty() {
+                    rows.drain(0..(split.remove(0) as usize)).collect::<Vec<_>>()
                 } else {
                     rows.drain(0..rows.len()).collect::<Vec<_>>()
                 };
