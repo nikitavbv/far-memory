@@ -494,6 +494,112 @@ pub fn marketing() -> Block {
             "Обґрунтування факторів конкуретноспроможності".to_owned(),
         ).with_split(vec![4])),
 
+        paragraph("Базуючись на визначених факторах конкурентноспроможності було проведено аналіз слабких сторін стартап-проекту. Порівняльний аналіз \
+наведено у таблиці 5.11."),
+        Block::Table(TableBlock::new(
+            vec![
+                TableCell::new("№".into()).merge_continue(),
+                TableCell::new("Фактор конкурентноспроможності".into()).merge_continue(),
+                TableCell::new("Бали 1-20".into()).merge_continue(),
+                TableCell::new("Рейтинг товарів-конкурентів у порівнянні з запропонованим".into()).columns(7),
+            ],
+            vec![
+                vec![
+                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new(TextSpan::Bold(Box::new("-3".into()))),
+                    TableCell::new(TextSpan::Bold(Box::new("-2".into()))),
+                    TableCell::new(TextSpan::Bold(Box::new("-1".into()))),
+                    TableCell::new(TextSpan::Bold(Box::new("0".into()))),
+                    TableCell::new(TextSpan::Bold(Box::new("+1".into()))),
+                    TableCell::new(TextSpan::Bold(Box::new("+2".into()))),
+                    TableCell::new(TextSpan::Bold(Box::new("+3".into()))),
+                ],
+                vec![
+                    TableCell::new("1".into()),
+                    TableCell::new("До і після продажне обслуговування".into()),
+                    TableCell::new("16".into()),
+                    TableCell::new("".into()),
+                    TableCell::new("".into()),
+                    TableCell::new("".into()),
+                    TableCell::new("".into()),
+                    TableCell::new("+".into()), // +1
+                    TableCell::new("".into()),
+                    TableCell::new("".into()),
+                ],
+                vec![
+                    TableCell::new("2".into()),
+                    TableCell::new("Модифікація по замовленню".into()),
+                    TableCell::new("18".into()),
+                    TableCell::new("".into()),
+                    TableCell::new("".into()),
+                    TableCell::new("".into()),
+                    TableCell::new("".into()),
+                    TableCell::new("".into()),
+                    TableCell::new("+".into()), // +2
+                    TableCell::new("".into()),
+                ],
+                vec![
+                    TableCell::new("3".into()),
+                    TableCell::new("Легкість розгортання та інтеграції".into()),
+                    TableCell::new("19".into()),
+                    TableCell::new("".into()),
+                    TableCell::new("".into()),
+                    TableCell::new("".into()),
+                    TableCell::new("".into()),
+                    TableCell::new("".into()),
+                    TableCell::new("".into()),
+                    TableCell::new("+".into()), // +3
+                ],
+                vec![
+                    TableCell::new("4".into()),
+                    TableCell::new("Рівень швидкодії".into()),
+                    TableCell::new("15".into()),
+                    TableCell::new("".into()),
+                    TableCell::new("".into()),
+                    TableCell::new("".into()),
+                    TableCell::new("".into()),
+                    TableCell::new("+".into()), // +1
+                    TableCell::new("".into()),
+                    TableCell::new("".into()),
+                ],
+            ],
+            "Порівняльний аналіз сильних та слабких сторін програмного забезпечення для надання віддаленої памʼяті у розподілених системах".to_owned(),
+        )),
+
+        paragraph("Фінальним етапом ринкового аналізу можливостей впровадження програмного продукту для надання віддаленої памʼяті є проведення SWOT-аналізу. \
+Сильні та слабкі сторони проекти, а також можливості та загрози наведені у таблиці 5.12."),
+        Block::Table(TableBlock::new(
+            vec![
+                TableCell::new(TextSpan::Bold(Box::new("Сильні сторони (S):".into()))),
+                TableCell::new(TextSpan::Bold(Box::new("Слабкі сторони (W):".into()))),
+            ],
+            vec![
+                vec![
+                    TableCell::new(vec![
+                        "".into(), // TODO
+                    ].into()),
+                    TableCell::new(vec![
+                        "".into(), // TODO
+                    ].into()),
+                ],
+                vec![
+                    TableCell::new(TextSpan::Bold(Box::new("Можливості (O):".into()))),
+                    TableCell::new(TextSpan::Bold(Box::new("Загрози (T):".into()))),
+                ],
+                vec![
+                    TableCell::new(vec![
+                        "".into(), // TODO
+                    ].into()),
+                    TableCell::new(vec![
+                        "".into(), // TODO
+                    ].into()),
+                ],
+            ],
+            "SWOT-аналіз стартап-проекту".to_owned(),
+        )),
+
         // TODO: add this subsection
 
         subsection_header("Розроблення ринкової стратегії проекту"),
