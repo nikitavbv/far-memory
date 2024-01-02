@@ -356,6 +356,7 @@ impl TableBlock {
 pub struct TableCell {
     text: TextSpan,
     merge_continue: bool,
+    merge_restart: bool,
     width: Option<usize>,
     columns: Option<usize>,
     alignment: Option<Alignment>,
@@ -367,6 +368,7 @@ impl TableCell {
         Self {
             text,
             merge_continue: false,
+            merge_restart: false,
             width: None,
             columns: None,
             alignment: None,
@@ -377,6 +379,13 @@ impl TableCell {
     pub fn merge_continue(self) -> Self {
         Self {
             merge_continue: true,
+            ..self
+        }
+    }
+
+    pub fn merge_restart(self) -> Self {
+        Self {
+            merge_restart: true,
             ..self
         }
     }
@@ -600,6 +609,8 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
 
                                 let docx_cell = if cell.merge_continue {
                                     docx_cell.vertical_merge(VMergeType::Continue)
+                                } else if cell.merge_restart {
+                                    docx_cell.vertical_merge(VMergeType::Restart)
                                 } else {
                                     docx_cell
                                 };
@@ -638,6 +649,8 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
 
                 let docx_cell = if cell.merge_continue {
                     docx_cell.vertical_merge(VMergeType::Continue)
+                } else if cell.merge_restart {
+                    docx_cell.vertical_merge(VMergeType::Restart)
                 } else {
                     docx_cell
                 };

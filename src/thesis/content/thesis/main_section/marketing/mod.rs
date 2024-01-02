@@ -863,7 +863,8 @@ pub fn marketing() -> Block {
             vec![
                 vec![
                     TableCell::new("1. Товар за задумом".into()),
-                    TableCell::new("...".into()).columns(3), // TODO
+                    TableCell::new("Збільшення ефективності використання ресурсів центру обробки даних, а саме більш ефективне використання \
+оперативної памʼяті у розподіленій системі".into()).columns(3),
                 ],
                 vec![
                     TableCell::new("2. Товар у реальному виконанні".into()).merge_continue(),
@@ -873,12 +874,54 @@ pub fn marketing() -> Block {
                 ],
                 vec![
                     TableCell::new("".into()).merge_continue(),
-                    TableCell::new("...".into()), // TODO
-                    TableCell::new("...".into()), // TODO
-                    TableCell::new("...".into()), // TODO
+                    TableCell::new("Розгортання".into()),
+                    TableCell::new("Нм".into()),
+                    TableCell::new("Вр/Тх/Е".into()),
                 ],
                 vec![
-                    TableCell::new("3. Товар із підкріпленням".into()).merge_continue(),
+                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("Інтеграція у програмне забезпечення".into()),
+                    TableCell::new("М".into()),
+                    TableCell::new("Вр/Тх/Тл/Е".into()),
+                ],
+                vec![
+                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("Забезпечення відмовостійкості".into()),
+                    TableCell::new("Нм".into()),
+                    TableCell::new("Вр/Тх".into()),
+                ],
+                vec![
+                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("Забезпечення високого рівня швидкодії".into()),
+                    TableCell::new("М".into()),
+                    TableCell::new("Вр/Тх/Тл".into()),
+                ],
+                vec![
+                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("Інтерфейс для моніторингу та керування".into()),
+                    TableCell::new("Нм".into()),
+                    TableCell::new("Вр/Тх/Е".into()),
+                ],
+                vec![
+                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("Адаптація до запитів клієнта".into()),
+                    TableCell::new("М".into()),
+                    TableCell::new("Вр/Тх/Ор".into()),
+                ],
+                vec![
+                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("Якість: ...".into()).columns(3), // TODO
+                ],
+                vec![
+                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("Пакування: ...".into()).columns(3), // TODO
+                ],
+                vec![
+                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("Марка: ...".into()).columns(3), // TODO
+                ],
+                vec![
+                    TableCell::new("3. Товар із підкріпленням".into()).merge_restart(),
                     TableCell::new("До продажу: ...".into()).columns(3), // TODO
                 ],
                 vec![
@@ -891,6 +934,7 @@ pub fn marketing() -> Block {
             ],
             "Опис трьох рівнів моделі товару".to_owned(),
         )),
+        paragraph("М/Нм – монотонні/немонотонні; Вр/Тх/Тл/Е/Ор – вартісні/ технічні/ технологічні/ ергономічні/ органолептичні;"),
 
         // TODO: finish this subsection
 
