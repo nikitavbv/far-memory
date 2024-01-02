@@ -20,6 +20,8 @@ pub fn marketing() -> Block {
     let competition_table_property_width = 2000;
     let competition_table_description_width = 3500;
 
+    let product_levels_table_property_width = 500;
+
     Block::Multiple(vec![
         section_header("Маркетинговий аналіз стартап-проекту"),
 
@@ -857,84 +859,90 @@ pub fn marketing() -> Block {
         paragraph("Наступним кроком є розробка трирівневої маркетингової моделі товару. Опис трьох рівнів моделі товару наведено у таблиці 5.19."),
         Block::Table(TableBlock::new(
             vec![
-                TableCell::new("Рівні товару".into()),
+                TableCell::new("Рівні товару".into()).width(product_levels_table_property_width),
                 TableCell::new("Сутність та складові".into()).columns(3),
             ],
             vec![
                 vec![
-                    TableCell::new("1. Товар за задумом".into()),
+                    TableCell::new("1. Товар за задумом".into()).width(product_levels_table_property_width),
                     TableCell::new("Збільшення ефективності використання ресурсів центру обробки даних, а саме більш ефективне використання \
 оперативної памʼяті у розподіленій системі".into()).columns(3),
                 ],
                 vec![
-                    TableCell::new("2. Товар у реальному виконанні".into()).merge_continue(),
+                    TableCell::new("2. Товар у реальному виконанні".into()).merge_continue().width(product_levels_table_property_width),
                     TableCell::new("Властивості/характеристики".into()),
                     TableCell::new("М/Нм".into()),
                     TableCell::new("Вр/Тх/Тл/Е/Ор".into()),
                 ],
                 vec![
-                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("".into()).merge_continue().width(product_levels_table_property_width),
                     TableCell::new("Розгортання".into()),
                     TableCell::new("Нм".into()),
                     TableCell::new("Вр/Тх/Е".into()),
                 ],
                 vec![
-                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("".into()).merge_continue().width(product_levels_table_property_width),
                     TableCell::new("Інтеграція у програмне забезпечення".into()),
                     TableCell::new("М".into()),
                     TableCell::new("Вр/Тх/Тл/Е".into()),
                 ],
                 vec![
-                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("".into()).merge_continue().width(product_levels_table_property_width),
                     TableCell::new("Забезпечення відмовостійкості".into()),
                     TableCell::new("Нм".into()),
                     TableCell::new("Вр/Тх".into()),
                 ],
                 vec![
-                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("".into()).merge_continue().width(product_levels_table_property_width),
                     TableCell::new("Забезпечення високого рівня швидкодії".into()),
                     TableCell::new("М".into()),
                     TableCell::new("Вр/Тх/Тл".into()),
                 ],
                 vec![
-                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("".into()).merge_continue().width(product_levels_table_property_width),
                     TableCell::new("Інтерфейс для моніторингу та керування".into()),
                     TableCell::new("Нм".into()),
                     TableCell::new("Вр/Тх/Е".into()),
                 ],
                 vec![
-                    TableCell::new("".into()).merge_continue(),
+                    TableCell::new("".into()).merge_continue().width(product_levels_table_property_width),
                     TableCell::new("Адаптація до запитів клієнта".into()),
                     TableCell::new("М".into()),
                     TableCell::new("Вр/Тх/Ор".into()),
                 ],
                 vec![
-                    TableCell::new("".into()).merge_continue(),
-                    TableCell::new("Якість: ...".into()).columns(3), // TODO
+                    TableCell::new("".into()).merge_continue().width(product_levels_table_property_width),
+                    TableCell::new("Якість: покриття усіх компонентів автоматизованими тестами".into()).columns(3),
                 ],
                 vec![
-                    TableCell::new("".into()).merge_continue(),
-                    TableCell::new("Пакування: ...".into()).columns(3), // TODO
+                    TableCell::new("2. Товар у реальному виконанні".into()).merge_continue().width(product_levels_table_property_width),
+                    TableCell::new("Пакування: компоненти віддаленої памʼяті надаються у вигляді Docker контейнерів, конфігурації \
+Kubernetes на Helm для більш простого розгортання".into()).columns(3),
                 ],
                 vec![
-                    TableCell::new("".into()).merge_continue(),
-                    TableCell::new("Марка: ...".into()).columns(3), // TODO
+                    TableCell::new("".into()).merge_continue().width(product_levels_table_property_width),
+                    TableCell::new("Марка: назва організації-розробника та назва програмного продукту".into()).columns(3),
                 ],
                 vec![
-                    TableCell::new("3. Товар із підкріпленням".into()).merge_restart(),
-                    TableCell::new("До продажу: ...".into()).columns(3), // TODO
+                    TableCell::new("3. Товар із підкріпленням".into()).merge_restart().width(product_levels_table_property_width),
+                    TableCell::new("До продажу: наявність документації для усіх компонентів програмного продукту для надання віддаленої \
+памʼяті, надання послуг консультації по розгортанню та інтеграції віддаленої памʼяті".into()).columns(3),
                 ],
                 vec![
-                    TableCell::new("".into()).merge_continue(),
-                    TableCell::new("Після продажу: ...".into()).columns(3), // TODO
+                    TableCell::new("".into()).merge_continue().width(product_levels_table_property_width),
+                    TableCell::new("Після продажу: моніторинг стану віддаленої памʼяті, надання послуг консультацій по обслуговуванню та \
+налаштуванню, випуск оновлень".into()).columns(3),
                 ],
                 vec![
-                    TableCell::new("За рахунок чого потенційний товар буде захищено від копіювання: ...".into()).columns(4), // TODO
+                    // i hate this and do believe that there is nothing bad in such software being copied. But still, it is required from
+                    // me to write something here.
+                    TableCell::new("За рахунок чого потенційний товар буде захищено від копіювання: запатентовані алгоритми заміщення \
+проміжків що є фактором швидкодії віддаленої памʼяті, послуги консультації базуються на знаннях та досвіді яких немає у конкурентів".into()).columns(4),
                 ]
             ],
             "Опис трьох рівнів моделі товару".to_owned(),
-        )),
-        paragraph("М/Нм – монотонні/немонотонні; Вр/Тх/Тл/Е/Ор – вартісні/ технічні/ технологічні/ ергономічні/ органолептичні;"),
+        ).with_split(vec![10])),
+        paragraph("М/Нм – монотонні/немонотонні; Вр/Тх/Тл/Е/Ор – вартісні/ технічні/ технологічні/ ергономічні/ органолептичні."),
 
         // TODO: finish this subsection
 
