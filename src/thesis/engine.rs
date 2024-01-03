@@ -1,5 +1,5 @@
 use {
-    std::{process::Command, fs::File, io::ErrorKind},
+    std::{process::Command, fs::{self, File}, io::{ErrorKind, Cursor}},
     tracing::warn,
     docx_rs::{
         Docx,
@@ -29,6 +29,7 @@ use {
         TableCellMargins,
         WidthType,
         BreakType,
+        Pic,
     },
     thiserror::Error,
     crate::thesis::{
@@ -437,14 +438,28 @@ pub enum Alignment {
 pub struct ApplicationBlock {
     id: &'static str,
     title: String,
+    content: ApplicationContent,
 }
 
 impl ApplicationBlock {
-    pub fn new(id: &'static str, title: String) -> Self {
+    pub fn new(id: &'static str, title: String, content: ApplicationContent) -> Self {
         Self {
             id,
             title,
+            content,
         }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum ApplicationContent {
+    None,
+    Image(Vec<u8>),
+}
+
+impl ApplicationContent {
+    pub fn image_from_file(path: &str) -> Self {
+        Self::Image(fs::read(path).unwrap())
     }
 }
 
@@ -723,17 +738,41 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
 
             document
         },
-        Block::Application(application) => document.add_paragraph(
-            Paragraph::new()
-                .page_break_before(true)
-                .line_spacing(LineSpacing::new().line(24 * 15))
-                .align(AlignmentType::Center)
-                .add_run(Run::new()
-                    .bold()
-                    .add_text(format!("Додаток {}", application_letter_for_index(context.index_for_application_id(application.id).unwrap())).to_uppercase())
-                    .add_break(BreakType::TextWrapping))
-                .add_run(Run::new().add_text(application.title))
-        ),
+        Block::Application(application) => {
+            let document = document.add_paragraph(
+                Paragraph::new()
+                    .page_break_before(true)
+                    .line_spacing(LineSpacing::new().line(24 * 15))
+                    .align(AlignmentType::Center)
+                    .add_run(Run::new()
+                        .bold()
+                        .add_text(format!("Додаток {}", application_letter_for_index(context.index_for_application_id(application.id).unwrap())).to_uppercase())
+                        .add_break(BreakType::TextWrapping))
+                    .add_run(Run::new().add_text(application.title))
+            );
+
+            let document = match application.content {
+                ApplicationContent::None => document,
+                ApplicationContent::Image(image) => {
+                    let mut reader = image::io::Reader::new(Cursor::new(&image));
+                    reader.set_format(image::ImageFormat::Jpeg);
+                    let img = reader.decode().unwrap();
+                    let width = img.width();
+                    let height = img.height();
+
+                    let width_emu = 5500000 as u32;
+                    let height_emu = ((height as f32) / (width as f32) * (width_emu as f32)) as u32;
+
+                    document.add_paragraph(
+                        Paragraph::new()
+                            .align(AlignmentType::Center)
+                            .add_run(Run::new().add_image(Pic::new(&image).size(width_emu, height_emu)))
+                    )
+                },
+            };
+
+            document
+        },
     }
 }
 
