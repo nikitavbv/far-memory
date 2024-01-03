@@ -9,7 +9,10 @@ pub trait ImageComponent {
 
 impl ImageComponent for Docx {
     fn add_image_component(self, context: &mut Context, section_index: usize, path: &str, description: &str, scaling: f32, paper_style: bool) -> Self {
-        let img = image::io::Reader::open(path).unwrap().decode().unwrap();
+        let img = match image::io::Reader::open(path) {
+            Ok(v) => v.decode().unwrap(),
+            Err(err) => panic!("failed to read image {:?}: {:?}", path, err),
+        };
 
         let width = img.width();
         let height = img.height();

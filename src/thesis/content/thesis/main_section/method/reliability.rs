@@ -1,4 +1,4 @@
-use crate::thesis::engine::{Block, subsection_header, paragraph};
+use crate::thesis::engine::{Block, subsection_header, paragraph, ImageBlock};
 
 pub fn reliability() -> Block {
     Block::Multiple(vec![
@@ -26,6 +26,7 @@ SSD диск (якщо він використовується як бекенд
 дані можна відновити через зворотнє лінійне перетворення. N та M задаються користувачем, приклади зачень які можна взяти: (3, 2), (4, 3) та ін. - в залежності від середовища та вимог. Перевагою цього \
 методу є швидке відновлення даних та відносно невелике використання додаткової памʼяті. В цій роботі це реалізовано у ErasureCodingBackend, який виконує кодування, а для власне зберігання даних передає \
 шарди (частини) даних до існуючих реалізацій бекендів (наприклад NetworkNodeBackend)."),
+        Block::Image(ImageBlock::new("./images/fault_tolerance.jpg".to_owned(), "Схематичне зображення кодування проміжків кодами Ріда-Соломона та зберігання частин даних на різних вузлах".to_owned())),
         // tell about replication to remote nodes and local SSDs and erasure coding. Tell how exactly data will be restored and deleted. Explain that failure domain becomes larger when far memory is used.
         // tell about healthchecks.
         // tell about reconnects.
