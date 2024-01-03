@@ -2,7 +2,22 @@ use {
     tracing::warn,
     docx_rs::{Docx, Style, StyleType, RunFonts, PageMargin},
     crate::thesis::{
-        engine::{Block, paragraph, unordered_list, count_pages, count_images, count_tables, count_applications, PageCountingError, count_references, section_header, SectionHeaderBlock},
+        engine::{
+            Block,
+            paragraph,
+            unordered_list,
+            count_pages,
+            count_images,
+            count_tables,
+            count_applications,
+            PageCountingError,
+            count_references,
+            section_header,
+            SectionHeaderBlock,
+            ParagraphBlock,
+            TextSpan,
+            Alignment,
+        },
         content::{Language, AbstractContent, Content},
         utils::mm_to_twentieth_of_a_point,
     },
@@ -135,6 +150,25 @@ fn thesis_content_inner(abstract_content: AbstractContent, front_page: bool, app
         ]),
 
         // applications
+        Block::Paragraph(ParagraphBlock::new(vec![
+            TextSpan::Break, // yeah, this is ugly
+            TextSpan::Break,
+            TextSpan::Break,
+            TextSpan::Break,
+            TextSpan::Break,
+            TextSpan::Break,
+            TextSpan::Break,
+            TextSpan::Break,
+            TextSpan::Break,
+            TextSpan::Break,
+            TextSpan::Break,
+            TextSpan::Break,
+            TextSpan::Break,
+            TextSpan::Break,
+            TextSpan::Break,
+            TextSpan::Break,
+            "Додатки".to_uppercase().into(),
+        ].into()).with_tab(false).with_alignment(Alignment::Center)),
         applications.unwrap_or(Block::Multiple(vec![]))
     ])
 }

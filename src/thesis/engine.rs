@@ -188,6 +188,7 @@ pub struct ParagraphBlock {
     before_spacing: Option<u32>,
     after_spacing: Option<u32>,
     columns: Option<usize>,
+    alignment: Option<Alignment>,
 }
 
 impl ParagraphBlock {
@@ -199,6 +200,7 @@ impl ParagraphBlock {
             before_spacing: None,
             after_spacing: None,
             columns: None,
+            alignment: None,
         }
     }
 
@@ -239,6 +241,13 @@ impl ParagraphBlock {
 
     pub fn text(&self) -> &TextSpan {
         &self.span
+    }
+
+    pub fn with_alignment(self, alignment: Alignment) -> Self {
+        Self {
+            alignment: Some(alignment),
+            ..self
+        }
     }
 }
 
@@ -427,12 +436,14 @@ pub enum Alignment {
 #[derive(Debug, Clone)]
 pub struct ApplicationBlock {
     id: &'static str,
+    title: String,
 }
 
 impl ApplicationBlock {
-    pub fn new(id: &'static str) -> Self {
+    pub fn new(id: &'static str, title: String) -> Self {
         Self {
             id,
+            title,
         }
     }
 }
@@ -498,7 +509,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
         },
         Block::Paragraph(paragraph) => match placeholder {
             Some(v) => document.add_paragraph_placeholder_component(paragraph.span, v),
-            None => document.add_paragraph_component(context, paragraph.span, paragraph.tab, paragraph.line_spacing, paragraph.before_spacing, paragraph.after_spacing, paragraph.columns),
+            None => document.add_paragraph_component(context, paragraph.span, paragraph.tab, paragraph.line_spacing, paragraph.before_spacing, paragraph.after_spacing, paragraph.columns, paragraph.alignment),
         },
         Block::OrderedList(list) => {
             let numbering = context.next_numbering_id();
@@ -715,7 +726,13 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
         Block::Application(application) => document.add_paragraph(
             Paragraph::new()
                 .page_break_before(true)
-                .add_run(Run::new().add_text(format!("Додаток {}", application_letter_for_index(context.index_for_application_id(application.id).unwrap()))))
+                .line_spacing(LineSpacing::new().line(24 * 15))
+                .align(AlignmentType::Center)
+                .add_run(Run::new()
+                    .bold()
+                    .add_text(format!("Додаток {}", application_letter_for_index(context.index_for_application_id(application.id).unwrap())).to_uppercase())
+                    .add_break(BreakType::TextWrapping))
+                .add_run(Run::new().add_text(application.title))
         ),
     }
 }

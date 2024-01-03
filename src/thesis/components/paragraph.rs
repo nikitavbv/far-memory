@@ -1,21 +1,21 @@
 use {
     docx_rs::{Docx, Paragraph, Run, Tab, LineSpacing, AlignmentType, BreakType, SectionProperty, PageMargin, SectionType},
-    crate::thesis::{engine::{TextSpan, application_letter_for_index}, utils::mm_to_twentieth_of_a_point, context::Context},
+    crate::thesis::{engine::{TextSpan, application_letter_for_index, Alignment}, utils::mm_to_twentieth_of_a_point, context::Context},
     super::PlaceholderComponent,
 };
 
 pub trait ParagraphComponent {
-    fn add_paragraph_component(self, context: &mut Context, text: TextSpan, tab: bool, line_spacing: i32, before_spacing: Option<u32>, after_spacing: Option<u32>, columns: Option<usize>) -> Self;
+    fn add_paragraph_component(self, context: &mut Context, text: TextSpan, tab: bool, line_spacing: i32, before_spacing: Option<u32>, after_spacing: Option<u32>, columns: Option<usize>, alignment: Option<Alignment>) -> Self;
     fn add_paragraph_placeholder_component(self, text: TextSpan, description: impl Into<String>) -> Self;
 }
 
 impl ParagraphComponent for Docx {
-    fn add_paragraph_component(self, context: &mut Context, text: TextSpan, tab: bool, line_spacing: i32, before_spacing: Option<u32>, after_spacing: Option<u32>, columns: Option<usize>) -> Self {
-        self.add_paragraph(runs_for_text_span(context, text, Run::new()).into_iter().fold(paragraph(tab, line_spacing, before_spacing, after_spacing, columns), |p, r| p.add_run(r)))
+    fn add_paragraph_component(self, context: &mut Context, text: TextSpan, tab: bool, line_spacing: i32, before_spacing: Option<u32>, after_spacing: Option<u32>, columns: Option<usize>, alignment: Option<Alignment>) -> Self {
+        self.add_paragraph(runs_for_text_span(context, text, Run::new()).into_iter().fold(paragraph(tab, line_spacing, before_spacing, after_spacing, columns, alignment), |p, r| p.add_run(r)))
     }
 
     fn add_paragraph_placeholder_component(self, text: TextSpan, description: impl Into<String>) -> Self {
-        self.add_paragraph(paragraph(true, 24 * 15, None, None, None).add_placeholder_component(text.to_plaintext(), description))
+        self.add_paragraph(paragraph(true, 24 * 15, None, None, None, None).add_placeholder_component(text.to_plaintext(), description))
     }
 }
 
@@ -36,7 +36,7 @@ pub fn runs_for_text_span(context: &mut Context, text: TextSpan, run: Run) -> Ve
     }
 }
 
-fn paragraph(tab: bool, line_spacing: i32, before_spacing: Option<u32>, after_spacing: Option<u32>, columns: Option<usize>) -> Paragraph {
+fn paragraph(tab: bool, line_spacing: i32, before_spacing: Option<u32>, after_spacing: Option<u32>, columns: Option<usize>, alignment: Option<Alignment>) -> Paragraph {
     let paragraph = Paragraph::new();
 
     let paragraph = if tab {
@@ -80,8 +80,15 @@ fn paragraph(tab: bool, line_spacing: i32, before_spacing: Option<u32>, after_sp
     });
 
     let paragraph = paragraph
-        .line_spacing(line_spacing)
-        .align(AlignmentType::Both);
+        .line_spacing(line_spacing);
+
+    let paragraph = if let Some(alignment) = alignment {
+        paragraph.align(match alignment {
+            Alignment::Center => AlignmentType::Center,
+        })
+    } else {
+        paragraph.align(AlignmentType::Both)
+    };
 
     let paragraph = if let Some(section_property) = section_property {
         paragraph.section_property(section_property)
