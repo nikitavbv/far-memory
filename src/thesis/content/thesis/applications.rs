@@ -22,7 +22,7 @@ pub fn applications() -> Block {
         Block::Application(ApplicationBlock::new(
             CLASS_DIAGRAM,
             "Структура бібліотеки клієнта віддаленої памʼяті".to_owned(),
-            ApplicationContent::None,
+            ApplicationContent::image_from_file("images/class_diagram.jpg"),
         )), // class diagram for far memory client
         Block::Application(ApplicationBlock::new(
             ACCESS_SEQUENCE,
