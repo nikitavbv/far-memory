@@ -27,7 +27,7 @@ pub fn applications() -> Block {
         Block::Application(ApplicationBlock::new(
             ACCESS_SEQUENCE,
             "Схема структурна послідовності доступу до обʼєкту що зберігається у віддаленій памʼяті інформаційною системою".to_owned(),
-            ApplicationContent::None,
+            ApplicationContent::image_from_file("images/access_sequence_diagram.jpg"),
         )), // sequence digram for accessing data for FarMemory<T> end-to-end.
         Block::Application(ApplicationBlock::new(
             BACKGROUND_THREAD_SEQUENCE,
