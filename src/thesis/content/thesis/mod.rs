@@ -58,7 +58,6 @@ pub fn thesis_content(content: &Content) -> Block {
 
     thesis_content_inner(AbstractContent {
         total_pages: true_total_pages,
-        total_applications: count_applications(&content_with_placeholders),
         total_references: count_references(&content_with_placeholders),
         ..abstract_placeholder_content
     }, true, Some(applications))
