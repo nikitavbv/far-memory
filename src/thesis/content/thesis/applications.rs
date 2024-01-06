@@ -17,7 +17,7 @@ pub fn applications() -> Block {
         Block::Application(ApplicationBlock::new(
             COMPONENT_DIAGRAM,
             "Схема структурна компонентів".to_owned(),
-            ApplicationContent::None,
+            ApplicationContent::image_from_file("images/component_diagram.jpg"),
         )), // this should be a component diagram - show which data is passed where
         Block::Application(ApplicationBlock::new(
             CLASS_DIAGRAM,
