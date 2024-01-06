@@ -124,19 +124,17 @@ impl TaskSection for Docx {
                 .align(AlignmentType::Both)
                 .add_run(Run::new()
                     .add_text(format!(
-                        "Тема дисертації «{}», науковий керівник дисертації {} {}, затверджені наказом по університету від ",
+                        "Тема дисертації «{}», науковий керівник дисертації {} {}, затверджені наказом по університету від «11» листопада 2023 р. № 5168-с.",
                         content.topic,
                         content.mentor.full_name(),
                         content.mentor_title
                     )))
-                .add_placeholder_component("«27» жовтня 2021 р. № 3587-с", "update with correct date and number after it is issued")
             )
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(150))
                 .numbering(NumberingId::new(numbering), IndentLevel::new(0))
                 .align(AlignmentType::Both)
-                .add_run(Run::new().add_text("Термін подання студентом дисертації "))
-                .add_placeholder_component("«06» грудня 2023 р.", "update with correct date for thesis submit")
+                .add_run(Run::new().add_text("Термін подання студентом дисертації «19» січня 2024 р."))
             )
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(150))
@@ -288,13 +286,13 @@ impl TaskSection for Docx {
                 ),
                 calendar_plan_row(
                     9,
-                    "Подання дисертації на попередній захист ",
-                    "22.11.2023",
+                    "Подання дисертації на попередній захист",
+                    "19.12.2023",
                 ),
                 calendar_plan_row(
                     10,
                     "Подання дисертації на захист",
-                    "06.12.2023",
+                    "19.01.2024",
                 ),
             ]).margins(TableCellMargins::new().margin(0, 80, 0, 80)))
             .add_paragraph(Paragraph::new())
