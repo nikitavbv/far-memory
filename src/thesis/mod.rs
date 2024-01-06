@@ -123,7 +123,10 @@ fn copy_images_to_output(path: &str, block: &Block) {
         Block::Image(image) => {
             fs::create_dir_all(path).unwrap();
             let output_path = std::path::Path::new(path).join(image.path());
-            fs::copy(format!("./images/{}", image.path()), output_path).unwrap();
+            let from = format!("./images/{}", image.path());
+            if let Err(err) = fs::copy(&from, output_path) {
+                panic!("failed to copy image from {:?} because {:?}", from, err);
+            }
         },
         Block::Placeholder(inner, _) => copy_images_to_output(path, &*inner),
         Block::Multiple(inner) => inner.iter().for_each(|v| copy_images_to_output(path, v)),
