@@ -23,11 +23,11 @@ pub struct Content {
 
 impl Content {
     pub fn new() -> Self {
-        let aim_of_study_short_ua = "Підвищення ефективності надання віддаленої памʼяті в інформаційному забезпеченні сучасних центрів обробки даних за рахунок \
-розробки оригінальної архітектури програмного засобу що реалізує запропоновані модифіковані методи надання віддаленої памʼяті.".to_owned();
+        let aim_of_study_short_ua = "Підвищення ефективності використання оперативної памʼяті за рахунок розробки ефективного методу надання віддаленої памʼяті \
+в інформаційному забезпеченні сучасних центрів обробки даних.".to_owned();
         let aim_of_study = MultiLanguageString::new(
-            "Improving the efficiency of providing far memory to the information software of modern datacenters through the development of an original \
-software architecture implementing proposed modified methods of providing far memory.".to_owned(),
+            "Improving the efficiency of using far memory by developing an effective method for providing far memory to the information software of modern \
+datacenters.".to_owned(),
             aim_of_study_short_ua.clone()
         );
 
@@ -45,13 +45,10 @@ deployment and integration of far memory into the software",
 реплікація, розгортання та інтеграція віддаленої памʼяті у програмне забезпечення"
             ),
             scientific_novelty: MultiLanguageString::new(
-                "for the first time, software architectural solution is proposed that implements the autor's modified methods of providing far memory to enhance fault \
-                tolerance and speed of the implementation of software that operates with data located in far memory. Unlike other approached, the proposed solution utilizes \
-only openly available software and hardware components, integrates into both new and existing software, ensures fault tolerance and low data access latency.".to_owned(),
-                "впреше запропоновано архітектурне рішення програмного забезпечення, що реалізує розроблені автором модифіковані методи надання віддаленої памʼяті \
-для підвищення відмовостійкості та швидкості реалізації програмного забезпечення, що працює з даними, які знаходяться у віддаленій памʼяті. На відміну від інших підходів, \
-запропоноване рішення використовує тільки загальнодоступні програмні та апаратні компоненти, інтегрується у нове та існуюче програмне забезпечення, забезпечує відмовостійкість \
-та низький рівень затримки доступу до даних.".to_owned(),
+                "unlike existing methods, span replacement problem is solved statistically more efficiently by implementing the adaptation of span access prediction model parameters \
+based on statistics that are continously collected during runtime of software.".to_owned(),
+                "на відміну від існуючих методів, задача заміщення проміжків вирішена статистично більш ефективно за рахунок реалізації адаптації параметрів моделі \
+прогнозування доступу на основі використання статистики, що неперервно збирається в процесі роботи програмного забезпечення.".to_owned(),
             ),
             keywords: keywords(),
             tasks: thesis_tasks(),
@@ -197,8 +194,9 @@ pub fn thesis_tasks() -> Vec<MultiLanguageString> {
             "розробити архітектуру, структуру та взаємодію компонентів віддаленої памʼяті".to_owned(),
         ),
         MultiLanguageString::new(
-            "decrease average latency of far memory spans access".to_owned(),
-            "знизити в середьному затримку доступу до блоків у віддаленій памʼяті".to_owned(),
+            "decrease average latency of far memory spans access by using span replacement algorithm that relies on memory access statistics and predictive models".to_owned(),
+            "знизити в середьному затримку доступу до блоків у віддаленій памʼяті за рахунок використання алгоритму заміщення, що спирається на статистику доступу \
+до памʼяті та використання прогнозних моделей".to_owned(),
         ),
         MultiLanguageString::new(
             "develop methods to ensure far memory resiliency".to_owned(),
