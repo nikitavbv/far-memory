@@ -1276,3 +1276,7 @@ fn assign_index_to_applications(context: &mut Context, text: &Block) {
         Block::Table{..} => (),
     }
 }
+
+pub fn empty_block() -> Block {
+    Block::Multiple(vec![])
+}

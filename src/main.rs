@@ -117,6 +117,9 @@ pub struct Args {
     conference_abstract: bool,
 
     #[arg(long)]
+    plagiarism_check_docs: bool,
+
+    #[arg(long)]
     ukrainian: bool, // language for conference abstract (default is english)
 
     #[arg(long)]
@@ -244,7 +247,7 @@ pub fn main() {
         run_manager_node(read_token());
     } else if args.replacement_policies_demo {
         run_replacement_policies_demo();
-    } else if args.thesis || args.card || args.docs || args.practice_report || args.conference_abstract {
+    } else if args.thesis || args.card || args.docs || args.practice_report || args.conference_abstract || args.plagiarism_check_docs {
         build_thesis(&args);
     }
 }

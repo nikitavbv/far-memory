@@ -1,11 +1,12 @@
 use {
-    std::{process::Command, fs},
+    std::{process::Command, fs, path::Path},
     tracing::info,
     crate::thesis::{
         content::{
             Content,
             Language,
             thesis_content,
+            thesis_content_for_plagiarism_check,
             thesis_docx_template,
             topic_card_docx_template,
             documentation::documentation,
@@ -68,10 +69,19 @@ pub fn build_thesis(args: &Args) {
         );
     }
 
+    if args.plagiarism_check_docs {
+        documents.push(
+            Document::new("plagiarism_check/ІП22мп_Волобуєв_ПЗ", thesis_content_for_plagiarism_check()).with_docx_template(thesis_docx_template()),
+        );
+    }
+
     for document in documents {
         let mut context = Context::new();
 
         let docx_path = format!("./output/{}.docx", document.name());
+
+        let path = Path::new(&docx_path);
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
         let docx_file = fs::File::create(&docx_path).unwrap();
 
         info!("building {}", document.name());
