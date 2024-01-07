@@ -64,7 +64,7 @@ impl Context {
 
     pub fn reference_id_for(&mut self, reference: &Reference) -> u32 {
         let reference_text = reference.text();
-        if let Some(id) = self.references.get(reference_text) {
+        if let Some(id) = self.references.get(&reference_text) {
             return *id;
         } else {
             let next_id = (self.references.len() + 1) as u32;

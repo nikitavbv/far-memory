@@ -1,4 +1,4 @@
-use crate::thesis::engine::{Block, paragraph, subsection_header};
+use crate::thesis::engine::{Block, paragraph, subsection_header, reference, Reference};
 
 /**
  * "Carbink: Fault-tolerant Far Memory"
@@ -59,9 +59,20 @@ use crate::thesis::engine::{Block, paragraph, subsection_header};
 pub fn carbink() -> Block {
     Block::Multiple(vec![
         subsection_header("Carbink: Fault-Tolerant Far Memory"),
-        paragraph("Carbink це система віддаленої памʼяті розроблена та протестована компанією Google в своїх центрах \
+        paragraph(vec![
+            reference(
+                "Carbink",
+                Reference::for_publication(
+                    "Carbink: Fault-tolerant Far Memory".into(),
+                    "Yang Zhou, Hassan Wassel, Sihang Liu, Jiaqi Gao, James Mickens, Minlan Yu, Chris Kennelly, Paul Jack Turner, David E Culler, Hank Levy, Amin Vahdat".into(),
+                    2022,
+                    "Proceedings of the 16th USENIX Symposium on Operating Systems Design and Implementation".into(),
+                )
+            ),
+            " це система віддаленої памʼяті розроблена та протестована компанією Google в своїх центрах \
 обробки даних. Ця реалізація фокусується на покращені відмовостійкості та зниженні рівня затримок при роботі з віддаленою \
-памʼяттю."),
+памʼяттю.".into(),
+        ]),
         paragraph("Система складається з декількох компонентів: memory nodes (вузли, що зберігають дані), compute nodes \
 (програмне забезпечення, в яке інтегрується віддалена памʼять) та memory manager (менеджер памʼяті). Менеджер памʼяті \
 керує розподілом фрагментів памʼяті по вузлах, що їх зберігають та перевіряє стан роботи цих вузлів. Важливим припущенням є \

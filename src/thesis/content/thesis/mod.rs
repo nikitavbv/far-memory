@@ -131,6 +131,7 @@ fn thesis_content_inner(abstract_content: AbstractContent, front_page: bool, mai
 
         // applications
         Block::Paragraph(ParagraphBlock::new(vec![
+            TextSpan::PageBreak,
             TextSpan::Break, // yeah, this is ugly
             TextSpan::Break,
             TextSpan::Break,

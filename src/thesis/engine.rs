@@ -269,25 +269,34 @@ pub enum TextSpan {
 }
 
 #[derive(Debug, Clone)]
-pub struct Reference {
-    text: String,
+pub enum Reference {
+    Publication {
+        title: String,
+        author: String,
+        year: u32,
+        published_in: String,
+    },
+    Website {
+        title: String,
+        link: String,
+    },
 }
 
+// ДСТУ 8302:2015
 impl Reference {
     pub fn for_publication(title: String, author: String, year: u32, published_in: String) -> Self {
-        Self {
-            text: format!("{}/{} // {}. {}", title, author, published_in, year),
-        }
+        Self::Publication { title, author, year, published_in }
     }
 
     pub fn for_website(title: String, link: String) -> Self {
-        Self {
-            text: format!("{} [Online] Available at: {}", title, link),
-        }
+        Self::Website { title, link }
     }
 
-    pub fn text(&self) -> &str {
-        &self.text
+    pub fn text(&self) -> String {
+        match self {
+            Self::Publication { title, author, year, published_in } => format!("{}/{} // {}. {}", title, author, published_in, year),
+            Self::Website { title, link } => format!("{} [Online] Available at: {}", title, link),
+        }
     }
 }
 
@@ -1338,4 +1347,8 @@ fn extract_references_text_span(references: &mut Vec<String>, text: &TextSpan) {
         TextSpan::PageBreak => (),
         TextSpan::ApplicationReference(_) => (),
     }
+}
+
+pub fn reference(inner_text: impl Into<TextSpan>, reference: Reference) -> TextSpan {
+    TextSpan::Reference(Box::new(inner_text.into()), reference)
 }
