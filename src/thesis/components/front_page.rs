@@ -69,7 +69,7 @@ impl FrontPageSection for Docx {
                 ])
             ]).set_borders(TableBorders::new().clear_all()))
             .add_paragraph(Paragraph::new()
-                .line_spacing(LineSpacing::new().line(30 * 10).before(800).after(300))
+                .line_spacing(LineSpacing::new().line(30 * 10).before(500).after(300))
                 .align(AlignmentType::Center)
                 .add_run(Run::new()
                     .size(20 * 2)
@@ -160,7 +160,7 @@ impl FrontPageSection for Docx {
             .add_paragraph(Paragraph::new()
                 .line_spacing(LineSpacing::new().before(300))
                 .align(AlignmentType::Center)
-                .add_run(Run::new().add_text("Київ – 2023 року"))
+                .add_run(Run::new().add_text("Київ – 2024 року"))
             )
     }
 }

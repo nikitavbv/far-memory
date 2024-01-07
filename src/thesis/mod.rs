@@ -36,7 +36,7 @@ pub fn build_thesis(args: &Args) {
 
     if args.thesis {
         documents.push(
-            Document::new("thesis", thesis_content(&content)).with_docx_template(thesis_docx_template()),
+            Document::new("thesis", thesis_content(&content)).with_docx_template(thesis_docx_template(true)),
         );
     }
 
@@ -48,7 +48,7 @@ pub fn build_thesis(args: &Args) {
 
     if args.practice_report {
         documents.push(
-            Document::new("іп22мп_волобуєв_звіт", practice_report_content(&content)).with_docx_template(thesis_docx_template()).with_prepend_pdf("./config/docs/практика_титулка звіту.pdf".to_owned()),
+            Document::new("іп22мп_волобуєв_звіт", practice_report_content(&content)).with_docx_template(thesis_docx_template(true)).with_prepend_pdf("./config/docs/практика_титулка звіту.pdf".to_owned()),
         );
     }
 
@@ -72,10 +72,10 @@ pub fn build_thesis(args: &Args) {
 
     if args.plagiarism_check_docs {
         documents.push(
-            Document::new("plagiarism_check/ІП22мп_Волобуєв_ПЗ", thesis_content_for_plagiarism_check()).with_docx_template(thesis_docx_template()),
+            Document::new("plagiarism_check/ІП22мп_Волобуєв_ПЗ", thesis_content_for_plagiarism_check()).with_docx_template(thesis_docx_template(false)),
         );
         documents.push(
-            Document::new("plagiarism_check/ІП22мп_Волобуєв_КОД", thesis_application_code_listing()).with_docx_template(thesis_docx_template()),
+            Document::new("plagiarism_check/ІП22мп_Волобуєв_КОД", thesis_application_code_listing()).with_docx_template(thesis_docx_template(false)),
         );
     }
 

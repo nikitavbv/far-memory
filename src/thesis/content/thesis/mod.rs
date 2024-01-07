@@ -61,7 +61,7 @@ fn generate_abstract_content(content: &Content, main: &Block, applications: &Blo
     };
     let content_with_placeholders = thesis_content_inner(abstract_placeholder_content.clone(), true, main.clone(), None);
 
-    let true_total_pages = match count_pages(thesis_docx_template(), content, &content_with_placeholders) {
+    let true_total_pages = match count_pages(thesis_docx_template(true), content, &content_with_placeholders) {
         Ok(v) => v - 1, // front page does not count
         Err(err) => match err {
             PageCountingError::NoPdfConverterInstalled => {
@@ -207,9 +207,9 @@ fn conclusions() -> Block {
     ])
 }
 
-pub fn thesis_docx_template() -> Docx {
+pub fn thesis_docx_template(skip_front_page_from_numbering: bool) -> Docx {
     // formatting: https://drive.google.com/file/d/1XzGVVvXRREoc6HGYMpjZFywzsWzRa01l/view
-    Docx::new()
+    let docx = Docx::new()
         .page_margin(
             PageMargin::new()
                 .left(mm_to_twentieth_of_a_point(30.0))
@@ -230,9 +230,15 @@ pub fn thesis_docx_template() -> Docx {
                             .add_instr_text(InstrText::Unsupported("PAGE".to_owned()))
                             .add_field_char(docx_rs::FieldCharType::End, false)
                     ))
-        )
-        .first_header(Header::new())
-        .add_style(Style::new("Heading1", StyleType::Paragraph).name("Heading 1").bold())
+        );
+
+    let docx = if skip_front_page_from_numbering {
+        docx.first_header(Header::new())
+    } else {
+        docx
+    };
+
+    docx.add_style(Style::new("Heading1", StyleType::Paragraph).name("Heading 1").bold())
         .add_style(Style::new("Heading2", StyleType::Paragraph).name("Heading 2").bold())
 }
 
@@ -249,7 +255,7 @@ pub fn practice_report_content(content: &Content) -> Block {
     };
     let content_with_placeholders = thesis_content_inner(abstract_placeholder_content.clone(), true, main.clone(), None);
 
-    let true_total_pages = match count_pages(thesis_docx_template(), content, &content_with_placeholders) {
+    let true_total_pages = match count_pages(thesis_docx_template(true), content, &content_with_placeholders) {
         Ok(v) => v - 1, // front page does not count
         Err(err) => match err {
             PageCountingError::NoPdfConverterInstalled => {
