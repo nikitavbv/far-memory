@@ -1,4 +1,4 @@
-use crate::thesis::engine::{Block, section_header, paragraph, SubsectionHeaderBlock, subsection_header, TableBlock, TableCell, Alignment, TextSpan};
+use crate::thesis::engine::{Block, section_header, paragraph, SubsectionHeaderBlock, subsection_header, TableBlock, TableCell, Alignment, TextSpan, Reference, reference};
 
 pub fn marketing() -> Block {
     let comparison_table_sign_width = 5000;
@@ -402,8 +402,11 @@ pub fn marketing() -> Block {
             "Ступеневий аналіз конкуренції на ринку".to_owned()
         ).with_split(vec![3])),
 
-        paragraph("Для більш детального аналізу умов конкуренції в галузі використовується модель М. Портера. Детальний аналіз умов конкуренції на ринку \
-наведено у таблиці 5.9."),
+        paragraph(vec![
+            "Для більш детального аналізу умов конкуренції в галузі використовується ".into(),
+            reference("модель М. Портера", Reference::for_website("Porter's five forces analysis // Wikipedia", "https://en.wikipedia.org/wiki/Porter%27s_five_forces_analysis")),
+            ". Детальний аналіз умов конкуренції на ринку наведено у таблиці 5.9.".into(),
+        ]),
         Block::Table(TableBlock::new(
             vec![
                 TableCell::new("Складові аналізу".into()).columns(2),
@@ -571,8 +574,9 @@ pub fn marketing() -> Block {
         )),
 
         paragraph(vec![
-            "Фінальним етапом ринкового аналізу можливостей впровадження програмного продукту для надання віддаленої памʼяті є проведення SWOT-аналізу. \
-Сильні та слабкі сторони проекти, а також можливості та загрози наведені у таблиці 5.12.".into(),
+            "Фінальним етапом ринкового аналізу можливостей впровадження програмного продукту для надання віддаленої памʼяті є проведення ".into(),
+            reference("SWOT-аналізу", Reference::for_website("SWOT analysis // Wikipedia", "https://en.wikipedia.org/wiki/SWOT_analysis")),
+            ". Сильні та слабкі сторони проекти, а також можливості та загрози наведені у таблиці 5.12.".into(),
             TextSpan::PageBreak,
         ]),
         Block::Table(TableBlock::new(
