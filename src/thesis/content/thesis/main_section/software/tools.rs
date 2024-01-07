@@ -1,4 +1,4 @@
-use crate::thesis::engine::{Block, subsection_header, paragraph};
+use crate::thesis::engine::{Block, subsection_header, paragraph, Reference, reference};
 
 pub fn tools() -> Block {
     Block::Multiple(vec![
@@ -23,8 +23,11 @@ pub fn tools() -> Block {
 недостатньо. У цій роботі для цього використовується бібліотека tracing. У поєднанні з tracing-chrome вона дозволяє зберігати інформацію \
 про події під час роботи клієнту віддаленої памʼяті та аналізувати їх у вигляді діаграми з часовою шкалою за допомогою chrome developer \
 tools."),
-        paragraph("Бібліотека vblk використана для реалізації віртуального блокового пристрою. Для цього ця бібліотека взаємодіє з модулем \
-NBD у операційній системі Linux."),
+        paragraph(vec![
+            "Бібліотека vblk використана для реалізації віртуального блокового пристрою. Для цього ця бібліотека взаємодіє з модулем ".into(),
+            reference("NBD", Reference::for_website("Network Block Device // The Linux Kernel documentation".to_owned(), "https://docs.kernel.org/admin-guide/blockdev/nbd.html".to_owned())),
+            " у операційній системі Linux.".into(),
+        ]),
         paragraph("Для серіалізації даних використовується бібліотека serde разом з bincode, що реалізує компактне кодування даних у набір \
 байт. За замовчуванням serde працює неефективно з векторами байт (Vec<u8>): серіалізує кожен елемент окремо замість того, щоб скопіювати \
 усю ділянку памʼяті за одну операцію. Для усунення цього недоліку використовується бібліотека serde-bytes."),
