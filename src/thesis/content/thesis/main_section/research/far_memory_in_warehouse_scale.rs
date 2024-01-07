@@ -1,4 +1,4 @@
-use crate::thesis::engine::{Block, paragraph, subsection_header};
+use crate::thesis::engine::{Block, paragraph, subsection_header, Reference, reference};
 
 /**
  * "Software-Defined Far Memory in Warehouse-Scale Computers"
@@ -65,8 +65,15 @@ use crate::thesis::engine::{Block, paragraph, subsection_header};
 pub fn far_memory_in_warehouse_scale() -> Block {
     Block::Multiple(vec![
         subsection_header("Software-Defined Far Memory in Warehouse-Scale Computers"),
-        paragraph("Ця реалізація віддаленої памʼяті зберігає дані не на віддалених вузлах, а у локальній памʼяті, але у стиснутому стані. Для цього, реалізація спирається \
-на функціонал zswap у операційній системі Linux."),
+        paragraph(vec![
+            reference("Ця", Reference::for_publication(
+                "Software-defined far memory in warehouse-scale computers".to_owned(),
+                "Andres Lagar-Cavilla, Junwhan Ahn, Suleiman Souhlal, Neha Agarwal, Radoslaw Burny, Shakeel Butt, Jichuan Chang, Ashwin Chaugule, Nan Deng, Junaid Shahid, Greg Thelen, Kamil Adam Yurtsever, Yu Zhao, Parthasarathy Ranganathan".to_owned(),
+                2019, "International Conference on Architectural Support for Programming Languages and Operating Systems".to_owned()
+            )),
+            " реалізація віддаленої памʼяті зберігає дані не на віддалених вузлах, а у локальній памʼяті, але у стиснутому стані. Для цього, реалізація спирається \
+на функціонал zswap у операційній системі Linux.".into(),
+        ]),
         paragraph("Найбільший ефект на швидкодію програмного забезпечення та кількість звільненої памʼяті має алгоритм ідентифікації холодних сторінок (тобто сторінок \
 памʼяті з низькою частотою доступу). Ціллю алгоритма є пошук такого рівеня відносно якого сторінки вважаються холодними, щоб максимізувати кількість сторінок у віддаленій \
 памʼяті при цьому задовільняючи вимоги програмного забезпечення щодо швидкодії. Цей рівень виражається у частці від обʼєму памʼяті, доступ до якої програма виконує за \
