@@ -34,10 +34,14 @@ pub fn applications() -> Block {
             "Схема структурна послідовності роботи фонового потоку переміщення проміжків".to_owned(),
             ApplicationContent::image_from_file("images/background_thread_sequence_diagram.jpg"),
         )), // sequence diagram for background thread performing swap out and swap in.
-        Block::Application(ApplicationBlock::new(
-            CODE_LISTING,
-            "Лістинг коду".to_owned(),
-            ApplicationContent::None,
-        ))
+        code_listing_application()
     ])
+}
+
+pub fn code_listing_application() -> Block {
+    Block::Application(ApplicationBlock::new(
+        CODE_LISTING,
+        "Лістинг коду".to_owned(),
+        ApplicationContent::None,
+    ))
 }

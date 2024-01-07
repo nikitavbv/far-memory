@@ -24,7 +24,7 @@ use {
     self::{
         main_section::main_section,
         abstract_section::abstract_section,
-        applications::applications,
+        applications::{applications, code_listing_application},
     },
 };
 
@@ -45,6 +45,10 @@ pub fn thesis_content_for_plagiarism_check() -> Block {
         main_section(false),
         conclusions(),
     ])
+}
+
+pub fn thesis_application_code_listing() -> Block {
+    code_listing_application()
 }
 
 fn generate_abstract_content(content: &Content, main: &Block, applications: &Block) -> AbstractContent {

@@ -1,5 +1,5 @@
 pub use self::{
-    thesis::{thesis_content, thesis_content_for_plagiarism_check, thesis_docx_template, practice_report_content},
+    thesis::{thesis_content, thesis_content_for_plagiarism_check, thesis_application_code_listing, thesis_docx_template, practice_report_content},
     topic_card::topic_card_docx_template,
 };
 

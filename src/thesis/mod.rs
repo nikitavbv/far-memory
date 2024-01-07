@@ -7,6 +7,7 @@ use {
             Language,
             thesis_content,
             thesis_content_for_plagiarism_check,
+            thesis_application_code_listing,
             thesis_docx_template,
             topic_card_docx_template,
             documentation::documentation,
@@ -72,6 +73,9 @@ pub fn build_thesis(args: &Args) {
     if args.plagiarism_check_docs {
         documents.push(
             Document::new("plagiarism_check/ІП22мп_Волобуєв_ПЗ", thesis_content_for_plagiarism_check()).with_docx_template(thesis_docx_template()),
+        );
+        documents.push(
+            Document::new("plagiarism_check/ІП22мп_Волобуєв_КОД", thesis_application_code_listing()).with_docx_template(thesis_docx_template()),
         );
     }
 
