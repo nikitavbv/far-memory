@@ -42,6 +42,9 @@ pub fn code_listing_application() -> Block {
     Block::Application(ApplicationBlock::new(
         CODE_LISTING,
         "Лістинг коду".to_owned(),
-        ApplicationContent::None,
+        ApplicationContent::SourceCode(vec![
+            "./Cargo.toml",
+            "./src/client/client.rs",
+        ]),
     ))
 }

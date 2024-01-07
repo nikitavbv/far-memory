@@ -1,5 +1,5 @@
 use {
-    std::{process::Command, fs::{self, File}, io::{ErrorKind, Cursor}},
+    std::{process::Command, fs::{self, File, read_to_string}, io::{ErrorKind, Cursor}},
     tracing::warn,
     docx_rs::{
         Docx,
@@ -455,6 +455,7 @@ impl ApplicationBlock {
 pub enum ApplicationContent {
     None,
     Image(Vec<u8>),
+    SourceCode(Vec<&'static str>),
 }
 
 impl ApplicationContent {
@@ -769,6 +770,28 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
                             .add_run(Run::new().add_image(Pic::new(&image).size(width_emu, height_emu)))
                     )
                 },
+                ApplicationContent::SourceCode(files) => {
+                    let mut document = document;
+
+                    for file in files {
+                        let file_content = read_to_string(file).unwrap();
+
+                        let font_size = 10 * 2;
+                        let mut code_run = Run::new().size(font_size);
+                        for line in file_content.lines() {
+                            code_run = code_run.add_text(line).add_break(BreakType::TextWrapping);
+                        }
+
+                        document = document.add_paragraph(
+                            Paragraph::new()
+                                .line_spacing(LineSpacing::new().line((font_size * 10) as i32))
+                                .add_run(Run::new().size(font_size).add_text(format!("Файл {}:", file)).add_break(BreakType::TextWrapping).add_break(BreakType::TextWrapping))
+                                .add_run(code_run)
+                        );
+                    }
+
+                    document
+                }
             };
 
             document
