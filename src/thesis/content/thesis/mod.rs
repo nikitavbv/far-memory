@@ -226,7 +226,6 @@ pub fn thesis_docx_template() -> Docx {
                     .align(AlignmentType::Right)
                     .add_run(
                         Run::new()
-                            .color("black")
                             .add_field_char(docx_rs::FieldCharType::Begin, false)
                             .add_instr_text(InstrText::Unsupported("PAGE".to_owned()))
                             .add_field_char(docx_rs::FieldCharType::End, false)
