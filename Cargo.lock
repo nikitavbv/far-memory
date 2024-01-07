@@ -652,7 +652,7 @@ dependencies = [
 [[package]]
 name = "docx-rs"
 version = "0.4.7"
-source = "git+https://github.com/nikitavbv/docx-rs#a10173c7ef152250113ac04cf3cc728cfb47cb95"
+source = "git+https://github.com/nikitavbv/docx-rs#3a7b925554813fe1e2f9a0a5e30531460979229a"
 dependencies = [
  "base64 0.13.1",
  "image",
