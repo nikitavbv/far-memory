@@ -17,6 +17,7 @@ use {
             ParagraphBlock,
             TextSpan,
             Alignment,
+            extract_references_text,
         },
         content::{Language, AbstractContent, Content},
         utils::mm_to_twentieth_of_a_point,
@@ -40,11 +41,7 @@ pub fn thesis_content(content: &Content) -> Block {
 }
 
 pub fn thesis_content_for_plagiarism_check() -> Block {
-    Block::Multiple(vec![
-        introduction(),
-        main_section(false),
-        conclusions(),
-    ])
+    thesis_body(main_section(false))
 }
 
 pub fn thesis_application_code_listing() -> Block {
@@ -79,6 +76,19 @@ fn generate_abstract_content(content: &Content, main: &Block, applications: &Blo
 }
 
 fn thesis_content_inner(abstract_content: AbstractContent, front_page: bool, main: Block, applications: Option<Block>) -> Block {
+    let body = thesis_body(main);
+    let references = extract_references_text(&body);
+
+    /*
+    todo: add references
+    vec![
+        "Carbink: Fault-tolerant Far Memory [Електорнний ресурс] // Yang Zhou Hassan Wassel Sihang Liu Jiaqi Gao James Mickens Minlan Yu Chris Kennelly Paul Jack Turner David E Culler Hank Levy Amin Vahdat - Proceedings of the 16th USENIX Symposium on Operating Systems Design and Implementation, Usenix - 2022. Режим доступу до ресурсу: https://research.google/pubs/pub51559/".to_owned(),
+        "Software-Defined Far Memory in Warehouse-Scale Computers [Електронний ресурс] // Andres Lagar-Cavilla, Junwhan Ahn, Suleiman Souhlal, Neha Agarwal, Radoslaw Burny, Shakeel Butt, Jichuan Chang, Ashwin Chaugule, Nan Deng, Junaid Shahid, Greg Thelen, Kamil Adam Yurtsever, Yu Zhao, and Parthasarathy Ranganathan - International Conference on Architectural Support for Programming Languages and Operating Systems - 2019. Режим доступу до ресурсу: https://research.google/pubs/pub48551/".to_owned(),
+        "AIFM: High-Performance, Application-Integrated Far Memory [Електронний ресурс] // Zhenyuan Ruan, MIT CSAIL; Malte Schwarzkopf, Brown University; Marcos K. Aguilera, VMware Research; Adam Belay, MIT CSAIL - 14th USENIX Symposium on Operating Systems Design and Implementation (OSDI 20) - 2020. Режим доступу до ресурсу: https://www.usenix.org/conference/osdi20/presentation/ruan".to_owned(),
+        "Block Device Driver [Електорнний ресурс] // Linux Kernel Teaching. Режим доступу до ресурсу: https://linux-kernel-labs.github.io/refs/heads/master/index.html".to_owned(),
+        "Understanding InfiniBand and RDMA [Електронний ресурс] // Red Hat Customer Portal. Режим доступу до ресурсу: https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/configuring_infiniband_and_rdma_networks/understanding-infiniband-and-rdma_configuring-infiniband-and-rdma-networks".to_owned(),
+    ]*/
+
     /*
     requirements: https://ela.kpi.ua/bitstream/123456789/49978/1/Mahisterska_dysertatsiia.pdf
     examples: https://ela.kpi.ua/handle/123456789/21930
@@ -113,24 +123,11 @@ fn thesis_content_inner(abstract_content: AbstractContent, front_page: bool, mai
             paragraph("span - сторінка або блок памʼяті, що є одиницею, з якою працює віддалена памʼять."),
         ]),
 
-        // intro
-        introduction(),
-
-        // main
-        main,
-
-        // conclusions
-        conclusions(),
+        body,
 
         // references
         Block::SectionHeader(SectionHeaderBlock::without_numbering("Список використаних джерел".to_owned())),
-        Block::ReferencesList(vec![
-            "Carbink: Fault-tolerant Far Memory [Електорнний ресурс] // Yang Zhou Hassan Wassel Sihang Liu Jiaqi Gao James Mickens Minlan Yu Chris Kennelly Paul Jack Turner David E Culler Hank Levy Amin Vahdat - Proceedings of the 16th USENIX Symposium on Operating Systems Design and Implementation, Usenix - 2022. Режим доступу до ресурсу: https://research.google/pubs/pub51559/".to_owned(),
-            "Software-Defined Far Memory in Warehouse-Scale Computers [Електронний ресурс] // Andres Lagar-Cavilla, Junwhan Ahn, Suleiman Souhlal, Neha Agarwal, Radoslaw Burny, Shakeel Butt, Jichuan Chang, Ashwin Chaugule, Nan Deng, Junaid Shahid, Greg Thelen, Kamil Adam Yurtsever, Yu Zhao, and Parthasarathy Ranganathan - International Conference on Architectural Support for Programming Languages and Operating Systems - 2019. Режим доступу до ресурсу: https://research.google/pubs/pub48551/".to_owned(),
-            "AIFM: High-Performance, Application-Integrated Far Memory [Електронний ресурс] // Zhenyuan Ruan, MIT CSAIL; Malte Schwarzkopf, Brown University; Marcos K. Aguilera, VMware Research; Adam Belay, MIT CSAIL - 14th USENIX Symposium on Operating Systems Design and Implementation (OSDI 20) - 2020. Режим доступу до ресурсу: https://www.usenix.org/conference/osdi20/presentation/ruan".to_owned(),
-            "Block Device Driver [Електорнний ресурс] // Linux Kernel Teaching. Режим доступу до ресурсу: https://linux-kernel-labs.github.io/refs/heads/master/index.html".to_owned(),
-            "Understanding InfiniBand and RDMA [Електронний ресурс] // Red Hat Customer Portal. Режим доступу до ресурсу: https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/configuring_infiniband_and_rdma_networks/understanding-infiniband-and-rdma_configuring-infiniband-and-rdma-networks".to_owned(),
-        ]),
+        Block::ReferencesList(references),
 
         // applications
         Block::Paragraph(ParagraphBlock::new(vec![
@@ -153,6 +150,14 @@ fn thesis_content_inner(abstract_content: AbstractContent, front_page: bool, mai
             "Додатки".to_uppercase().into(),
         ].into()).with_tab(false).with_alignment(Alignment::Center)),
         applications.unwrap_or(Block::Multiple(vec![]))
+    ])
+}
+
+fn thesis_body(main: Block) -> Block {
+    Block::Multiple(vec![
+        introduction(),
+        main,
+        conclusions(),
     ])
 }
 

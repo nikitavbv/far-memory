@@ -1303,3 +1303,39 @@ fn assign_index_to_applications(context: &mut Context, text: &Block) {
 pub fn empty_block() -> Block {
     Block::Multiple(vec![])
 }
+
+pub fn extract_references_text(block: &Block) -> Vec<String> {
+    let mut result = Vec::new();
+    extract_references_text_inner(&mut result, block);
+    result
+}
+
+fn extract_references_text_inner(references: &mut Vec<String>, block: &Block) {
+    match &block {
+        Block::Paragraph(paragraph) => extract_references_text_span(references, paragraph.text()),
+        Block::Multiple(multi) => multi.iter().for_each(|v| extract_references_text_inner(references, v)),
+        Block::OrderedList(list) => list.iter().for_each(|v| extract_references_text_span(references, v)),
+        _ => (),
+    }
+}
+
+fn extract_references_text_span(references: &mut Vec<String>, text: &TextSpan) {
+    match &text {
+        TextSpan::Regular(_) => (),
+        TextSpan::Bold(inner) => extract_references_text_span(references, inner),
+        TextSpan::Italic(inner) => extract_references_text_span(references, inner),
+        TextSpan::Multiple(multi) => multi.iter().for_each(|v| extract_references_text_span(references, v)),
+        TextSpan::Link { .. } => (),
+        TextSpan::Reference(inner, reference) => {
+            extract_references_text_span(references, inner);
+
+            let ref_text = reference.text();
+            if !references.contains(&ref_text.to_owned()) {
+                references.push(ref_text.to_owned());
+            }
+        },
+        TextSpan::Break => (),
+        TextSpan::PageBreak => (),
+        TextSpan::ApplicationReference(_) => (),
+    }
+}
