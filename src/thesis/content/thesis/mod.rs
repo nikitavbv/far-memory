@@ -1,6 +1,6 @@
 use {
     tracing::warn,
-    docx_rs::{Docx, Style, StyleType, RunFonts, PageMargin},
+    docx_rs::{Docx, Style, StyleType, RunFonts, PageMargin, Header, Paragraph, Run, InstrText, AlignmentType},
     crate::thesis::{
         engine::{
             Block,
@@ -220,6 +220,19 @@ pub fn thesis_docx_template() -> Docx {
         .default_fonts(RunFonts::new().cs("Times New Roman"))
         .default_size(28) // 14
         .default_tab_stop(0)
+        .header(
+            Header::new()
+                .add_paragraph(Paragraph::new()
+                    .align(AlignmentType::Right)
+                    .add_run(
+                        Run::new()
+                            .color("black")
+                            .add_field_char(docx_rs::FieldCharType::Begin, false)
+                            .add_instr_text(InstrText::Unsupported("PAGE".to_owned()))
+                            .add_field_char(docx_rs::FieldCharType::End, false)
+                    ))
+        )
+        .first_header(Header::new())
         .add_style(Style::new("Heading1", StyleType::Paragraph).name("Heading 1").bold())
         .add_style(Style::new("Heading2", StyleType::Paragraph).name("Heading 2").bold())
 }
