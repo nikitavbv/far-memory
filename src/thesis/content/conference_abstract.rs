@@ -4,7 +4,7 @@ use {
     plotters::{prelude::*, coord::{Shift, types::RangedCoordf64}},
     crate::{
         thesis::{
-            engine::{Block, ParagraphBlock, TextSpan, SectionHeaderBlock, SubsectionHeaderBlock, ImageBlock, Reference, extract_references_text},
+            engine::{Block, ParagraphBlock, TextSpan, SectionHeaderBlock, SubsectionHeaderBlock, ImageBlock, Reference, extract_references_text, ReferenceFormat},
             content::{classification_code, keywords, Language},
             utils::mm_to_twentieth_of_a_point,
         },
@@ -17,7 +17,7 @@ const INTERVAL: f32 = 1.15;
 
 pub fn conference_abstract(language: &Language) -> Block {
     let body = conference_abstract_body(language);
-    let references = extract_references_text(&body);
+    let references = extract_references_text(&ReferenceFormat::ConferenceAbstract, &body);
 
     Block::Multiple(vec![
         body,

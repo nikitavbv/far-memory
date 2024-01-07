@@ -18,6 +18,7 @@ use {
             TextSpan,
             Alignment,
             extract_references_text,
+            ReferenceFormat,
         },
         content::{Language, AbstractContent, Content},
         utils::mm_to_twentieth_of_a_point,
@@ -77,7 +78,7 @@ fn generate_abstract_content(content: &Content, main: &Block, applications: &Blo
 
 fn thesis_content_inner(abstract_content: AbstractContent, front_page: bool, main: Block, applications: Option<Block>) -> Block {
     let body = thesis_body(main);
-    let references = extract_references_text(&body);
+    let references = extract_references_text(&ReferenceFormat::Thesis, &body);
 
     /*
     todo: add references

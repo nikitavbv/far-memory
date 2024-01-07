@@ -63,7 +63,7 @@ impl Context {
     }
 
     pub fn reference_id_for(&mut self, reference: &Reference) -> u32 {
-        let reference_text = reference.text();
+        let reference_text = reference.id();
         if let Some(id) = self.references.get(&reference_text) {
             return *id;
         } else {

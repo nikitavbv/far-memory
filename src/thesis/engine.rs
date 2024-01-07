@@ -282,7 +282,12 @@ pub enum Reference {
     },
 }
 
-// ДСТУ 8302:2015
+pub enum ReferenceFormat {
+    ConferenceAbstract,
+    // ДСТУ 8302:2015
+    Thesis,
+}
+
 impl Reference {
     pub fn for_publication(title: String, author: String, year: u32, published_in: String) -> Self {
         Self::Publication { title, author, year, published_in }
@@ -292,10 +297,23 @@ impl Reference {
         Self::Website { title, link }
     }
 
-    pub fn text(&self) -> String {
+    pub fn text(&self, format: &ReferenceFormat) -> String {
         match self {
-            Self::Publication { title, author, year, published_in } => format!("{}/{} // {}. {}", title, author, published_in, year),
-            Self::Website { title, link } => format!("{} [Online] Available at: {}", title, link),
+            Self::Publication { title, author, year, published_in } => match format {
+                ReferenceFormat::ConferenceAbstract => format!("{}/{} // {}. {}", title, author, published_in, year),
+                ReferenceFormat::Thesis => format!("{}. {}. {}. {}.", author, title, published_in, year),
+            },
+            Self::Website { title, link } => match format {
+                ReferenceFormat::ConferenceAbstract => format!("{} [Online] Available at: {}", title, link),
+                ReferenceFormat::Thesis => format!("{}. URL: {}", title, link),
+            },
+        }
+    }
+
+    pub fn id(&self) -> String {
+        match self {
+            Self::Publication { title, author, year, published_in } => format!("publication::{}_{}_{}_{}", title, author, year, published_in),
+            Self::Website { title, link } => format!("website::{}", link),
         }
     }
 }
@@ -1313,32 +1331,32 @@ pub fn empty_block() -> Block {
     Block::Multiple(vec![])
 }
 
-pub fn extract_references_text(block: &Block) -> Vec<String> {
+pub fn extract_references_text(format: &ReferenceFormat, block: &Block) -> Vec<String> {
     let mut result = Vec::new();
-    extract_references_text_inner(&mut result, block);
+    extract_references_text_inner(&mut result, block, format);
     result
 }
 
-fn extract_references_text_inner(references: &mut Vec<String>, block: &Block) {
+fn extract_references_text_inner(references: &mut Vec<String>, block: &Block, format: &ReferenceFormat) {
     match &block {
-        Block::Paragraph(paragraph) => extract_references_text_span(references, paragraph.text()),
-        Block::Multiple(multi) => multi.iter().for_each(|v| extract_references_text_inner(references, v)),
-        Block::OrderedList(list) => list.iter().for_each(|v| extract_references_text_span(references, v)),
+        Block::Paragraph(paragraph) => extract_references_text_span(references, paragraph.text(), format),
+        Block::Multiple(multi) => multi.iter().for_each(|v| extract_references_text_inner(references, v, format)),
+        Block::OrderedList(list) => list.iter().for_each(|v| extract_references_text_span(references, v, format)),
         _ => (),
     }
 }
 
-fn extract_references_text_span(references: &mut Vec<String>, text: &TextSpan) {
+fn extract_references_text_span(references: &mut Vec<String>, text: &TextSpan, format: &ReferenceFormat) {
     match &text {
         TextSpan::Regular(_) => (),
-        TextSpan::Bold(inner) => extract_references_text_span(references, inner),
-        TextSpan::Italic(inner) => extract_references_text_span(references, inner),
-        TextSpan::Multiple(multi) => multi.iter().for_each(|v| extract_references_text_span(references, v)),
+        TextSpan::Bold(inner) => extract_references_text_span(references, inner, format),
+        TextSpan::Italic(inner) => extract_references_text_span(references, inner, format),
+        TextSpan::Multiple(multi) => multi.iter().for_each(|v| extract_references_text_span(references, v, format)),
         TextSpan::Link { .. } => (),
         TextSpan::Reference(inner, reference) => {
-            extract_references_text_span(references, inner);
+            extract_references_text_span(references, inner, format);
 
-            let ref_text = reference.text();
+            let ref_text = reference.text(format);
             if !references.contains(&ref_text.to_owned()) {
                 references.push(ref_text.to_owned());
             }
