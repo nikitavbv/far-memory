@@ -205,8 +205,8 @@ allow using such memory class as far memory.",
             )
             .add_publications_component(context, &[
                 MultiLanguageString::new(
-                    "Volobuev N.O. Methods and software for providing software-defined far memory in distributed systems/ N.O. Volobuev, O.A. Pavlov, M.M. Holovchenko // Proceedings of the V International Scientific and Practical Conference for Young Scientists and Students \"Software Engineering and Advanced Information Technologies SoftTech-2023\" - Kyiv: National Technical University of Ukraine «Igor Sikorsky Kyiv Polytechnic Institute», December 19-21, 2023.",
-                    "Волобуєв Н.О. Methods and software for providing software-defined far memory in distributed systems/ Н.О. Волобуєв, О.А. Павлов, М.М. Головченко // Матеріали V Міжнародної науково-практичної конференції молодих вчених та студентів «Інженерія програмного забезпечення і передові інформаційні технології SoftTech-2023» – м. Київ: НТУУ «КПІ ім. Ігоря Сікорського», 12-21 грудня 2023 р."
+                    "Methods and software for providing software-defined far memory in distributed systems/ N.O. Volobuev, O.A. Pavlov, M.M. Holovchenko // Proceedings of the V International Scientific and Practical Conference for Young Scientists and Students \"Software Engineering and Advanced Information Technologies SoftTech-2023\" - Kyiv: National Technical University of Ukraine «Igor Sikorsky Kyiv Polytechnic Institute», December 19-21, 2023.",
+                    "Methods and software for providing software-defined far memory in distributed systems/ Н.О. Волобуєв, О.А. Павлов, М.М. Головченко // Матеріали V Міжнародної науково-практичної конференції молодих вчених та студентів «Інженерія програмного забезпечення і передові інформаційні технології SoftTech-2023» – м. Київ: НТУУ «КПІ ім. Ігоря Сікорського», 12-21 грудня 2023 р."
                 )
             ], language)
     }

@@ -289,12 +289,12 @@ pub enum ReferenceFormat {
 }
 
 impl Reference {
-    pub fn for_publication(title: String, author: String, year: u32, published_in: String) -> Self {
-        Self::Publication { title, author, year, published_in }
+    pub fn for_publication(title: impl Into<String>, author: impl Into<String>, year: u32, published_in: impl Into<String>) -> Self {
+        Self::Publication { title: title.into(), author: author.into(), year, published_in: published_in.into() }
     }
 
-    pub fn for_website(title: String, link: String) -> Self {
-        Self::Website { title, link }
+    pub fn for_website(title: impl Into<String>, link: impl Into<String>) -> Self {
+        Self::Website { title: title.into(), link: link.into() }
     }
 
     pub fn text(&self, format: &ReferenceFormat) -> String {

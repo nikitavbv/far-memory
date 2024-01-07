@@ -63,10 +63,10 @@ pub fn carbink() -> Block {
             reference(
                 "Carbink",
                 Reference::for_publication(
-                    "Carbink: Fault-tolerant Far Memory".into(),
-                    "Yang Zhou, Hassan Wassel, Sihang Liu, Jiaqi Gao, James Mickens, Minlan Yu, Chris Kennelly, Paul Jack Turner, David E Culler, Hank Levy, Amin Vahdat".into(),
+                    "Carbink: Fault-tolerant Far Memory",
+                    "Yang Zhou, Hassan Wassel, Sihang Liu, Jiaqi Gao, James Mickens, Minlan Yu, Chris Kennelly, Paul Jack Turner, David E Culler, Hank Levy, Amin Vahdat",
                     2022,
-                    "Proceedings of the 16th USENIX Symposium on Operating Systems Design and Implementation".into(),
+                    "Proceedings of the 16th USENIX Symposium on Operating Systems Design and Implementation",
                 )
             ),
             " це система віддаленої памʼяті розроблена та протестована компанією Google в своїх центрах \
@@ -80,13 +80,24 @@ pub fn carbink() -> Block {
         paragraph("Для інтеграції у програмне забезпечення використовується бібліотека яка надає застосунку доступ до \
 даних у віддаленій памʼяті через розумні показчики. При розміщенні даних у віддаленій памʼяті вони \
 групуються у сторінки (spans)."),
-        paragraph("Групування сторінок відбувається за їх розміром - такий самий підхід, який \
-використовується у алокаторах памʼяті, наприклад у TCMalloc. Окремий потік у фоновому режимі переміщує обʼєкти, доступ \
+        paragraph(vec![
+            "Групування сторінок відбувається за їх розміром - такий самий підхід, який \
+використовується у алокаторах памʼяті, наприклад у ".into(),
+            reference("TCMalloc", Reference::for_publication(
+                "Beyond malloc efficiency to fleet efficiency: a hugepage-aware memory allocator",
+                "Andrew Hamilton Hunter, Chris Kennelly, Darryl Gove, Parthasarathy Ranganathan, Paul Jack Turner, Tipp James Moseley",
+                2021,
+                "15th USENIX Symposium on Operating Systems Design and Implementation (OSDI 21)"
+            )),
+            ". Окремий потік у фоновому режимі переміщує обʼєкти, доступ \
 до яких відбувається частіше у спільні сторінки. Для того, щоб відслідковувати частоту доступу до обʼєктів, \
 використовується підхід схожий на барʼєри запису та читання у прибиральниках сміття. Для роботи з байтом активності \
-(hotness byte) використовується алгоритм CLOCK. Також слід зазначити, що переміщення даних між локальною та \
+(hotness byte) використовується алгоритм ".into(),
+            reference("CLOCK", Reference::for_website("Clock Algorithm, Second Chance List Algorithm, and Intro to I/O // CS162", "https://inst.eecs.berkeley.edu/~cs162/sp20/static/sections/section8-sol.pdf")),
+            ". Також слід зазначити, що переміщення даних між локальною та \
 віддаленою памʼяттю відбувається на рівні гранулярності сторінки (span). Коли системі потрібно звільнити памʼять, то \
-переміщуються у першу чергу сторінки з нвйбільшою кількістю холодних обʼєктів."),
+переміщуються у першу чергу сторінки з нвйбільшою кількістю холодних обʼєктів.".into()
+        ]),
         paragraph("Для забезпечення відмовостійкості, менеджер памʼяті постійно перевіряє стан інших вузлів (як тих, що \
 зберігають дані, так і тих, на яких розміщене програмне забезпечення, в яке інтегрується віддалена памʼять) за допомгою \
 healthcheck запитів. Якщо вузел обчислень (compute node) виходить з ладу, то вузлам що зберігають дані, надається команда \
