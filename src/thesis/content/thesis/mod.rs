@@ -59,10 +59,10 @@ fn generate_abstract_content(content: &Content, main: &Block, applications: &Blo
         total_applications: count_applications(&applications),
         total_references: 42,
     };
-    let content_with_placeholders = thesis_content_inner(abstract_placeholder_content.clone(), true, main.clone(), None);
+    let content_with_placeholders = thesis_content_inner(abstract_placeholder_content.clone(), true, main.clone(), Some(applications.clone()));
 
     let true_total_pages = match count_pages(thesis_docx_template(true), content, &content_with_placeholders) {
-        Ok(v) => v - 1, // front page does not count
+        Ok(v) => v,
         Err(err) => match err {
             PageCountingError::NoPdfConverterInstalled => {
                 warn!("Cannot count pages, because pdf converter tool is not installed. Using \"0\" as the number of pages.");
