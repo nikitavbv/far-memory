@@ -142,7 +142,7 @@ fn thesis_content_inner(abstract_content: AbstractContent, front_page: bool, mai
             TextSpan::Break,
             TextSpan::Break,
             TextSpan::Break,
-            "Додатки".to_uppercase().into(),
+            TextSpan::Bold(Box::new("Додатки".to_uppercase().into())),
         ].into()).with_tab(false).with_alignment(Alignment::Center)),
         applications.unwrap_or(Block::Multiple(vec![]))
     ])
