@@ -107,7 +107,7 @@ pub fn research() -> Block {
                 TableCell::new("Carbink".into()),
                 TableCell::new("AIFM".into()),
                 TableCell::new("Hydra".into()),
-                TableCell::new("far memory in warehouse-scale computers".into()),
+                TableCell::new("Software-Defined Far Memory in Warehouse-Scale Computers".into()),
             ],
             vec![
                 vec![
@@ -116,9 +116,37 @@ pub fn research() -> Block {
                     TableCell::new("+".into()).alignment(Alignment::Center),
                     TableCell::new("+".into()).alignment(Alignment::Center),
                     TableCell::new("-".into()).alignment(Alignment::Center),
-                ]
+                ],
+                vec![
+                    TableCell::new("Не залежить від спеціалізованого апаратного забезпечення".into()),
+                    TableCell::new("+".into()).alignment(Alignment::Center),
+                    TableCell::new("RDMA NIC".into()).alignment(Alignment::Center),
+                    TableCell::new("RDMA NIC".into()).alignment(Alignment::Center),
+                    TableCell::new("+".into()).alignment(Alignment::Center),
+                ],
+                vec![
+                    TableCell::new("Зберігання даних на багатьох віддалених вузлах".into()),
+                    TableCell::new("+".into()).alignment(Alignment::Center),
+                    TableCell::new("-".into()).alignment(Alignment::Center),
+                    TableCell::new("+".into()).alignment(Alignment::Center),
+                    TableCell::new("-".into()).alignment(Alignment::Center),
+                ],
+                vec![
+                    TableCell::new("Підтримка інтеграції без зміни коду".into()),
+                    TableCell::new("-".into()).alignment(Alignment::Center),
+                    TableCell::new("-".into()).alignment(Alignment::Center),
+                    TableCell::new("+".into()).alignment(Alignment::Center),
+                    TableCell::new("+".into()).alignment(Alignment::Center),
+                ],
+                vec![
+                    TableCell::new("Зниження затримки за рахунок керування заміщенням сторінок".into()),
+                    TableCell::new("прості еврістики".into()).alignment(Alignment::Center),
+                    TableCell::new("prefetching".into()).alignment(Alignment::Center),
+                    TableCell::new("прості еврістики".into()).alignment(Alignment::Center),
+                    TableCell::new("адаптація гіперпараметрів механізму підкачки".into()).alignment(Alignment::Center),
+                ],
             ],
-            "Порівняння існуючих рішень".to_owned(),
+            "Порівняльна таблиця існуючих методів надання віддаленої памʼяті".to_owned(),
         )),
 
         subsection_header("Постановка задачі"),
