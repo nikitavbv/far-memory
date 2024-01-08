@@ -275,7 +275,7 @@ impl PublicationsComponent for Docx {
                         LevelText::new("%1) "),
                         LevelJc::new("left")
                     )
-                    .indent(Some(700), Some(SpecialIndentType::Hanging(300)), None, None))
+                    .indent(None, Some(SpecialIndentType::FirstLine(725)), None, None))
             )
             .add_numbering(Numbering::new(numbering, numbering));
 

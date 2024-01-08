@@ -803,7 +803,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
                     for file in files {
                         let file_content = read_to_string(file).unwrap();
 
-                        let font_size = 10 * 2;
+                        let font_size = 8 * 2;
                         let mut code_run = Run::new().size(font_size);
                         for line in file_content.lines() {
                             code_run = code_run.add_text(line).add_break(BreakType::TextWrapping);
