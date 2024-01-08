@@ -1,7 +1,9 @@
+use crate::thesis::engine::Alignment;
+
 use {
     crate::thesis::{
         content::{thesis_tasks, Language},
-        engine::{Block, ImageBlock, subsection_header, paragraph, unordered_list, section_header, SubsectionHeaderBlock, Reference, reference}
+        engine::{Block, ImageBlock, subsection_header, paragraph, unordered_list, section_header, SubsectionHeaderBlock, Reference, reference, TableBlock, TableCell}
     },
     self::{
         aifm::aifm,
@@ -96,6 +98,28 @@ pub fn research() -> Block {
         aifm(),
         carbink(),
         far_memory_in_warehouse_scale(),
+
+        subsection_header("Порівняння існуючих рішень"),
+        paragraph("У таблиці 1.1 наведено порівняння основних властивостей існуючих рішень, що було розглянуто."),
+        Block::Table(TableBlock::new(
+            vec![
+                TableCell::new("".into()),
+                TableCell::new("Carbink".into()),
+                TableCell::new("AIFM".into()),
+                TableCell::new("Hydra".into()),
+                TableCell::new("far memory in warehouse-scale computers".into()),
+            ],
+            vec![
+                vec![
+                    TableCell::new("Відкритий вихідний код та доступність для зовнішнього використання".into()),
+                    TableCell::new("-".into()).alignment(Alignment::Center),
+                    TableCell::new("+".into()).alignment(Alignment::Center),
+                    TableCell::new("+".into()).alignment(Alignment::Center),
+                    TableCell::new("-".into()).alignment(Alignment::Center),
+                ]
+            ],
+            "Порівняння існуючих рішень".to_owned(),
+        )),
 
         subsection_header("Постановка задачі"),
         paragraph("Метою роботи є покращення програмних засобів та методів, що можуть використовуватись операторами центрів обробки даних та розробниками програмного \
