@@ -239,7 +239,7 @@ impl TasksComponent for Docx {
                         NumberFormat::new("bullet"),
                         LevelText::new("– "),
                         LevelJc::new("left")
-                    ).indent(Some(1100 + 300), Some(SpecialIndentType::Hanging(300)), None, None))
+                    ).indent(None, Some(SpecialIndentType::FirstLine(725)), None, None))
             )
             .add_numbering(Numbering::new(tasks_numbering, tasks_numbering));
 
