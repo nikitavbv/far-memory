@@ -45,6 +45,10 @@ pub fn code_listing_application() -> Block {
         ApplicationContent::SourceCode(vec![
             "./Cargo.toml",
             "./src/client/client.rs",
+            "./src/client/replacement/mod.rs",
+            "./src/client/replacement/replay.rs",
+            "./src/client/object.rs",
+            "./src/client/vec.rs",
         ]),
     ))
 }

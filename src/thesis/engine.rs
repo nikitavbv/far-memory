@@ -811,8 +811,13 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
 
                         document = document.add_paragraph(
                             Paragraph::new()
-                                .line_spacing(LineSpacing::new().line((font_size * 10) as i32))
-                                .add_run(Run::new().size(font_size).add_text(format!("Файл {}:", file)).add_break(BreakType::TextWrapping).add_break(BreakType::TextWrapping))
+                                .line_spacing(LineSpacing::new().line((14 * 2 * 15) as i32))
+                                .add_run(Run::new().size(14 * 2).add_text(format!("Файл {}:", file)))
+                        );
+
+                        document = document.add_paragraph(
+                            Paragraph::new()
+                                .line_spacing(LineSpacing::new().line((font_size * 15) as i32))
                                 .add_run(code_run)
                         );
                     }
