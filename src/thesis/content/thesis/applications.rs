@@ -6,6 +6,7 @@ pub const CLASS_DIAGRAM: &str = "class_diagram";
 pub const ACCESS_SEQUENCE: &str = "access_sequence";
 pub const BACKGROUND_THREAD_SEQUENCE: &str = "background_thread_sequence";
 pub const CODE_LISTING: &str = "code_listing";
+pub const PLAGIARISM_REPORT: &str = "plagiarism_report";
 
 pub fn applications() -> Block {
     Block::Multiple(vec![
@@ -34,7 +35,12 @@ pub fn applications() -> Block {
             "Схема структурна послідовності роботи фонового потоку переміщення проміжків".to_owned(),
             ApplicationContent::image_from_file("images/background_thread_sequence_diagram.jpg"),
         )), // sequence diagram for background thread performing swap out and swap in.
-        code_listing_application()
+        code_listing_application(),
+        Block::Application(ApplicationBlock::new(
+            PLAGIARISM_REPORT,
+            "Результати перевірки роботи на співпадіння".to_owned(),
+            ApplicationContent::image_from_file("images/plagiarism_report.png"),
+        )),
     ])
 }
 

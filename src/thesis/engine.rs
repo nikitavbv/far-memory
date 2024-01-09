@@ -32,6 +32,7 @@ use {
         Pic,
     },
     thiserror::Error,
+    image::ImageFormat,
     crate::thesis::{
         context::Context,
         content::{Content, Language, AbstractContent},
@@ -481,13 +482,25 @@ impl ApplicationBlock {
 #[derive(Debug, Clone)]
 pub enum ApplicationContent {
     None,
-    Image(Vec<u8>),
+    Image {
+        image: Vec<u8>,
+        format: ImageFormat,
+    },
     SourceCode(Vec<&'static str>),
 }
 
 impl ApplicationContent {
     pub fn image_from_file(path: &str) -> Self {
-        Self::Image(fs::read(path).unwrap())
+        Self::Image {
+            image: fs::read(path).unwrap(),
+            format: if path.ends_with(".jpg") {
+                ImageFormat::Jpeg
+            } else if path.ends_with(".png") {
+                ImageFormat::Png
+            } else {
+                panic!("cannot determine format for {:?}", path);
+            }
+        }
     }
 }
 
@@ -781,9 +794,9 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
 
             let document = match application.content {
                 ApplicationContent::None => document,
-                ApplicationContent::Image(image) => {
+                ApplicationContent::Image { image, format } => {
                     let mut reader = image::io::Reader::new(Cursor::new(&image));
-                    reader.set_format(image::ImageFormat::Jpeg);
+                    reader.set_format(format);
                     let img = reader.decode().unwrap();
                     let width = img.width();
                     let height = img.height();
