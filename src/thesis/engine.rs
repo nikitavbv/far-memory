@@ -306,7 +306,7 @@ impl Reference {
             },
             Self::Website { title, link } => match format {
                 ReferenceFormat::ConferenceAbstract => format!("{} [Online] Available at: {}", title, link),
-                ReferenceFormat::Thesis => format!("{}. URL: {}", title, link),
+                ReferenceFormat::Thesis => format!("{}. URL: {} (дата звернення 07.01.2024).", title, link),
             },
         }
     }
