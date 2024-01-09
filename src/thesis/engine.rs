@@ -1,5 +1,5 @@
 use {
-    std::{process::Command, fs::{self, File, read_to_string}, io::{ErrorKind, Cursor}},
+    std::{process::Command, fs::{self, File, read_to_string}, io::{ErrorKind, Cursor}, ops::Range},
     tracing::warn,
     docx_rs::{
         Docx,
@@ -281,6 +281,21 @@ pub enum Reference {
         title: String,
         link: String,
     },
+    Book {
+        author: String,
+        title: String,
+        city: String,
+        year: u32,
+        total_pages: u32,
+    },
+    BookSection {
+        author: String,
+        title: String,
+        section_name: String,
+        city: String,
+        year: u32,
+        pages: Range<u32>,
+    },
 }
 
 pub enum ReferenceFormat {
@@ -298,6 +313,27 @@ impl Reference {
         Self::Website { title: title.into(), link: link.into() }
     }
 
+    pub fn for_book(author: impl Into<String>, title: impl Into<String>, city: impl Into<String>, year: u32, total_pages: u32) -> Self {
+       Self::Book {
+           author: author.into(),
+           title: title.into(),
+           city: city.into(),
+           year,
+           total_pages,
+       }
+    }
+
+    pub fn for_book_section(author: impl Into<String>, title: impl Into<String>, section_name: impl Into<String>, city: impl Into<String>, year: u32, pages: Range<u32>) -> Self {
+        Self::BookSection {
+            author: author.into(),
+            title: title.into(),
+            section_name: section_name.into(),
+            city: city.into(),
+            year,
+            pages,
+        }
+    }
+
     pub fn text(&self, format: &ReferenceFormat) -> String {
         match self {
             Self::Publication { title, author, year, published_in } => match format {
@@ -308,13 +344,23 @@ impl Reference {
                 ReferenceFormat::ConferenceAbstract => format!("{} [Online] Available at: {}", title, link),
                 ReferenceFormat::Thesis => format!("{}. URL: {} (дата звернення 07.01.2024).", title, link),
             },
+            Self::Book { author, title, city, year, total_pages } => match format {
+                ReferenceFormat::ConferenceAbstract => unimplemented!(),
+                ReferenceFormat::Thesis => format!("{}. {}. {}, {}. {} p.", author, title, city, year, total_pages),
+            },
+            Self::BookSection { author, title, section_name, city, year, pages } => match format {
+                ReferenceFormat::ConferenceAbstract => unimplemented!(),
+                ReferenceFormat::Thesis => format!("{}. {}. {} / {}. {}, {}. P. {}-{}", author, section_name, title, author, city, year, pages.start, pages.end),
+            }
         }
     }
 
     pub fn id(&self) -> String {
         match self {
             Self::Publication { title, author, year, published_in } => format!("publication::{}_{}_{}_{}", title, author, year, published_in),
-            Self::Website { title, link } => format!("website::{}", link),
+            Self::Website { link, .. } => format!("website::{}", link),
+            Self::Book { title, .. } => format!("book::{}", title),
+            Self::BookSection { title, section_name, .. } => format!("book_section::{}::{}", title, section_name),
         }
     }
 }
@@ -1081,7 +1127,7 @@ pub fn print_placeholders(block: &Block) {
         Block::Multiple(multiple) => multiple.iter().for_each(print_placeholders),
         Block::SectionHeader(_) => (),
         Block::SubsectionHeader(_) => (),
-        Block::Paragraph(_) => (),
+        Block::Paragraph(paragraph) => print_placeholders_for_text_span(&paragraph.span),
         Block::OrderedList(_) => (),
         Block::UnorderedList(_) => (),
         Block::Image(_) => (),
@@ -1094,6 +1140,28 @@ pub fn print_placeholders(block: &Block) {
         Block::Note(_) => (),
         Block::Table(_) => (),
         Block::Application(_) => (),
+    }
+}
+
+fn print_placeholders_for_text_span(span: &TextSpan) {
+    match &span {
+        TextSpan::Reference(inner, reference) => {
+            if let Reference::Website { title: _, link } = reference {
+                if link.contains("wikipedia.org") {
+                    // as adviced by supervisor
+                    warn!("avoid referencing wikipedia, reference publication that wikipedia is referencing instead. Referenced {:?}", link);
+                }
+                print_placeholders_for_text_span(inner);
+            }
+        },
+        TextSpan::Regular(_) => (),
+        TextSpan::Bold(inner) => print_placeholders_for_text_span(inner),
+        TextSpan::Italic(inner) => print_placeholders_for_text_span(inner),
+        TextSpan::Multiple(inner) => inner.iter().for_each(print_placeholders_for_text_span),
+        TextSpan::Link { .. } => (),
+        TextSpan::ApplicationReference(_) => (),
+        TextSpan::Break => (),
+        TextSpan::PageBreak => (),
     }
 }
 

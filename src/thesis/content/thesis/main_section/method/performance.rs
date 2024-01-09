@@ -38,7 +38,7 @@ pub fn performance() -> Block {
         ]),
         paragraph(vec![
             "Для того, щоб знизити затримку (latency) передачі даних по TCP, клієнт віддаленої памʼяті не використовує ".into(),
-            reference("алгоритм Нейгла (Nagle's algorithm)", Reference::for_website("Nagle's algorithm // Wikipedia", "https://en.wikipedia.org/wiki/Nagle%27s_algorithm")),
+            reference("алгоритм Нейгла (Nagle's algorithm)", Reference::for_website("RFC 896 - Congestion Control in IP/TCP Internetworks", "https://datatracker.ietf.org/doc/html/rfc896")),
             ". Його \
 задачею є підвищення швидкодії мережі через уникання невеликих пакетів даних під час передачі. Додаткове очікування наступних пакетів не має сенсу, оскільки клієнт віддаленої \
 памʼяті пише увесь запит за раз і навіть якщо він невеликий (наприклад, запит на отримання проміжку памʼяті), клієнт очікує відповідь одразу після запису запиту. Алгоритм \
@@ -119,7 +119,10 @@ Rust."),
 зменшення кількості блокувань покращує швидкодію."),
         paragraph(vec![
             "Таке формулювання вказує на те, що вибір проміжків памʼяті для переміщення є відомою ".into(),
-            reference("задачею заміщення сторінок (page replacement algorithm)", Reference::for_website("Page Replacement Algorithm // Wikipedia".to_owned(), "https://en.wikipedia.org/wiki/Page_replacement_algorithm".to_owned())),
+            reference(
+                "задачею заміщення сторінок (page replacement algorithm)",
+                Reference::for_book_section("Andrew S. Tanenbaum", "Modern Operating Systems, 2nd Edition", "Page Replacement Algorithms", "Hoboken", 2001, 273..275)
+            ),
             ". Ця задача \
 формулюється як задача керування памʼяттю компʼютера, у якій потрібно обирати яка сторінка буде переміщена у більш повільну памʼять з більш швидкої замість тієї сторінки \
 памʼяті на яку надійшов запит. В схожому вигляді ця задача вирішується, наприклад, у операційних системах: операційній системі потрібно обирати які сторінки памʼяті будуть \
@@ -146,7 +149,10 @@ Rust."),
 Це призводить до великої кількості випадків коли потрібного проміжку немає в локальній памʼяті, що погіршує швидкодію програмного забезпечення."),
         paragraph(vec![
             "Альтернативою є використання алгоритму заміщення найменш нещодавно використаних (".into(),
-            reference("least recently used", Reference::for_website("Least Recently Used // Cache Replacement Policies - Wikipedia", "https://en.wikipedia.org/wiki/Cache_replacement_policies#LRU")),
+            reference(
+                "least recently used",
+                Reference::for_book_section("Andrew S. Tanenbaum", "Modern Operating Systems, 2nd Edition", "The Least Recently Used (LRU) Page Replacement Algorithm", "Hoboken", 2001, 278..281)
+            ),
             ") проміжків (LeastRecentlyUsedReplacementPolicy). \
 Цей алгоритм часто використовується в операційних системах для заміщення сторінок під час використання файлу підкачки, а також у системах кешування - в багатьох випадках \
 використання цього алгоритму є виправданим. Так само цей алгоритм може бути виправданим при інтеграції віддаленої памʼяті у програмне забезпечення яке має закономірності \
@@ -207,7 +213,10 @@ Rust."),
         paragraph(vec![
             "Для ефективної роботи з програмним забезпеченням що має динамічні схеми доступу до памʼяті, в цій роботі пропонується використовувати (і реалізовано) \
 алгоритм заміщення проміжків що базується на використанні рекурентної нейронної мережі (".into(),
-            reference("recurrent neural network", Reference::for_website("Recurrent neural network // Wikipedia", "https://en.wikipedia.org/wiki/Recurrent_neural_network")),
+            reference(
+                "recurrent neural network",
+                Reference::for_publication("A thorough review on the current advance of neural network structures", "S. Dupond", 2019, "Annual Reviews in Control, vol. 14")
+            ),
             ") як моделі прогнозування доступу до проміжків. Рекурентні нейронні мережі є розповсюдженим рішенням у задачах де необхідно обробляти послідовності даних. \
 Заміщення сторінок у віддаленій памʼяті є такою задачею. Послідовністю в цьому випадку є події доступу до проміжків памʼяті. Як і у попередньому алгоритму заміщення проміжків, \
 цей алгоритм неперервно збирає та надсилає на вузол керування статистику доступів до проміжків. Вузол керування у фоновому потоці адаптації параметрів, агрегує статистику \

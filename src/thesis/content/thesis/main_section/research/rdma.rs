@@ -20,7 +20,7 @@ pub fn rdma() -> Block {
             ". Ця реалізація забезпечує \
 пропускну здатність до 50Гбіт/c на кожен кабель, при цьому має затримку що є в десятки раз меншою (в залежності \
 від розміру повідомлення) ніж за умов пересилання даних по ".into(),
-            reference("TCP", Reference::for_website("Transmission Control Protocol // Wikipedia", "https://en.wikipedia.org/wiki/Transmission_Control_Protocol")),
+            reference("TCP", Reference::for_website("RFC 9293 - Transmission Control Protocol", "https://datatracker.ietf.org/doc/html/rfc9293")),
             " через ".into(),
             reference("Gigabit Ethernet", Reference::for_website("IEEE 802.3 ETHERNET", "https://www.ieee802.org/3/")),
             ".".into()
