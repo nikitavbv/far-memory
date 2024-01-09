@@ -195,7 +195,7 @@ pub fn thesis_tasks() -> Vec<MultiLanguageString> {
         ),
         MultiLanguageString::new(
             "decrease average latency of far memory spans access by using span replacement algorithm that relies on memory access statistics and predictive models".to_owned(),
-            "знизити в середьному затримку доступу до блоків у віддаленій памʼяті за рахунок використання алгоритму заміщення, що спирається на статистику доступу \
+            "знизити в середньому затримку доступу до блоків у віддаленій памʼяті за рахунок використання алгоритму заміщення, що спирається на статистику доступу \
 до памʼяті та використання прогнозних моделей".to_owned(),
         ),
         MultiLanguageString::new(

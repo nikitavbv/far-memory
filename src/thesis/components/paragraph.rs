@@ -24,7 +24,7 @@ pub fn runs_for_text_span(context: &mut Context, text: TextSpan, run: Run) -> Ve
         TextSpan::Bold(inner) => runs_for_text_span(context, *inner, run.bold()),
         TextSpan::Italic(inner) => runs_for_text_span(context, *inner, run.italic()),
         TextSpan::Link { .. } => unimplemented!(),
-        TextSpan::Regular(text) => vec![run.add_text(text)],
+        TextSpan::Regular(text) => vec![run.add_text(text.replace("ʼ", "'"))], // use correct apostrophe for ukrainian (doesn't look different but word complains)
         TextSpan::Reference(text, reference) => {
             let id = context.reference_id_for(&reference);
             runs_for_text_span(context, TextSpan::Multiple(vec![*text, TextSpan::Regular(format!(" [{}]", id))]), run)
