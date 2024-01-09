@@ -404,7 +404,10 @@ pub fn marketing() -> Block {
 
         paragraph(vec![
             "Для більш детального аналізу умов конкуренції в галузі використовується ".into(),
-            reference("модель М. Портера", Reference::for_website("Porter's five forces analysis // Wikipedia", "https://en.wikipedia.org/wiki/Porter%27s_five_forces_analysis")),
+            reference(
+                "модель М. Портера",
+                Reference::for_publication("Michael E. Porter", "How Competitive Forces Shape Strategy", 1979, "Harvard Business Review")
+            ),
             ". Детальний аналіз умов конкуренції на ринку наведено у таблиці 5.9.".into(),
         ]),
         Block::Table(TableBlock::new(
@@ -575,7 +578,10 @@ pub fn marketing() -> Block {
 
         paragraph(vec![
             "Фінальним етапом ринкового аналізу можливостей впровадження програмного продукту для надання віддаленої памʼяті є проведення ".into(),
-            reference("SWOT-аналізу", Reference::for_website("SWOT analysis // Wikipedia", "https://en.wikipedia.org/wiki/SWOT_analysis")),
+            reference(
+                "SWOT-аналізу",
+                Reference::for_publication("The TOWS matrix—a tool for situational analysis", "Heinz Weihrich", 1982, "Long Range Planning")
+            ),
             ". Сильні та слабкі сторони проекти, а також можливості та загрози наведені у таблиці 5.12.".into(),
             TextSpan::PageBreak,
         ]),

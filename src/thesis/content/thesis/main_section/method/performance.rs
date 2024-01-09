@@ -222,9 +222,15 @@ Rust."),
 цей алгоритм неперервно збирає та надсилає на вузол керування статистику доступів до проміжків. Вузол керування у фоновому потоці адаптації параметрів, агрегує статистику \
 зібрану з усіх вузлів та попередніх запусків програмного забезпечення, розбиває на послідовності з заданою довжиною вікна (за замовчуванням, 100 останніх проміжків). \
 Після цього, зібрана статистика використовується для тренування нейронної мережі ".into(),
-            reference("LSTM", Reference::for_website("Long short-term memory // Wikipedia", "https://en.wikipedia.org/wiki/Long_short-term_memory")),
+            reference(
+                "LSTM",
+                Reference::for_publication("Long short-term memory", "S. Hochreiter, J. Schmidhuber", 1997, "Neural computation, vol. 9, no. 8"),
+            ),
             " з лінійним шаром на виході розмір якого відповідає кількості проміжків, та має значення наступного проміжка до якого відбудеться доступ закодований ".into(),
-            reference("унітарним кодом", Reference::for_website("One-hot // Wikipedia", "https://en.wikipedia.org/wiki/One-hot")),
+            reference(
+                "унітарним кодом",
+                Reference::for_book("David Harris, Sarah Harris", "Digital design and computer architecture (2nd ed.)", "San Francisco", 2012, 712)
+            ),
             ". Після завершення тренування нейронної мережі, значення її вагів передаються на вузли обчислення для використання для прогнозування у алгоритмі заміщення \
 проміжків. На кожен запит на переміщення проміжків у віддалену памʼять, цей алгоритм обирає проміжок з найнижчим значенням коефіцієнту на виході нейронної мережі. \
 Для завчасного переміщення у локальну памʼять навпаки обираються проміжки з найвищим значенням.".into(),
@@ -233,7 +239,10 @@ Rust."),
             "Слід зазначити, що наведені алгоритми заміщення проміжків є лише демонстрацією використання статистики доступу до памʼяті що неперервно збирається для \
 адаптації параметрів моделі прогнозування, що використовується у алгоритмі заміщення проміжків. Наступним розвитком алгоритмів заміщення проміжків може бути побудова \
 скінченних автоматів, використання моделей глибинного навчання такі як ".into(),
-            reference("трансформер", Reference::for_website("Transformer (machine learning model) // Wikipedia", "https://en.wikipedia.org/wiki/Transformer_(machine_learning_model)")),
+            reference(
+                "трансформер",
+                Reference::for_publication("Attention is All You Need", "Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Lukasz Kaiser, Illia Polosukhin", 2017, "Proceedings of the 31st International Conference on Neural Information Processing Systems")
+            ),
             " та інші моделі що можуть бути більш ефективними.".into(),
         ]),
     ])
