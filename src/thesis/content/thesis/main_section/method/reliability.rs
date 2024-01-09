@@ -31,6 +31,7 @@ SSD диск (якщо він використовується як бекенд
 памʼяті за рахунок того, що додаткові частини даних мають у сумі менший розмір ніж розмір додаткової копії даних у разі використанні реплікації. В цій роботі це реалізовано у ErasureCodingBackend, \
 який виконує кодування, а для власне зберігання даних передає шарди (частини) даних до існуючих реалізацій бекендів (наприклад NetworkNodeBackend).".into(),
         ]),
+        paragraph("На рисунку 2.3 схематично показано підхід з використанням кодів Ріда-Соломона для розділення даних на частини, що зберігаються на різних вузлах."),
         Block::Image(ImageBlock::new("./images/fault_tolerance.jpg".to_owned(), "Схематичне зображення кодування проміжків кодами Ріда-Соломона та зберігання частин даних на різних вузлах".to_owned())),
         // tell about replication to remote nodes and local SSDs and erasure coding. Tell how exactly data will be restored and deleted. Explain that failure domain becomes larger when far memory is used.
         // tell about healthchecks.
