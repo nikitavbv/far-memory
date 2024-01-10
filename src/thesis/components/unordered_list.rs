@@ -51,11 +51,11 @@ impl UnorderedListComponent for Docx {
 
             document = document.add_paragraph(
                 Paragraph::new()
-                    .add_tab(Tab::new().pos(710))
+                    .add_tab(Tab::new().pos(1450))
                     .line_spacing(LineSpacing::new().line(24 * 15))
                     .align(AlignmentType::Both)
                     .numbering(NumberingId::new(numbering_id), IndentLevel::new(0))
-                    .add_run(Run::new().add_text(text))
+                    .add_run(Run::new().add_tab().add_text(text))
             );
         }
 

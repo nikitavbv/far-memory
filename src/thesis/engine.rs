@@ -669,18 +669,19 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
                             0,
                             Start::new(1),
                             NumberFormat::new("decimal"),
-                            LevelText::new("%1. "),
+                            LevelText::new("%1) "),
                             LevelJc::new("start")
-                        ).indent(None, Some(SpecialIndentType::Hanging(300)), None, None)
+                        ).indent(None, Some(SpecialIndentType::FirstLine(725)), None, None)
                     )
                 )
                 .add_numbering(Numbering::new(numbering, numbering));
 
             references.into_iter().fold(document, |document, reference| document.add_paragraph(Paragraph::new()
+                .add_tab(Tab::new().pos(1450))
                 .line_spacing(LineSpacing::new().line(24 * 15))
                 .numbering(NumberingId::new(numbering), IndentLevel::new(0))
                 .align(AlignmentType::Both)
-                .add_run(Run::new().add_text(reference))))
+                .add_run(Run::new().add_tab().add_text(reference))))
         },
         Block::TableOfContents => document.add_table_of_contents(TableOfContents::new()
             .heading_styles_range(1, 3)

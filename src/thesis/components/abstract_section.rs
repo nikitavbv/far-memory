@@ -247,8 +247,9 @@ impl TasksComponent for Docx {
             let task = tasks.get(i).unwrap();
 
             document = document.add_paragraph_with_abstract_style_component(Paragraph::new()
+                .add_tab(Tab::new().pos(1450))
                 .numbering(NumberingId::new(tasks_numbering), IndentLevel::new(0))
-                .add_text_component(task.for_language(language))
+                .add_run(Run::new().add_tab().add_text(task.for_language(language)))
                 .add_text_component(if i == tasks.len() - 1 { "." } else { ";" })
             );
         }
@@ -282,8 +283,9 @@ impl PublicationsComponent for Docx {
         publications.into_iter()
             .fold(document, |document, publication|
                 document.add_paragraph_with_abstract_style_component(Paragraph::new()
+                    .add_tab(Tab::new().pos(1450))
                     .numbering(NumberingId::new(numbering), IndentLevel::new(0))
-                    .add_text_component(publication.for_language(language))
+                    .add_run(Run::new().add_tab().add_text(publication.for_language(language)))
                 )
             )
     }
