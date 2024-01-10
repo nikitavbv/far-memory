@@ -87,7 +87,9 @@ pub fn far_memory_in_warehouse_scale() -> Block {
 різними датацентрами та різним програмним забезпеченням. Дані збираються за допомогою існуючої інфраструктури збору телеметрії. Для оптимізації використовується алгоритм \
 машинного навчання ".into(),
             reference("Gaussian Process (GP) Bandit", Reference::for_website("Gaussian Process (GP) Bandits", "https://acsweb.ucsd.edu/~shshekha/GPBandits.html")),
-            ", який є оптимізацією чорного ящику (black-box optimization). У роботі зазначається, що це підвищує ефективність системи \
+            ", який є оптимізацією чорного ящику (".into(),
+            reference("black-box optimization", Reference::for_book("Andrew R. Conn, Katya Scheinberg, Luis N. Vicente", "Introduction to Derivative-Free Optimization", "University City", 2009, 289)),
+            "). У роботі зазначається, що це підвищує ефективність системи \
 на 30% у порівнянні з евристичними підходами. Алгоритм генерує декілька можливих конфігурацій параметрів системи, які оцінюються за допомогою симуляції роботи за статистикою, \
 що була зібрана протягом тижня. Найкраща конфігурація (за показником звільненої памʼяті) передається для використання на всьому кластері.".into()
         ]),
