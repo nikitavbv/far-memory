@@ -99,6 +99,7 @@ modifying existing methods of providing far memory is relevant.",
 
         self
             .add_paragraph(Paragraph::new()
+                .line_spacing(LineSpacing::new().line(360))
                 .align(AlignmentType::Center)
                 .page_break_before(true)
                 .add_run(Run::new()
