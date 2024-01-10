@@ -685,7 +685,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
         },
         Block::TableOfContents => document.add_table_of_contents(TableOfContents::new()
             .heading_styles_range(1, 3)
-            .tab_leader_type(Some(TabLeaderType::None))
+            .tab_leader_type(Some(TabLeaderType::Dot))
             .auto()
         ),
         Block::AbstractSection(language, abstract_content) => document.add_abstract_section(context, content, &abstract_content, &language),
