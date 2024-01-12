@@ -119,7 +119,7 @@ impl DemoDataFramePipeline {
             .filter(|v| query.airline_code.is_none() || query.airline_code.unwrap() == v.dot_id_operating_airline)
             .filter(|v| query.origin_airport_id.is_none() || query.origin_airport_id.unwrap() == v.origin_airport_id)
             .filter(|v| v.arr_delay.is_some())
-            .take(100_000)
+            .take(200_000)
             .fold((0.0, 0), |acc, v| (acc.0 + v.arr_delay.unwrap(), acc.1 + 1));
 
         if total_objects == 0 {
