@@ -445,7 +445,7 @@ impl FarMemoryClient {
                 }
 
                 let span_id = loop {
-                    if let Some(span_id) = span!(Level::DEBUG, "replacement iterator -> next").in_scope(|| spans_for_eviction.next()) {
+                    if let Some(span_id) = spans_for_eviction.next() {
                         break span_id;
                     } else {
                         spans_for_eviction = span!(Level::DEBUG, "querying replacement policy").in_scope(|| self.replacement_policy.pick_for_eviction(&possible_swap_out_spans));
