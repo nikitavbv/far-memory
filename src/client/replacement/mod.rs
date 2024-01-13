@@ -1,8 +1,7 @@
-use itertools::Itertools;
-
 use {
     std::{sync::{atomic::{AtomicU64, Ordering}, RwLock}, collections::{HashMap, HashSet}, path::Path, fs},
     rand::seq::SliceRandom,
+    itertools::Itertools,
     super::SpanId,
 };
 
@@ -97,16 +96,19 @@ impl PreferRemoteSpansReplacementPolicy {
 
 impl ReplacementPolicy for PreferRemoteSpansReplacementPolicy {
     fn pick_for_eviction(&self, spans: &[SpanId]) -> Box<dyn Iterator<Item = SpanId>> {
+        let inner_result: Vec<_> = self.inner.pick_for_eviction(spans).collect();
+
         let remote_spans: Vec<_> = {
             let remote_spans = self.remote_spans.try_read().unwrap();
-            spans.iter().filter(|s| remote_spans.contains(s)).cloned().collect()
+            inner_result.iter().filter(|s| remote_spans.contains(s)).cloned().collect()
         };
 
-        if !remote_spans.is_empty() {
-            self.inner.pick_for_eviction(&remote_spans)
-        } else {
-            self.inner.pick_for_eviction(spans)
-        }
+        let local_spans: Vec<_> = {
+            let remote_spans = self.remote_spans.try_read().unwrap();
+            inner_result.iter().filter(|s| !remote_spans.contains(s)).cloned().collect()
+        };
+
+        Box::new(remote_spans.into_iter().chain(local_spans.into_iter()))
     }
 
     fn on_span_access(&self, span_id: &SpanId) {
