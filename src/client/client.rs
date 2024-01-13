@@ -462,7 +462,7 @@ impl FarMemoryClient {
                         SpanState::Free => {
                             let span_local_memory_size = span.local_memory_usage();
                             if span_local_memory_size == 0 {
-                                debug!("skipping span that does not have local memory");
+                                // debug!("skipping span that does not have local memory");
                                 continue;
                             }
 
