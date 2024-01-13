@@ -468,7 +468,7 @@ impl FarMemoryClient {
                         SpanState::Free => {
                             let span_local_memory_size = span.local_memory_usage();
                             if span_local_memory_size == 0 {
-                                // debug!("skipping span that does not have local memory");
+                                debug!(span_id=span_id.id(), "skipping span that does not have local memory");
                                 continue;
                             }
 
@@ -481,12 +481,12 @@ impl FarMemoryClient {
                         },
                         SpanState::InUse(_) => {
                             // cannot swap out span that is in use
-                            debug!("skipping span that is in use");
+                            debug!(span_id=span_id.id(), "skipping span that is in use");
                             continue;
                         },
                         SpanState::Swapping => {
                             // cannot swap out span that is already being swapped out or is in progress of being swapped in
-                            debug!("skipping span that is in process of swapping");
+                            debug!(span_id=span_id.id(), "skipping span that is in process of swapping");
                             continue;
                         },
                     }
