@@ -439,7 +439,7 @@ impl FarMemoryClient {
 
         let mut spans_for_eviction = span!(Level::DEBUG, "querying replacement policy").in_scope(|| self.replacement_policy.pick_for_eviction(&possible_swap_out_spans));
 
-        span!(Level::DEBUG, "picking spans for eviction").in_scope(|| {
+        span!(Level::DEBUG, "picking spans for eviction", total_spans=possible_swap_out_spans.len()).in_scope(|| {
             'spans_picking: loop {
                 if total_memory >= memory_to_swap_out {
                     break;
