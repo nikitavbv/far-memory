@@ -1,5 +1,5 @@
 use {
-    std::{net::TcpListener, io::{Read, Write}, fs},
+    std::{net::TcpListener, io::{Read, Write}, fs, path::Path},
     tracing::{info, error},
     crate::client::RnnReplacementPolicy,
     self::protocol::{ManagerNodeRequest, ManagerNodeResponse, ReplacementPolicyParams},
@@ -127,6 +127,12 @@ impl Server {
             ManagerNodeRequest::FinishSession => {
                 if !self.auth {
                     return ManagerNodeResponse::Forbidden;
+                }
+
+                let stats_file_path = Path::new(SPAN_ACCESS_STATS_FILE);
+                let stats_dir = stats_file_path.parent().unwrap();
+                if !stats_dir.exists() {
+                    fs::create_dir_all(stats_dir).unwrap();
                 }
 
                 fs::write(SPAN_ACCESS_STATS_FILE, serde_json::to_vec(&self.span_access_stats).unwrap()).unwrap();
