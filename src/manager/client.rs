@@ -20,11 +20,13 @@ struct SpanAccessStatsEntry {
 // this client tends to have both high-level logic and communication layer. It probably needs to be split into two separate components. The client itself and manager logic.
 impl Client {
     pub fn new(addr: &str) -> Self {
-        let mut stream = TcpStream::connect(addr);
+        let timeout = Duration::from_secs(10);
+        let addr = addr.parse().unwrap();
+        let mut stream = TcpStream::connect_timeout(&addr, timeout);
         while !stream.is_ok() {
             eprintln!("connection to manager node failed: {:?}", stream.err().unwrap());
             thread::sleep(Duration::from_secs(1));
-            stream = TcpStream::connect(addr);
+            stream = TcpStream::connect_timeout(&addr, timeout);
         }
         let stream = Arc::new(Mutex::new(stream.unwrap()));
 
