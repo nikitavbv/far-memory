@@ -91,6 +91,31 @@ mod tests {
 
     #[test]
     fn simple() {
-        // TODO: add test for pick based on history
+        let events = vec![
+            SpanAccessEvent {
+                time_step: 0,
+                span_id: 2,
+            },
+            SpanAccessEvent {
+                time_step: 1,
+                span_id: 0,
+            },
+            SpanAccessEvent {
+                time_step: 2,
+                span_id: 1,
+            }
+        ];
+
+        let spans = vec![
+            SpanId::from_id(0),
+            SpanId::from_id(1),
+            SpanId::from_id(2),
+        ];
+
+        let mut spans_to_swap_out = pick_based_on_history(&spans, &events);
+        assert_eq!(Some(SpanId::from_id(2)), spans_to_swap_out.next());
+        assert_eq!(Some(SpanId::from_id(0)), spans_to_swap_out.next());
+        assert_eq!(Some(SpanId::from_id(1)), spans_to_swap_out.next());
+        assert_eq!(None, spans_to_swap_out.next());
     }
 }

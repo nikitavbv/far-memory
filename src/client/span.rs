@@ -6,7 +6,7 @@ use {
     super::backend::SwapOutOperationData,
 };
 
-#[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug)]
 pub struct SpanId(u64);
 
 // not sure if there is a cheap way to avoid this
