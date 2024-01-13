@@ -19,6 +19,7 @@ impl Client {
         }
         let stream = stream.unwrap();
         stream.set_nodelay(true).unwrap();
+        stream.set_read_timeout(Some(Duration::from_secs(10))).unwrap();
 
         Self {
             stream,
