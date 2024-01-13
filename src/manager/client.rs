@@ -28,7 +28,9 @@ impl Client {
             thread::sleep(Duration::from_secs(1));
             stream = TcpStream::connect_timeout(&addr, timeout);
         }
-        let stream = Arc::new(Mutex::new(stream.unwrap()));
+        let stream = stream.unwrap();
+        stream.set_read_timeout(Some(Duration::from_secs(10))).unwrap();
+        let stream = Arc::new(Mutex::new(stream));
 
         let is_running = Arc::new(AtomicBool::new(true));
         let span_access_stats = Arc::new(Mutex::new(Vec::new()));
