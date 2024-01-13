@@ -1,5 +1,6 @@
 use {
     std::sync::{atomic::{AtomicU64, Ordering}, RwLock},
+    itertools::Itertools,
     crate::{
         manager::{ManagerClient, SpanAccessEvent, ReplacementPolicyType},
         client::SpanId,
@@ -34,24 +35,7 @@ impl ReplacementPolicy for RemoteReplayReplacementPolicy {
         {
             let span_access_events = self.span_access_events.read().unwrap();
             if !span_access_events.is_empty() {
-                // pick based on history
-                let mut span_pos = vec![usize::MAX; spans.len()];
-                for i in 0..spans.len() {
-                    for k in 0..span_access_events.len() {
-                        if span_access_events[k].span_id == spans[i].id() {
-                            span_pos[i] = k;
-                            break;
-                        }
-                    }
-                }
-
-                let max_pos = span_pos.iter()
-                    .enumerate()
-                    .max_by(|(_, a), (_, b)| a.cmp(b))
-                    .map(|(index, _)| index)
-                    .unwrap();
-
-                return Box::new(vec![spans[max_pos].clone()].into_iter()); // TODO: return full iterator
+                return pick_based_on_history(spans, &span_access_events);
             }
         }
         self.fallback.pick_for_eviction(spans)
@@ -80,5 +64,33 @@ impl ReplacementPolicy for RemoteReplayReplacementPolicy {
     fn on_stop(&self) {
         // TODO: flush state
         self.fallback.on_stop()
+    }
+}
+
+fn pick_based_on_history(spans: &[SpanId], events: &[SpanAccessEvent]) -> Box<dyn Iterator<Item = SpanId>> {
+    let mut span_pos = vec![usize::MAX; spans.len()];
+    for i in 0..spans.len() {
+        for k in 0..events.len() {
+            if events[k].span_id == spans[i].id() {
+                span_pos[i] = k;
+                break;
+            }
+        }
+    }
+
+    let spans = spans.to_vec();
+    return Box::new(span_pos.into_iter()
+        .enumerate()
+        .sorted_by_key(|(_index, value)| *value)
+        .map(move |(index, _value)| spans[index].clone()));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn simple() {
+        // TODO: add test for pick based on history
     }
 }
