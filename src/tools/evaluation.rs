@@ -71,7 +71,7 @@ impl DemoApplicationType {
         match self {
             Self::LlmInference => "llm_inference",
             Self::WebService => "web_service_v2",
-            Self::Dataframe => "dataframe_v2_1m",
+            Self::Dataframe => "dataframe_v2_10k",
         }.to_owned()
     }
 }
