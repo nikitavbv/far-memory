@@ -37,9 +37,6 @@ impl <T: Serialize> FarMemorySerialized<T> {
 
 impl <T: DeserializeOwned> FarMemorySerialized<T> {
     pub fn to_local(&self) -> T {
-        let span = span!(Level::INFO, "serialized object to local");
-        let _span = span.enter();
-
         let location = self.client.get_object(&self.object);
         let bytes = unsafe {
             let ptr = self.client.span_ptr(&location.span_id).add(location.offset);
