@@ -113,14 +113,37 @@ impl DemoDataFramePipeline {
 
     /* get average delay based on arr_delay */
     pub fn get_average_delay_with_criteria(&self, query: FlightsQuery) -> Option<f32> {
-        let (total_delay, total_objects) = self.dataframe
-            .iter()
-            .filter(|v| query.after_date.is_none() || query.after_date.unwrap() > v.flight_date)
-            .filter(|v| query.airline_code.is_none() || query.airline_code.unwrap() == v.dot_id_operating_airline)
-            .filter(|v| query.origin_airport_id.is_none() || query.origin_airport_id.unwrap() == v.origin_airport_id)
-            .filter(|v| v.arr_delay.is_some())
-            .take(10_000)
-            .fold((0.0, 0), |acc, v| (acc.0 + v.arr_delay.unwrap(), acc.1 + 1));
+        let mut dataframe_iter = span!(Level::DEBUG, "creating dataframe iterator").in_scope(|| self.dataframe.iter());
+
+        let mut total_delay = 0.0;
+        let mut total_objects = 0;
+        span!(Level::DEBUG, "iterating").in_scope(|| {
+            while let Some(v) = dataframe_iter.next() {
+                if !(query.after_date.is_none() || query.after_date.unwrap() > v.flight_date) {
+                    continue;
+                }
+
+                if !(query.airline_code.is_none() || query.airline_code.unwrap() == v.dot_id_operating_airline) {
+                    continue;
+                }
+
+                if !(query.origin_airport_id.is_none() || query.origin_airport_id.unwrap() == v.origin_airport_id) {
+                    continue;
+                }
+
+                if !v.arr_delay.is_some() {
+                    continue;
+                }
+
+                if total_objects >= 1000 {
+                    break;
+                }
+
+                total_objects += 1;
+                total_delay += v.arr_delay.unwrap();
+            }
+        });
+        span!(Level::DEBUG, "iterator drop").in_scope(|| std::mem::drop(dataframe_iter));
 
         if total_objects == 0 {
             None
