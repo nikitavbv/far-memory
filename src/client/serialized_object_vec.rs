@@ -60,23 +60,22 @@ impl<'a, T: DeserializeOwned> Iterator for FarMemorySerializedObjectVecIterator<
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let span = span!(Level::DEBUG, "serialized object iterator - next");
-        let _span = span.enter();
-
         let group_objects_by_span = span!(Level::DEBUG, "group objects by span");
         let group_objects_by_span_guard = group_objects_by_span.enter();
         if let Some(object) = self.objects.next() {
             // we have objects that are not sorted yet
             if object.is_local() {
-                return Some(object.to_local());
+                return Some(span!(Level::DEBUG, "returning object that is already local").in_scope(|| object.to_local()));
             }
 
             // save remote object to remote objects by span
-            let span_id = object.span().id();
-            if !self.remote_objects_by_span.contains_key(&span_id) {
-                self.remote_objects_by_span.insert(span_id, vec![]);
-            }
-            self.remote_objects_by_span.get_mut(&span_id).unwrap().push(object);
+            span!(Level::DEBUG, "map remote object to span").in_scope(|| {
+                let span_id = object.span().id();
+                if !self.remote_objects_by_span.contains_key(&span_id) {
+                    self.remote_objects_by_span.insert(span_id, vec![]);
+                }
+                self.remote_objects_by_span.get_mut(&span_id).unwrap().push(object);
+            });
         }
         drop(group_objects_by_span_guard);
 
