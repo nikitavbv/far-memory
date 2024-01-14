@@ -7,3 +7,4 @@ config.toml
 /trace.json
 /trace-*.json
 config
+flamegraph.svg
