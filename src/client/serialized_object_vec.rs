@@ -2,7 +2,6 @@ use {
     std::collections::HashMap,
     serde::{Serialize, de::DeserializeOwned},
     tracing::{span, Level},
-    rand::Rng,
     super::{
         serialized_object::FarMemorySerialized,
         client::FarMemoryClient,
@@ -39,17 +38,17 @@ impl<T: DeserializeOwned> FarMemorySerializedObjectVec<T> {
     }
 
     pub fn iter(&self) -> FarMemorySerializedObjectVecIterator<T> {
-        FarMemorySerializedObjectVecIterator::new(span!(Level::DEBUG, "cloning objects for iterator").in_scope(|| self.objects.clone()))
+        FarMemorySerializedObjectVecIterator::new(self.objects.iter())
     }
 }
 
-pub struct FarMemorySerializedObjectVecIterator<T> {
-    objects: Vec<FarMemorySerialized<T>>,
-    remote_objects_by_span: HashMap<u64, Vec<FarMemorySerialized<T>>>,
+pub struct FarMemorySerializedObjectVecIterator<'a, T> {
+    objects: std::slice::Iter<'a, FarMemorySerialized<T>>,
+    remote_objects_by_span: HashMap<u64, Vec<&'a FarMemorySerialized<T>>>,
 }
 
-impl<T> FarMemorySerializedObjectVecIterator<T> {
-    pub fn new(objects: Vec<FarMemorySerialized<T>>) -> Self {
+impl<'a, T> FarMemorySerializedObjectVecIterator<'a, T> {
+    pub fn new(objects: std::slice::Iter<'a, FarMemorySerialized<T>>) -> Self {
         Self {
             objects,
             remote_objects_by_span: HashMap::new(),
@@ -57,14 +56,14 @@ impl<T> FarMemorySerializedObjectVecIterator<T> {
     }
 }
 
-impl<T: DeserializeOwned> Iterator for FarMemorySerializedObjectVecIterator<T> {
+impl<'a, T: DeserializeOwned> Iterator for FarMemorySerializedObjectVecIterator<'a, T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
         let span = span!(Level::DEBUG, "serialized object iterator - next");
         let _span = span.enter();
 
-        if let Some(object) = self.objects.pop() {
+        if let Some(object) = self.objects.next() {
             // we have objects that are not sorted yet
             if object.is_local() {
                 return Some(object.to_local());
