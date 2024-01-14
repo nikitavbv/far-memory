@@ -39,7 +39,7 @@ impl<T: DeserializeOwned> FarMemorySerializedObjectVec<T> {
     }
 
     pub fn iter(&self) -> FarMemorySerializedObjectVecIterator<T> {
-        FarMemorySerializedObjectVecIterator::new(self.objects.clone())
+        FarMemorySerializedObjectVecIterator::new(span!(Level::DEBUG, "cloning objects for iterator").in_scope(|| self.objects.clone()))
     }
 }
 
