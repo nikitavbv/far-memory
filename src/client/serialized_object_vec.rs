@@ -63,6 +63,8 @@ impl<'a, T: DeserializeOwned> Iterator for FarMemorySerializedObjectVecIterator<
         let span = span!(Level::DEBUG, "serialized object iterator - next");
         let _span = span.enter();
 
+        let group_objects_by_span = span!(Level::DEBUG, "group objects by span");
+        let group_objects_by_span_guard = group_objects_by_span.enter();
         if let Some(object) = self.objects.next() {
             // we have objects that are not sorted yet
             if object.is_local() {
@@ -76,8 +78,11 @@ impl<'a, T: DeserializeOwned> Iterator for FarMemorySerializedObjectVecIterator<
             }
             self.remote_objects_by_span.get_mut(&span_id).unwrap().push(object);
         }
+        drop(group_objects_by_span_guard);
 
         // go over remote objects by span and check if any of those is local yet
+        let iterate_local_span = span!(Level::DEBUG, "iterate local");
+        let iterate_local_span_guard = iterate_local_span.enter();
         let spans = self.remote_objects_by_span.keys().cloned().collect::<Vec<_>>();
         for span in spans {
             if self.remote_objects_by_span.get(&span).unwrap().is_empty() {
@@ -91,8 +96,11 @@ impl<'a, T: DeserializeOwned> Iterator for FarMemorySerializedObjectVecIterator<
                 return Some(objects_in_span.pop().unwrap().to_local());
             }
         }
+        drop(iterate_local_span_guard);
 
         // time to swap something in
+        let iterate_swap_in = span!(Level::DEBUG, "iterate swap in");
+        let iterate_swap_in_guard = iterate_swap_in.enter();
         while !self.remote_objects_by_span.is_empty() {
             let span = *self.remote_objects_by_span.keys().next().unwrap();
             let objects_in_span = self.remote_objects_by_span.get_mut(&span).unwrap();
@@ -104,6 +112,7 @@ impl<'a, T: DeserializeOwned> Iterator for FarMemorySerializedObjectVecIterator<
             // swap in happens here
             return Some(objects_in_span.pop().unwrap().to_local());
         }
+        drop(iterate_swap_in_guard);
 
         // no objects left
         None
