@@ -25,7 +25,7 @@ impl ImageComponent for Docx {
         let text = if paper_style {
             format!("Fig. {}. {}", image_index, description)
         } else {
-            format!("Рисунок {}.{} – {}.", section_index, image_index, description)
+            format!("Рисунок {}.{} – {}", section_index, image_index, description)
         };
 
         self.add_paragraph(

@@ -800,7 +800,7 @@ fn render_block_to_docx_with_params(document: Docx, context: &mut Context, conte
                 };
 
                 let table_title_text = if table_first_part {
-                    format!("Таблиця {}.{} - {}.", section_index, table_index, table.description)
+                    format!("Таблиця {}.{} - {}", section_index, table_index, table.description)
                 } else {
                     format!("Продовження таблиці {}.{}", section_index, table_index)
                 };
