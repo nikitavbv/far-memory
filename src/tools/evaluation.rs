@@ -71,7 +71,7 @@ impl DemoApplicationType {
         match self {
             Self::LlmInference => "llm_inference",
             Self::WebService => "web_service_v2",
-            Self::Dataframe => "dataframe_v2_100",
+            Self::Dataframe => "dataframe_v3",
         }.to_owned()
     }
 }
@@ -102,7 +102,7 @@ impl SpanReplacementPolicy {
 pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
     info!("running evaluation");
 
-    let granularity: u32 = 10;
+    let granularity: u32 = 20;
 
     let evaluation_data = load_evaluation_data();
 

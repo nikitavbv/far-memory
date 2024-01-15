@@ -135,7 +135,7 @@ impl DemoDataFramePipeline {
                     continue;
                 }
 
-                if total_objects >= 100 {
+                if total_objects >= 10_000 {
                     break;
                 }
 
