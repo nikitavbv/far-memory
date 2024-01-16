@@ -64,7 +64,7 @@ impl FrontPageSection for Docx {
                                 .add_line_component(180000)
                                 .add_text("»")
                                 .add_line_component(1400000)
-                                .add_text("2023р.")))
+                                .add_text("2024р.")))
                         .width(4000, WidthType::Dxa)
                 ])
             ]).set_borders(TableBorders::new().clear_all()))
