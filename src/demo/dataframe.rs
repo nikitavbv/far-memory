@@ -304,7 +304,7 @@ pub fn run_dataframe_demo(metrics: Registry, run_id: String, token: &str, storag
     loop {
         let now = Instant::now();
         let time_since_start = (now - started_at).as_secs();
-        if time_since_start > 30 * 60 {
+        if time_since_start > 60 * 60 {
             break;
         }
 
