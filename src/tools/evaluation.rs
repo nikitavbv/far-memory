@@ -162,7 +162,7 @@ pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
         .filter(|exp| !evaluation_data.values.contains_key(&exp.get_key()) || evaluation_data.values.get(&exp.get_key()).unwrap().len() < exp.total_runs as usize)
         .collect();
 
-    info!("experiments remaining to run: {}", experiments.len());
+    info!("experiments remaining to run: {}", experiments.iter().map(|v| v.total_runs as usize - evaluation_data.values.get(&v.get_key()).map(|values| values.len()).unwrap_or(0)).sum::<usize>());
     if experiments.is_empty() {
         info!("no experiments left to run");
         return;
