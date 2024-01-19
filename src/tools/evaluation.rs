@@ -16,12 +16,12 @@ use {
 
 #[derive(Serialize, Deserialize)]
 pub struct EvaluationData {
-    values: HashMap<String, f32>,
+    values: HashMap<String, Vec<f32>>,
 }
 
 impl EvaluationData {
-    pub fn get_experiment_result(&self, experiment: &Experiment) -> Option<f32> {
-        self.values.get(&experiment.get_key()).cloned()
+    pub fn get_experiment_result(&self, experiment: &Experiment) -> Vec<f32> {
+        self.values.get(&experiment.get_key()).cloned().unwrap_or(Vec::new())
     }
 }
 
@@ -31,6 +31,7 @@ pub struct Experiment {
     pub application: DemoApplicationType,
     pub zipf_s: Option<u32>, // 0..100
     pub span_replacement_policy: Option<SpanReplacementPolicy>,
+    pub total_runs: u32,
 }
 
 impl Experiment {
@@ -51,7 +52,7 @@ impl Experiment {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum DemoApplicationType {
     LlmInference,
     WebService,
@@ -71,7 +72,7 @@ impl DemoApplicationType {
         match self {
             Self::LlmInference => "llm_inference",
             Self::WebService => "web_service_v2",
-            Self::Dataframe => "dataframe_v3_1hr",
+            Self::Dataframe => "dataframe_v3",
         }.to_owned()
     }
 }
@@ -116,6 +117,11 @@ pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
                 application: application.clone(),
                 zipf_s: None,
                 span_replacement_policy: None,
+                total_runs: if application == DemoApplicationType::Dataframe {
+                    3
+                } else {
+                    1
+                },
             });
         }
     }
@@ -127,6 +133,7 @@ pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
             application: DemoApplicationType::WebService,
             zipf_s: Some(zipf_s),
             span_replacement_policy: None,
+            total_runs: 1,
         })
     }
 
@@ -145,13 +152,14 @@ pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
                 application: DemoApplicationType::LlmInference,
                 zipf_s: None,
                 span_replacement_policy: Some(span_replacement_policy.clone()),
+                total_runs: 1,
             });
         }
     }
 
     info!("total {} experiments", experiments.len());
     let experiments: Vec<_> = experiments.into_iter()
-        .filter(|exp| !evaluation_data.values.contains_key(&exp.get_key()))
+        .filter(|exp| !evaluation_data.values.contains_key(&exp.get_key()) || evaluation_data.values.get(&exp.get_key()).unwrap().len() < exp.total_runs as usize)
         .collect();
 
     info!("experiments remaining to run: {}", experiments.len());
@@ -165,7 +173,11 @@ pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
     let result = run_experiment(&experiment, storage_endpoint, manager_endpoint);
     let evaluation_data = {
         let mut evaluation_data = evaluation_data;
-        evaluation_data.values.insert(experiment.get_key(), result);
+        let key = experiment.get_key();
+        if !evaluation_data.values.contains_key(&key) {
+            evaluation_data.values.insert(key.clone(), Vec::new());
+        }
+        evaluation_data.values.get_mut(&key).unwrap().push(result);
         evaluation_data
     };
     save_evaluation_data(evaluation_data);

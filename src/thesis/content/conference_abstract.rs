@@ -334,8 +334,11 @@ fn throughput_replacement_policies(scaling: f32) -> Block {
     fn plot(evaluation_data: &EvaluationData, experiments: &[Experiment]) -> Vec<(f64, u32)> {
         experiments.into_iter()
                 .map(|v| (v.local_memory_percent as f64 / 100.0, evaluation_data.get_experiment_result(&v)))
-                .filter(|(_, result)| result.is_some())
-                .map(|(percent, result)| (percent, result.unwrap() as u32))
+                .filter(|(_, result)| !result.is_empty())
+                .map(|(percent, result)| {
+                    let avg = result.iter().sum::<f32>() / result.len() as f32;
+                    (percent, avg as u32)
+                })
                 .collect::<Vec<_>>()
     }
 
@@ -425,6 +428,7 @@ fn experiments_for_replacement_policy(steps: &[u32], span_replacement_policy: Sp
             application: DemoApplicationType::LlmInference,
             zipf_s: None,
             span_replacement_policy: Some(span_replacement_policy.clone()),
+            total_runs: 1,
         })
         .collect::<Vec<_>>()
 }
@@ -439,14 +443,18 @@ fn throughput_distribution(scaling: f32) -> Block {
             application: DemoApplicationType::WebService,
             zipf_s: Some(zipf_s),
             span_replacement_policy: None,
+            total_runs: 1,
         })
         .collect::<Vec<_>>();
 
     let results = normalize_throughput(&experiments
         .iter()
         .map(|v| (v.zipf_s.unwrap() as f64 / 100.0, evaluation_data.get_experiment_result(&v)))
-        .filter(|(_, result)| result.is_some())
-        .map(|(percent, result)| (percent, result.unwrap() as u32))
+        .filter(|(_, result)| !result.is_empty())
+        .map(|(percent, result)| {
+            let avg = result.iter().sum::<f32>() / result.len() as f32;
+            (percent, avg as u32)
+        })
         .collect::<Vec<_>>());
 
     // graph
@@ -491,6 +499,7 @@ fn demo_throughput(scaling: f32) -> Block {
                 application: DemoApplicationType::LlmInference,
                 zipf_s: None,
                 span_replacement_policy: None,
+                total_runs: 1,
             })
             .collect::<Vec<_>>());
 
@@ -501,6 +510,7 @@ fn demo_throughput(scaling: f32) -> Block {
                 application: DemoApplicationType::WebService,
                 zipf_s: None,
                 span_replacement_policy: None,
+                total_runs: 1,
             })
             .collect::<Vec<_>>());
 
@@ -511,6 +521,7 @@ fn demo_throughput(scaling: f32) -> Block {
                 application: DemoApplicationType::Dataframe,
                 zipf_s: None,
                 span_replacement_policy: None,
+                total_runs: 1,
             })
             .collect::<Vec<_>>());
 
@@ -572,8 +583,11 @@ fn setup_chart_context<'a, 'b>(root_area: &'a DrawingArea<BitMapBackend<'b>, Shi
 fn throughput_plot_for_experiments(evaluation_data: &EvaluationData, experiments: &[Experiment]) -> Vec<(f64, f64)> {
     normalize_throughput(&experiments.into_iter()
             .map(|v| (v.local_memory_percent as f64 / 100.0, evaluation_data.get_experiment_result(&v)))
-            .filter(|(_, result)| result.is_some())
-            .map(|(percent, result)| (percent, result.unwrap() as u32))
+            .filter(|(_, result)| !result.is_empty())
+            .map(|(percent, result)| {
+                let avg = result.iter().sum::<f32>() / result.len() as f32;
+                (percent, avg as u32)
+            })
             .collect::<Vec<_>>())
 }
 
