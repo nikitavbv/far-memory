@@ -26,7 +26,7 @@ resource equinix_metal_device far_memory_app {
 cd /root
 git clone https://github.com/nikitavbv/far-memory
 DEBIAN_FRONTEND=noninteractive apt install -y tmux
-tmux new-session -d "cd /root/far-memory ; ./setup.sh ; bash"
+tmux new-session -d "cd /root/far-memory ; HOME=/root ./setup.sh ; bash"
 EOS
 }
 
@@ -42,6 +42,6 @@ resource equinix_metal_device far_memory_storage {
 cd /root
 git clone https://github.com/nikitavbv/far-memory
 DEBIAN_FRONTEND=noninteractive apt install -y tmux
-tmux new-session -d "cd /root/far-memory ; ./setup.sh ; bash"
+tmux new-session -d "cd /root/far-memory ; HOME=/root ./setup.sh ; bash"
 EOS
 }
