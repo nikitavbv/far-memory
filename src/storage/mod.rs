@@ -14,7 +14,7 @@ pub use self::{
 };
 
 const REQ_SIZE_LIMIT: u64 = 10 * 1024 * 1024 * 1024;
-pub const BUFFER_SIZE: u32 = 32 * 1024 * 1024;
+pub const BUFFER_SIZE: u32 = 16 * 1024 * 1024;
 
 mod client;
 mod protocol;
