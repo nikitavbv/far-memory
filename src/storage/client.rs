@@ -114,9 +114,10 @@ impl Client {
     async fn request(&mut self, request: StorageRequestBody) -> StorageResponse {
         let request_id = self.next_request_id();
 
-        span!(Level::DEBUG, "writing request", request_id).in_scope(|| {
-            self.write_request(StorageRequest { body: request, request_id });
-        });
+        let writing_request_span = span!(Level::DEBUG, "writing request", request_id);
+        let writing_request_guard = writing_request_span.enter();
+        self.write_request(StorageRequest { body: request, request_id }).await;
+        drop(writing_request_guard);
 
         let reading_response_span = span!(Level::DEBUG, "reading response");
         let _reading_response_guard = reading_response_span.enter();
