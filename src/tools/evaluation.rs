@@ -36,7 +36,7 @@ pub struct Experiment {
 
 impl Experiment {
     pub fn get_key(&self) -> String {
-        let mut res = format!("v2_local_{}_application_{}", self.local_memory_percent, self.application.get_key());
+        let mut res = format!("v3_local_{}_application_{}", self.local_memory_percent, self.application.get_key());
 
         if let Some(zipf_s) = self.zipf_s {
             res = format!("{}_zipf_{}", res, zipf_s);
