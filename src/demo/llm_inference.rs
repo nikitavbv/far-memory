@@ -569,7 +569,6 @@ pub fn run_llm_inference_demo(
     metrics: Registry,
     run_id: String,
     token: &str,
-    storage_endpoints: Vec<String>,
     manager_endpoint: Option<String>,
     time_limit: u64,
     optimize: bool,
@@ -587,7 +586,7 @@ pub fn run_llm_inference_demo(
         loop {
             info!("trying {}MB as local memory treshold", memory_threshold / (1024 * 1024));
 
-            let total_tokens = run_inference(metrics.clone(), run_id.clone(), token, storage_endpoints.clone(), manager_endpoint.clone(), time_limit, memory_threshold, None);
+            let total_tokens = run_inference(metrics.clone(), run_id.clone(), token, manager_endpoint.clone(), time_limit, memory_threshold, None);
             if (15.0 * 60.0 / total_tokens as f32) < slo {
                 break;
             }
@@ -598,7 +597,7 @@ pub fn run_llm_inference_demo(
         info!("lowest local memory threshold which maintains SLO is {}MB", memory_threshold / (1024 * 1024));
         0.0
     } else {
-        run_inference(metrics, run_id.clone(), token, storage_endpoints, manager_endpoint, time_limit, memory_limit.unwrap_or(25600 * 1024 * 1024), replacement_policy) as f32
+        run_inference(metrics, run_id.clone(), token, manager_endpoint, time_limit, memory_limit.unwrap_or(25600 * 1024 * 1024), replacement_policy) as f32
     }
 }
 
@@ -606,7 +605,6 @@ fn run_inference(
     metrics: Registry,
     run_id: String,
     token: &str,
-    storage_endpoints: Vec<String>,
     manager_endpoint: Option<String>,
     time_limit: u64,
     local_max_memory: u64,
@@ -617,6 +615,9 @@ fn run_inference(
         client.auth(token);
         client
     });
+
+    let manager_configuration = manager_client.as_ref().map(|manager| manager.get_configuration());
+    let storage_endpoints = manager_configuration.map(|v| v.storage_endpoints).unwrap_or(Vec::new());
 
     let backend: Box<dyn FarMemoryBackend> = if !storage_endpoints.is_empty() {
         if storage_endpoints.len() == 1 {

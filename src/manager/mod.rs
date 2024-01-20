@@ -2,7 +2,7 @@ use {
     std::{net::TcpListener, io::{Read, Write}, fs, path::Path},
     tracing::{info, error},
     crate::client::RnnReplacementPolicy,
-    self::protocol::{ManagerNodeRequest, ManagerNodeResponse, ReplacementPolicyParams},
+    self::protocol::{ManagerNodeRequest, ManagerNodeResponse, ReplacementPolicyParams, FarMemoryConfiguration},
 };
 
 pub use self::{client::Client as ManagerClient, protocol::{SpanAccessEvent, ReplacementPolicyType, RNNWeights}};
@@ -13,7 +13,7 @@ mod protocol;
 const REQ_SIZE_LIMIT: u64 = 10 * 1024 * 1024 * 1024;
 const SPAN_ACCESS_STATS_FILE: &str = "./data/span_access_stats.json";
 
-pub fn run_manager_node(token: String) {
+pub fn run_manager_node(token: String, storage_endpoints: Vec<String>) {
     let port = 14000;
     info!("running manager node on port {}", port);
 
@@ -23,7 +23,7 @@ pub fn run_manager_node(token: String) {
     for stream in listener.incoming() {
         let mut stream = stream.unwrap();
 
-        let mut server = Server::new(token.clone());
+        let mut server = Server::new(token.clone(), storage_endpoints.clone());
 
         info!("handling incoming connection");
         loop {
@@ -72,15 +72,23 @@ struct Server {
     auth: bool,
     token: String,
 
+    // configuration
+    storage_endpoints: Vec<String>,
+
+    // collected stats
     span_access_stats: Vec<SpanAccessEvent>,
 }
 
 impl Server {
-    pub fn new(token: String) -> Self {
+    pub fn new(token: String, storage_endpoints: Vec<String>) -> Self {
         Self {
             auth: false,
             token,
 
+            // configuration
+            storage_endpoints,
+
+            // collected stats
             span_access_stats: Vec::new(),
         }
     }
@@ -95,6 +103,9 @@ impl Server {
                     ManagerNodeResponse::Forbidden
                 }
             },
+            ManagerNodeRequest::GetConfiguration => ManagerNodeResponse::Configuration(FarMemoryConfiguration {
+               storage_endpoints: self.storage_endpoints.clone(),
+            }),
             ManagerNodeRequest::GetReplacementPolicyParams(policy_type) => {
                 if !self.auth {
                     return ManagerNodeResponse::Forbidden;

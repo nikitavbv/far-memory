@@ -216,7 +216,6 @@ fn run_experiment(experiment: &Experiment, storage_endpoint: String, manager_end
             metrics.clone(),
             run_id.clone(),
             &token,
-            storage_endpoints,
             Some(manager_endpoint),
             10 * 60,
             false,

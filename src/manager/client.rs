@@ -1,7 +1,7 @@
 use {
     std::{net::TcpStream, thread, io::{Read, Write}, time::Duration, sync::{Mutex, Arc, atomic::{AtomicBool, Ordering}}},
     crate::client::SpanId,
-    super::protocol::{ManagerNodeRequest, ManagerNodeResponse, SpanAccessEvent, ReplacementPolicyType, ReplacementPolicyParams},
+    super::protocol::{ManagerNodeRequest, ManagerNodeResponse, SpanAccessEvent, ReplacementPolicyType, ReplacementPolicyParams, FarMemoryConfiguration},
 };
 
 #[derive(Clone)]
@@ -53,6 +53,13 @@ impl Client {
         }) {
             ManagerNodeResponse::Ok => (),
             other => panic!("unexpected auth response from manager node: {:?}", other),
+        }
+    }
+
+    pub fn get_configuration(&self) -> FarMemoryConfiguration {
+        match self.request(ManagerNodeRequest::GetConfiguration) {
+            ManagerNodeResponse::Configuration(configuration) => configuration,
+            other => panic!("unexpected get configuration response from manager node: {:?}", other),
         }
     }
 

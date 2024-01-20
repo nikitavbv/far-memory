@@ -5,6 +5,7 @@ pub enum ManagerNodeRequest {
     Auth {
         token: String,
     },
+    GetConfiguration,
     GetReplacementPolicyParams(ReplacementPolicyType),
     SpanAccessStats(Vec<SpanAccessEvent>),
     FinishSession,
@@ -15,6 +16,7 @@ pub enum ManagerNodeResponse {
     Ok,
     Forbidden,
     ReplacementPolicyParams(ReplacementPolicyParams),
+    Configuration(FarMemoryConfiguration),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -39,4 +41,9 @@ pub struct ReplacementPolicyParams {
 pub struct RNNWeights {
     pub total_spans: u64,
     pub weights: Vec<u8>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct FarMemoryConfiguration {
+    pub storage_endpoints: Vec<String>,
 }

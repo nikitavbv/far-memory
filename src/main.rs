@@ -175,7 +175,6 @@ pub fn main() {
                     metrics.clone(),
                     run_id.clone(),
                     &read_token(),
-                    args.storage_endpoint.clone().map(|v| v.split(",").map(|v| v.to_owned()).collect::<Vec<String>>()).unwrap_or(Vec::new()),
                     args.manager_endpoint.clone(),
                     args.time_limit.unwrap_or(10 * 60),
                     args.optimize,
@@ -244,7 +243,10 @@ pub fn main() {
     } else if args.plots {
         generate_plots();
     } else if args.manager {
-        run_manager_node(read_token());
+        run_manager_node(
+            read_token(),
+            args.storage_endpoint.clone().map(|v| v.split(",").map(|v| v.to_owned()).collect::<Vec<String>>()).unwrap_or(Vec::new())
+        );
     } else if args.replacement_policies_demo {
         run_replacement_policies_demo();
     } else if args.thesis || args.card || args.docs || args.practice_report || args.conference_abstract || args.plagiarism_check_docs {
