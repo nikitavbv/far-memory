@@ -1,8 +1,8 @@
 use {
     std::time::Instant,
-    tokio::{net::{TcpStream, TcpListener}, io::{AsyncReadExt, AsyncWriteExt}},
+    tokio::{net::{TcpStream, TcpListener, TcpSocket}, io::{AsyncReadExt, AsyncWriteExt}},
     rand::RngCore,
-    tracing::{info, span, Level},
+    tracing::info,
 };
 
 const DATA_TO_TRANSFER: usize = 200 * 1024 * 1024; // 200MB is typical payload
@@ -29,7 +29,7 @@ async fn run_server() {
     let listener = TcpListener::bind("0.0.0.0:14000").await.unwrap();
     let mut buffer = vec![0u8; DATA_TO_TRANSFER];
 
-    for (mut stream, addr) in listener.accept().await {
+    while let Ok((mut stream, _addr)) = listener.accept().await {
         let started_at = Instant::now();
         stream.read_exact(&mut buffer).await.unwrap();
         info!("server finished reading in {:?}", Instant::now() - started_at);
@@ -44,7 +44,10 @@ async fn run_client(endpoint: String) {
     let mut data = vec![0u8; DATA_TO_TRANSFER];
     rand::thread_rng().fill_bytes(&mut data);
 
-    let mut stream = TcpStream::connect(&endpoint).await.unwrap();
+    let socket = TcpSocket::new_v4().unwrap();
+    info!("send buffer size: {:?}", socket.send_buffer_size());
+
+    let mut stream = socket.connect(endpoint.parse().unwrap()).await.unwrap();
     stream.set_nodelay(true).unwrap();
 
     let started_at = Instant::now();
