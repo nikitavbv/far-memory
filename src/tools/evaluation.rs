@@ -118,7 +118,7 @@ pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
                 zipf_s: None,
                 span_replacement_policy: None,
                 total_runs: if application == DemoApplicationType::Dataframe {
-                    3
+                    10
                 } else {
                     1
                 },
