@@ -44,7 +44,8 @@ async fn run_client(endpoint: String) {
     let mut data = vec![0u8; DATA_TO_TRANSFER];
     rand::thread_rng().fill_bytes(&mut data);
 
-    let socket = TcpSocket::new_v4().unwrap();
+    let mut socket = TcpSocket::new_v4().unwrap();
+    socket.set_send_buffer_size(512 * 1000).unwrap();
     info!("send buffer size: {:?}", socket.send_buffer_size());
 
     let mut stream = socket.connect(endpoint.parse().unwrap()).await.unwrap();
