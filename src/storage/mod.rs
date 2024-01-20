@@ -1,12 +1,10 @@
 use {
-    std::{
-        net::{TcpListener, TcpStream},
-        io::{Write, Read},
-        collections::HashMap,
-    },
+    std::collections::HashMap,
     tracing::{info, error, span, Level},
+    tokio::{net::{TcpSocket, TcpStream}, io::{AsyncReadExt, AsyncWriteExt}},
     prometheus::{Registry, register_int_counter_vec_with_registry, IntCounterVec, IntGaugeVec, register_int_gauge_vec_with_registry},
     thiserror::Error,
+    async_recursion::async_recursion,
     self::protocol::{StorageRequest, StorageRequestBody, StorageResponse},
 };
 
@@ -31,144 +29,153 @@ pub fn run_storage_server(metrics: Registry, token: String, port: Option<u16>) {
 }
 
 fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token: String, connections_limit: Option<usize>, requests_limit: Option<usize>) {
-    let port = port.unwrap_or(14001);
-    let hostname = hostname::get().unwrap().to_str().unwrap().to_owned();
-    let addr = format!("{}:{}", host, port);
-    let listener = TcpListener::bind(&addr).unwrap();
+    let rt = tokio::runtime::Runtime::new().unwrap();
 
-    info!("running storage server on {}", addr);
+    rt.block_on(async {
+        let port = port.unwrap_or(14001);
+        let hostname = hostname::get().unwrap().to_str().unwrap().to_owned();
+        let addr = format!("{}:{}", host, port);
 
-    let metrics = metrics.map(|v| ServerMetrics::new(v));
+        let socket = TcpSocket::new_v4().unwrap();
+        socket.bind(addr.parse().unwrap()).unwrap();
+        socket.set_reuseaddr(true).unwrap();
 
-    let mut connections = 0;
-    for stream in listener.incoming() {
-        let mut stream = stream.unwrap();
-        connections += 1;
+        let listener = socket.listen(1024).unwrap();
 
-        stream.set_nodelay(true).unwrap();
-        let mut server = Server::new(metrics.clone(), format!("{}:{}", hostname, port), token.clone());
+        info!("running storage server on {}", addr);
 
-        info!("handling incoming connection");
-        let mut requests = 0;
-        loop {
-            let _req_loop_span = span!(Level::DEBUG, "request loop iteration").entered();
+        let metrics = metrics.map(|v| ServerMetrics::new(v));
 
-            requests += 1;
-            if let Some(limit) = requests_limit {
-                if requests > limit {
-                    break;
-                }
-            }
+        let mut connections = 0;
+        while let Ok ((mut stream, _add)) = listener.accept().await {
+            connections += 1;
 
-            let req_len = {
-                let _req_len_span = span!(Level::DEBUG, "read request header").entered();
+            stream.set_nodelay(true).unwrap();
+            let mut server = Server::new(metrics.clone(), format!("{}:{}", hostname, port), token.clone());
 
-                let mut req_len: [u8; 8] = [0u8; 8];
-                if let Err(err) = stream.read(&mut req_len) {
-                    error!("unexpected error when reading request header: {:?}", err);
-                    break;
-                }
-                u64::from_be_bytes(req_len)
-            };
+            info!("handling incoming connection");
+            let mut requests = 0;
+            loop {
+                let _req_loop_span = span!(Level::DEBUG, "request loop iteration").entered();
 
-            let req = {
-                let _req_body_span = span!(Level::DEBUG, "read request body").entered();
-
-                if req_len > REQ_SIZE_LIMIT {
-                    error!("request is too large!");
-                    break;
-                }
-
-                let mut req = vec![0u8; req_len as usize];
-                if let Err(err) = stream.read_exact(&mut req) {
-                    error!("unexpected error when reading request body: {:?}", err);
-                    break;
-                }
-
-                req
-            };
-
-            let mut req: StorageRequest = {
-                let _req_deserialize_body = span!(Level::DEBUG, "deserialize request body").entered();
-
-                match bincode::deserialize(&req) {
-                    Ok(v) => v,
-                    Err(err) => {
-                        error!("unexpected error when reading request: {:?}", err);
+                requests += 1;
+                if let Some(limit) = requests_limit {
+                    if requests > limit {
                         break;
                     }
                 }
-            };
 
-            let request_id = req.request_id;
-            req.body = match inline_span_data_into_request(req.body, &mut stream) {
-                Ok(v) => v,
-                Err(err) => {
-                    error!("failed to inline span data into request: {:?}", err);
-                    break;
-                }
-            };
+                let req_len = {
+                    let _req_len_span = span!(Level::DEBUG, "read request header").entered();
 
-            let res = span!(Level::DEBUG, "handle request", request_id).in_scope(|| server.handle(req.body));
-            let (res, span_data) = match res {
-                StorageResponse::SwapIn { span_id, data } => {
-                    let span_data = match data {
-                        SpanData::Inline(data) => vec![data],
-                        SpanData::Concat { data } => data,
-                        _ => panic!("didn't expect data to be external at this point"),
-                    };
+                    let mut req_len: [u8; 8] = [0u8; 8];
+                    if let Err(err) = stream.read(&mut req_len).await {
+                        error!("unexpected error when reading request header: {:?}", err);
+                        break;
+                    }
+                    u64::from_be_bytes(req_len)
+                };
 
-                    (StorageResponse::SwapIn { span_id, data: SpanData::External { len: span_data.iter().map(|v| v.len() as u64).sum() } }, Some(span_data))
-                },
-                StorageResponse::Batch(responses) => {
-                    let mut span_data = None;
+                let req = {
+                    let _req_body_span = span!(Level::DEBUG, "read request body").entered();
 
-                    let mut new_responses = Vec::new();
-                    for response in responses {
-                        let new_response = match response {
-                            StorageResponse::SwapIn { span_id, data } => {
-                                span_data = Some(match data {
-                                    SpanData::Inline(data) => vec![data],
-                                    SpanData::Concat { data } => data,
-                                    _ => panic!("didn't expect data to be external at this point"),
-                                });
-
-                                StorageResponse::SwapIn { span_id, data: SpanData::External { len: span_data.as_ref().map(|data| data.iter().map(|v| v.len() as u64).sum()).unwrap() } }
-                            },
-                            other => other
-                        };
-                        new_responses.push(new_response);
+                    if req_len > REQ_SIZE_LIMIT {
+                        error!("request is too large!");
+                        break;
                     }
 
-                    (StorageResponse::Batch(new_responses), span_data)
-                },
-                other => (other, None),
-            };
+                    let mut req = vec![0u8; req_len as usize];
+                    if let Err(err) = stream.read_exact(&mut req).await {
+                        error!("unexpected error when reading request body: {:?}", err);
+                        break;
+                    }
 
-            let res = span!(Level::DEBUG, "serialize response", request_id).in_scope(|| bincode::serialize(&res).unwrap());
+                    req
+                };
 
-            span!(Level::DEBUG, "write response", request_id).in_scope(|| {
-                stream.write(&(res.len() as u64).to_be_bytes()).unwrap();
-                stream.write(&res).unwrap();
+                let mut req: StorageRequest = {
+                    let _req_deserialize_body = span!(Level::DEBUG, "deserialize request body").entered();
+
+                    match bincode::deserialize(&req) {
+                        Ok(v) => v,
+                        Err(err) => {
+                            error!("unexpected error when reading request: {:?}", err);
+                            break;
+                        }
+                    }
+                };
+
+                let request_id = req.request_id;
+                req.body = match inline_span_data_into_request(req.body, &mut stream).await {
+                    Ok(v) => v,
+                    Err(err) => {
+                        error!("failed to inline span data into request: {:?}", err);
+                        break;
+                    }
+                };
+
+                let res = span!(Level::DEBUG, "handle request", request_id).in_scope(|| server.handle(req.body));
+                let (res, span_data) = match res {
+                    StorageResponse::SwapIn { span_id, data } => {
+                        let span_data = match data {
+                            SpanData::Inline(data) => vec![data],
+                            SpanData::Concat { data } => data,
+                            _ => panic!("didn't expect data to be external at this point"),
+                        };
+
+                        (StorageResponse::SwapIn { span_id, data: SpanData::External { len: span_data.iter().map(|v| v.len() as u64).sum() } }, Some(span_data))
+                    },
+                    StorageResponse::Batch(responses) => {
+                        let mut span_data = None;
+
+                        let mut new_responses = Vec::new();
+                        for response in responses {
+                            let new_response = match response {
+                                StorageResponse::SwapIn { span_id, data } => {
+                                    span_data = Some(match data {
+                                        SpanData::Inline(data) => vec![data],
+                                        SpanData::Concat { data } => data,
+                                        _ => panic!("didn't expect data to be external at this point"),
+                                    });
+
+                                    StorageResponse::SwapIn { span_id, data: SpanData::External { len: span_data.as_ref().map(|data| data.iter().map(|v| v.len() as u64).sum()).unwrap() } }
+                                },
+                                other => other
+                            };
+                            new_responses.push(new_response);
+                        }
+
+                        (StorageResponse::Batch(new_responses), span_data)
+                    },
+                    other => (other, None),
+                };
+
+                let res = span!(Level::DEBUG, "serialize response", request_id).in_scope(|| bincode::serialize(&res).unwrap());
+
+                let scope_write_response = span!(Level::DEBUG, "write response", request_id);
+                let _scope_write_response_guard = scope_write_response.enter();
+
+                stream.write(&(res.len() as u64).to_be_bytes()).await.unwrap();
+                stream.write(&res).await.unwrap();
 
                 if let Some(span_data) = span_data {
                     for chunk in span_data {
-                        stream.write(&chunk).unwrap();
+                        stream.write(&chunk).await.unwrap();
                     }
                 }
-            });
-        }
+            }
 
-        if let Some(metrics) = metrics.as_ref() {
-            metrics.reset();
-        }
+            if let Some(metrics) = metrics.as_ref() {
+                metrics.reset();
+            }
 
-        if let Some(limit) = connections_limit {
-            if connections >= limit {
-                break;
+            if let Some(limit) = connections_limit {
+                if connections >= limit {
+                    break;
+                }
             }
         }
-    }
+    });
 }
 
 pub struct Server {
@@ -334,7 +341,8 @@ impl Server {
     }
 }
 
-fn inline_span_data_into_request(request: StorageRequestBody, stream: &mut TcpStream) -> Result<StorageRequestBody, StorageServerError> {
+#[async_recursion]
+async fn inline_span_data_into_request(request: StorageRequestBody, stream: &mut TcpStream) -> Result<StorageRequestBody, StorageServerError> {
     Ok(match request {
         StorageRequestBody::SwapOut(swap_out_request) => {
             let data = match swap_out_request.data {
@@ -342,7 +350,7 @@ fn inline_span_data_into_request(request: StorageRequestBody, stream: &mut TcpSt
                 SpanData::Concat { data } => SpanData::Inline(data.concat()),
                 SpanData::External { len } => SpanData::Inline({
                     let mut data = vec![0; len as usize];
-                    if let Err(_err) = stream.read_exact(&mut data) {
+                    if let Err(_err) = stream.read_exact(&mut data).await {
                         return Err(StorageServerError::FailedToReadSpanData)
                     }
                     data
@@ -357,7 +365,7 @@ fn inline_span_data_into_request(request: StorageRequestBody, stream: &mut TcpSt
         StorageRequestBody::Batch(reqs) => {
             let mut result = Vec::new();
             for req in reqs {
-                result.push(inline_span_data_into_request(req, stream)?);
+                result.push(inline_span_data_into_request(req, stream).await?);
             }
             StorageRequestBody::Batch(result)
         },
