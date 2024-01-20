@@ -19,8 +19,8 @@ impl NetworkNodeBackend {
 
         let client = runtime.block_on(async {
             let mut client = Client::new(endpoint).await;
-            client.auth(token);
-            client.set_run_id(run_id);
+            client.auth(token).await;
+            client.set_run_id(run_id).await;
 
             client
         });
