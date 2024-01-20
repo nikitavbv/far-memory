@@ -139,7 +139,12 @@ impl Client {
 
         span!(Level::DEBUG, "write header").in_scope(|| self.stream.write(&(serialized.len() as u64).to_be_bytes()).unwrap());
         span!(Level::DEBUG, "write data").in_scope(|| self.stream.write(&serialized).unwrap());
-        span!(Level::DEBUG, "writing span data").in_scope(|| span_data.into_iter().for_each(|v| { self.stream.write(v.as_slice()).unwrap(); }));
+        span!(Level::DEBUG, "writing span data").in_scope(|| {
+            for v in span_data.iter() {
+                span!(Level::DEBUG, "writing to stream").in_scope(|| self.stream.write(v.as_slice()).unwrap());
+            }
+            span!(Level::DEBUG, "dropping local span data").in_scope(|| drop(span_data));
+        });
     }
 
     fn read_response(&mut self) -> StorageResponse {
