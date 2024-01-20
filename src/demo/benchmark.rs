@@ -6,6 +6,7 @@ use {
 };
 
 const DATA_TO_TRANSFER: usize = 200 * 1024 * 1024; // 200MB is typical payload
+const BUFFER_SIZE: u32 = 512 * 1024;
 
 pub fn run_benchmark(token: &str, endpoint: Option<String>) {
     info!("running benchmark");
@@ -26,7 +27,12 @@ pub fn run_benchmark(token: &str, endpoint: Option<String>) {
 async fn run_server() {
     info!("running benchmark server");
 
-    let listener = TcpListener::bind("0.0.0.0:14000").await.unwrap();
+    let socket = TcpSocket::new_v4().unwrap();
+    socket.bind("0.0.0.0:14000".parse().unwrap()).unwrap();
+    socket.set_recv_buffer_size(BUFFER_SIZE).unwrap();
+    socket.set_send_buffer_size(BUFFER_SIZE).unwrap();
+
+    let listener = socket.listen(1).unwrap();
     let mut buffer = vec![0u8; DATA_TO_TRANSFER];
 
     while let Ok((mut stream, _addr)) = listener.accept().await {
@@ -44,8 +50,9 @@ async fn run_client(endpoint: String) {
     let mut data = vec![0u8; DATA_TO_TRANSFER];
     rand::thread_rng().fill_bytes(&mut data);
 
-    let mut socket = TcpSocket::new_v4().unwrap();
-    socket.set_send_buffer_size(512 * 1000).unwrap();
+    let socket = TcpSocket::new_v4().unwrap();
+    socket.set_recv_buffer_size(BUFFER_SIZE).unwrap();
+    socket.set_send_buffer_size(BUFFER_SIZE).unwrap();
     info!("send buffer size: {:?}", socket.send_buffer_size());
 
     let mut stream = socket.connect(endpoint.parse().unwrap()).await.unwrap();
