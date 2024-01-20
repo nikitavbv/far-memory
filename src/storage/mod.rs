@@ -14,6 +14,7 @@ pub use self::{
 };
 
 const REQ_SIZE_LIMIT: u64 = 10 * 1024 * 1024 * 1024;
+pub const BUFFER_SIZE: u32 = 128 * 1024;
 
 mod client;
 mod protocol;
@@ -43,6 +44,8 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
             error!("failed to create server socket: {:?}", err);
             return Err(StorageServerError::FailedToCreateServerSocket);
         }
+        socket.set_recv_buffer_size(BUFFER_SIZE).unwrap();
+        socket.set_send_buffer_size(BUFFER_SIZE).unwrap();
         socket.set_reuseaddr(true).unwrap();
 
         let listener = socket.listen(1024).unwrap();

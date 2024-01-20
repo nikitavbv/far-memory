@@ -2,7 +2,7 @@ use {
     std::{thread, time::Duration, io::{Write, Read}, sync::atomic::{AtomicU64, Ordering}},
     tracing::{span, Level},
     tokio::{net::{TcpStream, TcpSocket}, io::{AsyncReadExt, AsyncWriteExt}},
-    super::protocol::{StorageRequest, StorageRequestBody, StorageResponse, SpanData, SwapOutRequest},
+    super::{BUFFER_SIZE, protocol::{StorageRequest, StorageRequestBody, StorageResponse, SpanData, SwapOutRequest}},
 };
 
 pub struct Client {
@@ -13,6 +13,9 @@ pub struct Client {
 impl Client {
     pub async fn new(addr: &str) -> Self {
         let socket = TcpSocket::new_v4().unwrap();
+        socket.set_recv_buffer_size(BUFFER_SIZE).unwrap();
+        socket.set_send_buffer_size(BUFFER_SIZE).unwrap();
+
         let mut stream = socket.connect(addr.parse().unwrap()).await;
         while !stream.is_ok() {
             eprintln!("connection failed: {:?}", stream.err().unwrap());
