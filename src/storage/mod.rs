@@ -392,8 +392,8 @@ mod tests {
         super::*,
     };
 
-    #[test]
-    fn simple() {
+    #[tokio::test]
+    async fn simple() {
         let server_thread = thread::spawn(|| run_server(
             None,
             "127.0.0.1".to_owned(),
@@ -402,19 +402,19 @@ mod tests {
             Some(1),
             Some(3)
         ).unwrap());
-        let mut client = Client::new("localhost:14000");
+        let mut client = Client::new("127.0.0.1:14000").await;
 
-        client.auth("some-token");
-        client.swap_out(42, vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1], false);
-        let res = client.swap_in(42);
+        client.auth("some-token").await;
+        client.swap_out(42, vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1], false).await;
+        let res = client.swap_in(42).await;
 
         assert_eq!(vec![10, 9, 8, 7, 6, 5, 4, 3, 2, 1], res);
 
         server_thread.join().unwrap();
     }
 
-    #[test]
-    fn prepend() {
+    #[tokio::test]
+    async fn prepend() {
         let server_thread = thread::spawn(|| run_server(
             None,
             "127.0.0.1".to_owned(),
@@ -423,14 +423,14 @@ mod tests {
             Some(1),
             Some(4)
         ).unwrap());
-        let mut client = Client::new("localhost:14001");
+        let mut client = Client::new("127.0.0.1:14001").await;
 
-        client.auth("some-token");
+        client.auth("some-token").await;
 
-        client.swap_out(42, vec![10, 9, 8], false);
-        client.swap_out(42, vec![7, 6, 5], true);
+        client.swap_out(42, vec![10, 9, 8], false).await;
+        client.swap_out(42, vec![7, 6, 5], true).await;
 
-        let res = client.swap_in(42);
+        let res = client.swap_in(42).await;
 
         assert_eq!(vec![7, 6, 5, 10, 9, 8], res);
 
