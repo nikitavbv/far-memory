@@ -1,6 +1,7 @@
 use {
-    std::{net::{TcpStream, Shutdown}, thread, time::Duration, io::{Write, Read}, sync::atomic::{AtomicU64, Ordering}},
+    std::{thread, time::Duration, io::{Write, Read}, sync::atomic::{AtomicU64, Ordering}},
     tracing::{span, Level},
+    tokio::{net::{TcpStream, TcpSocket}, io::{AsyncReadExt, AsyncWriteExt}},
     super::protocol::{StorageRequest, StorageRequestBody, StorageResponse, SpanData, SwapOutRequest},
 };
 
@@ -10,16 +11,16 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new(addr: &str) -> Self {
-        let mut stream = TcpStream::connect(addr);
+    pub async fn new(addr: &str) -> Self {
+        let socket = TcpSocket::new_v4().unwrap();
+        let mut stream = socket.connect(addr.parse().unwrap()).await;
         while !stream.is_ok() {
             eprintln!("connection failed: {:?}", stream.err().unwrap());
             thread::sleep(Duration::from_secs(1));
-            stream = TcpStream::connect(addr);
+            stream = TcpStream::connect(addr).await;
         }
         let stream = stream.unwrap();
         stream.set_nodelay(true).unwrap();
-        stream.set_read_timeout(Some(Duration::from_secs(10))).unwrap();
 
         Self {
             stream,
@@ -27,32 +28,32 @@ impl Client {
         }
     }
 
-    pub fn auth(&mut self, token: &str) {
+    pub async fn auth(&mut self, token: &str) {
         match self.request(StorageRequestBody::Auth {
             token: token.to_owned(),
-        }) {
+        }).await {
             StorageResponse::Ok => (),
             other => panic!("unexpected auth response: {:?}", other),
         }
     }
 
-    pub fn set_run_id(&mut self, run_id: String) {
+    pub async fn set_run_id(&mut self, run_id: String) {
         match self.request(StorageRequestBody::SetRunId {
             run_id,
-        }) {
+        }).await {
             StorageResponse::Ok => (),
             other => panic!("unexpected set run id response: {:?}", other),
         }
     }
 
-    pub fn swap_out(&mut self, span_id: u64, data: Vec<u8>, prepend: bool) {
-        match self.request(StorageRequestBody::SwapOut(SwapOutRequest { span_id, prepend, data: SpanData::Inline(data) })) {
+    pub async fn swap_out(&mut self, span_id: u64, data: Vec<u8>, prepend: bool) {
+        match self.request(StorageRequestBody::SwapOut(SwapOutRequest { span_id, prepend, data: SpanData::Inline(data) })).await {
             StorageResponse::Ok => (),
             other => panic!("unexpected swap out response: {:?}", other),
         }
     }
 
-    pub fn batch(&mut self, swap_out: Vec<BatchSwapOutOperation>, swap_in: Option<u64>) -> Option<Vec<u8>> {
+    pub async fn batch(&mut self, swap_out: Vec<BatchSwapOutOperation>, swap_in: Option<u64>) -> Option<Vec<u8>> {
         let mut reqs: Vec<_> = swap_out.iter().map(|v| StorageRequestBody::SwapOut(SwapOutRequest {
             span_id: v.span_id,
             prepend: v.prepend,
@@ -67,18 +68,20 @@ impl Client {
 
         let mut swap_in_result = None;
 
-        match self.request_with_external_span_data(req, local_span_data) {
+        match self.request_with_external_span_data(req, local_span_data).await {
             StorageResponse::Batch(responses) => for res in responses {
                 match res {
                     StorageResponse::Ok => (),
                     StorageResponse::SwapIn { span_id: _, data } => swap_in_result = Some(match data {
                        SpanData::Inline(data) => data,
                        SpanData::Concat { data } => data.concat(),
-                       SpanData::External { len } => span!(Level::DEBUG, "reading span body", len).in_scope(|| {
+                       SpanData::External { len } => {
+                           let reading_span = span!(Level::DEBUG, "reading span body", len);
+                           let _reading_span_guard = reading_span.enter();
                            let mut data = vec![0u8; len as usize];
-                           self.stream.read_exact(&mut data).unwrap();
+                           self.stream.read_exact(&mut data).await.unwrap();
                            data
-                       }),
+                        },
                     }),
                     other => panic!("unexpected one of batch swap out responses: {:?}", other),
                 }
@@ -89,8 +92,8 @@ impl Client {
         swap_in_result
     }
 
-    pub fn swap_in(&mut self, span_id: u64) -> Vec<u8> {
-        let data = match self.request(StorageRequestBody::SwapIn { span_id }) {
+    pub async fn swap_in(&mut self, span_id: u64) -> Vec<u8> {
+        let data = match self.request(StorageRequestBody::SwapIn { span_id }).await {
             StorageResponse::SwapIn { span_id: _, data } => data,
             other => panic!("unexpected swap in response: {:?}", other),
         };
@@ -98,73 +101,90 @@ impl Client {
         match data {
             SpanData::Inline(data) => data,
             SpanData::Concat { data } => data.concat(),
-            SpanData::External { len } => span!(Level::DEBUG, "reading span body", len).in_scope(|| {
+            SpanData::External { len } => {
+                let reading_span = span!(Level::DEBUG, "reading span body", len);
+                let _reading_span_scope = reading_span.enter();
                 let mut data = vec![0u8; len as usize];
-                self.stream.read_exact(&mut data).unwrap();
+                self.stream.read_exact(&mut data).await.unwrap();
                 data
-            }),
+            },
         }
     }
 
-    fn request(&mut self, request: StorageRequestBody) -> StorageResponse {
+    async fn request(&mut self, request: StorageRequestBody) -> StorageResponse {
         let request_id = self.next_request_id();
 
         span!(Level::DEBUG, "writing request", request_id).in_scope(|| {
             self.write_request(StorageRequest { body: request, request_id });
         });
-        span!(Level::DEBUG, "reading response").in_scope(|| {
-            self.read_response()
-        })
+
+        let reading_response_span = span!(Level::DEBUG, "reading response");
+        let _reading_response_guard = reading_response_span.enter();
+        self.read_response().await
     }
 
-    fn request_with_external_span_data(&mut self, body: StorageRequestBody, span_data: Vec<LocalSpanData>) -> StorageResponse {
+    async fn request_with_external_span_data(&mut self, body: StorageRequestBody, span_data: Vec<LocalSpanData>) -> StorageResponse {
         let request_id = self.next_request_id();
 
         span!(Level::DEBUG, "writing request", request_id).in_scope(|| {
             self.write_request_with_external_span_data(StorageRequest { body, request_id }, span_data);
         });
-        span!(Level::DEBUG, "reading response").in_scope(|| {
-            self.read_response()
-        })
+
+        let reading_response_span = span!(Level::DEBUG, "reading response");
+        let _reading_response_guard = reading_response_span.enter();
+        self.read_response().await
     }
 
-    fn write_request(&mut self, mut request: StorageRequest) {
+    async fn write_request(&mut self, mut request: StorageRequest) {
         let mut span_data = Vec::new();
         request.body = extract_span_data_from_request(request.body, &mut span_data);
-        self.write_request_with_external_span_data(request, span_data)
+        self.write_request_with_external_span_data(request, span_data).await
     }
 
-    fn write_request_with_external_span_data(&mut self, request: StorageRequest, span_data: Vec<LocalSpanData>) {
+    async fn write_request_with_external_span_data(&mut self, request: StorageRequest, span_data: Vec<LocalSpanData>) {
         let serialized = span!(Level::DEBUG, "serialize").in_scope(|| bincode::serialize(&request).unwrap());
 
-        span!(Level::DEBUG, "write header").in_scope(|| self.stream.write(&(serialized.len() as u64).to_be_bytes()).unwrap());
-        span!(Level::DEBUG, "write data").in_scope(|| self.stream.write(&serialized).unwrap());
-        span!(Level::DEBUG, "writing span data").in_scope(|| {
-            for v in span_data.iter() {
-                span!(Level::DEBUG, "writing to stream").in_scope(|| self.stream.write(v.as_slice()).unwrap());
-            }
-            span!(Level::DEBUG, "dropping local span data").in_scope(|| drop(span_data));
-        });
+        let write_header_span = span!(Level::DEBUG, "write header");
+        let write_header_span_guard = write_header_span.enter();
+        self.stream.write(&(serialized.len() as u64).to_be_bytes()).await.unwrap();
+        drop(write_header_span_guard);
+
+        let write_data_span = span!(Level::DEBUG, "write data");
+        let write_data_span_guard = write_data_span.enter();
+        self.stream.write(&serialized).await.unwrap();
+        drop(write_data_span_guard);
+
+        let write_span_data_span = span!(Level::DEBUG, "write span data");
+        let write_span_data_guard = write_span_data_span.enter();
+        for v in span_data.iter() {
+            let writing_to_stream_span = span!(Level::DEBUG, "writing to stream");
+            let _writing_to_stream_guard = writing_to_stream_span.enter();
+            self.stream.write(v.as_slice()).await.unwrap();
+        }
+        drop(write_span_data_guard);
+
+        span!(Level::DEBUG, "dropping local span data").in_scope(|| drop(span_data));
     }
 
-    fn read_response(&mut self) -> StorageResponse {
-        let res_len = span!(Level::DEBUG, "reading response header").in_scope(|| {
-            let mut res_len: [u8; 8] = [0u8; 8];
-            self.stream.read_exact(&mut res_len).unwrap();
-            u64::from_be_bytes(res_len)
-        });
+    async fn read_response(&mut self) -> StorageResponse {
+        let reading_response_header_span = span!(Level::DEBUG, "reading response header");
+        let reading_response_header_guard = reading_response_header_span.enter();
+        let mut res_len: [u8; 8] = [0u8; 8];
+        self.stream.read_exact(&mut res_len).await.unwrap();
+        let res_len = u64::from_be_bytes(res_len);
+        drop(reading_response_header_guard);
 
-        let res = span!(Level::DEBUG, "reading response body").in_scope(|| {
-            let mut res = vec![0u8; res_len as usize];
-            self.stream.read_exact(&mut res).unwrap();
-            res
-        });
+        let reading_response_body_span = span!(Level::DEBUG, "reading response body");
+        let reading_response_body_guard = reading_response_body_span.enter();
+        let mut res = vec![0u8; res_len as usize];
+        self.stream.read_exact(&mut res).await.unwrap();
+        drop(reading_response_body_guard);
 
         span!(Level::DEBUG, "deserialize").in_scope(|| bincode::deserialize(&res).unwrap())
     }
 
-    pub fn close(&mut self) {
-        self.stream.shutdown(Shutdown::Both).unwrap();
+    pub async fn close(&mut self) {
+        self.stream.shutdown().await.unwrap();
     }
 
     fn next_request_id(&self) -> u64 {
