@@ -126,9 +126,10 @@ impl Client {
     async fn request_with_external_span_data(&mut self, body: StorageRequestBody, span_data: Vec<LocalSpanData>) -> StorageResponse {
         let request_id = self.next_request_id();
 
-        span!(Level::DEBUG, "writing request", request_id).in_scope(|| {
-            self.write_request_with_external_span_data(StorageRequest { body, request_id }, span_data);
-        });
+        let writing_request_span = span!(Level::DEBUG, "writing request", request_id);
+        let writing_request_guard = writing_request_span.enter();
+        self.write_request_with_external_span_data(StorageRequest { body, request_id }, span_data).await;
+        drop(writing_request_guard);
 
         let reading_response_span = span!(Level::DEBUG, "reading response");
         let _reading_response_guard = reading_response_span.enter();

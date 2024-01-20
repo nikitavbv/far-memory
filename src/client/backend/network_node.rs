@@ -1,7 +1,5 @@
-use std::ops::DerefMut;
-
 use {
-    std::sync::Mutex,
+    std::{sync::Mutex, ops::DerefMut},
     tracing::debug_span,
     tokio::runtime::Runtime,
     crate::{
