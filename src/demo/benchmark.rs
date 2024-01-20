@@ -44,7 +44,7 @@ fn run_client(endpoint: String) {
 
     let started_at = Instant::now();
     stream.write_all(&data).unwrap();
-    info!("client finished reading in {:?}", Instant::now() - started_at);
+    info!("client finished writing in {}mbps", DATA_TO_TRANSFER as f64 / (Instant::now() - started_at).as_secs_f64() * 8.0 / 1000.0 / 1000.0);
 
     let started_at = Instant::now();
     stream.read_exact(&mut data).unwrap();
