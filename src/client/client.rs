@@ -459,13 +459,13 @@ impl FarMemoryClient {
                     }
                 };
 
-                let spans = self.spans.read().unwrap();
-                let span = spans.get(&span_id).unwrap();
                 {
                     let span_states = self.span_states.read().unwrap();
                     let mut span_state = span_states[&span_id].lock().unwrap();
                     match &*span_state {
                         SpanState::Free => {
+                            let spans = self.spans.read().unwrap();
+                            let span = spans.get(&span_id).unwrap();
                             let span_local_memory_size = span.local_memory_usage();
                             if span_local_memory_size == 0 {
                                 debug!(span_id=span_id.id(), "skipping span that does not have local memory");
