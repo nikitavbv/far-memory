@@ -29,6 +29,7 @@ async fn run_server() {
 
     let socket = TcpSocket::new_v4().unwrap();
     socket.bind("0.0.0.0:14000".parse().unwrap()).unwrap();
+    socket.set_reuseaddr(true).unwrap();
     socket.set_recv_buffer_size(BUFFER_SIZE).unwrap();
     socket.set_send_buffer_size(BUFFER_SIZE).unwrap();
 
