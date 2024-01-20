@@ -20,15 +20,17 @@ mod protocol;
 
 #[derive(Error, Debug)]
 enum StorageServerError {
+    #[error("failed to create server socket")]
+    FailedToCreateServerSocket,
     #[error("failed to read span data")]
     FailedToReadSpanData,
 }
 
 pub fn run_storage_server(metrics: Registry, token: String, port: Option<u16>) {
-    run_server(Some(metrics), "0.0.0.0".to_owned(), port, token, None, None);
+    run_server(Some(metrics), "0.0.0.0".to_owned(), port, token, None, None).unwrap();
 }
 
-fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token: String, connections_limit: Option<usize>, requests_limit: Option<usize>) {
+fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token: String, connections_limit: Option<usize>, requests_limit: Option<usize>) -> Result<(), StorageServerError> {
     let rt = tokio::runtime::Runtime::new().unwrap();
 
     rt.block_on(async {
@@ -37,7 +39,10 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
         let addr = format!("{}:{}", host, port);
 
         let socket = TcpSocket::new_v4().unwrap();
-        socket.bind(addr.parse().unwrap()).unwrap();
+        if let Err(err) = socket.bind(addr.parse().unwrap()) {
+            error!("failed to create server socket: {:?}", err);
+            return Err(StorageServerError::FailedToCreateServerSocket);
+        }
         socket.set_reuseaddr(true).unwrap();
 
         let listener = socket.listen(1024).unwrap();
@@ -175,7 +180,11 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
                 }
             }
         }
-    });
+
+        Ok(())
+    })?;
+
+    Ok(())
 }
 
 pub struct Server {
@@ -384,12 +393,12 @@ mod tests {
     fn simple() {
         let server_thread = thread::spawn(|| run_server(
             None,
-            "localhost".to_owned(),
+            "127.0.0.1".to_owned(),
             Some(14000),
             "some-token".to_owned(),
             Some(1),
             Some(3)
-        ));
+        ).unwrap());
         let mut client = Client::new("localhost:14000");
 
         client.auth("some-token");
@@ -405,12 +414,12 @@ mod tests {
     fn prepend() {
         let server_thread = thread::spawn(|| run_server(
             None,
-            "localhost".to_owned(),
+            "127.0.0.1".to_owned(),
             Some(14001),
             "some-token".to_owned(),
             Some(1),
             Some(4)
-        ));
+        ).unwrap());
         let mut client = Client::new("localhost:14001");
 
         client.auth("some-token");
