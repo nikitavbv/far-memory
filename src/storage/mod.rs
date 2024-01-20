@@ -160,12 +160,12 @@ fn run_server(metrics: Option<Registry>, host: String, port: Option<u16>, token:
                 let scope_write_response = span!(Level::DEBUG, "write response", request_id);
                 let _scope_write_response_guard = scope_write_response.enter();
 
-                stream.write(&(res.len() as u64).to_be_bytes()).await.unwrap();
-                stream.write(&res).await.unwrap();
+                stream.write_all(&(res.len() as u64).to_be_bytes()).await.unwrap();
+                stream.write_all(&res).await.unwrap();
 
                 if let Some(span_data) = span_data {
                     for chunk in span_data {
-                        stream.write(&chunk).await.unwrap();
+                        stream.write_all(&chunk).await.unwrap();
                     }
                 }
             }

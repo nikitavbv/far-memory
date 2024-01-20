@@ -148,12 +148,12 @@ impl Client {
 
         let write_header_span = span!(Level::DEBUG, "write header");
         let write_header_span_guard = write_header_span.enter();
-        self.stream.write(&(serialized.len() as u64).to_be_bytes()).await.unwrap();
+        self.stream.write_all(&(serialized.len() as u64).to_be_bytes()).await.unwrap();
         drop(write_header_span_guard);
 
         let write_data_span = span!(Level::DEBUG, "write data");
         let write_data_span_guard = write_data_span.enter();
-        self.stream.write(&serialized).await.unwrap();
+        self.stream.write_all(&serialized).await.unwrap();
         drop(write_data_span_guard);
 
         let write_span_data_span = span!(Level::DEBUG, "write span data");
@@ -161,7 +161,7 @@ impl Client {
         for v in span_data.iter() {
             let writing_to_stream_span = span!(Level::DEBUG, "writing to stream");
             let _writing_to_stream_guard = writing_to_stream_span.enter();
-            self.stream.write(v.as_slice()).await.unwrap();
+            self.stream.write_all(v.as_slice()).await.unwrap();
         }
         drop(write_span_data_guard);
 
