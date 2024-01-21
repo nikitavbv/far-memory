@@ -54,7 +54,21 @@ impl FarMemoryBackend for NetworkShardingBackend {
     }
 
     fn swap_in(&self, id: &SpanId) -> Vec<u8> {
-        unimplemented!()
+        let lock_span = debug_span!("waiting for network client lock for swap in");
+        let lock_span_guard = lock_span.enter();
+        let _lock = self.lock.lock().unwrap();
+        drop(lock_span_guard);
+
+        self.runtime.block_on(async {
+            let mut client = match id.id() % 4 {
+                0 => &self.client0,
+                1 => &self.client1,
+                2 => &self.client2,
+                3 => &self.client3,
+                _ => unreachable!(),
+            }.lock().unwrap();
+            client.swap_in(id.id()).await
+        })
     }
 
     fn batch_swap_out(&self, swap_out_operations: Vec<SwapOutOperation>) {
