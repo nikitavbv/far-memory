@@ -349,7 +349,7 @@ impl Server {
     }
 
     fn total_span_bytes(&self) -> usize {
-        self.spans.iter().map(|v| v.1.len()).sum()
+        self.spans.iter().map(|v| v.1.iter().map(|t| t.len()).sum::<usize>()).sum()
     }
 }
 
