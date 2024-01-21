@@ -103,7 +103,7 @@ impl SpanReplacementPolicy {
 pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
     info!("running evaluation");
 
-    let granularity: u32 = 40;
+    let granularity: u32 = 10;
 
     let evaluation_data = load_evaluation_data();
 
@@ -127,7 +127,7 @@ pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
     }
 
     // plot different distributions
-    for zipf_s in (0..=100).step_by(granularity as usize) {
+    /*for zipf_s in (0..=100).step_by(granularity as usize) {
         experiments.push(Experiment {
             local_memory_percent: 80,
             application: DemoApplicationType::WebService,
@@ -155,7 +155,7 @@ pub fn run_evaluation(storage_endpoint: String, manager_endpoint: String) {
                 total_runs: 1,
             });
         }
-    }
+    }*/
 
     info!("total {} experiments", experiments.len());
     let experiments: Vec<_> = experiments.into_iter()
