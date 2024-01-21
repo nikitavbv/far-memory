@@ -25,6 +25,7 @@ pub struct FarMemoryClient {
     manager: Arc<Option<ManagerClient>>,
 
     local_memory_max_threshold: u64,
+    swap_out_min_size: Option<u64>,
 
     swap_in_out_lock: Arc<Mutex<()>>,
     span_states: Arc<RwLock<HashMap<SpanId, Mutex<SpanState>>>>,
@@ -77,6 +78,7 @@ impl FarMemoryClient {
             replacement_policy: Arc::new(Box::new(ReplayReplacementPolicy::new(Box::new(PreferRemoteSpansReplacementPolicy::new(Box::new(MostRecentlyUsedReplacementPolicy::new())))))),
             manager: Arc::new(None),
             local_memory_max_threshold,
+            swap_out_min_size: None,
 
             swap_in_out_lock: Arc::new(Mutex::new(())),
             span_states: Arc::new(RwLock::new(HashMap::new())),
@@ -128,6 +130,10 @@ impl FarMemoryClient {
 
     pub fn is_running(&self) -> bool {
         self.is_running.load(Ordering::Relaxed)
+    }
+
+    pub fn set_swap_out_min_size(&mut self, swap_out_min_size: u64) {
+        self.swap_out_min_size = Some(swap_out_min_size);
     }
 
     pub fn allocate_span(&self, span_size: usize) -> SpanId {
@@ -432,6 +438,12 @@ impl FarMemoryClient {
 
         let _swap_ops_lock_guard = span!(Level::DEBUG, "waiting for lock").in_scope(|| self.swap_in_out_lock.lock().unwrap());
         let memory_to_swap_out = current_local_memory - limit;
+        let memory_to_swap_out = if let Some(min_size) = self.swap_out_min_size {
+            memory_to_swap_out.max(min_size)
+        } else {
+            memory_to_swap_out
+        };
+
         let mut spans_to_swap_out = Vec::new(); // (span, how much memory to swap out - can be partial or full swap out)
 
         let mut total_memory = 0;

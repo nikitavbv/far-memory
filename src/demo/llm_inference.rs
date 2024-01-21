@@ -659,6 +659,7 @@ fn run_inference(
     if let Some(policy) = replacement_policy {
         client.use_replacement_policy(policy);
     }
+    client.set_swap_out_min_size(512 * 1024 * 1024);
     client.use_replacement_policy(Box::new(MostRecentlyUsedReplacementPolicy::new())); // todo: there is a bug in replay leading to bad performance that needs to be fixed.
     client.track_metrics(metrics.clone());
     client.start_swap_out_thread();
