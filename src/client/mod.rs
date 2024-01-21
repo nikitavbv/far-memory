@@ -20,6 +20,7 @@ pub use self::{
         replication::ReplicationBackend,
         erasure_coding::ErasureCodingBackend,
         metrics::InstrumentedBackend,
+        network_sharding::NetworkShardingBackend,
     },
     replacement::{
         ReplacementPolicy,

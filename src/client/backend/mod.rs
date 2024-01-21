@@ -7,6 +7,7 @@ pub mod erasure_coding;
 pub mod in_memory;
 pub mod metrics;
 pub mod network_node;
+pub mod network_sharding;
 pub mod replication;
 
 pub trait FarMemoryBackend: Send + Sync {

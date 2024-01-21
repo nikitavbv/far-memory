@@ -24,6 +24,7 @@ use {
             PreferRemoteSpansReplacementPolicy,
             RemoteReplayReplacementPolicy,
             ReplacementPolicy,
+            NetworkShardingBackend,
         },
     },
 };
@@ -631,6 +632,9 @@ fn run_inference(
                 .collect();
 
             Box::new(ErasureCodingBackend::new(nodes))
+        } else if storage_endpoints.len() == 4 {
+            info!("running in sharding mode");
+            Box::new(NetworkShardingBackend::new(token, &run_id, storage_endpoints))
         } else {
             let nodes: Vec<_> = storage_endpoints.iter()
                 .map(|v| Box::new(NetworkNodeBackend::new(&v, token, run_id.clone())) as Box<dyn FarMemoryBackend>)
