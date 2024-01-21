@@ -106,7 +106,7 @@ impl FarMemoryClient {
         thread::Builder::new().name("swap-out".to_owned())
             .spawn(swap_out_thread(
                 self.clone(),
-                self.local_memory_max_threshold - 512 * 1024 * 1024
+                self.local_memory_max_threshold - 256 * 1024 * 1024
             )).unwrap();
     }
 
